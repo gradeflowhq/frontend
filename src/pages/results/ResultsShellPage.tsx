@@ -1,0 +1,217 @@
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '../../api';
+import ErrorAlert from '../../components/common/ErrorAlert';
+import EncryptedDataGuard from '../../components/common/EncryptedDataGuard';
+import { decryptString, isEncrypted } from '../../utils/crypto';
+import type {
+  GradingResponse,
+  AdjustableGradedSubmission,
+  QuestionSetResponse,
+  AssessmentResponse,
+} from '../../api/models';
+import ResultsOverviewTab from './ResultsOverviewTab';
+import ResultsStatsTab from './ResultsStatsTab';
+import QuestionAnalysisTab from './QuestionAnalysisTab';
+import ResultsExportMenu from '../../components/results/ResultsExportMenu';
+import { useDocumentTitle } from '../../hooks/useDocumentTitle';
+
+const natsort = (a: string, b: string) =>
+  a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+
+const ResultsShellPage: React.FC = () => {
+  const { assessmentId } = useParams<{ assessmentId: string }>();
+  const navigate = useNavigate();
+
+  const storageKey = `submissions_passphrase:${assessmentId}`;
+  const [passphrase, setPassphrase] = useState<string | null>(() => localStorage.getItem(storageKey));
+  const [encryptedDetected, setEncryptedDetected] = useState(false);
+  const [displayedIdsMap, setDisplayedIdsMap] = useState<Map<string, string>>(new Map());
+  const [activeTab, setActiveTab] = useState<'overview' | 'stats' | 'analysis'>('overview');
+
+  const onPassphraseReady = useCallback((pp: string | null) => {
+    setPassphrase(pp);
+  }, []);
+
+  // Assessment name for header
+  const {
+    data: assessmentRes,
+    isLoading: loadingAssessment,
+    isError: errorAssessment,
+    error: assessmentError,
+  } = useQuery({
+    queryKey: ['assessment', assessmentId],
+    queryFn: async () =>
+      (await api.getAssessmentAssessmentsAssessmentIdGet(assessmentId!)).data as AssessmentResponse,
+    enabled: !!assessmentId,
+    staleTime: 60_000,
+  });
+
+  // Grading results
+  const {
+    data: gradingData,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ['grading', assessmentId],
+    queryFn: async () =>
+      (await api.getGradingAssessmentsAssessmentIdGradingGet(assessmentId!)).data as GradingResponse,
+    enabled: !!assessmentId,
+    staleTime: 30000,
+  });
+  const items: AdjustableGradedSubmission[] = gradingData?.graded_submissions ?? [];
+
+  // Question set (to list all questions)
+  const { data: qsRes } = useQuery({
+    queryKey: ['questionSet', assessmentId],
+    queryFn: async () =>
+      (await api.getQuestionSetAssessmentsAssessmentIdQuestionSetGet(assessmentId!)).data as QuestionSetResponse,
+    enabled: !!assessmentId,
+    staleTime: 30000,
+  });
+  const questionMap = qsRes?.question_set?.question_map ?? {};
+  const questionIds = useMemo(() => Object.keys(questionMap).sort(natsort), [questionMap]);
+
+  // Decrypt student IDs (default) and flag if encrypted detected
+  useEffect(() => {
+    let cancelled = false;
+    const buildMap = async () => {
+      const m = new Map<string, string>();
+      const work: Promise<void>[] = [];
+      for (const it of items) {
+        const sid = it.student_id;
+        const enc = isEncrypted(sid);
+        if (enc) setEncryptedDetected(true);
+        if (passphrase) {
+          work.push(
+            decryptString(sid, passphrase)
+              .then((plain) => {
+                if (!cancelled) m.set(sid, plain);
+              })
+              .catch(() => {
+                if (!cancelled) m.set(sid, '••••');
+              })
+          );
+        } else {
+          m.set(sid, enc ? '••••' : sid);
+        }
+      }
+      await Promise.all(work);
+      if (!cancelled) setDisplayedIdsMap(m);
+    };
+    buildMap();
+    return () => {
+      cancelled = true;
+    };
+  }, [items, passphrase]);
+
+  // Totals per submission (adjusted points if present)
+  const totalsPerSubmission = useMemo(
+    () =>
+      items.map((gs) => {
+        const totalPoints = (gs.results ?? []).reduce(
+          (sum, r) => sum + (r.adjusted_points ?? r.points),
+          0
+        );
+        const totalMax = (gs.results ?? []).reduce((sum, r) => sum + r.max_points, 0);
+        return { id: gs.student_id, totalPoints, totalMax };
+      }),
+    [items]
+  );
+
+  useDocumentTitle(`Reults - ${assessmentRes?.name} - GradeFlow`, []);
+
+  return (
+    <section className="space-y-4">
+      <EncryptedDataGuard
+        storageKey={storageKey}
+        encryptedDetected={encryptedDetected}
+        onPassphraseReady={onPassphraseReady}
+      />
+
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <h2 className="text-xl font-semibold">Grading Results</h2>
+          <span className="opacity-70">·</span>
+          <span className="font-medium">{assessmentRes?.name ?? 'Assessment'}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            className="btn btn-outline"
+            onClick={() => navigate(`/assessments/${assessmentId}/rules`)}
+          >
+            Back to Assessment
+          </button>
+          <ResultsExportMenu
+            assessmentId={assessmentId!}
+            disabled={items.length === 0}
+            titleWhenDisabled="No grading results to export"
+          />
+        </div>
+      </div>
+
+      {loadingAssessment && (
+        <div className="alert alert-info">
+          <span>Loading assessment…</span>
+        </div>
+      )}
+      {errorAssessment && <ErrorAlert error={assessmentError} />}
+
+      {isLoading && (
+        <div className="alert alert-info">
+          <span>Loading grading results...</span>
+        </div>
+      )}
+      {isError && <ErrorAlert error={error} />}
+
+      {!isLoading && !isError && items.length === 0 && (
+        <div className="alert alert-info">
+          <span>No graded submissions found. Run grading first.</span>
+        </div>
+      )}
+
+      <div className="tabs tabs-lift">
+        <button
+          className={`tab ${activeTab === 'overview' ? 'tab-active' : ''}`}
+          onClick={() => setActiveTab('overview')}
+        >
+          Overview
+        </button>
+        <button
+          className={`tab ${activeTab === 'stats' ? 'tab-active' : ''}`}
+          onClick={() => setActiveTab('stats')}
+        >
+          Stats
+        </button>
+        <button
+          className={`tab ${activeTab === 'analysis' ? 'tab-active' : ''}`}
+          onClick={() => setActiveTab('analysis')}
+        >
+          Question Analysis
+        </button>
+      </div>
+
+      {!isLoading && !isError && items.length > 0 && activeTab === 'overview' && (
+        <ResultsOverviewTab
+          assessmentId={assessmentId!}
+          items={items}
+          questionIds={questionIds}
+          displayedIdsMap={displayedIdsMap}
+          navigate={navigate}
+        />
+      )}
+
+      {!isLoading && !isError && items.length > 0 && activeTab === 'stats' && (
+        <ResultsStatsTab items={items} totals={totalsPerSubmission} />
+      )}
+
+      {!isLoading && !isError && items.length > 0 && activeTab === 'analysis' && (
+        <QuestionAnalysisTab items={items} questionIds={questionIds} />
+      )}
+    </section>
+  );
+};
+
+export default ResultsShellPage;
