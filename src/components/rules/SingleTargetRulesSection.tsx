@@ -6,6 +6,7 @@ import RuleItem from './RuleItem';
 import RuleDialog from './RuleDialog';
 import rulesSchema from '../../schemas/rules.json';
 import ErrorAlert from '../common/ErrorAlert';
+import ConfirmDialog from '../common/ConfirmDialog';
 import { api } from '../../api';
 import type { RubricOutput } from '../../api/models';
 import { friendlyRuleLabel, findSchemaKeyByType } from '../../utils/rulesHelpers';
@@ -35,6 +36,7 @@ const SingleTargetRulesSection: React.FC<Props> = ({
   const [editingRule, setEditingRule] = useState<any | null>(null);
   const [validateError, setValidateError] = useState<unknown | null>(null);
   const [validating, setValidating] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ qid: string; rule: any } | null>(null);
 
   const allRules = rubric?.rules ?? [];
 
@@ -83,9 +85,8 @@ const SingleTargetRulesSection: React.FC<Props> = ({
     setDialogOpen(true);
   };
 
-  const handleDelete = async (_qid: string, rule: any) => {
-    const nextRules = allRules.filter((r) => r !== rule);
-    await onReplaceRubric({ rules: nextRules });
+  const handleDelete = async (qid: string, rule: any) => {
+    setDeleteTarget({ qid, rule });
   };
 
   const handleSaveDialog = async (ruleObj: any) => {
@@ -122,92 +123,85 @@ const SingleTargetRulesSection: React.FC<Props> = ({
 
   return (
     <section className="space-y-4">
-      {/* Section wrapper */}
-      {/* <div className="card bg-base-100 shadow-xs">
-        <div className="card-body"> */}
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">Single Target Rules</h3>
-          </div>
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">Single Target Rules</h3>
+      </div>
 
-          {questionIds.length === 0 && (
-            <div className="alert alert-info mt-3">
-              <span>No questions found. Infer or set a question set first.</span>
-            </div>
-          )}
+      {questionIds.length === 0 && (
+        <div className="alert alert-info mt-3">
+          <span>No questions found. Infer or set a question set first.</span>
+        </div>
+      )}
 
-          {/* Questions list */}
-          <div className="mt-3 space-y-3">
-            {questionIds.map((qid) => {
-              const qType = questionTypesById[qid] ?? 'TEXT';
-              const rules = byQuestion[qid] ?? [];
-              const options = compatibleKeysFor(qType);
+      <div className="mt-3 space-y-3">
+        {questionIds.map((qid) => {
+          const qType = questionTypesById[qid] ?? 'TEXT';
+          const rules = byQuestion[qid] ?? [];
+          const options = compatibleKeysFor(qType);
 
-              return (
-                <div key={qid} className="card bg-base-100 border border-base-300 shadow-xs">
-                  <div className="card-body">
-                    {/* Question header row */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="font-mono text-sm">
-                          <span className="font-semibold">{qid}</span>
-                        </div>
-                        <span className="badge badge-ghost">{qType}</span>
-                        {rules.length > 0 && (
-                          <span>
-                                <IconCheckCircle />
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Add rule dropdown */}
-                      <DropdownMenu trigger={<><IconPlus />Add Rule</>} align="end">
-                          {options.map((key) => (
-                            <li key={key}>
-                              <Button variant="ghost" className="justify-start" onClick={() => handleAddDropdownSelect(qid, key)}>
-                                {friendlyRuleLabel(key)}
-                              </Button>
-                            </li>
-                          ))}
-                          {options.length === 0 && (
-                            <li>
-                              <span className="opacity-70 px-2 py-1">No compatible rules</span>
-                            </li>
-                          )}
-                      </DropdownMenu>
+          return (
+            <div key={qid} className="card bg-base-100 border border-base-300 shadow-xs">
+              <div className="card-body">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="font-mono text-sm">
+                      <span className="font-semibold">{qid}</span>
                     </div>
-
-                    {/* Rules list */}
-                    {rules.length === 0 ? (
-                      <div className="mt-3">
-                        <div className="alert alert-ghost">
-                          <span className="opacity-70">No rules for this question yet.</span>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="mt-3 space-y-3">
-                        {rules.map((r, idx) => (
-                        <RuleItem
-                            key={idx}
-                            rule={r}
-                            onEdit={(rule) => handleEdit(qid, rule)}
-                            onDelete={(rule) => handleDelete(qid, rule)}
-                            contextQuestionId={qid}
-                        />
-                        ))}
-                      </div>
+                    <span className="badge badge-ghost">{qType}</span>
+                    {rules.length > 0 && (
+                      <span>
+                        <IconCheckCircle />
+                      </span>
                     )}
                   </div>
+
+                  <DropdownMenu trigger={<><IconPlus />Add Rule</>} align="end">
+                    {options.map((key) => (
+                      <li key={key}>
+                        <Button
+                          variant="ghost"
+                          className="justify-start"
+                          onClick={() => handleAddDropdownSelect(qid, key)}
+                        >
+                          {friendlyRuleLabel(key)}
+                        </Button>
+                      </li>
+                    ))}
+                    {options.length === 0 && (
+                      <li>
+                        <span className="opacity-70 px-2 py-1">No compatible rules</span>
+                      </li>
+                    )}
+                  </DropdownMenu>
                 </div>
-              );
-            })}
-          </div>
 
-          {/* Validation/Mutation error outside the dialog, if needed */}
-          {error && <ErrorAlert error={error} className="mt-3" />}
-        {/* </div>
-      </div> */}
+                {rules.length === 0 ? (
+                  <div className="mt-3">
+                    <div className="alert alert-ghost">
+                      <span className="opacity-70">No rules for this question yet.</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-3 space-y-3">
+                    {rules.map((r, idx) => (
+                      <RuleItem
+                        key={idx}
+                        rule={r}
+                        onEdit={(rule) => handleEdit(qid, rule)}
+                        onDelete={(rule) => handleDelete(qid, rule)}
+                        contextQuestionId={qid}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
 
-      {/* Dialog */}
+      {error && <ErrorAlert error={error} className="mt-3" />}
+
       <RuleDialog
         open={dialogOpen}
         selectedRuleKey={selectedRuleKey}
@@ -224,6 +218,20 @@ const SingleTargetRulesSection: React.FC<Props> = ({
         onSave={handleSaveDialog}
         isSaving={saving || validating}
         error={validateError ?? (error ?? null)}
+      />
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="Delete Rule"
+        message="Are you sure you want to delete this rule?"
+        confirmText={saving ? 'Deleting...' : 'Delete'}
+        onConfirm={async () => {
+          if (!deleteTarget) return;
+          const nextRules = allRules.filter((r) => r !== deleteTarget.rule);
+          await onReplaceRubric({ rules: nextRules });
+          setDeleteTarget(null);
+        }}
+        onCancel={() => setDeleteTarget(null)}
       />
     </section>
   );

@@ -15,7 +15,7 @@ import type {
   GradingResponse,
   RubricResponse,
   CoverageResponse,
-} from '../api/models';
+} from '../../api/models';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle';
 
 const TabsNav: React.FC<{ basePath: string }> = ({ basePath }) => {

@@ -123,7 +123,7 @@ const ResultsShellPage: React.FC = () => {
     [items]
   );
 
-  useDocumentTitle(`Reults - ${assessmentRes?.name} - GradeFlow`, []);
+  useDocumentTitle(`Results - ${assessmentRes?.name} - GradeFlow`, []);
 
   return (
     <section className="space-y-4">
@@ -148,7 +148,6 @@ const ResultsShellPage: React.FC = () => {
           <ResultsExportMenu
             assessmentId={assessmentId!}
             disabled={items.length === 0}
-            titleWhenDisabled="No grading results to export"
           />
         </div>
       </div>
