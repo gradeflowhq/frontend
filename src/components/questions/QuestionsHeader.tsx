@@ -1,4 +1,6 @@
 import React from 'react';
+import { IconInfer } from '../ui/icons';
+import { Button } from '../ui/Button';
 
 type QuestionsHeaderProps = {
   onInfer: () => void;
@@ -13,9 +15,9 @@ const QuestionsHeader: React.FC<QuestionsHeaderProps> = ({
       <h2 className="card-title">Questions</h2>
       {showInfer && (
       <div className="flex gap-2">
-        <button type="button" className="btn" onClick={onInfer}>
+        <Button type="button" variant="ghost" onClick={onInfer} leftIcon={<IconInfer />}>
           Infer from Submissions
-        </button>
+        </Button>
       </div>
       )}
     </div>

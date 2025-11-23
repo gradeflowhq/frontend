@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { IconChevronDown, IconDownload } from '../ui/icons';
+import { DropdownMenu } from '../ui/DropdownMenu';
+import { Button } from '../ui/Button';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import Papa from 'papaparse';
 import { api } from '../../api';
@@ -11,7 +14,6 @@ type ResultsExportMenuProps = {
   className?: string;
   onError?: (e: unknown) => void;
   label?: string;
-  titleWhenDisabled?: string;
 };
 
 const ResultsExportMenu: React.FC<ResultsExportMenuProps> = ({
@@ -20,9 +22,7 @@ const ResultsExportMenu: React.FC<ResultsExportMenuProps> = ({
   className,
   onError,
   label = 'Export',
-  titleWhenDisabled = 'No grading results to export',
 }) => {
-  const [open, setOpen] = useState(false);
   const [pendingSaver, setPendingSaver] = useState<string | null>(null);
 
   // Available savers (fallback to CSV)
@@ -101,7 +101,6 @@ const ResultsExportMenu: React.FC<ResultsExportMenuProps> = ({
       URL.revokeObjectURL(url);
 
       setPendingSaver(null);
-      setOpen(false);
     },
     onError: (e) => {
       setPendingSaver(null);
@@ -117,30 +116,22 @@ const ResultsExportMenu: React.FC<ResultsExportMenuProps> = ({
     setPendingSaver(saver);
     exportMutation.mutate(saver);
   };
-
-  const closeOnBlur = () => setTimeout(() => setOpen(false), 100);
+  
 
   return (
-    <div className={`dropdown dropdown-end ${open ? 'dropdown-open' : ''} ${className ?? ''}`}>
-      <button
-        tabIndex={0}
-        className="btn btn-primary"
-        onClick={() => setOpen((o) => !o)}
-        onBlur={closeOnBlur}
-        disabled={btnDisabled}
-        title={btnDisabled && !isPending ? titleWhenDisabled : undefined}
-      >
-        {isPending ? `Exporting ${pendingSaver ?? ''}…` : label}
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-2 opacity-80" viewBox="0 0 20 20" fill="currentColor">
-          <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.08 1.04l-4.25 4.25a.75.75 0 01-1.06 0L5.21 8.27a.75.75 0 01.02-1.06z" clipRule="evenodd" />
-        </svg>
-      </button>
-
-      <ul tabIndex={0} className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-48 z-50">
+    <DropdownMenu align="end" className={className} trigger={isPending ? `Exporting ${pendingSaver ?? ''}…` : (
+      <>
+        <IconDownload />
+        {label}
+        <IconChevronDown />
+      </>
+    )}>
+      <>
         {savers.map((saver) => (
           <li key={saver}>
-            <button
-              className="btn btn-ghost justify-start"
+            <Button
+              variant="ghost"
+              className="justify-start"
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => handleExport(saver)}
               disabled={isPending}
@@ -150,11 +141,11 @@ const ResultsExportMenu: React.FC<ResultsExportMenuProps> = ({
               {pendingSaver === saver && isPending && (
                 <span className="loading loading-spinner loading-xs ml-2" />
               )}
-            </button>
+            </Button>
           </li>
         ))}
-      </ul>
-    </div>
+      </>
+    </DropdownMenu>
   );
 };
 

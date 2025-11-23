@@ -1,4 +1,7 @@
 import React, { useMemo, useState } from 'react';
+import { IconCheckCircle, IconPlus } from '../ui/icons';
+import { DropdownMenu } from '../ui/DropdownMenu';
+import { Button } from '../ui/Button';
 import RuleItem from './RuleItem';
 import RuleDialog from './RuleDialog';
 import rulesSchema from '../../schemas/rules.json';
@@ -150,39 +153,19 @@ const SingleTargetRulesSection: React.FC<Props> = ({
                         </div>
                         <span className="badge badge-ghost">{qType}</span>
                         {rules.length > 0 && (
-                            <span>
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="size-6">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                </svg>
-                            </span>
+                          <span>
+                                <IconCheckCircle />
+                          </span>
                         )}
                       </div>
 
                       {/* Add rule dropdown */}
-                      <div className="dropdown dropdown-end">
-                        <button className="btn btn-sm btn-primary" tabIndex={0}>
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-4 w-4 mr-1"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                          >
-                            <path d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" />
-                          </svg>
-                          Add Rule
-                        </button>
-                        <ul
-                          className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-64"
-                          tabIndex={0}
-                        >
+                      <DropdownMenu trigger={<><IconPlus />Add Rule</>} align="end">
                           {options.map((key) => (
                             <li key={key}>
-                              <button
-                                className="btn btn-ghost justify-start"
-                                onClick={() => handleAddDropdownSelect(qid, key)}
-                              >
+                              <Button variant="ghost" className="justify-start" onClick={() => handleAddDropdownSelect(qid, key)}>
                                 {friendlyRuleLabel(key)}
-                              </button>
+                              </Button>
                             </li>
                           ))}
                           {options.length === 0 && (
@@ -190,8 +173,7 @@ const SingleTargetRulesSection: React.FC<Props> = ({
                               <span className="opacity-70 px-2 py-1">No compatible rules</span>
                             </li>
                           )}
-                        </ul>
-                      </div>
+                      </DropdownMenu>
                     </div>
 
                     {/* Rules list */}

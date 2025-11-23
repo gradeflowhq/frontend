@@ -1,5 +1,8 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { IconLock, IconChevronLeft, IconChevronRight, IconSave, IconCheckCircle, IconEdit, IconAlertCircle } from '../../components/ui/icons';
+import { Button } from '../../components/ui/Button';
+import { IconButton } from '../../components/ui/IconButton';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../api';
 import ErrorAlert from '../../components/common/ErrorAlert';
@@ -13,13 +16,6 @@ import type {
   GradeAdjustment,
 } from '../../api/models';
 
-const LockIcon: React.FC<{ title?: string }> = ({ title }) => (
-  <span className="inline-flex items-center tooltip" data-tip={title ?? 'Stored encrypted on server'}>
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1 opacity-70" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 1a5 5 0 00-5 5v3H6a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2v-8a2 2 0 00-2-2h-1V6a5 5 0 00-5-5zm-3 8V6a3 3 0 116 0v3H9z" />
-    </svg>
-  </span>
-);
 
 type EditState = Record<string, { points?: number; feedback?: string }>; // keyed by question_id
 
@@ -158,25 +154,37 @@ const GradedSubmissionDetailPage: React.FC = () => {
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="font-mono text-sm badge badge-ghost flex items-center">
+          <Button
+            variant="outline"
+            onClick={() => navigate(`/results/${assessmentId}`)}
+            leftIcon={<IconChevronLeft />}
+          >
+            Back
+          </Button>
+            <span className="font-mono text-sm badge badge-ghost flex items-center">
             {displayStudentId}
-            {enc && <LockIcon title="Stored encrypted on server" />}
+            {enc && (
+              <span className="inline-flex items-center tooltip" data-tip="Stored encrypted on server">
+                <IconLock />
+              </span>
+            )}
           </span>
         </div>
-        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
           {hasAnyChange && (
-            <button
-              className="btn btn-primary"
+            <Button
+              variant="primary"
               onClick={onSave}
               disabled={adjustMutation.isPending}
               title="Save adjustments for edited questions"
+              leftIcon={<IconSave />}
+              loading={adjustMutation.isPending}
             >
-              {adjustMutation.isPending ? 'Saving…' : 'Save Adjustments'}
-            </button>
+              Save Adjustments
+            </Button>
           )}
-          <Link className="btn btn-outline" to={`/results/${assessmentId}`}>Back to Results</Link>
-          <button className="btn" onClick={gotoPrev} disabled={!prevId}>Prev</button>
-          <button className="btn" onClick={gotoNext} disabled={!nextId}>Next</button>
+          <IconButton icon={<IconChevronLeft />} onClick={gotoPrev} disabled={!prevId} aria-label="Previous" />
+          <IconButton icon={<IconChevronRight />} onClick={gotoNext} disabled={!nextId} aria-label="Next" />
         </div>
       </div>
       {adjustMutation.isError && <ErrorAlert error={adjustMutation.error} />}
@@ -226,7 +234,9 @@ const GradedSubmissionDetailPage: React.FC = () => {
             <tr>
               <th>Question ID</th>
               <th>Rule</th>
-              <th>Passed</th>
+              <th title="Passed" aria-label="Passed">
+                <IconCheckCircle />
+              </th>
               <th>Points</th>
               <th>Feedback</th>
               <th>Actions</th>
@@ -254,9 +264,9 @@ const GradedSubmissionDetailPage: React.FC = () => {
 
                   <td className="align-top">
                     {res.passed ? (
-                      <span className="badge badge-success">Passed</span>
+                      <IconCheckCircle className="text-success" title="Passed" aria-label="Passed" />
                     ) : (
-                      <span className="badge badge-error">Failed</span>
+                      <IconAlertCircle className="text-error" title="Failed" aria-label="Failed" />
                     )}
                   </td>
 
@@ -328,13 +338,13 @@ const GradedSubmissionDetailPage: React.FC = () => {
 
                   <td className="align-top">
                     {!isEditing ? (
-                      <button className="btn btn-sm" onClick={() => startEdit(qid, res)}>
+                      <Button size="sm" onClick={() => startEdit(qid, res)} leftIcon={<IconEdit />}>
                         Edit
-                      </button>
+                      </Button>
                     ) : (
-                      <button className="btn btn-sm btn-ghost" onClick={() => cancelEdit(qid)}>
+                      <Button size="sm" variant="ghost" onClick={() => cancelEdit(qid)}>
                         Cancel
-                      </button>
+                      </Button>
                     )}
                   </td>
                 </tr>

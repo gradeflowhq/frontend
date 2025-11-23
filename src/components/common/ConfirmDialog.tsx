@@ -1,4 +1,6 @@
 import React from 'react';
+import { IconTrash, IconCheckCircle } from '../ui/icons';
+import { Button } from '../ui/Button';
 import { createPortal } from 'react-dom';
 
 type ConfirmDialogProps = {
@@ -28,12 +30,23 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         <h3 className="font-bold text-lg">{title}</h3>
         <p className="py-4">{message}</p>
         <div className="modal-action">
-          <button type="button" className="btn btn-ghost" onClick={onCancel}>
+          <Button type="button" variant="ghost" onClick={onCancel}>
             {cancelText}
-          </button>
-          <button type="button" className="btn btn-error" onClick={onConfirm}>
+          </Button>
+          <Button
+            type="button"
+            variant="error"
+            onClick={onConfirm}
+            leftIcon={
+              (confirmText && /delete|remove/i.test(confirmText)) ? (
+                <IconTrash />
+              ) : (
+                <IconCheckCircle />
+              )
+            }
+          >
             {confirmText}
-          </button>
+          </Button>
         </div>
       </div>
       {/* Backdrop closes the modal */}

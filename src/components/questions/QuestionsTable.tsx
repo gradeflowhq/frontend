@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { SchemaForm } from '../common/SchemaForm';
 import ErrorAlert from '../common/ErrorAlert';
+import { Button } from '../ui/Button';
+import { IconInbox, IconSave } from '../ui/icons';
 import questionsSchema from '../../schemas/questions.json';
 
 import type {
@@ -73,7 +75,7 @@ const QuestionsTable: React.FC<Props> = ({
       <div className="hero rounded-box bg-base-200 py-12">
         <div className="hero-content text-center">
           <div className="max-w-md">
-            <h1 className="text-2xl font-bold">No questions</h1>
+            <h1 className="text-2xl font-bold flex items-center justify-center"><IconInbox className='m-2' /> No questions</h1>
             <p className="py-2 opacity-70">Upload submissions to infer questions.</p>
           </div>
         </div>
@@ -169,16 +171,18 @@ const QuestionsTable: React.FC<Props> = ({
                 </td>
 
                 <td className="align-top">
-                  <button
-                    className="btn btn-sm btn-primary"
+                  <Button
+                    size="sm"
+                    variant="primary"
                     disabled={updating}
                     onClick={async () => {
                       const nextQS = buildQuestionSetInput();
                       await onUpdateQuestionSet(nextQS);
                     }}
+                    leftIcon={<IconSave />}
                   >
                     {updating ? 'Saving...' : 'Save'}
-                  </button>
+                  </Button>
                   {updateError && <ErrorAlert error={updateError} className="mt-2" />}
                 </td>
               </tr>

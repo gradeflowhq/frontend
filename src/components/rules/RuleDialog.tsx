@@ -1,4 +1,6 @@
 import React from 'react';
+import { IconSave } from '../ui/icons';
+import { Button } from '../ui/Button';
 import Modal from '../common/Modal';
 import ErrorAlert from '../common/ErrorAlert';
 import { SchemaForm } from '../common/SchemaForm';
@@ -129,10 +131,10 @@ const RuleDialog: React.FC<RuleDialogProps> = ({
       {error && <ErrorAlert error={error} className="mt-2" />}
 
       <div className="modal-action">
-        <button type="button" className="btn btn-ghost" onClick={onClose} disabled={!!isSaving}>Cancel</button>
-        <button type="button" className="btn btn-primary" onClick={() => onSave(draft)} disabled={!!isSaving || !schemaForRender}>
-          {isSaving ? 'Saving...' : 'Save'}
-        </button>
+        <Button type="button" variant="ghost" onClick={onClose} disabled={!!isSaving}>Cancel</Button>
+        <Button type="button" variant="primary" onClick={() => onSave(draft)} disabled={!!isSaving || !schemaForRender} loading={!!isSaving} leftIcon={<IconSave />}>
+          Save
+        </Button>
       </div>
     </Modal>
   );

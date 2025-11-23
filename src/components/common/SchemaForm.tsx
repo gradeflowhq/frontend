@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '../ui/Button';
 import { withTheme } from '@rjsf/core';
 import type { FormProps } from '@rjsf/core';
 import { Theme as DaisyUITheme } from '@rjsf/daisyui';
@@ -55,9 +56,9 @@ export const SchemaForm = <T extends any>({
     >
       {showSubmit && (
         <div className="mt-4">
-          <button type="submit" className="btn btn-primary w-full">
+          <Button type="submit" variant="primary" className="w-full">
             Submit
-          </button>
+          </Button>
         </div>
       )}
     </DaisyUIForm>

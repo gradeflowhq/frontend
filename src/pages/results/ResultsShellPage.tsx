@@ -15,6 +15,8 @@ import ResultsOverviewTab from './ResultsOverviewTab';
 import ResultsStatsTab from './ResultsStatsTab';
 import QuestionAnalysisTab from './QuestionAnalysisTab';
 import ResultsExportMenu from '../../components/results/ResultsExportMenu';
+import { IconChevronLeft } from '../../components/ui/icons';
+import { Button } from '../../components/ui/Button';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle';
 
 const natsort = (a: string, b: string) =>
@@ -133,17 +135,16 @@ const ResultsShellPage: React.FC = () => {
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              onClick={() => navigate(`/assessments/${assessmentId}/rules`)}
+              leftIcon={<IconChevronLeft />}
+            >
+              <span>{assessmentRes?.name ?? 'Assessment'}</span>
+            </Button>
           <h2 className="text-xl font-semibold">Grading Results</h2>
-          <span className="opacity-70">·</span>
-          <span className="font-medium">{assessmentRes?.name ?? 'Assessment'}</span>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            className="btn btn-outline"
-            onClick={() => navigate(`/assessments/${assessmentId}/rules`)}
-          >
-            Back to Assessment
-          </button>
           <ResultsExportMenu
             assessmentId={assessmentId!}
             disabled={items.length === 0}

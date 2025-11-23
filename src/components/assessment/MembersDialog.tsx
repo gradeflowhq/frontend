@@ -1,4 +1,6 @@
 import React, { useState, useCallback } from 'react';
+import { IconPlus } from '../ui/icons';
+import { Button } from '../ui/Button';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Modal from '../common/Modal';
 import ErrorAlert from '../common/ErrorAlert';
@@ -113,14 +115,16 @@ const MembersDialog: React.FC<Props> = ({ open, assessmentId, onClose }) => {
       </div>
 
       <div className="mt-3">
-        <button
+        <Button
           type="button"
-          className="btn btn-primary"
+          variant="primary"
           onClick={() => addMutation.mutate()}
           disabled={addMutation.isPending || !userEmail}
+          leftIcon={<IconPlus />}
+          loading={addMutation.isPending}
         >
-          {addMutation.isPending ? 'Adding...' : 'Add'}
-        </button>
+          Add
+        </Button>
       </div>
 
       {isLoading && <div className="alert alert-info mt-3"><span>Loading members...</span></div>}
@@ -140,14 +144,13 @@ const MembersDialog: React.FC<Props> = ({ open, assessmentId, onClose }) => {
       )}
 
       <div className="modal-action">
-        <button
+        <Button
           type="button"
-          className="btn"
           onClick={onClose}
           disabled={addMutation.isPending || setRoleMutation.isPending || removeMutation.isPending}
         >
           Close
-        </button>
+        </Button>
       </div>
 
       {/* Confirm delete dialog */}

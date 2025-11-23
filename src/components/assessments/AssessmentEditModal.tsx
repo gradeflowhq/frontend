@@ -1,7 +1,9 @@
 import React from 'react';
+import { IconEdit } from '../ui/icons';
 import Modal from '../common/Modal';
 import { SchemaForm } from '../common/SchemaForm';
 import ErrorAlert from '../common/ErrorAlert';
+import { Button } from '../ui/Button';
 import requestsSchema from '../../schemas/requests.json';
 import type { AssessmentUpdateRequest, AssessmentResponse } from '../../api/models';
 
@@ -31,7 +33,7 @@ const AssessmentEditModal: React.FC<Props> = ({ openItem, isSubmitting, error, o
 
   return (
     <Modal open={!!openItem} onClose={onClose}>
-      <h3 className="font-bold text-lg">Edit Assessment</h3>
+      <h3 className="font-bold text-lg flex items-center gap-2">Edit Assessment</h3>
       {openItem && (
         <SchemaForm<AssessmentUpdateRequest>
           schema={schema}
@@ -48,9 +50,9 @@ const AssessmentEditModal: React.FC<Props> = ({ openItem, isSubmitting, error, o
       )}
       {error && <ErrorAlert error={error} className="mt-2" />}
       <div className="modal-action">
-        <button type="button" className="btn" onClick={onClose} disabled={isSubmitting}>
+        <Button type="button" onClick={onClose} disabled={isSubmitting}>
           Close
-        </button>
+        </Button>
       </div>
     </Modal>
   );

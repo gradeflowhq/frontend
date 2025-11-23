@@ -1,4 +1,6 @@
 import React from 'react';
+import { IconUpload, IconTrash } from '../ui/icons';
+import { Button } from '../ui/Button';
 
 type SubmissionsHeaderProps = {
   onLoadCsv: () => void;
@@ -15,13 +17,13 @@ const SubmissionsHeader: React.FC<SubmissionsHeaderProps> = ({
     <div className="mb-4 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
       <h2 className="card-title">Submissions</h2>
       <div className="flex gap-2">
-        <button type="button" className="btn" onClick={onLoadCsv}>
+        <Button type="button" variant="ghost" onClick={onLoadCsv} leftIcon={<IconUpload />}>
           Load from CSV
-        </button>
+        </Button>
         {showDeleteAll && (
-        <button type="button" className="btn btn-error" onClick={onDeleteAll}>
+        <Button type="button" variant="error" onClick={onDeleteAll} leftIcon={<IconTrash />}>
           Delete All
-        </button>
+        </Button>
         )}
       </div>
     </div>

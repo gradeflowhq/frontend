@@ -1,4 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
+import { IconUpload } from '../ui/icons';
+import { Button } from '../ui/Button';
 import Papa from 'papaparse';
 import Modal from '../common/Modal';
 import ErrorAlert from '../common/ErrorAlert';
@@ -241,18 +243,20 @@ const SubmissionsLoadWizardModal: React.FC<Props> = ({
       {error && <ErrorAlert error={error} className="mt-4" />}
 
       <div className="modal-action">
-        <button type="button" className="btn btn-ghost" onClick={onClose} disabled={isSubmitting}>
+        <Button type="button" variant="ghost" onClick={onClose} disabled={isSubmitting}>
           Cancel
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className="btn btn-primary"
+          variant="primary"
           onClick={onSubmit}
           disabled={isSubmitting || !canSubmit}
           title={!canSubmit ? 'Select file, mapping, and passphrase (if encrypting)' : 'Upload'}
+          loading={isSubmitting}
+          leftIcon={<IconUpload />}
         >
-          {isSubmitting ? 'Uploading...' : 'Upload'}
-        </button>
+          Upload
+        </Button>
       </div>
     </Modal>
   );

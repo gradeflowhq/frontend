@@ -1,4 +1,6 @@
 import React from 'react';
+import { IconEdit, IconTrash } from '../ui/icons';
+import { Button } from '../ui/Button';
 import { HIDE_KEYS_SINGLE } from '../../utils/rulesConstants';
 import { getRuleDefinitions, isRuleObject, prettifyKey } from '../../utils/rulesHelpers';
 
@@ -98,14 +100,14 @@ const RuleObjectView: React.FC<{
         {showActions && (onEdit || onDelete) && (
           <div className="flex items-center gap-2">
             {onEdit && (
-              <button className="btn btn-xs" onClick={() => onEdit(obj)}>
+              <Button size="xs" onClick={() => onEdit(obj)} leftIcon={<IconEdit />}>
                 Edit
-              </button>
+              </Button>
             )}
             {onDelete && (
-              <button className="btn btn-xs btn-error" onClick={() => onDelete(obj)}>
+              <Button size="xs" variant="error" onClick={() => onDelete(obj)} leftIcon={<IconTrash />}>
                 Delete
-              </button>
+              </Button>
             )}
           </div>
         )}

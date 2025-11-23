@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import ErrorAlert from '../components/common/ErrorAlert';
+import { Button } from '../components/ui/Button';
+import { IconPlus } from '../components/ui/icons';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import AssessmentsTable from '../components/assessments/AssessmentsTable';
 import AssessmentCreateModal from '../components/assessments/AssessmentCreateModal';
@@ -78,9 +80,9 @@ const AssessmentsPage: React.FC = () => {
       <PageHeader
         title="Assessments"
         actions={
-          <button type="button" className="btn btn-primary" onClick={() => setShowCreate(true)}>
-            New Assessment
-          </button>
+          <Button variant="ghost" onClick={() => setShowCreate(true)} leftIcon={<IconPlus />}>
+            Add Assessment
+          </Button>
         }
       />
 

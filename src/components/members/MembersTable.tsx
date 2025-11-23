@@ -1,4 +1,6 @@
 import React, { useMemo, useState } from 'react';
+import { IconSave, IconTrash, IconInbox } from '../ui/icons';
+import { Button } from '../ui/Button';
 import {
   createColumnHelper,
   flexRender,
@@ -47,12 +49,9 @@ const MembersTable: React.FC<MembersTableProps> = ({ items = [], onSetRole, onRe
                 <option value="editor">editor</option>
                 <option value="viewer">viewer</option>
               </select>
-              <button
-                className="btn btn-xs"
-                onClick={() => onSetRole(userId, (pendingRole[userId] ?? user.role))}
-              >
+              <Button size="xs" onClick={() => onSetRole(userId, (pendingRole[userId] ?? user.role))} leftIcon={<IconSave />}>
                 Save
-              </button>
+              </Button>
             </div>
           );
         },
@@ -64,9 +63,9 @@ const MembersTable: React.FC<MembersTableProps> = ({ items = [], onSetRole, onRe
           const user = row.original;
           return (
             <div className="flex gap-2">
-              <button className="btn btn-sm btn-error" onClick={() => onRemove(user.id)}>
+              <Button size="sm" variant="error" onClick={() => onRemove(user.id)} leftIcon={<IconTrash />}>
                 Remove
-              </button>
+              </Button>
             </div>
           );
         },
@@ -87,7 +86,10 @@ const MembersTable: React.FC<MembersTableProps> = ({ items = [], onSetRole, onRe
       <div className="hero rounded-box bg-base-200 py-12">
         <div className="hero-content text-center">
           <div className="max-w-md">
-            <h1 className="text-2xl font-bold">No members</h1>
+            <h1 className="text-2xl font-bold flex items-center justify-center">
+              <IconInbox />
+              No members
+            </h1>
             <p className="py-2 opacity-70">Add members using the input above.</p>
           </div>
         </div>

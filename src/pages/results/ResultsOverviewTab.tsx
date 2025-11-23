@@ -1,14 +1,9 @@
 import React from 'react';
+import { IconLock, IconEye } from '../../components/ui/icons';
+import { Button } from '../../components/ui/Button';
 import { isEncrypted } from '../../utils/crypto';
 import type { AdjustableGradedSubmission, AdjustableQuestionResult } from '../../api/models';
 
-const LockIcon: React.FC<{ title?: string }> = ({ title }) => (
-  <span className="inline-flex items-center tooltip" data-tip={title ?? 'Stored encrypted on server'}>
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1 opacity-70" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 1a5 5 0 00-5 5v3H6a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2v-8a2 2 0 00-2-2h-1V6a5 5 0 00-5-5zm-3 8V6a3 3 0 116 0v3H9z" />
-    </svg>
-  </span>
-);
 
 type Props = {
   assessmentId: string;
@@ -61,7 +56,11 @@ const ResultsOverviewTab: React.FC<Props> = ({ assessmentId, items, questionIds,
                 <td>
                   <div className="flex items-center">
                     <span className="font-mono text-sm">{displaySid}</span>
-                    {enc && <LockIcon title="Stored encrypted on server" />}
+                    {enc && (
+                      <span className="inline-flex items-center tooltip" data-tip="Stored encrypted on server">
+                        <IconLock />
+                      </span>
+                    )}
                   </div>
                 </td>
 
@@ -99,15 +98,16 @@ const ResultsOverviewTab: React.FC<Props> = ({ assessmentId, items, questionIds,
                 </td>
 
                 <td>
-                  <button
-                    className="btn btn-sm"
-                    onClick={() =>
-                      navigate(`/results/${assessmentId}/${encodeURIComponent(gs.student_id)}`)
-                    }
-                    title="View submission details"
-                  >
-                    View
-                  </button>
+                    <Button
+                      size="sm"
+                      onClick={() =>
+                        navigate(`/results/${assessmentId}/${encodeURIComponent(gs.student_id)}`)
+                      }
+                      leftIcon={<IconEye />}
+                      title="View submission details"
+                    >
+                      View
+                    </Button>
                 </td>
               </tr>
             );

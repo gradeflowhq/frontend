@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Modal from './Modal';
+import { Button } from '../ui/Button';
 
 type Props = {
   storageKey: string;              // e.g., submissions_passphrase:<assessmentId>
@@ -68,17 +69,12 @@ const EncryptedDataGuard: React.FC<Props> = ({ storageKey, encryptedDetected, on
         </div>
       </div>
       <div className="modal-action">
-        <button type="button" className="btn btn-ghost" onClick={handleIgnore}>
+        <Button type="button" variant="ghost" onClick={handleIgnore}>
           Ignore
-        </button>
-        <button
-          type="button"
-          className="btn btn-primary"
-          onClick={handleUse}
-          disabled={!passphrase}
-        >
+        </Button>
+        <Button type="button" variant="primary" onClick={handleUse} disabled={!passphrase}>
           Use Passphrase
-        </button>
+        </Button>
       </div>
     </Modal>
   );

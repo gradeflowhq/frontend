@@ -1,4 +1,6 @@
 import React from 'react';
+import { IconChevronDown, IconLogOut } from '../ui/icons';
+import { Button } from '../ui/Button';
 import { Link } from 'react-router-dom';
 
 type NavbarProps = {
@@ -18,27 +20,16 @@ const Navbar: React.FC<NavbarProps> = ({ username, onLogout }) => {
         <div className="dropdown dropdown-end">
           <label tabIndex={0} className="btn btn-ghost">
             <span className="mr-2">{username}</span>
-            <svg
-              className="h-4 w-4 opacity-70"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fillRule="evenodd"
-                d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.08 1.04l-4.25 4.25a.75.75 0 01-1.06 0L5.21 8.27a.75.75 0 01.02-1.06z"
-                clipRule="evenodd"
-              />
-            </svg>
+            <IconChevronDown />
           </label>
-          <ul
+            <ul
             tabIndex={0}
             className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-48"
           >
             <li>
-              <button className="btn btn-ghost justify-start" onClick={onLogout}>
+              <Button variant="ghost" className="justify-start" onClick={onLogout} leftIcon={<IconLogOut />}>
                 Logout
-              </button>
+              </Button>
             </li>
           </ul>
         </div>

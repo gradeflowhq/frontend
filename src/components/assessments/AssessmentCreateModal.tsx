@@ -2,6 +2,7 @@ import React from 'react';
 import Modal from '../common/Modal';
 import { SchemaForm } from '../common/SchemaForm';
 import ErrorAlert from '../common/ErrorAlert';
+import { Button } from '../ui/Button';
 import requestsSchema from '../../schemas/requests.json';
 import type { AssessmentCreateRequest } from '../../api/models';
 
@@ -43,9 +44,9 @@ const AssessmentCreateModal: React.FC<Props> = ({ open, isSubmitting, error, onC
       />
       {error && <ErrorAlert error={error} className="mt-2" />}
       <div className="modal-action">
-        <button type="button" className="btn" onClick={onClose} disabled={isSubmitting}>
+        <Button type="button" onClick={onClose} disabled={isSubmitting}>
           Close
-        </button>
+        </Button>
       </div>
     </Modal>
   );

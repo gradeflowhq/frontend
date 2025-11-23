@@ -1,4 +1,7 @@
 import React, { useMemo, useState } from 'react';
+import { IconPlus } from '../ui/icons';
+import { DropdownMenu } from '../ui/DropdownMenu';
+import { Button } from '../ui/Button';
 import RuleItem from './RuleItem';
 import RuleDialog from './RuleDialog';
 import rulesSchema from '../../schemas/rules.json';
@@ -94,21 +97,18 @@ const MultiTargetRulesSection: React.FC<Props> = ({ rubric, onReplaceRubric, sav
         <h3 className="text-lg font-semibold">Multi Target Rules</h3>
 
         {/* DaisyUI dropdown for Add Rule */}
-        <div className="dropdown dropdown-end">
-          <button className="btn btn-sm" tabIndex={0}>Add Rule…</button>
-          <ul className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-64" tabIndex={0}>
+        <DropdownMenu trigger={<><IconPlus />Add Rule</>} align="end">
             {multiQuestionRuleKeys.map((key) => (
               <li key={key}>
-                <button className="btn btn-ghost justify-start" onClick={() => handleAddDropdownSelect(key)}>
+                <Button variant="ghost" className="justify-start" onClick={() => handleAddDropdownSelect(key)}>
                   {friendlyRuleLabel(key)}
-                </button>
+                </Button>
               </li>
             ))}
             {multiQuestionRuleKeys.length === 0 && (
               <li><span className="opacity-70 px-2 py-1">No multi-target rule types</span></li>
             )}
-          </ul>
-        </div>
+        </DropdownMenu>
       </div>
 
       {multiRules.length === 0 ? (

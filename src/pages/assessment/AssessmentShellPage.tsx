@@ -5,6 +5,7 @@ import PageHeader from '../../components/common/PageHeader';
 import ErrorAlert from '../../components/common/ErrorAlert';
 import AssessmentEditModal from '../../components/assessments/AssessmentEditModal';
 import SettingsDropdown from '../../components/assessment/SettingsDropdown';
+import { Button } from '../../components/ui/Button';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import MembersDialog from '../../components/assessment/MembersDialog';
 import { api } from '../../api';
@@ -139,30 +140,30 @@ const AssessmentShellPage: React.FC = () => {
           <div className="flex gap-2 items-center">
             {/* Grade button appears when at least one rule is set */}
             {rulesCount > 0 && (
-              <button
+              <Button
                 type="button"
-                className="btn btn-outline btn-primary"
+                variant="outline"
+                className="btn-primary"
                 onClick={handleGradeClick}
                 disabled={gradeMutation.isPending}
               >
                 {gradeMutation.isPending ? 'Grading…' : 'Grade submissions'}
-              </button>
+              </Button>
             )}
 
             {/* Results link appears only when grading results exist */}
             {hasGrading && (
-              <button
+              <Button
                 type="button"
-                className="btn btn-outline"
+                variant="outline"
                 onClick={() => navigate(`/results/${assessmentId}`)}
                 title="View grading results"
               >
                 Results
-              </button>
+              </Button>
             )}
 
             <SettingsDropdown
-              assessmentId={assessmentId!}
               onEditAssessment={() => setShowEdit(true)}
               onOpenMembers={() => setShowMembers(true)}
             />

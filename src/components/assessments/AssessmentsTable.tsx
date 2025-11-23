@@ -1,4 +1,6 @@
 import React, { useMemo } from 'react';
+import { IconEdit, IconTrash, IconInbox } from '../ui/icons';
+import { Button } from '../ui/Button';
 import {
   createColumnHelper,
   flexRender,
@@ -21,14 +23,10 @@ const AssessmentsTable: React.FC<AssessmentsTableProps> = ({ items, onOpen, onEd
     () => [
       columnHelper.accessor('name', {
         header: 'Name',
-        cell: ({ row, getValue }) => (
-          <button
-            className="btn btn-link p-0 no-underline font-medium"
-            onClick={() => onOpen(row.original)}
-            title="Open assessment"
-          >
+          cell: ({ row, getValue }) => (
+          <Button variant="link" className="p-0 no-underline font-medium" onClick={() => onOpen(row.original)} title="Open assessment">
             {getValue()}
-          </button>
+          </Button>
         ),
       }),
       columnHelper.accessor('description', {
@@ -50,12 +48,12 @@ const AssessmentsTable: React.FC<AssessmentsTableProps> = ({ items, onOpen, onEd
           const item = row.original;
           return (
             <div className="flex flex-wrap gap-2">
-              <button className="btn btn-sm" onClick={() => onEdit(item)} title="Edit">
+              <Button size="sm" onClick={() => onEdit(item)} title="Edit" leftIcon={<IconEdit />}>
                 Edit
-              </button>
-              <button className="btn btn-sm btn-error" onClick={() => onDelete(item)} title="Delete">
+              </Button>
+              <Button size="sm" variant="error" onClick={() => onDelete(item)} title="Delete" leftIcon={<IconTrash />}>
                 Delete
-              </button>
+              </Button>
             </div>
           );
         },
@@ -76,7 +74,10 @@ const AssessmentsTable: React.FC<AssessmentsTableProps> = ({ items, onOpen, onEd
       <div className="hero rounded-box bg-base-200 py-12">
         <div className="hero-content text-center">
           <div className="max-w-md">
-            <h1 className="text-2xl font-bold">No assessments</h1>
+            <h1 className="text-2xl font-bold flex items-center justify-center">
+              <IconInbox />
+              No assessments
+            </h1>
             <p className="py-2 opacity-70">
               Create your first assessment using the “New Assessment” button above.
             </p>
