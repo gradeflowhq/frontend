@@ -9,6 +9,7 @@ import { useAuthStore } from '../state/authStore';
 import othersSchema from '../schemas/others.json';
 import type { BodyIssueTokenAuthTokenPost, TokenPairResponse } from '../api/models';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import HiddenAwareFieldTemplate from '../components/common/HiddenAwareFieldTemplate';
 
 const getLoginSchema = () => {
   const schema = (othersSchema as any)['Body_issue_token_auth_token_post'];
@@ -21,12 +22,16 @@ const LoginPage: React.FC = () => {
   const setTokens = useAuthStore((s) => s.setTokens);
   const schema = useMemo(() => getLoginSchema(), []);
 
+  // Keys we never want to render (global hide via HiddenAwareFieldTemplate + formContext)
+  const hideKeys = useMemo(() => new Set(['grant_type', 'scope', 'client_id', 'client_secret']), []);
+
   const uiSchema = useMemo(
     () => ({
       'ui:title': '',
       'ui:options': { label: true },
       username: { 'ui:widget': 'email', 'ui:options': { inputType: 'email' } },
       password: { 'ui:widget': 'password', 'ui:options': { inputType: 'password' } },
+      // Local hiding still retained; global hide will also suppress rendering robustly
       grant_type: { 'ui:widget': 'hidden', 'ui:title': '', 'ui:options': { label: false } },
       scope: { 'ui:widget': 'hidden', 'ui:title': '', 'ui:options': { label: false } },
       client_id: { 'ui:widget': 'hidden', 'ui:title': '', 'ui:options': { label: false } },
@@ -35,10 +40,13 @@ const LoginPage: React.FC = () => {
     []
   );
 
+  const templates = useMemo(() => ({ FieldTemplate: HiddenAwareFieldTemplate }), []);
+  const formContext = useMemo(() => ({ hideKeys }), [hideKeys]);
+
   const { mutateAsync, isPending, isError, error, isSuccess } = useMutation({
     mutationKey: ['auth', 'login'],
     mutationFn: async (payload: BodyIssueTokenAuthTokenPost) => {
-      const res = await api.issueTokenAuthTokenPost(payload); // Orval encodes URL form
+      const res = await api.issueTokenAuthTokenPost(payload);
       return res.data as TokenPairResponse;
     },
     onSuccess: (tokenPair) => {
@@ -52,6 +60,8 @@ const LoginPage: React.FC = () => {
       <SchemaForm<BodyIssueTokenAuthTokenPost>
         schema={schema}
         uiSchema={uiSchema}
+        templates={templates}       // Use HiddenAwareFieldTemplate
+        formContext={formContext}   // Provide global hide keys
         onSubmit={async ({ formData }) => {
           await mutateAsync(formData);
         }}

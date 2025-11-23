@@ -14,7 +14,7 @@ import {
   findSchemaKeyByType,
   isSingleTargetKey,
 } from '../../utils/rulesHelpers';
-import HiddenAwareFieldTemplate from './HiddenAwareFieldTemplate';
+import HiddenAwareFieldTemplate from '../common/HiddenAwareFieldTemplate';
 
 type RuleDialogProps = {
   open: boolean;
