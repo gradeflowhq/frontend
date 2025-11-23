@@ -8,6 +8,7 @@ import { api } from '../../api';
 import ErrorAlert from '../../components/common/ErrorAlert';
 import EncryptedDataGuard from '../../components/common/EncryptedDataGuard';
 import { decryptString, isEncrypted } from '../../utils/crypto';
+import { friendlyRuleLabel } from '../../utils/rulesHelpers';
 import type {
   GradingResponse,
   AdjustableGradedSubmission,
@@ -259,7 +260,7 @@ const GradedSubmissionDetailPage: React.FC = () => {
                   </td>
 
                   <td className="align-top">
-                    <span className="badge badge-ghost font-mono text-xs">{res.rule}</span>
+                    <span className="badge badge-ghost font-mono text-xs">{friendlyRuleLabel(res.rule)}</span>
                   </td>
 
                   <td className="align-top">
