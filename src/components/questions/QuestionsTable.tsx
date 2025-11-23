@@ -2,8 +2,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { SchemaForm } from '../common/SchemaForm';
 import ErrorAlert from '../common/ErrorAlert';
 import { Button } from '../ui/Button';
-import { IconInbox, IconSave } from '../ui/icons';
+import { IconInbox, IconSave, IconEdit } from '../ui/icons';
 import questionsSchema from '../../schemas/questions.json';
+import QuestionsConfigRender from './QuestionsConfigRender';
 
 import type {
   QuestionSetInput,
@@ -35,13 +36,13 @@ const QuestionsTable: React.FC<Props> = ({
   updateError,
 }) => {
   const [localMap, setLocalMap] = useState<QuestionSetOutputQuestionMap>({});
+  const [openEdits, setOpenEdits] = useState<Record<string, boolean>>({});
 
-  // Sync local editable map with source
   useEffect(() => {
     setLocalMap(questionMap ?? {});
+    setOpenEdits({});
   }, [questionMap]);
 
-  // Natural sort of question IDs: q1, q2, q10 ...
   const ids = useMemo(
     () =>
       Object.keys(localMap ?? {}).sort((a, b) =>
@@ -50,7 +51,6 @@ const QuestionsTable: React.FC<Props> = ({
     [localMap]
   );
 
-  // Dumb schema selection: choose root subschema by type, attach all definitions so refs resolve
   const selectRootSchema = (type: string | undefined) => {
     const dict = questionsSchema as any;
     switch (type) {
@@ -75,7 +75,7 @@ const QuestionsTable: React.FC<Props> = ({
       <div className="hero rounded-box bg-base-200 py-12">
         <div className="hero-content text-center">
           <div className="max-w-md">
-            <h1 className="text-2xl font-bold flex items-center justify-center"><IconInbox className='m-2' /> No questions</h1>
+            <h1 className="text-2xl font-bold flex items-center justify-center"><IconInbox className="m-2" /> No questions</h1>
             <p className="py-2 opacity-70">Upload submissions to infer questions.</p>
           </div>
         </div>
@@ -101,6 +101,7 @@ const QuestionsTable: React.FC<Props> = ({
             const type = (def?.type as string) ?? 'TEXT';
             const rootSchema = selectRootSchema(type);
             const examples = examplesByQuestion[qid] ?? [];
+            const isEditing = !!openEdits[qid];
 
             return (
               <tr key={qid}>
@@ -109,46 +110,49 @@ const QuestionsTable: React.FC<Props> = ({
                 </td>
 
                 <td className="align-top">
-                  <select
-                    className="select select-bordered select-sm"
-                    value={type}
-                    onChange={(e) => {
-                      const nextType = e.target.value;
-                      // Keep frontend dumb: only change the type; config/options are edited via the form
-                      setLocalMap((prev) => ({
-                        ...prev,
-                        [qid]: { ...(prev[qid] as any), type: nextType },
-                      }));
-                    }}
-                  >
-                    <option value="TEXT">TEXT</option>
-                    <option value="NUMERIC">NUMERIC</option>
-                    <option value="CHOICE">CHOICE</option>
-                    <option value="MULTI_VALUED">MULTI_VALUED</option>
-                  </select>
+                  {!isEditing ? (
+                    <span className="badge badge-ghost">{type}</span>
+                  ) : (
+                    <select
+                      className="select select-bordered select-sm"
+                      value={type}
+                      onChange={(e) => {
+                        const nextType = e.target.value;
+                        setLocalMap((prev) => ({
+                          ...prev,
+                          [qid]: { ...(prev[qid] as any), type: nextType },
+                        }));
+                      }}
+                    >
+                      <option value="TEXT">TEXT</option>
+                      <option value="NUMERIC">NUMERIC</option>
+                      <option value="CHOICE">CHOICE</option>
+                      <option value="MULTI_VALUED">MULTI_VALUED</option>
+                    </select>
+                  )}
                 </td>
 
                 <td className="align-top">
-                  {rootSchema ? (
+                  {!isEditing ? (
+                    <QuestionsConfigRender value={def} />
+                  ) : rootSchema ? (
                     <div className="max-w-xl">
                       <SchemaForm<any>
-                        // Attach entire questions schema under definitions so "#/definitions/..." refs resolve
                         schema={{ ...rootSchema, definitions: questionsSchema as any }}
                         uiSchema={{
                           'ui:title': '',
                           'ui:options': { label: true },
-                          "ui:submitButtonOptions": { norender: true },
+                          'ui:submitButtonOptions': { norender: true },
                           type: { 'ui:widget': 'hidden', 'ui:title': '', 'ui:options': { label: false } },
                         }}
-                        formData={def as any} // pass current def as-is
+                        formData={def as any}
                         onChange={({ formData }) => {
-                          // Shallow-merge; preserve current type
                           const next = { ...(formData || {}), type };
                           setLocalMap((prev) => ({ ...prev, [qid]: next as any }));
                         }}
                         onSubmit={() => {}}
                         formProps={{ noHtml5Validate: true }}
-                        showSubmit={false} // only one Save button per row (last column)
+                        showSubmit={false}
                       />
                     </div>
                   ) : (
@@ -171,18 +175,42 @@ const QuestionsTable: React.FC<Props> = ({
                 </td>
 
                 <td className="align-top">
-                  <Button
-                    size="sm"
-                    variant="primary"
-                    disabled={updating}
-                    onClick={async () => {
-                      const nextQS = buildQuestionSetInput();
-                      await onUpdateQuestionSet(nextQS);
-                    }}
-                    leftIcon={<IconSave />}
-                  >
-                    {updating ? 'Saving...' : 'Save'}
-                  </Button>
+                  {!isEditing ? (
+                    <Button
+                      size="sm"
+                      variant="primary"
+                      onClick={() => setOpenEdits((prev) => ({ ...prev, [qid]: true }))}
+                      leftIcon={<IconEdit />}
+                    >
+                      Edit
+                    </Button>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="primary"
+                        disabled={updating}
+                        onClick={async () => {
+                          const nextQS = buildQuestionSetInput();
+                          await onUpdateQuestionSet(nextQS);
+                          setOpenEdits((prev) => ({ ...prev, [qid]: false }));
+                        }}
+                        leftIcon={<IconSave />}
+                      >
+                        {updating ? 'Saving...' : 'Save'}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setLocalMap((prev) => ({ ...prev, [qid]: questionMap[qid] as any }));
+                          setOpenEdits((prev) => ({ ...prev, [qid]: false }));
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  )}
                   {updateError && <ErrorAlert error={updateError} className="mt-2" />}
                 </td>
               </tr>
