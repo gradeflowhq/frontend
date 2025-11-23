@@ -1,33 +1,49 @@
 import React, { useEffect, useState } from 'react';
 import Modal from './Modal';
 import { Button } from '../ui/Button';
+import { normalizePresent, readPassphrase, writePassphrase } from '../../utils/passphrase';
 
 type Props = {
-  storageKey: string;              // e.g., submissions_passphrase:<assessmentId>
-  encryptedDetected: boolean;      // whether page contains encrypted data
-  onPassphraseReady: (passphrase: string | null) => void; // notify parent to use/hide
+  storageKey: string;                         // e.g., submissions_passphrase:<assessmentId>
+  encryptedDetected: boolean;                 // whether page contains encrypted data
+  onPassphraseReady: (passphrase: string | null) => void;
+  currentPassphrase?: string | null;          // optional: parent-provided passphrase state
 };
 
-const EncryptedDataGuard: React.FC<Props> = ({ storageKey, encryptedDetected, onPassphraseReady }) => {
+const EncryptedDataGuard: React.FC<Props> = ({
+  storageKey,
+  encryptedDetected,
+  onPassphraseReady,
+  currentPassphrase,
+}) => {
   const [open, setOpen] = useState(false);
-  const [passphrase, setPassphrase] = useState('');
+  const [passphraseInput, setPassphraseInput] = useState('');
   const [store, setStore] = useState(false);
 
+  // Decide whether to open based on encryptedDetected and effective passphrase (from prop or storage)
   useEffect(() => {
     if (!encryptedDetected) return;
-    const saved = localStorage.getItem(storageKey);
-    if (saved) {
-      onPassphraseReady(saved);
+
+    const effective = normalizePresent(currentPassphrase ?? readPassphrase(storageKey));
+    if (effective) {
+      onPassphraseReady(effective);
       setOpen(false);
     } else {
       setOpen(true);
     }
-  }, [encryptedDetected, storageKey, onPassphraseReady]);
+  }, [encryptedDetected, storageKey, currentPassphrase, onPassphraseReady]);
+
+  // If parent later loads a passphrase, close the guard
+  useEffect(() => {
+    const effective = normalizePresent(currentPassphrase ?? null);
+    if (effective) setOpen(false);
+  }, [currentPassphrase]);
 
   const handleUse = () => {
-    if (!passphrase) return;
-    if (store) localStorage.setItem(storageKey, passphrase);
-    onPassphraseReady(passphrase);
+    const effective = normalizePresent(passphraseInput);
+    if (!effective) return;
+    if (store) writePassphrase(storageKey, effective);
+    onPassphraseReady(effective);
     setOpen(false);
   };
 
@@ -35,6 +51,8 @@ const EncryptedDataGuard: React.FC<Props> = ({ storageKey, encryptedDetected, on
     onPassphraseReady(null);
     setOpen(false);
   };
+
+  if (!open) return null;
 
   return (
     <Modal open={open} onClose={handleIgnore} boxClassName="w-full max-w-md">
@@ -48,8 +66,8 @@ const EncryptedDataGuard: React.FC<Props> = ({ storageKey, encryptedDetected, on
           <input
             type="password"
             className="input input-bordered w-full"
-            value={passphrase}
-            onChange={(e) => setPassphrase(e.target.value)}
+            value={passphraseInput}
+            onChange={(e) => setPassphraseInput(e.target.value)}
             placeholder="Enter passphrase"
           />
         </div>
@@ -72,7 +90,7 @@ const EncryptedDataGuard: React.FC<Props> = ({ storageKey, encryptedDetected, on
         <Button type="button" variant="ghost" onClick={handleIgnore}>
           Ignore
         </Button>
-        <Button type="button" variant="primary" onClick={handleUse} disabled={!passphrase}>
+        <Button type="button" variant="primary" onClick={handleUse} disabled={!passphraseInput}>
           Use Passphrase
         </Button>
       </div>

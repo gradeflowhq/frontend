@@ -9,15 +9,15 @@ import {
 import type { ColumnDef } from '@tanstack/react-table';
 import type { RawSubmission } from '../../api/models';
 import { isEncrypted } from '../../utils/crypto';
+import DecryptedText from '../common/DecryptedText';
 
 type SubmissionsTableProps = {
   items: RawSubmission[];
-  displayedIdsMap: Map<string, string>;
+  passphrase?: string | null;
   onEncryptionDetected?: () => void;
 };
 
-
-const SubmissionsTable: React.FC<SubmissionsTableProps> = ({ items, displayedIdsMap, onEncryptionDetected }) => {
+const SubmissionsTable: React.FC<SubmissionsTableProps> = ({ items, passphrase, onEncryptionDetected }) => {
   const columnHelper = createColumnHelper<RawSubmission>();
 
   const questionKeys = useMemo(() => {
@@ -38,16 +38,15 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({ items, displayedIds
         cell: ({ row }) => {
           const sid = row.original.student_id;
           const enc = isEncrypted(sid);
-          if (enc && onEncryptionDetected) onEncryptionDetected();
-          const display = displayedIdsMap.get(sid) ?? (enc ? '••••' : sid);
           return (
             <div className="flex items-center">
-              <span className="font-mono text-sm">{display}</span>
-              {enc && (
-                <span className="inline-flex items-center tooltip" data-tip="Stored encrypted on server">
-                  <IconLock />
-                </span>
-              )}
+              <DecryptedText
+                value={sid}
+                passphrase={passphrase}
+                mono
+                size="sm"
+                onEncryptedDetected={onEncryptionDetected}
+              />
             </div>
           );
         },
@@ -79,7 +78,7 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({ items, displayedIds
     }
 
     return cols;
-  }, [columnHelper, displayedIdsMap, onEncryptionDetected, questionKeys]);
+  }, [columnHelper, passphrase, onEncryptionDetected, questionKeys]);
 
   const table = useReactTable({
     data: items,
@@ -94,7 +93,7 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({ items, displayedIds
         <div className="hero-content text-center">
           <div className="max-w-md">
             <h1 className="text-2xl font-bold flex items-center justify-center">
-              <IconInbox className='m-2' />
+              <IconInbox className="m-2" />
               No submissions
             </h1>
             <p className="py-2 opacity-70">Load submissions using the actions above.</p>

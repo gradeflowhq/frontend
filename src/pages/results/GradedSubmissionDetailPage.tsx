@@ -1,5 +1,12 @@
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
-import { IconLock, IconChevronLeft, IconChevronRight, IconSave, IconCheckCircle, IconEdit, IconAlertCircle } from '../../components/ui/icons';
+import React, { useMemo, useState, useCallback } from 'react';
+import {
+  IconChevronLeft,
+  IconChevronRight,
+  IconSave,
+  IconCheckCircle,
+  IconEdit,
+  IconAlertCircle,
+} from '../../components/ui/icons';
 import { Button } from '../../components/ui/Button';
 import { IconButton } from '../../components/ui/IconButton';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -7,7 +14,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../../api';
 import ErrorAlert from '../../components/common/ErrorAlert';
 import EncryptedDataGuard from '../../components/common/EncryptedDataGuard';
-import { decryptString, isEncrypted } from '../../utils/crypto';
+import DecryptedText from '../../components/common/DecryptedText';
+import { isEncrypted } from '../../utils/crypto';
+import { buildPassphraseKey } from '../../utils/passphrase';
+import { usePassphrase } from '../../hooks/usePassphrase';
 import { friendlyRuleLabel } from '../../utils/rulesHelpers';
 import type {
   GradingResponse,
@@ -17,7 +27,6 @@ import type {
   GradeAdjustment,
 } from '../../api/models';
 
-
 type EditState = Record<string, { points?: number; feedback?: string }>; // keyed by question_id
 
 const GradedSubmissionDetailPage: React.FC = () => {
@@ -26,56 +35,45 @@ const GradedSubmissionDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const qc = useQueryClient();
 
-  // Passphrase and decrypted student ID
-  const storageKey = `submissions_passphrase:${assessmentId}`;
-  const [passphrase, setPassphrase] = useState<string | null>(() => localStorage.getItem(storageKey));
-  const [encryptedDetected, setEncryptedDetected] = useState(false);
-  const [displayStudentId, setDisplayStudentId] = useState<string>(encodedStudentId);
+  if (!assessmentId) {
+    return <div className="alert alert-error"><span>Assessment ID is missing.</span></div>;
+  }
+
+  // Passphrase state via hook (standardised storage key)
+  const storageKey = buildPassphraseKey(assessmentId);
+  const { passphrase, setPassphrase } = usePassphrase(storageKey);
+
+  // Encrypted data guard prompt only when the encoded ID is encrypted
+  const [encryptedDetected] = useState<boolean>(() => isEncrypted(encodedStudentId));
 
   const onPassphraseReady = useCallback((pp: string | null) => {
     setPassphrase(pp);
-  }, []);
+  }, [setPassphrase]);
 
-  useEffect(() => {
-    const enc = isEncrypted(encodedStudentId);
-    if (enc) setEncryptedDetected(true);
-    const run = async () => {
-      if (passphrase && enc) {
-        try {
-          const plain = await decryptString(encodedStudentId, passphrase);
-          setDisplayStudentId(plain);
-        } catch {
-          setDisplayStudentId('••••');
-        }
-      } else {
-        setDisplayStudentId(enc ? '••••' : decodeURIComponent(encodedStudentId));
-      }
-    };
-    run();
-  }, [encodedStudentId, passphrase]);
-
+  // Load graded submissions
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['grading', assessmentId],
     queryFn: async () =>
-      (await api.getGradingAssessmentsAssessmentIdGradingGet(assessmentId!)).data as GradingResponse,
+      (await api.getGradingAssessmentsAssessmentIdGradingGet(assessmentId)).data as GradingResponse,
     enabled: !!assessmentId,
-    staleTime: 30000,
+    staleTime: 30_000,
   });
 
   const submissions: AdjustableGradedSubmission[] = data?.graded_submissions ?? [];
-  const index = submissions.findIndex(s => s.student_id === encodedStudentId);
+  const index = submissions.findIndex((s) => s.student_id === encodedStudentId);
   const current = index >= 0 ? submissions[index] : null;
 
   const prevId = index > 0 ? submissions[index - 1].student_id : null;
   const nextId = index >= 0 && index < submissions.length - 1 ? submissions[index + 1].student_id : null;
 
+  // Local edit state for adjustments
   const [editing, setEditing] = useState<EditState>({});
   const [openEdits, setOpenEdits] = useState<Record<string, boolean>>({});
 
   const adjustMutation = useMutation({
     mutationKey: ['grading', assessmentId, 'adjust'],
     mutationFn: async (payload: GradeAdjustmentRequest) =>
-      (await api.adjustGradingAssessmentsAssessmentIdGradingAdjustPost(assessmentId!, payload)).data,
+      (await api.adjustGradingAssessmentsAssessmentIdGradingAdjustPost(assessmentId, payload)).data,
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: ['grading', assessmentId] });
       setEditing({});
@@ -84,8 +82,8 @@ const GradedSubmissionDetailPage: React.FC = () => {
   });
 
   const startEdit = (qid: string, res: AdjustableQuestionResult) => {
-    setOpenEdits(prev => ({ ...prev, [qid]: true }));
-    setEditing(prev => ({
+    setOpenEdits((prev) => ({ ...prev, [qid]: true }));
+    setEditing((prev) => ({
       ...prev,
       [qid]: {
         points: res.adjusted_points ?? res.points,
@@ -95,8 +93,8 @@ const GradedSubmissionDetailPage: React.FC = () => {
   };
 
   const cancelEdit = (qid: string) => {
-    setOpenEdits(prev => ({ ...prev, [qid]: false }));
-    setEditing(prev => {
+    setOpenEdits((prev) => ({ ...prev, [qid]: false }));
+    setEditing((prev) => {
       const next = { ...prev };
       delete next[qid];
       return next;
@@ -128,17 +126,18 @@ const GradedSubmissionDetailPage: React.FC = () => {
   if (isError) return <ErrorAlert error={error} />;
   if (!current) return <div className="alert alert-warning"><span>Submission not found.</span></div>;
 
-  const enc = isEncrypted(encodedStudentId);
-
-  // Totals (original vs adjusted), number of adjustments, and percentages
+  // Summary stats
   const originalTotalPoints = (current.results ?? []).reduce((sum, r) => sum + (r.points ?? 0), 0);
   const adjustedTotalPoints = (current.results ?? []).reduce(
-    (sum, r) => sum + (r.adjusted_points !== null && r.adjusted_points !== undefined ? r.adjusted_points : (r.points ?? 0)),
+    (sum, r) =>
+      sum + (r.adjusted_points !== null && r.adjusted_points !== undefined ? r.adjusted_points : (r.points ?? 0)),
     0
   );
   const totalMax = (current.results ?? []).reduce((sum, r) => sum + (r.max_points ?? 0), 0);
   const adjustmentsCount = (current.results ?? []).filter(
-    r => (r.adjusted_points !== null && r.adjusted_points !== undefined) || (r.adjusted_feedback !== null && r.adjusted_feedback !== undefined)
+    (r) =>
+      (r.adjusted_points !== null && r.adjusted_points !== undefined) ||
+      (r.adjusted_feedback !== null && r.adjusted_feedback !== undefined)
   ).length;
 
   const originalPct = totalMax > 0 ? (originalTotalPoints / totalMax) * 100 : 0;
@@ -151,6 +150,7 @@ const GradedSubmissionDetailPage: React.FC = () => {
         storageKey={storageKey}
         encryptedDetected={encryptedDetected}
         onPassphraseReady={onPassphraseReady}
+        currentPassphrase={passphrase}
       />
 
       <div className="flex items-center justify-between">
@@ -162,16 +162,11 @@ const GradedSubmissionDetailPage: React.FC = () => {
           >
             Back
           </Button>
-            <span className="font-mono text-sm badge badge-ghost flex items-center">
-            {displayStudentId}
-            {enc && (
-              <span className="inline-flex items-center tooltip" data-tip="Stored encrypted on server">
-                <IconLock />
-              </span>
-            )}
+          <span className="font-mono text-sm badge badge-ghost flex items-center">
+            <DecryptedText value={encodedStudentId} passphrase={passphrase} mono size="sm" />
           </span>
         </div>
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2">
           {hasAnyChange && (
             <Button
               variant="primary"
@@ -190,7 +185,7 @@ const GradedSubmissionDetailPage: React.FC = () => {
       </div>
       {adjustMutation.isError && <ErrorAlert error={adjustMutation.error} />}
 
-      {/* DaisyUI stats: total, adjusted total, number of adjustments (with percentages) */}
+      {/* Totals/percentages */}
       <div className="stats shadow bg-base-100 w-full">
         <div className="stat">
           <div className="stat-title">Total (Original)</div>
@@ -229,6 +224,7 @@ const GradedSubmissionDetailPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Per-question results and editing */}
       <div className="overflow-x-auto rounded-box border border-base-300 bg-base-100 shadow-xs">
         <table className="table w-full">
           <thead>
@@ -292,7 +288,7 @@ const GradedSubmissionDetailPage: React.FC = () => {
                           className="input input-bordered input-sm w-24"
                           value={local?.points ?? ''}
                           onChange={(e) =>
-                            setEditing(prev => ({
+                            setEditing((prev) => ({
                               ...prev,
                               [qid]: {
                                 ...prev[qid],
@@ -324,7 +320,7 @@ const GradedSubmissionDetailPage: React.FC = () => {
                         className="textarea textarea-bordered textarea-sm w-full"
                         value={local?.feedback ?? ''}
                         onChange={(e) =>
-                          setEditing(prev => ({
+                          setEditing((prev) => ({
                             ...prev,
                             [qid]: {
                               ...prev[qid],

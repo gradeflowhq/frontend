@@ -5,6 +5,7 @@ import Papa from 'papaparse';
 import Modal from '../common/Modal';
 import ErrorAlert from '../common/ErrorAlert';
 import { encryptString } from '../../utils/crypto';
+import { buildPassphraseKey, readPassphrase, writePassphrase } from '../../utils/passphrase';
 
 type Props = {
   open: boolean;
@@ -12,7 +13,7 @@ type Props = {
   isSubmitting: boolean;
   error: unknown;
   onSubmitCsv: (csv: string) => Promise<void> | void;
-  assessmentId?: string;
+  assessmentId: string;
 };
 
 type ParsedCsv = { headers: string[]; rows: string[][] };
@@ -58,20 +59,16 @@ const SubmissionsLoadWizardModal: React.FC<Props> = ({
   const [passphrase, setPassphrase] = useState('');
   const [storePassphrase, setStorePassphrase] = useState(false);
 
-  const storageKey = assessmentId ? `submissions_passphrase:${assessmentId}` : 'submissions_passphrase';
+  const storageKey = buildPassphraseKey(assessmentId);
 
+  // Initialise passphrase from localStorage if present (do not auto-remove later)
   useEffect(() => {
-    const saved = localStorage.getItem(storageKey);
+    const saved = readPassphrase(storageKey);
     if (saved) {
       setPassphrase(saved);
       setStorePassphrase(true);
     }
   }, [storageKey]);
-
-  useEffect(() => {
-    if (storePassphrase && passphrase) localStorage.setItem(storageKey, passphrase);
-    else localStorage.removeItem(storageKey);
-  }, [storePassphrase, passphrase, storageKey]);
 
   const headers = parsed?.headers ?? [];
   const rows = parsed?.rows ?? [];
@@ -100,10 +97,19 @@ const SubmissionsLoadWizardModal: React.FC<Props> = ({
 
   const canSubmit = parsed && studentCol && questionCols.length > 0 && (!encryptIds || !!passphrase);
 
+  const persistPassphraseIfNeeded = () => {
+    // Write only if user opted in and encryption is enabled
+    if (encryptIds && storePassphrase && passphrase) {
+      writePassphrase(storageKey, passphrase);
+    }
+  };
+
   const onSubmit = async () => {
     if (!parsed) return;
     const sIdx = headers.indexOf(studentCol);
     if (sIdx < 0) return;
+
+    persistPassphraseIfNeeded();
 
     const outHeaders = ['student_id', ...questionCols];
     const outRows = await Promise.all(
@@ -126,6 +132,8 @@ const SubmissionsLoadWizardModal: React.FC<Props> = ({
     () => headers.filter((h) => h !== studentCol),
     [headers, studentCol]
   );
+
+  if (!open) return null;
 
   return (
     <Modal open={open} onClose={onClose} boxClassName="w-full max-w-6xl">
@@ -157,7 +165,6 @@ const SubmissionsLoadWizardModal: React.FC<Props> = ({
                 onChange={(e) => {
                   const val = e.target.value;
                   setStudentCol(val);
-                  // Ensure currently selected student column isn't in questions
                   setQuestionCols((prev) => prev.filter((qc) => qc !== val));
                 }}
               >
@@ -189,7 +196,7 @@ const SubmissionsLoadWizardModal: React.FC<Props> = ({
             </div>
           </div>
 
-          {/* Encryption section - tidy layout */}
+          {/* Encryption section */}
           <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
             <div className="form-control">
               <label className="label cursor-pointer justify-start gap-3">

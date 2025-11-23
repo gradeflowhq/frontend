@@ -1,10 +1,12 @@
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../api';
 import ErrorAlert from '../../components/common/ErrorAlert';
 import EncryptedDataGuard from '../../components/common/EncryptedDataGuard';
-import { decryptString, isEncrypted } from '../../utils/crypto';
+import { isEncrypted } from '../../utils/crypto';
+import { buildPassphraseKey } from '../../utils/passphrase';
+import { usePassphrase } from '../../hooks/usePassphrase';
 import type {
   GradingResponse,
   AdjustableGradedSubmission,
@@ -26,17 +28,20 @@ const ResultsShellPage: React.FC = () => {
   const { assessmentId } = useParams<{ assessmentId: string }>();
   const navigate = useNavigate();
 
-  const storageKey = `submissions_passphrase:${assessmentId}`;
-  const [passphrase, setPassphrase] = useState<string | null>(() => localStorage.getItem(storageKey));
-  const [encryptedDetected, setEncryptedDetected] = useState(false);
-  const [displayedIdsMap, setDisplayedIdsMap] = useState<Map<string, string>>(new Map());
+  if (!assessmentId) {
+    return <div className="alert alert-error"><span>Assessment ID is missing.</span></div>;
+  }
+
+  const storageKey = buildPassphraseKey(assessmentId);
+  const { passphrase, setPassphrase } = usePassphrase(storageKey);
+
+  const [encryptedDetected, setEncryptedDetected] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'stats' | 'analysis'>('overview');
 
   const onPassphraseReady = useCallback((pp: string | null) => {
     setPassphrase(pp);
-  }, []);
+  }, [setPassphrase]);
 
-  // Assessment name for header
   const {
     data: assessmentRes,
     isLoading: loadingAssessment,
@@ -45,12 +50,11 @@ const ResultsShellPage: React.FC = () => {
   } = useQuery({
     queryKey: ['assessment', assessmentId],
     queryFn: async () =>
-      (await api.getAssessmentAssessmentsAssessmentIdGet(assessmentId!)).data as AssessmentResponse,
+      (await api.getAssessmentAssessmentsAssessmentIdGet(assessmentId)).data as AssessmentResponse,
     enabled: !!assessmentId,
     staleTime: 60_000,
   });
 
-  // Grading results
   const {
     data: gradingData,
     isLoading,
@@ -59,57 +63,26 @@ const ResultsShellPage: React.FC = () => {
   } = useQuery({
     queryKey: ['grading', assessmentId],
     queryFn: async () =>
-      (await api.getGradingAssessmentsAssessmentIdGradingGet(assessmentId!)).data as GradingResponse,
+      (await api.getGradingAssessmentsAssessmentIdGradingGet(assessmentId)).data as GradingResponse,
     enabled: !!assessmentId,
-    staleTime: 30000,
+    staleTime: 30_000,
   });
   const items: AdjustableGradedSubmission[] = gradingData?.graded_submissions ?? [];
 
-  // Question set (to list all questions)
   const { data: qsRes } = useQuery({
     queryKey: ['questionSet', assessmentId],
     queryFn: async () =>
-      (await api.getQuestionSetAssessmentsAssessmentIdQuestionSetGet(assessmentId!)).data as QuestionSetResponse,
+      (await api.getQuestionSetAssessmentsAssessmentIdQuestionSetGet(assessmentId)).data as QuestionSetResponse,
     enabled: !!assessmentId,
-    staleTime: 30000,
+    staleTime: 30_000,
   });
   const questionMap = qsRes?.question_set?.question_map ?? {};
   const questionIds = useMemo(() => Object.keys(questionMap).sort(natsort), [questionMap]);
 
-  // Decrypt student IDs (default) and flag if encrypted detected
   useEffect(() => {
-    let cancelled = false;
-    const buildMap = async () => {
-      const m = new Map<string, string>();
-      const work: Promise<void>[] = [];
-      for (const it of items) {
-        const sid = it.student_id;
-        const enc = isEncrypted(sid);
-        if (enc) setEncryptedDetected(true);
-        if (passphrase) {
-          work.push(
-            decryptString(sid, passphrase)
-              .then((plain) => {
-                if (!cancelled) m.set(sid, plain);
-              })
-              .catch(() => {
-                if (!cancelled) m.set(sid, '••••');
-              })
-          );
-        } else {
-          m.set(sid, enc ? '••••' : sid);
-        }
-      }
-      await Promise.all(work);
-      if (!cancelled) setDisplayedIdsMap(m);
-    };
-    buildMap();
-    return () => {
-      cancelled = true;
-    };
-  }, [items, passphrase]);
+    setEncryptedDetected(items.some((it) => isEncrypted(it.student_id)));
+  }, [items]);
 
-  // Totals per submission (adjusted points if present)
   const totalsPerSubmission = useMemo(
     () =>
       items.map((gs) => {
@@ -123,7 +96,7 @@ const ResultsShellPage: React.FC = () => {
     [items]
   );
 
-  useDocumentTitle(`Results - ${assessmentRes?.name} - GradeFlow`, []);
+  useDocumentTitle(`Results - ${assessmentRes?.name ?? 'Assessment'} - GradeFlow`, []);
 
   return (
     <section className="space-y-4">
@@ -131,24 +104,22 @@ const ResultsShellPage: React.FC = () => {
         storageKey={storageKey}
         encryptedDetected={encryptedDetected}
         onPassphraseReady={onPassphraseReady}
+        currentPassphrase={passphrase}
       />
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              onClick={() => navigate(`/assessments/${assessmentId}/rules`)}
-              leftIcon={<IconChevronLeft />}
-            >
-              <span>{assessmentRes?.name ?? 'Assessment'}</span>
-            </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate(`/assessments/${assessmentId}/rules`)}
+            leftIcon={<IconChevronLeft />}
+          >
+            <span>{assessmentRes?.name ?? 'Assessment'}</span>
+          </Button>
           <h2 className="text-xl font-semibold">Grading Results</h2>
         </div>
         <div className="flex items-center gap-2">
-          <ResultsExportMenu
-            assessmentId={assessmentId!}
-            disabled={items.length === 0}
-          />
+          <ResultsExportMenu assessmentId={assessmentId} disabled={items.length === 0} />
         </div>
       </div>
 
@@ -195,11 +166,11 @@ const ResultsShellPage: React.FC = () => {
 
       {!isLoading && !isError && items.length > 0 && activeTab === 'overview' && (
         <ResultsOverviewTab
-          assessmentId={assessmentId!}
+          assessmentId={assessmentId}
           items={items}
           questionIds={questionIds}
-          displayedIdsMap={displayedIdsMap}
           navigate={navigate}
+          passphrase={passphrase}
         />
       )}
 
