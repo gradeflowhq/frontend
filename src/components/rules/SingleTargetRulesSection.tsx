@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { IconCheckCircle, IconPlus } from '../ui/icons';
+import { IconCheckCircle, IconPlus } from '../ui/Icon';
 import { DropdownMenu } from '../ui/DropdownMenu';
 import { Button } from '../ui/Button';
 import RuleItem from './RuleItem';

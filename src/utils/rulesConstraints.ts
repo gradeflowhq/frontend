@@ -81,7 +81,6 @@ const buildSelectUiForTarget = (props: any, target: string): UiSchema => {
 };
 
 // Main enrichment: apply constraints to the concrete branch schema and produce UI select widgets.
-// Also supports a fallback for single-target CHOICE questions when constraints are initially absent.
 export const enrichSchemaByConstraints = (
   baseSchema: JsonSchema,
   defs: Record<string, any>,
@@ -121,29 +120,6 @@ export const enrichSchemaByConstraints = (
       applyToSchemaObject(schema, c);
     }
   });
-
-  // Fallback for single-target CHOICE when constraints are absent: inject options into 'answer'
-  if ((!constraints || constraints.length === 0) && scopedQid && qMap[scopedQid]) {
-    const def = qMap[scopedQid] as any;
-    if (String(def?.type) === 'CHOICE' && Array.isArray(def?.options)) {
-      const injectAnswer = (obj: any) => {
-        if (obj?.properties?.answer) {
-          const ok = injectIntoProps(obj.properties, 'answer', def.options.map(String));
-          if (ok) Object.assign(uiSchema, buildSelectUiForTarget(obj.properties, 'answer'));
-        }
-      };
-      if (branches) {
-        const t = (draft as any)?.type;
-        const candidates = branches.filter((b: any) => {
-          const constType = b?.properties?.type?.const ?? b?.properties?.type?.default;
-          return t && constType ? String(constType) === String(t) : !!b?.properties?.answer;
-        });
-        candidates.forEach(injectAnswer);
-      } else {
-        injectAnswer(schema);
-      }
-    }
-  }
 
   // Do NOT add uiSchema.constraints here; RuleDialog hides constraints via hiddenKeys.
   return { schema, definitions, uiSchema };

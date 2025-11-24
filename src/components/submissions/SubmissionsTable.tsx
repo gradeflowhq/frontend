@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { IconLock, IconInbox } from '../ui/icons';
+import { IconLock, IconInbox } from '../ui/Icon';
 import {
   createColumnHelper,
   flexRender,
@@ -37,7 +37,6 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({ items, passphrase, 
         header: 'Student ID',
         cell: ({ row }) => {
           const sid = row.original.student_id;
-          const enc = isEncrypted(sid);
           return (
             <div className="flex items-center">
               <DecryptedText

@@ -1,5 +1,5 @@
 import React from 'react';
-import { IconSettings, IconUsers, IconAssessment } from '../ui/icons';
+import { IconSettings, IconUsers, IconAssessment } from '../ui/Icon';
 import { DropdownMenu } from '../ui/DropdownMenu';
 import { Button } from '../ui/Button';
 

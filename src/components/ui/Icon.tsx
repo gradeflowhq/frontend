@@ -22,10 +22,9 @@ import {
 } from 'react-icons/fi';
 
 import type { SVGProps } from 'react';
-import { IconBase, type IconBaseProps } from './IconBase';
 
 const wrap = (Comp: React.ComponentType<SVGProps<SVGSVGElement>>) =>
-  forwardRef<SVGSVGElement, IconBaseProps>((props, ref) => (
+  forwardRef<SVGSVGElement, SVGProps<SVGSVGElement>>((props, ref) => (
     <Comp ref={ref} {...props} className={props.className} />
   ));
 

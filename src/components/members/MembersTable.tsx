@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { IconSave, IconTrash, IconInbox } from '../ui/icons';
+import { IconSave, IconTrash, IconInbox } from '../ui/Icon';
 import { Button } from '../ui/Button';
 import {
   createColumnHelper,

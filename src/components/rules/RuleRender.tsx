@@ -1,5 +1,5 @@
 import React from 'react';
-import { IconEdit, IconTrash } from '../ui/icons';
+import { IconEdit, IconTrash } from '../ui/Icon';
 import { Button } from '../ui/Button';
 import { HIDE_KEYS_SINGLE } from '../../utils/rulesConstants';
 import { getRuleDefinitions, isRuleObject, prettifyKey } from '../../utils/rulesHelpers';

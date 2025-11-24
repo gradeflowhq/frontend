@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { decryptString, isEncrypted } from '../../../utils/crypto';
-import { IconLock } from '../../ui/icons';
+import { IconLock } from '../../ui/Icon';
 
 // Global cache to avoid flicker and repeated decrypts across re-renders/components
 // Keyed by `${cipher}::${passphrase}`

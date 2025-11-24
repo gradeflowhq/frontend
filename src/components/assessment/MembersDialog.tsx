@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { IconPlus } from '../ui/icons';
+import { IconPlus } from '../ui/Icon';
 import { Button } from '../ui/Button';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Modal from '../common/Modal';

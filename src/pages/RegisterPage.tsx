@@ -17,7 +17,7 @@ const getSignupSchema = () => {
 };
 
 const RegisterPage: React.FC = () => {
-  useDocumentTitle('Register - GradeFlow', []);
+  useDocumentTitle('Register - GradeFlow');
   const setTokens = useAuthStore((s) => s.setTokens);
   const schema = useMemo(() => getSignupSchema(), []);
 

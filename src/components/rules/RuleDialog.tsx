@@ -1,5 +1,5 @@
 import React from 'react';
-import { IconSave } from '../ui/icons';
+import { IconSave } from '../ui/Icon';
 import { Button } from '../ui/Button';
 import Modal from '../common/Modal';
 import ErrorAlert from '../common/ErrorAlert';

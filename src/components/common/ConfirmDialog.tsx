@@ -1,5 +1,5 @@
 import React from 'react';
-import { IconTrash, IconCheckCircle } from '../ui/icons';
+import { IconTrash, IconCheckCircle } from '../ui/Icon';
 import { Button } from '../ui/Button';
 import { createPortal } from 'react-dom';
 

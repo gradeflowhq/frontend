@@ -1,5 +1,5 @@
 import React from 'react';
-import { IconEye } from '../../components/ui/icons';
+import { IconEye } from '../../components/ui/Icon';
 import { Button } from '../../components/ui/Button';
 import DecryptedText from '../../components/common/encryptions/DecryptedText';
 import type { AdjustableGradedSubmission, AdjustableQuestionResult } from '../../api/models';

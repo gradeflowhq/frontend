@@ -18,7 +18,7 @@ const getLoginSchema = () => {
 };
 
 const LoginPage: React.FC = () => {
-  useDocumentTitle('Login - GradeFlow', []);
+  useDocumentTitle('Login - GradeFlow');
   const setTokens = useAuthStore((s) => s.setTokens);
   const schema = useMemo(() => getLoginSchema(), []);
 

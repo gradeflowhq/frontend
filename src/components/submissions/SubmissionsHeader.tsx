@@ -1,5 +1,5 @@
 import React from 'react';
-import { IconUpload, IconTrash } from '../ui/icons';
+import { IconUpload, IconTrash } from '../ui/Icon';
 import { Button } from '../ui/Button';
 
 type SubmissionsHeaderProps = {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { IconEdit } from '../ui/icons';
+import { IconEdit } from '../ui/Icon';
 import Modal from '../common/Modal';
 import { SchemaForm } from '../common/forms/SchemaForm';
 import ErrorAlert from '../common/ErrorAlert';

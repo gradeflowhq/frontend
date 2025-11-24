@@ -17,7 +17,7 @@ import ResultsOverviewTab from './ResultsOverviewTab';
 import ResultsStatsTab from './ResultsStatsTab';
 import QuestionAnalysisTab from './QuestionAnalysisTab';
 import ResultsExportMenu from '../../components/results/ResultsExportMenu';
-import { IconChevronLeft } from '../../components/ui/icons';
+import { IconChevronLeft } from '../../components/ui/Icon';
 import { Button } from '../../components/ui/Button';
 import { useDocumentTitle } from '../../hooks/useDocumentTitle';
 
@@ -96,7 +96,7 @@ const ResultsShellPage: React.FC = () => {
     [items]
   );
 
-  useDocumentTitle(`Results - ${assessmentRes?.name ?? 'Assessment'} - GradeFlow`, []);
+  useDocumentTitle(`Results - ${assessmentRes?.name ?? 'Assessment'} - GradeFlow`);
 
   return (
     <section className="space-y-4">

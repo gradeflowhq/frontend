@@ -1,5 +1,5 @@
 import React from 'react';
-import { IconInfer } from '../ui/icons';
+import { IconInfer } from '../ui/Icon';
 import { Button } from '../ui/Button';
 
 type QuestionsHeaderProps = {

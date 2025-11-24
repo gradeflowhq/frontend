@@ -6,7 +6,7 @@ import {
   IconCheckCircle,
   IconEdit,
   IconAlertCircle,
-} from '../../components/ui/icons';
+} from '../../components/ui/Icon';
 import { Button } from '../../components/ui/Button';
 import { IconButton } from '../../components/ui/IconButton';
 import { useParams, useNavigate } from 'react-router-dom';

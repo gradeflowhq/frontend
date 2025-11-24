@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { IconUpload } from '../ui/icons';
+import { IconUpload } from '../ui/Icon';
 import { Button } from '../ui/Button';
 import Papa from 'papaparse';
 import Modal from '../common/Modal';

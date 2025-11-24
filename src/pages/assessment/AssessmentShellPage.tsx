@@ -130,7 +130,7 @@ const AssessmentShellPage: React.FC = () => {
   const hasGrading = (gradingRes?.graded_submissions?.length ?? 0) > 0;
   const basePath = `/assessments/${assessmentId}`;
 
-  useDocumentTitle(`${assessmentRes?.name} - GradeFlow`, []);
+  useDocumentTitle(`${assessmentRes?.name} - GradeFlow`);
 
   return (
     <section>

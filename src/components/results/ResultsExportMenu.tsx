@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { IconChevronDown, IconDownload } from '../ui/icons';
+import { IconChevronDown, IconDownload } from '../ui/Icon';
 import { DropdownMenu } from '../ui/DropdownMenu';
 import { Button } from '../ui/Button';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -132,7 +132,6 @@ const ResultsExportMenu: React.FC<ResultsExportMenuProps> = ({
             <Button
               variant="ghost"
               className="justify-start"
-              onMouseDown={(e) => e.preventDefault()}
               onClick={() => handleExport(saver)}
               disabled={isPending}
               title={`Export as ${saver}`}

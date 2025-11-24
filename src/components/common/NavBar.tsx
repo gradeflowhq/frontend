@@ -1,5 +1,5 @@
 import React from 'react';
-import { IconChevronDown, IconLogOut } from '../ui/icons';
+import { IconChevronDown, IconLogOut } from '../ui/Icon';
 import { Button } from '../ui/Button';
 import { Link } from 'react-router-dom';
 

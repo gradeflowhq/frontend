@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import ErrorAlert from '../components/common/ErrorAlert';
 import { Button } from '../components/ui/Button';
-import { IconPlus } from '../components/ui/icons';
+import { IconPlus } from '../components/ui/Icon';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import AssessmentsTable from '../components/assessments/AssessmentsTable';
 import AssessmentCreateModal from '../components/assessments/AssessmentCreateModal';
@@ -20,7 +20,7 @@ import type {
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
 
 const AssessmentsPage: React.FC = () => {
-  useDocumentTitle('Assessments - GradeFlow', []);
+  useDocumentTitle('Assessments - GradeFlow');
 
   const qc = useQueryClient();
   const navigate = useNavigate();
