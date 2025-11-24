@@ -78,6 +78,10 @@ const RulesTabPage: React.FC = () => {
 
   const rubric = rubricRes?.rubric ?? { rules: [] };
   const cov = coverageRes?.coverage;
+  const coveredQuestionIds = React.useMemo(
+    () => new Set<string>(cov?.covered_question_ids ?? []),
+    [cov]
+  );
 
   return (
     <section className="space-y-6">
@@ -107,6 +111,8 @@ const RulesTabPage: React.FC = () => {
         error={replaceRubricMutation.isError ? replaceRubricMutation.error : null}
         assessmentId={assessmentId}
         questionMap={questionMap}
+        coveredQuestionIds={coveredQuestionIds}
+        
       />
 
       <MultiTargetRulesSection

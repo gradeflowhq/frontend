@@ -20,6 +20,7 @@ type Props = {
   error?: unknown;
   assessmentId: string;
   questionMap: QuestionSetOutputQuestionMap;
+  coveredQuestionIds: Set<string>;
 };
 
 const SingleTargetRulesSection: React.FC<Props> = ({
@@ -31,6 +32,7 @@ const SingleTargetRulesSection: React.FC<Props> = ({
   error,
   assessmentId,
   questionMap,
+  coveredQuestionIds,
 }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedRuleKey, setSelectedRuleKey] = useState<string | null>(null);
@@ -141,6 +143,9 @@ const SingleTargetRulesSection: React.FC<Props> = ({
           const rules = byQuestion[qid] ?? [];
           const options = compatibleKeysFor(qType);
 
+          const isCovered = coveredQuestionIds.has(qid);
+          const canAddRule = !isCovered;
+
           return (
             <div key={qid} className="card bg-base-100 border border-base-300 shadow-xs">
               <div className="card-body">
@@ -150,37 +155,37 @@ const SingleTargetRulesSection: React.FC<Props> = ({
                       <span className="font-semibold">{qid}</span>
                     </div>
                     <span className="badge badge-ghost">{qType}</span>
-                    {rules.length > 0 && (
-                      <span>
-                        <IconCheckCircle />
-                      </span>
-                    )}
                   </div>
-
-                  <DropdownMenu trigger={<><IconPlus />Add Rule</>} align="end">
-                    {options.map((key) => (
-                      <li key={key}>
-                        <Button
-                          variant="ghost"
-                          className="justify-start"
-                          onClick={() => handleAddDropdownSelect(qid, key)}
-                        >
-                          {friendlyRuleLabel(key)}
-                        </Button>
-                      </li>
-                    ))}
-                    {options.length === 0 && (
-                      <li>
-                        <span className="opacity-70 px-2 py-1">No compatible rules</span>
-                      </li>
-                    )}
-                  </DropdownMenu>
+                  
+                  {canAddRule ? (
+                    <DropdownMenu trigger={<><IconPlus />Add Rule</>} align="end">
+                      {options.map((key) => (
+                        <li key={key}>
+                          <Button
+                            variant="ghost"
+                            className="justify-start"
+                            onClick={() => handleAddDropdownSelect(qid, key)}
+                          >
+                            {friendlyRuleLabel(key)}
+                          </Button>
+                        </li>
+                      ))}
+                      {options.length === 0 && (
+                        <li>
+                          <span className="opacity-70 px-2 py-1">No compatible rules</span>
+                        </li>
+                      )}
+                    </DropdownMenu>
+                  ) : (
+                    <IconCheckCircle />
+                  )
+                  }
                 </div>
 
                 {rules.length === 0 ? (
                   <div className="mt-3">
                     <div className="alert alert-ghost">
-                      <span className="opacity-70">No rules for this question yet.</span>
+                      {isCovered ? 'Covered by multi-target rule(s).' : 'No rules for this question yet.'}
                     </div>
                   </div>
                 ) : (
