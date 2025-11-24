@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { api } from '../api';
-import { SchemaForm } from '../components/common/SchemaForm';
+import { SchemaForm } from '../components/common/forms/SchemaForm';
 import PageCard from '../components/common/PageCard';
 import ErrorAlert from '../components/common/ErrorAlert';
 import { useAuthStore } from '../state/authStore';

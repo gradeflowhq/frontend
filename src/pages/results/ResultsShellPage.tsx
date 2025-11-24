@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../api';
 import ErrorAlert from '../../components/common/ErrorAlert';
-import EncryptedDataGuard from '../../components/common/EncryptedDataGuard';
+import EncryptedDataGuard from '../../components/common/encryptions/EncryptedDataGuard';
 import { isEncrypted } from '../../utils/crypto';
 import { buildPassphraseKey } from '../../utils/passphrase';
 import { usePassphrase } from '../../hooks/usePassphrase';

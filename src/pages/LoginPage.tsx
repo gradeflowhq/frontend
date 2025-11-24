@@ -2,14 +2,14 @@ import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { api } from '../api';
-import { SchemaForm } from '../components/common/SchemaForm';
+import { SchemaForm } from '../components/common/forms/SchemaForm';
 import PageCard from '../components/common/PageCard';
 import ErrorAlert from '../components/common/ErrorAlert';
 import { useAuthStore } from '../state/authStore';
 import othersSchema from '../schemas/others.json';
 import type { BodyIssueTokenAuthTokenPost, TokenPairResponse } from '../api/models';
 import { useDocumentTitle } from '../hooks/useDocumentTitle';
-import HiddenAwareFieldTemplate from '../components/common/HiddenAwareFieldTemplate';
+import HiddenAwareFieldTemplate from '../components/common/forms/HiddenAwareFieldTemplate';
 
 const getLoginSchema = () => {
   const schema = (othersSchema as any)['Body_issue_token_auth_token_post'];
@@ -60,8 +60,8 @@ const LoginPage: React.FC = () => {
       <SchemaForm<BodyIssueTokenAuthTokenPost>
         schema={schema}
         uiSchema={uiSchema}
-        templates={templates}       // Use HiddenAwareFieldTemplate
-        formContext={formContext}   // Provide global hide keys
+        templates={templates}
+        formContext={formContext}
         onSubmit={async ({ formData }) => {
           await mutateAsync(formData);
         }}

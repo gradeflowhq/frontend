@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import Modal from './Modal';
-import { Button } from '../ui/Button';
-import { normalizePresent, readPassphrase, writePassphrase } from '../../utils/passphrase';
+import Modal from '../Modal';
+import { Button } from '../../ui/Button';
+import { normalizePresent, readPassphrase, writePassphrase } from '../../../utils/passphrase';
 
 type Props = {
   storageKey: string;                         // e.g., submissions_passphrase:<assessmentId>

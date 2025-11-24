@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import ErrorAlert from '../../components/common/ErrorAlert';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
-import EncryptedDataGuard from '../../components/common/EncryptedDataGuard';
+import EncryptedDataGuard from '../../components/common/encryptions/EncryptedDataGuard';
 import SubmissionsHeader from '../../components/submissions/SubmissionsHeader';
 import SubmissionsTable from '../../components/submissions/SubmissionsTable';
 import SubmissionsLoadWizardModal from '../../components/submissions/SubmissionsLoadWizardModal';

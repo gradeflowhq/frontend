@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { SchemaForm } from '../common/SchemaForm';
+import { SchemaForm } from '../common/forms/SchemaForm';
 import ErrorAlert from '../common/ErrorAlert';
 import { Button } from '../ui/Button';
 import { IconInbox, IconSave, IconEdit } from '../ui/icons';

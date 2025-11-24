@@ -1,7 +1,7 @@
 import React from 'react';
 import { IconEdit } from '../ui/icons';
 import Modal from '../common/Modal';
-import { SchemaForm } from '../common/SchemaForm';
+import { SchemaForm } from '../common/forms/SchemaForm';
 import ErrorAlert from '../common/ErrorAlert';
 import { Button } from '../ui/Button';
 import requestsSchema from '../../schemas/requests.json';

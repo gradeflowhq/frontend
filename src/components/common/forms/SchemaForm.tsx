@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from '../ui/Button';
+import { Button } from '../../ui/Button';
 import { withTheme } from '@rjsf/core';
 import type { FormProps } from '@rjsf/core';
 import { Theme as DaisyUITheme } from '@rjsf/daisyui';
@@ -19,8 +19,8 @@ export type SchemaFormProps<T = any> = {
   liveValidate?: boolean;
   formProps?: Partial<FormProps<T>>;
   showSubmit?: boolean;
-  templates?: FormProps<T>['templates'];     // NEW: override templates (FieldTemplate)
-  formContext?: FormProps<T>['formContext']; // NEW: pass global context (hide keys)
+  templates?: FormProps<T>['templates'];
+  formContext?: FormProps<T>['formContext'];
 };
 
 export const SchemaForm = <T extends any>({

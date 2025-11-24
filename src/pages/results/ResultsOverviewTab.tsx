@@ -1,7 +1,7 @@
 import React from 'react';
 import { IconEye } from '../../components/ui/icons';
 import { Button } from '../../components/ui/Button';
-import DecryptedText from '../../components/common/DecryptedText';
+import DecryptedText from '../../components/common/encryptions/DecryptedText';
 import type { AdjustableGradedSubmission, AdjustableQuestionResult } from '../../api/models';
 
 type Props = {

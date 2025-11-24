@@ -8,7 +8,7 @@ import rulesSchema from '../../schemas/rules.json';
 import ErrorAlert from '../common/ErrorAlert';
 import ConfirmDialog from '../common/ConfirmDialog';
 import { api } from '../../api';
-import type { RubricOutput } from '../../api/models';
+import type { QuestionSetOutputQuestionMap, RubricOutput } from '../../api/models';
 import { friendlyRuleLabel } from '../../utils/rulesHelpers';
 
 type Props = {
@@ -17,6 +17,7 @@ type Props = {
   saving?: boolean;
   error?: unknown;
   assessmentId: string;
+  questionMap: QuestionSetOutputQuestionMap;
 };
 
 const MultiTargetRulesSection: React.FC<Props> = ({
@@ -25,6 +26,7 @@ const MultiTargetRulesSection: React.FC<Props> = ({
   saving,
   error,
   assessmentId,
+  questionMap,
 }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedRuleKey, setSelectedRuleKey] = useState<string | null>(null);
@@ -128,6 +130,7 @@ const MultiTargetRulesSection: React.FC<Props> = ({
         open={dialogOpen}
         selectedRuleKey={selectedRuleKey}
         initialRule={editingRule ?? undefined}
+        questionMap={questionMap}
         onClose={() => {
           setDialogOpen(false);
           setEditingRule(null);

@@ -9,7 +9,7 @@ import {
 import type { ColumnDef } from '@tanstack/react-table';
 import type { RawSubmission } from '../../api/models';
 import { isEncrypted } from '../../utils/crypto';
-import DecryptedText from '../common/DecryptedText';
+import DecryptedText from '../common/encryptions/DecryptedText';
 
 type SubmissionsTableProps = {
   items: RawSubmission[];

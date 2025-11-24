@@ -106,6 +106,7 @@ const RulesTabPage: React.FC = () => {
         saving={replaceRubricMutation.isPending}
         error={replaceRubricMutation.isError ? replaceRubricMutation.error : null}
         assessmentId={assessmentId}
+        questionMap={questionMap}
       />
 
       <MultiTargetRulesSection
@@ -114,6 +115,7 @@ const RulesTabPage: React.FC = () => {
         saving={replaceRubricMutation.isPending}
         error={replaceRubricMutation.isError ? replaceRubricMutation.error : null}
         assessmentId={assessmentId}
+        questionMap={questionMap}
       />
     </section>
   );

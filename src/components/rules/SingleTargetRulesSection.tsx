@@ -8,7 +8,7 @@ import rulesSchema from '../../schemas/rules.json';
 import ErrorAlert from '../common/ErrorAlert';
 import ConfirmDialog from '../common/ConfirmDialog';
 import { api } from '../../api';
-import type { RubricOutput } from '../../api/models';
+import type { QuestionSetOutputQuestionMap, RubricOutput } from '../../api/models';
 import { friendlyRuleLabel, findSchemaKeyByType } from '../../utils/rulesHelpers';
 
 type Props = {
@@ -19,6 +19,7 @@ type Props = {
   saving?: boolean;
   error?: unknown;
   assessmentId: string;
+  questionMap: QuestionSetOutputQuestionMap;
 };
 
 const SingleTargetRulesSection: React.FC<Props> = ({
@@ -29,6 +30,7 @@ const SingleTargetRulesSection: React.FC<Props> = ({
   saving,
   error,
   assessmentId,
+  questionMap,
 }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedRuleKey, setSelectedRuleKey] = useState<string | null>(null);
@@ -208,6 +210,7 @@ const SingleTargetRulesSection: React.FC<Props> = ({
         initialRule={editingRule ?? undefined}
         questionId={editingForQid ?? undefined}
         questionType={editingForQid ? questionTypesById[editingForQid] : undefined}
+        questionMap={questionMap}
         onClose={() => {
           setDialogOpen(false);
           setEditingRule(null);
