@@ -7,6 +7,7 @@ import {
   IconCheckCircle,
   IconEdit,
   IconAlertCircle,
+  IconTrash,
 } from '@components/ui/Icon';
 import { Button } from '@components/ui/Button';
 import { IconButton } from '@components/ui/IconButton';
@@ -25,6 +26,7 @@ import type {
   GradeAdjustmentRequest,
   GradeAdjustment,
 } from '@api/models';
+import ConfirmDialog from '@components/common/ConfirmDialog';
 
 const GradedSubmissionDetailPage: React.FC = () => {
   const { assessmentId, studentId: rawStudentId } = useParams<{ assessmentId: string; studentId: string }>();
@@ -56,6 +58,7 @@ const GradedSubmissionDetailPage: React.FC = () => {
   type EditState = Record<string, { points?: number; feedback?: string }>; // keyed by question_id
   const [editing, setEditing] = useState<EditState>({});
   const [openEdits, setOpenEdits] = useState<Record<string, boolean>>({});
+  const [removeAdjustQid, setRemoveAdjustQid] = useState<string | null>(null);
 
   const startEdit = (qid: string, res: AdjustableQuestionResult) => {
     setOpenEdits((prev) => ({ ...prev, [qid]: true }));
@@ -318,9 +321,22 @@ const GradedSubmissionDetailPage: React.FC = () => {
 
                   <td className="align-top">
                     {!isEditing ? (
-                      <Button size="sm" onClick={() => startEdit(qid, res)} leftIcon={<IconEdit />}>
-                        Edit
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={() => startEdit(qid, res)} leftIcon={<IconEdit />}>
+                          Edit
+                        </Button>
+                        {adjustedExists && (
+                          <Button
+                            size="sm"
+                            variant="error"
+                            onClick={() => setRemoveAdjustQid(qid)}
+                            title="Remove Adjustment"
+                            leftIcon={<IconTrash />}
+                          >
+                            Remove Adjustment
+                          </Button>
+                        )}
+                      </div>
                     ) : (
                       <Button size="sm" variant="ghost" onClick={() => cancelEdit(qid)}>
                         Cancel
@@ -333,6 +349,30 @@ const GradedSubmissionDetailPage: React.FC = () => {
           </tbody>
         </table>
       </div>
+
+      <ConfirmDialog
+        open={!!removeAdjustQid}
+        title="Remove Adjustment"
+        message="This will revert the adjusted points and feedback for this question. Proceed?"
+        confirmText={adjustMutation.isPending ? 'Removing…' : 'Remove'}
+        onConfirm={() => {
+          if (!current || !removeAdjustQid) return;
+          const payload: GradeAdjustmentRequest = {
+            adjustments: [
+              {
+                student_id: current.student_id,
+                question_id: removeAdjustQid,
+                adjusted_points: null,
+                adjusted_feedback: null,
+              },
+            ],
+          };
+          adjustMutation.mutate(payload, {
+            onSuccess: () => setRemoveAdjustQid(null),
+          });
+        }}
+        onCancel={() => setRemoveAdjustQid(null)}
+      />
     </section>
   );
 };
