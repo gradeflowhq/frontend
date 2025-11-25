@@ -1,8 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import App from './app/App';
 import './api/axiosSetup';
+import App from './app/App';
 import './index.css';
 import AuthBootstrap from './app/bootstrap/AuthBootstrap';
 

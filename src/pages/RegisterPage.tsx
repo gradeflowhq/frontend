@@ -1,14 +1,14 @@
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
-import { api } from '../api';
-import { SchemaForm } from '../components/common/forms/SchemaForm';
-import PageCard from '../components/common/PageCard';
-import ErrorAlert from '../components/common/ErrorAlert';
-import { useAuthStore } from '../state/authStore';
-import requestsSchema from '../schemas/requests.json';
-import type { SignupRequest, TokenPairResponse } from '../api/models';
-import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import { api } from '@api';
+import { SchemaForm } from '@components/common/forms/SchemaForm';
+import PageCard from '@components/common/PageCard';
+import ErrorAlert from '@components/common/ErrorAlert';
+import { useAuthStore } from '@state/authStore';
+import requestsSchema from '@schemas/requests.json';
+import type { SignupRequest, TokenPairResponse } from '@api/models';
+import { useDocumentTitle } from '@hooks/useDocumentTitle';
 
 const getSignupSchema = () => {
   const schema = (requestsSchema as any)['SignupRequest'];

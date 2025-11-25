@@ -1,38 +1,36 @@
 import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '../../api';
-import ErrorAlert from '../../components/common/ErrorAlert';
-import EncryptedDataGuard from '../../components/common/encryptions/EncryptedDataGuard';
-import { isEncrypted } from '../../utils/crypto';
-import { buildPassphraseKey } from '../../utils/passphrase';
-import { usePassphrase } from '../../hooks/usePassphrase';
-import type {
-  GradingResponse,
-  AdjustableGradedSubmission,
-  QuestionSetResponse,
-  AssessmentResponse,
-} from '../../api/models';
-import ResultsOverviewTab from './ResultsOverviewTab';
-import ResultsStatsTab from './ResultsStatsTab';
-import QuestionAnalysisTab from './QuestionAnalysisTab';
-import ResultsExportMenu from '../../components/results/ResultsExportMenu';
-import { IconChevronLeft } from '../../components/ui/Icon';
-import { Button } from '../../components/ui/Button';
-import { useDocumentTitle } from '../../hooks/useDocumentTitle';
+import ErrorAlert from '@components/common/ErrorAlert';
+import EncryptedDataGuard from '@components/common/encryptions/EncryptedDataGuard';
+import { isEncrypted } from '@utils/crypto';
+import { buildPassphraseKey } from '@utils/passphrase';
+import { usePassphrase } from '@hooks/usePassphrase';
+import { IconChevronLeft } from '@components/ui/Icon';
+import { Button } from '@components/ui/Button';
+import { useDocumentTitle } from '@hooks/useDocumentTitle';
 
-const natsort = (a: string, b: string) =>
-  a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+// Grading feature
+import { useGrading } from '@features/grading/hooks';
+import { ResultsOverview, ResultsStats, QuestionAnalysis } from '@features/grading/components';
+import { buildTotals } from '@features/grading/helpers';
+
+// Assessments + questions (to show name and derive question IDs)
+import { useAssessment } from '@features/assessments/hooks';
+import { useQuestionSet } from '@features/questions/hooks';
+
+import type { AdjustableGradedSubmission, QuestionSetOutputQuestionMap } from '@api/models';
+import ResultsExportMenu from '@features/grading/components/ResultsExportMenu';
+
+const natsort = (a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
 
 const ResultsShellPage: React.FC = () => {
   const { assessmentId } = useParams<{ assessmentId: string }>();
   const navigate = useNavigate();
+  const enabled = Boolean(assessmentId);
+  const safeId = assessmentId ?? '';
 
-  if (!assessmentId) {
-    return <div className="alert alert-error"><span>Assessment ID is missing.</span></div>;
-  }
-
-  const storageKey = buildPassphraseKey(assessmentId);
+  // Passphrase state via hook (standardised storage key)
+  const storageKey = buildPassphraseKey(safeId);
   const { passphrase, setPassphrase } = usePassphrase(storageKey);
 
   const [encryptedDetected, setEncryptedDetected] = useState<boolean>(false);
@@ -42,61 +40,32 @@ const ResultsShellPage: React.FC = () => {
     setPassphrase(pp);
   }, [setPassphrase]);
 
-  const {
-    data: assessmentRes,
-    isLoading: loadingAssessment,
-    isError: errorAssessment,
-    error: assessmentError,
-  } = useQuery({
-    queryKey: ['assessment', assessmentId],
-    queryFn: async () =>
-      (await api.getAssessmentAssessmentsAssessmentIdGet(assessmentId)).data as AssessmentResponse,
-    enabled: !!assessmentId,
-    staleTime: 60_000,
-  });
+  // Data hooks (top-level, stable order)
+  const { data: assessmentRes, isLoading: loadingAssessment, isError: errorAssessment, error: assessmentError } =
+    useAssessment(safeId, enabled);
 
-  const {
-    data: gradingData,
-    isLoading,
-    isError,
-    error,
-  } = useQuery({
-    queryKey: ['grading', assessmentId],
-    queryFn: async () =>
-      (await api.getGradingAssessmentsAssessmentIdGradingGet(assessmentId)).data as GradingResponse,
-    enabled: !!assessmentId,
-    staleTime: 30_000,
-  });
+  const { data: gradingData, isLoading, isError, error } =
+    useGrading(safeId, enabled);
+
+  const { data: qsRes } =
+    useQuestionSet(safeId, enabled);
+
   const items: AdjustableGradedSubmission[] = gradingData?.graded_submissions ?? [];
 
-  const { data: qsRes } = useQuery({
-    queryKey: ['questionSet', assessmentId],
-    queryFn: async () =>
-      (await api.getQuestionSetAssessmentsAssessmentIdQuestionSetGet(assessmentId)).data as QuestionSetResponse,
-    enabled: !!assessmentId,
-    staleTime: 30_000,
-  });
-  const questionMap = qsRes?.question_set?.question_map ?? {};
+  const questionMap: QuestionSetOutputQuestionMap = qsRes?.question_set?.question_map ?? {};
   const questionIds = useMemo(() => Object.keys(questionMap).sort(natsort), [questionMap]);
 
   useEffect(() => {
     setEncryptedDetected(items.some((it) => isEncrypted(it.student_id)));
   }, [items]);
 
-  const totalsPerSubmission = useMemo(
-    () =>
-      items.map((gs) => {
-        const totalPoints = (gs.results ?? []).reduce(
-          (sum, r) => sum + (r.adjusted_points ?? r.points),
-          0
-        );
-        const totalMax = (gs.results ?? []).reduce((sum, r) => sum + r.max_points, 0);
-        return { id: gs.student_id, totalPoints, totalMax };
-      }),
-    [items]
-  );
+  const totalsPerSubmission = useMemo(() => buildTotals(items), [items]);
 
   useDocumentTitle(`Results - ${assessmentRes?.name ?? 'Assessment'} - GradeFlow`);
+
+  if (!enabled) {
+    return <div className="alert alert-error"><span>Assessment ID is missing.</span></div>;
+  }
 
   return (
     <section className="space-y-4">
@@ -111,15 +80,16 @@ const ResultsShellPage: React.FC = () => {
         <div className="flex items-center gap-3">
           <Button
             variant="outline"
-            onClick={() => navigate(`/assessments/${assessmentId}/rules`)}
+            onClick={() => navigate(`/assessments/${safeId}/rules`)}
             leftIcon={<IconChevronLeft />}
           >
             <span>{assessmentRes?.name ?? 'Assessment'}</span>
           </Button>
           <h2 className="text-xl font-semibold">Grading Results</h2>
         </div>
+
         <div className="flex items-center gap-2">
-          <ResultsExportMenu assessmentId={assessmentId} disabled={items.length === 0} />
+          <ResultsExportMenu assessmentId={safeId} disabled={(items?.length ?? 0) === 0} />
         </div>
       </div>
 
@@ -165,21 +135,20 @@ const ResultsShellPage: React.FC = () => {
       </div>
 
       {!isLoading && !isError && items.length > 0 && activeTab === 'overview' && (
-        <ResultsOverviewTab
-          assessmentId={assessmentId}
+        <ResultsOverview
           items={items}
           questionIds={questionIds}
-          navigate={navigate}
           passphrase={passphrase}
+          onView={(studentId) => navigate(`/results/${safeId}/${encodeURIComponent(studentId)}`)}
         />
       )}
 
       {!isLoading && !isError && items.length > 0 && activeTab === 'stats' && (
-        <ResultsStatsTab items={items} totals={totalsPerSubmission} />
+        <ResultsStats items={items} />
       )}
 
       {!isLoading && !isError && items.length > 0 && activeTab === 'analysis' && (
-        <QuestionAnalysisTab items={items} questionIds={questionIds} />
+        <QuestionAnalysis items={items} questionIds={questionIds} />
       )}
     </section>
   );

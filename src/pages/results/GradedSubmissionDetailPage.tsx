@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useCallback } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
   IconChevronLeft,
   IconChevronRight,
@@ -6,80 +7,55 @@ import {
   IconCheckCircle,
   IconEdit,
   IconAlertCircle,
-} from '../../components/ui/Icon';
-import { Button } from '../../components/ui/Button';
-import { IconButton } from '../../components/ui/IconButton';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '../../api';
-import ErrorAlert from '../../components/common/ErrorAlert';
-import EncryptedDataGuard from '../../components/common/encryptions/EncryptedDataGuard';
-import DecryptedText from '../../components/common/encryptions/DecryptedText';
-import { isEncrypted } from '../../utils/crypto';
-import { buildPassphraseKey } from '../../utils/passphrase';
-import { usePassphrase } from '../../hooks/usePassphrase';
-import { friendlyRuleLabel } from '../../utils/rulesHelpers';
+} from '@components/ui/Icon';
+import { Button } from '@components/ui/Button';
+import { IconButton } from '@components/ui/IconButton';
+import ErrorAlert from '@components/common/ErrorAlert';
+import EncryptedDataGuard from '@components/common/encryptions/EncryptedDataGuard';
+import DecryptedText from '@components/common/encryptions/DecryptedText';
+import { isEncrypted } from '@utils/crypto';
+import { buildPassphraseKey } from '@utils/passphrase';
+import { usePassphrase } from '@hooks/usePassphrase';
+import { friendlyRuleLabel } from '@features/rules/helpers';
+
+import { useGrading, useAdjustGrading } from '@features/grading/hooks';
 import type {
-  GradingResponse,
   AdjustableGradedSubmission,
   AdjustableQuestionResult,
   GradeAdjustmentRequest,
   GradeAdjustment,
-} from '../../api/models';
-
-type EditState = Record<string, { points?: number; feedback?: string }>; // keyed by question_id
+} from '@api/models';
 
 const GradedSubmissionDetailPage: React.FC = () => {
   const { assessmentId, studentId: rawStudentId } = useParams<{ assessmentId: string; studentId: string }>();
-  const encodedStudentId = rawStudentId ?? '';
   const navigate = useNavigate();
-  const qc = useQueryClient();
 
-  if (!assessmentId) {
-    return <div className="alert alert-error"><span>Assessment ID is missing.</span></div>;
-  }
+  // Always call hooks in a fixed order
+  const enabled = Boolean(assessmentId);
+  const safeId = assessmentId ?? '';
+  const encodedStudentId = rawStudentId ?? '';
 
-  // Passphrase state via hook (standardised storage key)
-  const storageKey = buildPassphraseKey(assessmentId);
+  // Passphrase state (standardised storage key)
+  const storageKey = buildPassphraseKey(safeId);
   const { passphrase, setPassphrase } = usePassphrase(storageKey);
-
-  // Encrypted data guard prompt only when the encoded ID is encrypted
   const [encryptedDetected] = useState<boolean>(() => isEncrypted(encodedStudentId));
+  const onPassphraseReady = useCallback((pp: string | null) => setPassphrase(pp), [setPassphrase]);
 
-  const onPassphraseReady = useCallback((pp: string | null) => {
-    setPassphrase(pp);
-  }, [setPassphrase]);
+  // Data hooks
+  const { data, isLoading, isError, error } = useGrading(safeId, enabled);
+  const adjustMutation = useAdjustGrading(safeId);
 
-  // Load graded submissions
-  const { data, isLoading, isError, error } = useQuery({
-    queryKey: ['grading', assessmentId],
-    queryFn: async () =>
-      (await api.getGradingAssessmentsAssessmentIdGradingGet(assessmentId)).data as GradingResponse,
-    enabled: !!assessmentId,
-    staleTime: 30_000,
-  });
-
+  // Derived data
   const submissions: AdjustableGradedSubmission[] = data?.graded_submissions ?? [];
   const index = submissions.findIndex((s) => s.student_id === encodedStudentId);
   const current = index >= 0 ? submissions[index] : null;
-
   const prevId = index > 0 ? submissions[index - 1].student_id : null;
   const nextId = index >= 0 && index < submissions.length - 1 ? submissions[index + 1].student_id : null;
 
   // Local edit state for adjustments
+  type EditState = Record<string, { points?: number; feedback?: string }>; // keyed by question_id
   const [editing, setEditing] = useState<EditState>({});
   const [openEdits, setOpenEdits] = useState<Record<string, boolean>>({});
-
-  const adjustMutation = useMutation({
-    mutationKey: ['grading', assessmentId, 'adjust'],
-    mutationFn: async (payload: GradeAdjustmentRequest) =>
-      (await api.adjustGradingAssessmentsAssessmentIdGradingAdjustPost(assessmentId, payload)).data,
-    onSuccess: async () => {
-      await qc.invalidateQueries({ queryKey: ['grading', assessmentId] });
-      setEditing({});
-      setOpenEdits({});
-    },
-  });
 
   const startEdit = (qid: string, res: AdjustableQuestionResult) => {
     setOpenEdits((prev) => ({ ...prev, [qid]: true }));
@@ -103,7 +79,12 @@ const GradedSubmissionDetailPage: React.FC = () => {
 
   const hasAnyChange = useMemo(() => Object.keys(editing).length > 0, [editing]);
 
-  const onSave = async () => {
+  const resetEdits = () => {
+    setEditing({});
+    setOpenEdits({});
+  };
+
+  const onSave = () => {
     if (!current) return;
     const adjustments: GradeAdjustment[] = Object.entries(editing).map(([qid, e]) => ({
       student_id: current.student_id,
@@ -112,16 +93,22 @@ const GradedSubmissionDetailPage: React.FC = () => {
       adjusted_feedback: e.feedback ?? null,
     }));
     if (!adjustments.length) return;
-    await adjustMutation.mutateAsync({ adjustments });
+
+    const payload: GradeAdjustmentRequest = { adjustments };
+    adjustMutation.mutate(payload, { onSuccess: resetEdits });
   };
 
   const gotoPrev = () => {
-    if (prevId) navigate(`/results/${assessmentId}/${encodeURIComponent(prevId)}`);
+    if (prevId) navigate(`/results/${safeId}/${encodeURIComponent(prevId)}`);
   };
   const gotoNext = () => {
-    if (nextId) navigate(`/results/${assessmentId}/${encodeURIComponent(nextId)}`);
+    if (nextId) navigate(`/results/${safeId}/${encodeURIComponent(nextId)}`);
   };
 
+  // Loading/error states after hooks
+  if (!enabled) {
+    return <div className="alert alert-error"><span>Assessment ID is missing.</span></div>;
+  }
   if (isLoading) return <div className="alert alert-info"><span>Loading submission...</span></div>;
   if (isError) return <ErrorAlert error={error} />;
   if (!current) return <div className="alert alert-warning"><span>Submission not found.</span></div>;
@@ -155,12 +142,8 @@ const GradedSubmissionDetailPage: React.FC = () => {
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            onClick={() => navigate(`/results/${assessmentId}`)}
-            leftIcon={<IconChevronLeft />}
-          >
-            Back
+          <Button variant="outline" onClick={() => navigate(`/results/${safeId}`)}>
+            <IconChevronLeft /> Back
           </Button>
           <span className="font-mono text-sm badge badge-ghost flex items-center">
             <DecryptedText value={encodedStudentId} passphrase={passphrase} mono size="sm" />

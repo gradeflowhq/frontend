@@ -1,5 +1,5 @@
 import React from 'react';
-import { getErrorMessages } from '../../utils/error';
+import { getErrorMessages } from '@utils/error';
 
 type ErrorAlertProps = {
   error: unknown;

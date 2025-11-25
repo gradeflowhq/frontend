@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { TokenPairResponse } from '../api/models';
+import type { TokenPairResponse } from '@api/models';
 
 type AuthState = {
   accessToken: string | null;

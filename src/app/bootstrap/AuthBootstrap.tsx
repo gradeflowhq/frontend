@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { api } from '../../api';
-import { useAuthStore } from '../../state/authStore';
+import { api } from '@api';
+import { useAuthStore } from '@state/authStore';
 
 type Props = { children: React.ReactNode };
 

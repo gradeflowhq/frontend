@@ -1,13 +1,13 @@
 import React, { useCallback } from 'react';
 import { Outlet } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { api } from '../api';
-import Navbar from '../components/common/NavBar';
-import ErrorAlert from '../components/common/ErrorAlert';
-import ErrorBoundary from '../components/common/ErrorBoundary';
-import { useAuthStore } from '../state/authStore';
+import { api } from '@api';
+import Navbar from '@components/common/NavBar';
+import ErrorAlert from '@components/common/ErrorAlert';
+import ErrorBoundary from '@components/common/ErrorBoundary';
+import { useAuthStore } from '@state/authStore';
 
-import type { MeResponse } from '../api/models';
+import type { MeResponse } from '@api/models';
 
 const ProtectedLayout: React.FC = () => {
   const clearTokens = useAuthStore((s) => s.clearTokens);

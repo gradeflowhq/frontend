@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { readPassphrase, writePassphrase } from '../utils/passphrase';
+import { readPassphrase, writePassphrase } from '@utils/passphrase';
 
 export const usePassphrase = (storageKey: string) => {
   const [passphrase, setPassphrase] = useState<string | null>(() => readPassphrase(storageKey));

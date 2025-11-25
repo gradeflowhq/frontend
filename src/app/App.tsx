@@ -1,15 +1,15 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
-import LoginPage from '../pages/LoginPage';
-import RegisterPage from '../pages/RegisterPage';
-import AssessmentsPage from '../pages/AssessmentsPage';
-import AssessmentShellPage from '../pages/assessment/AssessmentShellPage';
-import SubmissionsTabPage from '../pages/assessment/SubmissionsTabPage';
-import QuestionsTabPage from '../pages/assessment/QuestionsTabPage';
-import RulesTabPage from '../pages/assessment/RulesTabPage';
-import ResultsShellPage from '../pages/results/ResultsShellPage';
-import GradedSubmissionDetailPage from '../pages/results/GradedSubmissionDetailPage';
+import LoginPage from '@pages/LoginPage';
+import RegisterPage from '@pages/RegisterPage';
+import AssessmentsPage from '@pages/assessments/AssessmentsPage';
+import AssessmentShellPage from '@pages/assessments/AssessmentShellPage';
+import SubmissionsTabPage from '@pages/assessments/SubmissionsTabPage';
+import QuestionsTabPage from '@pages/assessments/QuestionsTabPage';
+import RulesTabPage from '@pages/assessments/RulesTabPage';
+import ResultsShellPage from '@pages/results/ResultsShellPage';
+import GradedSubmissionDetailPage from '@pages/results/GradedSubmissionDetailPage';
 
 import ProtectedRoute from './routes/ProtectedRoute';
 import PublicOnlyRoute from './routes/PublicOnlyRoute';

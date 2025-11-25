@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { api } from './index';
-import { useAuthStore } from '../state/authStore';
+import { useAuthStore } from '@state/authStore';
 
 axios.defaults.baseURL = 'http://localhost:8000';
 
@@ -16,7 +16,10 @@ axios.interceptors.request.use((config) => {
   const accessToken = useAuthStore.getState().accessToken;
   if (accessToken) {
     config.headers = config.headers ?? {};
-    (config.headers as any).Authorization = `Bearer ${accessToken}`;
+    // Only set if missing to avoid overriding custom headers
+    if (!config.headers.Authorization) {
+      (config.headers as any).Authorization = `Bearer ${accessToken}`;
+    }
   }
   return config;
 });
@@ -34,10 +37,13 @@ axios.interceptors.response.use(
 
     originalRequest._retry = true;
 
-    // Return a promise that resolves after refresh
     return new Promise(async (resolve, reject) => {
+      // Queue the request until refresh settles
       queue.push((newAccess) => {
-        if (!newAccess) return reject(error);
+        if (!newAccess) {
+          originalRequest._retry = false;
+          return reject(error);
+        }
         originalRequest.headers = originalRequest.headers ?? {};
         originalRequest.headers.Authorization = `Bearer ${newAccess}`;
         resolve(axios(originalRequest));

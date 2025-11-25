@@ -9,8 +9,5 @@ export default defineConfig({
       client: 'axios',
       prettier: true,
     },
-    hooks: {
-      useMutator: 'src/api/mutator.ts',
-    },
   },
 });
