@@ -38,46 +38,53 @@ const MembersDialog: React.FC<Props> = ({ open, assessmentId, onClose }) => {
     [setMemberRole]
   );
 
+  if (!open) return null;
+
   return (
     <Modal open={open} onClose={onClose} boxClassName="w-full max-w-3xl">
       <h3 className="font-bold text-lg">Members</h3>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-2">
-        <div className="form-control md:col-span-2">
-          <label className="label"><span className="label-text">User email</span></label>
-          <input
-            type="email"
-            className="input input-bordered w-full"
-            placeholder="user@example.com"
-            value={userEmail}
-            onChange={(e) => setUserEmail(e.target.value)}
-          />
-        </div>
-
-        <div className="form-control">
-          <label className="label"><span className="label-text">Role</span></label>
-          <select
-            className="select select-bordered w-full"
-            value={role}
-            onChange={(e) => setRole(e.target.value as UserResponseRole)}
-          >
-            <option value="owner">owner</option>
-            <option value="editor">editor</option>
-            <option value="viewer">viewer</option>
-          </select>
-        </div>
-      </div>
-
+      {/* One-line Add row */}
       <div className="mt-3">
-        <Button
-          type="button"
-          variant="primary"
-          onClick={() => addMember.mutate({ user_email: userEmail, role })}
-          disabled={addMember.isPending || !userEmail}
-          leftIcon={<IconPlus />}
-        >
-          {addMember.isPending ? 'Adding...' : 'Add'}
-        </Button>
+        <div className="flex flex-col gap-2 md:flex-row md:items-end">
+          <div className="form-control md:flex-1">
+            <label className="label"><span className="label-text">User email</span></label>
+            <input
+              type="email"
+              className="input input-bordered w-full"
+              placeholder="user@example.com"
+              value={userEmail}
+              onChange={(e) => setUserEmail(e.target.value)}
+            />
+          </div>
+
+          <div className="form-control md:w-48">
+            <label className="label"><span className="label-text">Role</span></label>
+            <select
+              className="select select-bordered w-full"
+              value={role}
+              onChange={(e) => setRole(e.target.value as UserResponseRole)}
+            >
+              <option value="owner">owner</option>
+              <option value="editor">editor</option>
+              <option value="viewer">viewer</option>
+            </select>
+          </div>
+
+          <div className="md:pb-0">
+            <Button
+              type="button"
+              variant="primary"
+              onClick={() => addMember.mutate({ user_email: userEmail, role }, { onSuccess: () => { setUserEmail('') } })}
+              disabled={addMember.isPending || !userEmail}
+              leftIcon={<IconPlus />}
+              className="w-full md:w-auto"
+              title="Add member"
+            >
+              {addMember.isPending ? 'Adding...' : 'Add'}
+            </Button>
+          </div>
+        </div>
       </div>
 
       {isLoading && <div className="alert alert-info mt-3"><span>Loading members...</span></div>}
@@ -97,7 +104,11 @@ const MembersDialog: React.FC<Props> = ({ open, assessmentId, onClose }) => {
       )}
 
       <div className="modal-action">
-        <Button type="button" onClick={onClose} disabled={addMember.isPending || setMemberRole.isPending || removeMember.isPending}>
+        <Button
+          type="button"
+          onClick={onClose}
+          disabled={addMember.isPending || setMemberRole.isPending || removeMember.isPending}
+        >
           Close
         </Button>
       </div>
@@ -107,7 +118,10 @@ const MembersDialog: React.FC<Props> = ({ open, assessmentId, onClose }) => {
         title="Remove Member"
         message="Are you sure you want to remove this member from the assessment?"
         confirmText={removeMember.isPending ? 'Removing...' : 'Remove'}
-        onConfirm={() => removeTarget && removeMember.mutate(removeTarget, { onSuccess: () => setRemoveTarget(null) })}
+        onConfirm={() =>
+          removeTarget &&
+          removeMember.mutate(removeTarget, { onSuccess: () => setRemoveTarget(null) })
+        }
         onCancel={() => setRemoveTarget(null)}
       />
     </Modal>

@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Button } from '@components/ui/Button';
-import { IconSave, IconTrash, IconInbox } from '@components/ui/Icon';
+import { IconSave, IconTrash, IconInbox, IconEdit } from '@components/ui/Icon';
 import {
   createColumnHelper,
   flexRender,
@@ -16,7 +16,34 @@ type MembersTableProps = {
 };
 
 const MembersTable: React.FC<MembersTableProps> = ({ items = [], onSetRole, onRemove }) => {
-  const [pendingRole, setPendingRole] = useState<Record<string, UserResponseRole>>({});
+  // Track which row is being edited and the pending role for that row
+  const [editingUserId, setEditingUserId] = useState<string | null>(null);
+  const [pendingRole, setPendingRole] = useState<UserResponseRole | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const beginEdit = (user: UserResponse) => {
+    setEditingUserId(user.id);
+    setPendingRole(user.role);
+  };
+
+  const cancelEdit = () => {
+    setEditingUserId(null);
+    setPendingRole(null);
+  };
+
+  const saveEdit = async (user: UserResponse) => {
+    if (pendingRole == null || pendingRole === user.role) {
+      cancelEdit();
+      return;
+    }
+    try {
+      setSaving(true);
+      await onSetRole(user.id, pendingRole);
+      cancelEdit();
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const columnHelper = createColumnHelper<UserResponse>();
   const columns = useMemo(
@@ -33,30 +60,25 @@ const MembersTable: React.FC<MembersTableProps> = ({ items = [], onSetRole, onRe
         header: 'Role',
         cell: ({ row }) => {
           const user = row.original;
-          const userId = user.id;
-          const current = pendingRole[userId] ?? user.role;
+          const isEditing = editingUserId === user.id;
+
+          if (!isEditing) {
+            return <span className="badge badge-ghost">{user.role}</span>;
+          }
+
           return (
-            <div className="flex items-center gap-2">
-              <select
-                className="select select-bordered select-sm"
-                value={current}
-                onChange={(e) => {
-                  const role = e.target.value as UserResponseRole;
-                  setPendingRole((prev) => ({ ...prev, [userId]: role }));
-                }}
-              >
-                <option value="owner">owner</option>
-                <option value="editor">editor</option>
-                <option value="viewer">viewer</option>
-              </select>
-              <Button
-                size="xs"
-                onClick={() => onSetRole(userId, (pendingRole[userId] ?? user.role))}
-                leftIcon={<IconSave />}
-              >
-                Save
-              </Button>
-            </div>
+            <select
+              className="select select-bordered select-sm"
+              value={pendingRole ?? user.role}
+              onChange={(e) => {
+                const r = e.target.value as UserResponseRole;
+                setPendingRole(r);
+              }}
+            >
+              <option value="owner">owner</option>
+              <option value="editor">editor</option>
+              <option value="viewer">viewer</option>
+            </select>
           );
         },
       }),
@@ -65,17 +87,42 @@ const MembersTable: React.FC<MembersTableProps> = ({ items = [], onSetRole, onRe
         header: 'Actions',
         cell: ({ row }) => {
           const user = row.original;
+          const isEditing = editingUserId === user.id;
+
+          if (!isEditing) {
+            return (
+              <div className="flex gap-2">
+                <Button size="sm" onClick={() => beginEdit(user)} leftIcon={<IconEdit />}>
+                  Edit
+                </Button>
+                <Button size="sm" variant="error" onClick={() => onRemove(user.id)} leftIcon={<IconTrash />}>
+                  Remove
+                </Button>
+              </div>
+            );
+          }
+
           return (
             <div className="flex gap-2">
-              <Button size="sm" variant="error" onClick={() => onRemove(user.id)} leftIcon={<IconTrash />}>
-                Remove
+              <Button
+                size="sm"
+                variant="primary"
+                onClick={() => saveEdit(user)}
+                leftIcon={<IconSave />}
+                loading={saving}
+                disabled={saving}
+              >
+                Save
+              </Button>
+              <Button size="sm" variant="ghost" onClick={cancelEdit} disabled={saving}>
+                Cancel
               </Button>
             </div>
           );
         },
       }),
     ],
-    [columnHelper, onSetRole, onRemove, pendingRole]
+    [columnHelper, editingUserId, pendingRole, saving, onRemove]
   );
 
   const table = useReactTable({
