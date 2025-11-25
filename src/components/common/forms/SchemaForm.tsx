@@ -23,6 +23,7 @@ export type SchemaFormProps<T = any> = {
   submitIdleLabel?: React.ReactNode;
   submitLoadingLabel?: React.ReactNode;
   templates?: FormProps<T>['templates'];
+  widgets?: FormProps<T>['widgets'];
   formContext?: FormProps<T>['formContext'];
 };
 
@@ -42,8 +43,15 @@ export const SchemaForm = <T extends any>({
   submitIdleLabel = 'Submit',
   submitLoadingLabel = undefined,
   templates,
+  widgets,
   formContext,
 }: SchemaFormProps<T>) => {
+  const mergedWidgets = React.useMemo(() => {
+    return {
+      ...(DaisyUITheme.widgets || {}),
+      ...(widgets || {}),
+    };
+  }, [widgets]);
   return (
     <DaisyUIForm
       schema={schema}
@@ -57,6 +65,7 @@ export const SchemaForm = <T extends any>({
       readonly={readonly}
       liveValidate={liveValidate}
       templates={templates}
+      widgets={mergedWidgets}
       formContext={formContext}
       {...formProps}
     >

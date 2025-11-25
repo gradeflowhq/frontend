@@ -15,6 +15,7 @@ import { injectEnumsFromConstraintsForQuestion } from '../helpers/constraints';
 
 import type { QuestionSetOutputQuestionMap } from '@api/models';
 import type { RuleValue } from '../types';
+import SwitchableTextWidget from '@components/common/forms/widgets/SwitchableTextWidget';
 
 type RuleDialogProps = {
   open: boolean;
@@ -127,6 +128,7 @@ const RuleDialog: React.FC<RuleDialogProps> = ({
   }, [baseSchema, injectedDefs, hiddenKeys]);
 
   const templates = React.useMemo(() => ({ FieldTemplate: HiddenAwareFieldTemplate }), []);
+  const widgets = React.useMemo(() => ({ TextWidget: SwitchableTextWidget }), []);
 
   if (!open) return null;
 
@@ -153,6 +155,7 @@ const RuleDialog: React.FC<RuleDialogProps> = ({
           formProps={{ noHtml5Validate: true }}
           showSubmit={false}
           templates={templates}
+          widgets={widgets}
           formContext={{ hideKeys: new Set(hiddenKeys) }}
         />
       ) : (

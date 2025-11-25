@@ -1,4 +1,7 @@
 import React from 'react';
+import CodeMirror from '@uiw/react-codemirror';
+import { python } from '@codemirror/lang-python';
+import { oneDark } from '@codemirror/theme-one-dark';
 import { IconEdit, IconTrash } from '@components/ui/Icon';
 import { Button } from '@components/ui/Button';
 import { HIDE_KEYS_SINGLE } from '../constants';
@@ -24,12 +27,47 @@ const PrimitiveView: React.FC<{ value: string | number | boolean | null }> = ({ 
   <span className="font-mono text-xs break-words">{value === null ? '—' : String(value)}</span>
 );
 
-const labelFromPath = (path: string): string => {
-  if (!path) return 'Details';
+// Extract last key segment from a path like "$.rules[0].code"
+const lastKeyFromPath = (path: string): string => {
+  if (!path) return '';
   const parts = path.split('.');
   let last = parts[parts.length - 1] || '';
-  last = last.replace(/$\d+$$/, ''); // strip array index like [0]
-  return last ? prettifyKey(last) : 'Details';
+  // strip trailing array index [0]
+  last = last.replace(/$\d+$$/, '');
+  return last;
+};
+
+const labelFromPath = (path: string): string => {
+  const key = lastKeyFromPath(path);
+  return key ? prettifyKey(key) : 'Details';
+};
+
+// Collapsible code block (read-only)
+const CodeCollapsible: React.FC<{ title: string; code: string; height?: string; language?: 'python' | 'text' }> = ({
+  title,
+  code,
+  height = '220px',
+  language = 'python',
+}) => {
+  const extensions = language === 'python' ? [python()] : [];
+  return (
+    <div className="collapse collapse-arrow border border-base-300 bg-base-100 rounded-box">
+      <input type="checkbox" />
+      <div className="collapse-title text-xs font-medium">{title}</div>
+      <div className="collapse-content">
+        <div className="rounded-md border border-base-300 overflow-hidden">
+          <CodeMirror
+            value={code}
+            height={height}
+            extensions={extensions}
+            theme={oneDark}
+            readOnly
+            basicSetup={{ lineNumbers: true, highlightActiveLine: true }}
+          />
+        </div>
+      </div>
+    </div>
+  );
 };
 
 const hasRuleDescendant = (value: any, defs: Record<string, any>): boolean => {
@@ -164,14 +202,29 @@ const renderNode = (
   defs: Record<string, any>,
   options: RenderOptions
 ): React.ReactNode => {
-  if (value === null || ['string', 'number', 'boolean'].includes(typeof value)) {
+  const keyName = lastKeyFromPath(path);
+  const isCodeKey = /code/i.test(keyName);
+
+  // Primitive non-string
+  if (value === null || ['number', 'boolean'].includes(typeof value)) {
     return <PrimitiveView value={value} />;
   }
 
+  // String
+  if (typeof value === 'string') {
+    if (isCodeKey) {
+      const title = prettifyKey(keyName || 'Code');
+      return <CodeCollapsible title={title} code={value} />;
+    }
+    return <PrimitiveView value={value} />;
+  }
+
+  // Arrays
   if (Array.isArray(value)) {
     return <ArrayView value={value} renderNode={(v, p, opts) => renderNode(v, p, defs, opts)} path={path} options={options} />;
   }
 
+  // Objects
   if (value && typeof value === 'object') {
     if (isRuleObject(value, defs)) {
       return (
@@ -187,6 +240,7 @@ const renderNode = (
     return <PlainObjectView obj={value} path={path} defs={defs} renderNode={(v, p, opts) => renderNode(v, p, defs, opts)} options={options} />;
   }
 
+  // Fallback
   try {
     return <span className="font-mono text-xs break-words">{JSON.stringify(value)}</span>;
   } catch {
