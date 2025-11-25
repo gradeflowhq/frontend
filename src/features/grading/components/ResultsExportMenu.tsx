@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '@api';
 import { useExportGrading } from '@features/grading/hooks';
 import { tryDecodeExportCsv } from '@features/submissions/helpers';
-import { buildPassphraseKey } from '@utils/passphrase';
+import { useAssessmentPassphrase } from '@features/encryption/AssessmentPassphraseProvider';
 import type { GradingExportRequest, GradingExportResponse } from '@api/models';
 
 type ResultsExportMenuProps = {
@@ -25,6 +25,7 @@ const ResultsExportMenu: React.FC<ResultsExportMenuProps> = ({
   label = 'Export',
 }) => {
   const [pendingSaver, setPendingSaver] = useState<string | null>(null);
+  const { passphrase } = useAssessmentPassphrase();
 
   // Available savers (fallback to CSV)
   const { data: saversRes } = useQuery({
@@ -47,8 +48,6 @@ const ResultsExportMenu: React.FC<ResultsExportMenuProps> = ({
     exportMutation.mutate(payload, {
       onSuccess: async (data: GradingExportResponse) => {
         try {
-          const storageKey = buildPassphraseKey(assessmentId);
-          const passphrase = localStorage.getItem(storageKey);
           const maybeDecoded = await tryDecodeExportCsv(data.data, { passphrase });
 
           const extension = data.extension || 'csv';

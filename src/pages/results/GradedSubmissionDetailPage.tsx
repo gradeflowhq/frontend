@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   IconChevronLeft,
@@ -12,11 +12,8 @@ import {
 import { Button } from '@components/ui/Button';
 import { IconButton } from '@components/ui/IconButton';
 import ErrorAlert from '@components/common/ErrorAlert';
-import EncryptedDataGuard from '@components/common/encryptions/EncryptedDataGuard';
 import DecryptedText from '@components/common/encryptions/DecryptedText';
 import { isEncrypted } from '@utils/crypto';
-import { buildPassphraseKey } from '@utils/passphrase';
-import { usePassphrase } from '@hooks/usePassphrase';
 import { friendlyRuleLabel } from '@features/rules/helpers';
 
 import { useGrading, useAdjustGrading } from '@features/grading/hooks';
@@ -27,35 +24,30 @@ import type {
   GradeAdjustment,
 } from '@api/models';
 import ConfirmDialog from '@components/common/ConfirmDialog';
+import { AssessmentPassphraseProvider, useAssessmentPassphrase } from '@features/encryption/AssessmentPassphraseProvider';
 
-const GradedSubmissionDetailPage: React.FC = () => {
-  const { assessmentId, studentId: rawStudentId } = useParams<{ assessmentId: string; studentId: string }>();
+const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStudentId: string }> = ({ assessmentId, encodedStudentId }) => {
   const navigate = useNavigate();
 
-  // Always call hooks in a fixed order
-  const enabled = Boolean(assessmentId);
-  const safeId = assessmentId ?? '';
-  const encodedStudentId = rawStudentId ?? '';
+  const safeId = assessmentId;
+  const enabled = true;
 
-  // Passphrase state (standardised storage key)
-  const storageKey = buildPassphraseKey(safeId);
-  const { passphrase, setPassphrase } = usePassphrase(storageKey);
+  const { passphrase, notifyEncryptedDetected } = useAssessmentPassphrase();
   const [encryptedDetected] = useState<boolean>(() => isEncrypted(encodedStudentId));
-  const onPassphraseReady = useCallback((pp: string | null) => setPassphrase(pp), [setPassphrase]);
+  React.useEffect(() => {
+    if (encryptedDetected) notifyEncryptedDetected();
+  }, [encryptedDetected, notifyEncryptedDetected]);
 
-  // Data hooks
   const { data, isLoading, isError, error } = useGrading(safeId, enabled);
   const adjustMutation = useAdjustGrading(safeId);
 
-  // Derived data
   const submissions: AdjustableGradedSubmission[] = data?.graded_submissions ?? [];
   const index = submissions.findIndex((s) => s.student_id === encodedStudentId);
   const current = index >= 0 ? submissions[index] : null;
   const prevId = index > 0 ? submissions[index - 1].student_id : null;
   const nextId = index >= 0 && index < submissions.length - 1 ? submissions[index + 1].student_id : null;
 
-  // Local edit state for adjustments
-  type EditState = Record<string, { points?: number; feedback?: string }>; // keyed by question_id
+  type EditState = Record<string, { points?: number; feedback?: string }>;
   const [editing, setEditing] = useState<EditState>({});
   const [openEdits, setOpenEdits] = useState<Record<string, boolean>>({});
   const [removeAdjustQid, setRemoveAdjustQid] = useState<string | null>(null);
@@ -108,7 +100,6 @@ const GradedSubmissionDetailPage: React.FC = () => {
     if (nextId) navigate(`/results/${safeId}/${encodeURIComponent(nextId)}`);
   };
 
-  // Loading/error states after hooks
   if (!enabled) {
     return <div className="alert alert-error"><span>Assessment ID is missing.</span></div>;
   }
@@ -116,7 +107,6 @@ const GradedSubmissionDetailPage: React.FC = () => {
   if (isError) return <ErrorAlert error={error} />;
   if (!current) return <div className="alert alert-warning"><span>Submission not found.</span></div>;
 
-  // Summary stats
   const originalTotalPoints = (current.results ?? []).reduce((sum, r) => sum + (r.points ?? 0), 0);
   const adjustedTotalPoints = (current.results ?? []).reduce(
     (sum, r) =>
@@ -136,13 +126,6 @@ const GradedSubmissionDetailPage: React.FC = () => {
 
   return (
     <section className="space-y-4">
-      <EncryptedDataGuard
-        storageKey={storageKey}
-        encryptedDetected={encryptedDetected}
-        onPassphraseReady={onPassphraseReady}
-        currentPassphrase={passphrase}
-      />
-
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={() => navigate(`/results/${safeId}`)}>
@@ -171,7 +154,6 @@ const GradedSubmissionDetailPage: React.FC = () => {
       </div>
       {adjustMutation.isError && <ErrorAlert error={adjustMutation.error} />}
 
-      {/* Totals/percentages */}
       <div className="stats shadow bg-base-100 w-full">
         <div className="stat">
           <div className="stat-title">Total (Original)</div>
@@ -210,7 +192,6 @@ const GradedSubmissionDetailPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Per-question results and editing */}
       <div className="overflow-x-auto rounded-box border border-base-300 bg-base-100 shadow-xs">
         <table className="table w-full">
           <thead>
@@ -374,6 +355,18 @@ const GradedSubmissionDetailPage: React.FC = () => {
         onCancel={() => setRemoveAdjustQid(null)}
       />
     </section>
+  );
+};
+
+const GradedSubmissionDetailPage: React.FC = () => {
+  const { assessmentId, studentId } = useParams<{ assessmentId: string; studentId: string }>();
+  if (!assessmentId || !studentId) {
+    return <div className="alert alert-error"><span>Assessment ID or Student ID is missing.</span></div>;
+  }
+  return (
+    <AssessmentPassphraseProvider assessmentId={assessmentId}>
+      <GradedSubmissionDetailInner assessmentId={assessmentId} encodedStudentId={studentId} />
+    </AssessmentPassphraseProvider>
   );
 };
 

@@ -1,4 +1,3 @@
-// frontend/src/pages/assessment/AssessmentShellPage.tsx
 import React from 'react';
 import { NavLink, Outlet, useParams, useNavigate } from 'react-router-dom';
 import PageHeader from '@components/common/PageHeader';
@@ -24,6 +23,7 @@ import SettingsDropdown from '@features/assessments/components/SettingsDropdown'
 import AssessmentEditModal from '@features/assessments/components/AssessmentEditModal';
 import type { AssessmentResponse, AssessmentUpdateRequest } from '@api/models';
 import { useUpdateAssessment } from '@features/assessments/hooks';
+import { AssessmentPassphraseProvider } from '@features/encryption/AssessmentPassphraseProvider';
 
 const TabsNav: React.FC<{ basePath: string }> = ({ basePath }) => {
   const tabClass = ({ isActive }: { isActive: boolean }) => `tab ${isActive ? 'tab-active' : ''}`;
@@ -138,10 +138,10 @@ const AssessmentShellPage: React.FC = () => {
       {isErrorAssessment && <ErrorAlert error={assessmentError} />}
 
       {!isLoadingAssessment && !isErrorAssessment && (
-        <>
+        <AssessmentPassphraseProvider assessmentId={assessmentId!}>
           <TabsNav basePath={basePath} />
           <Outlet />
-        </>
+        </AssessmentPassphraseProvider>
       )}
 
       <ConfirmDialog

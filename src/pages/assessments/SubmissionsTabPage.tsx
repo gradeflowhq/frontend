@@ -1,15 +1,9 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import ErrorAlert from '@components/common/ErrorAlert';
 import ConfirmDialog from '@components/common/ConfirmDialog';
-import EncryptedDataGuard from '@components/common/encryptions/EncryptedDataGuard';
-import { buildPassphraseKey } from '@utils/passphrase';
-import { usePassphrase } from '@hooks/usePassphrase';
 
-import {
-  useSubmissions,
-  useDeleteSubmissions,
-} from '@features/submissions';
+import { useSubmissions, useDeleteSubmissions } from '@features/submissions';
 import {
   SubmissionsHeader,
   SubmissionsTable,
@@ -24,14 +18,8 @@ const SubmissionsTabPage: React.FC = () => {
     return <div className="alert alert-error"><span>Assessment ID is missing.</span></div>;
   }
 
-  const storageKey = buildPassphraseKey(assessmentId);
-  const { passphrase, setPassphrase } = usePassphrase(storageKey);
-
   const [showLoadCsv, setShowLoadCsv] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [encryptedDetected, setEncryptedDetected] = useState(false);
-
-  const onPassphraseReady = useCallback((pp: string | null) => setPassphrase(pp), [setPassphrase]);
 
   const { data, isLoading, isError, error } = useSubmissions(assessmentId);
   const deleteMutation = useDeleteSubmissions(assessmentId);
@@ -40,13 +28,6 @@ const SubmissionsTabPage: React.FC = () => {
 
   return (
     <section className="space-y-6">
-      <EncryptedDataGuard
-        storageKey={storageKey}
-        encryptedDetected={encryptedDetected}
-        onPassphraseReady={onPassphraseReady}
-        currentPassphrase={passphrase}
-      />
-
       <SubmissionsHeader
         onLoadCsv={() => setShowLoadCsv(true)}
         onDeleteAll={() => setConfirmDelete(true)}
@@ -57,11 +38,7 @@ const SubmissionsTabPage: React.FC = () => {
       {isError && <ErrorAlert error={error} />}
 
       {!isLoading && !isError && (
-        <SubmissionsTable
-          items={items}
-          passphrase={passphrase}
-          onEncryptionDetected={() => setEncryptedDetected((prev) => prev || true)}
-        />
+        <SubmissionsTable items={items} />
       )}
 
       <SubmissionsLoadWizardModal
@@ -71,11 +48,13 @@ const SubmissionsTabPage: React.FC = () => {
       />
 
       <ConfirmDialog
-        open={confirmDelete}
+        open={!!confirmDelete}
         title="Delete All Submissions"
         message="Are you sure you want to delete all submissions for this assessment?"
         confirmText={deleteMutation.isPending ? 'Deleting...' : 'Delete'}
-        onConfirm={() => deleteMutation.mutate(undefined, { onSuccess: () => setConfirmDelete(false) })}
+        onConfirm={() => {
+          deleteMutation.mutate(undefined, { onSuccess: () => setConfirmDelete(false) });
+        }}
         onCancel={() => setConfirmDelete(false)}
       />
       {deleteMutation.isError && <ErrorAlert error={deleteMutation.error} className="mt-2" />}

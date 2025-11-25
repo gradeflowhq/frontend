@@ -3,15 +3,17 @@ import { Button } from '@components/ui/Button';
 import { IconEye } from '@components/ui/Icon';
 import DecryptedText from '@components/common/encryptions/DecryptedText';
 import type { AdjustableGradedSubmission, AdjustableQuestionResult } from '../types';
+import { useAssessmentPassphrase } from '@features/encryption/AssessmentPassphraseProvider';
 
 type Props = {
   items: AdjustableGradedSubmission[];
   questionIds: string[];
   onView: (studentId: string) => void; // caller decides how to navigate
-  passphrase?: string | null;
 };
 
-const ResultsOverview: React.FC<Props> = ({ items, questionIds, onView, passphrase }) => {
+const ResultsOverview: React.FC<Props> = ({ items, questionIds, onView }) => {
+  const { passphrase } = useAssessmentPassphrase();
+
   const renderPercentBar = (value: number, max: number) => {
     const pct = max > 0 ? Math.round((value / max) * 100) : 0;
     return (

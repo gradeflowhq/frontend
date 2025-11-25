@@ -9,15 +9,15 @@ import {
 import DecryptedText from '@components/common/encryptions/DecryptedText';
 import type { RawSubmission } from '@features/submissions/types';
 import { extractQuestionKeys } from '@features/submissions/helpers';
+import { useAssessmentPassphrase } from '@features/encryption/AssessmentPassphraseProvider';
 
 type SubmissionsTableProps = {
   items: RawSubmission[];
-  passphrase?: string | null;
-  onEncryptionDetected?: () => void;
 };
 
-const SubmissionsTable: React.FC<SubmissionsTableProps> = ({ items, passphrase, onEncryptionDetected }) => {
+const SubmissionsTable: React.FC<SubmissionsTableProps> = ({ items }) => {
   const columnHelper = createColumnHelper<RawSubmission>();
+  const { passphrase, notifyEncryptedDetected } = useAssessmentPassphrase();
 
   const questionKeys = useMemo(() => extractQuestionKeys(items), [items]);
 
@@ -37,7 +37,7 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({ items, passphrase, 
                 passphrase={passphrase}
                 mono
                 size="sm"
-                onEncryptedDetected={onEncryptionDetected}
+                onEncryptedDetected={notifyEncryptedDetected}
               />
             </div>
           );
@@ -70,7 +70,7 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({ items, passphrase, 
     }
 
     return cols;
-  }, [columnHelper, passphrase, onEncryptionDetected, questionKeys]);
+  }, [columnHelper, passphrase, notifyEncryptedDetected, questionKeys]);
 
   const table = useReactTable({
     data: items,

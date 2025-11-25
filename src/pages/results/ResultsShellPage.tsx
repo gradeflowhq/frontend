@@ -1,10 +1,7 @@
-import React, { useMemo, useState, useCallback, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ErrorAlert from '@components/common/ErrorAlert';
-import EncryptedDataGuard from '@components/common/encryptions/EncryptedDataGuard';
 import { isEncrypted } from '@utils/crypto';
-import { buildPassphraseKey } from '@utils/passphrase';
-import { usePassphrase } from '@hooks/usePassphrase';
 import { IconChevronLeft } from '@components/ui/Icon';
 import { Button } from '@components/ui/Button';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
@@ -20,27 +17,18 @@ import { useQuestionSet } from '@features/questions/hooks';
 
 import type { AdjustableGradedSubmission, QuestionSetOutputQuestionMap } from '@api/models';
 import ResultsExportMenu from '@features/grading/components/ResultsExportMenu';
+import { AssessmentPassphraseProvider, useAssessmentPassphrase } from '@features/encryption/AssessmentPassphraseProvider';
 
 const natsort = (a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
 
-const ResultsShellPage: React.FC = () => {
-  const { assessmentId } = useParams<{ assessmentId: string }>();
+const ResultsShellInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) => {
   const navigate = useNavigate();
-  const enabled = Boolean(assessmentId);
-  const safeId = assessmentId ?? '';
+  const safeId = assessmentId;
+  const enabled = true;
 
-  // Passphrase state via hook (standardised storage key)
-  const storageKey = buildPassphraseKey(safeId);
-  const { passphrase, setPassphrase } = usePassphrase(storageKey);
-
-  const [encryptedDetected, setEncryptedDetected] = useState<boolean>(false);
+  const { notifyEncryptedDetected } = useAssessmentPassphrase();
   const [activeTab, setActiveTab] = useState<'overview' | 'stats' | 'analysis'>('overview');
 
-  const onPassphraseReady = useCallback((pp: string | null) => {
-    setPassphrase(pp);
-  }, [setPassphrase]);
-
-  // Data hooks (top-level, stable order)
   const { data: assessmentRes, isLoading: loadingAssessment, isError: errorAssessment, error: assessmentError } =
     useAssessment(safeId, enabled);
 
@@ -56,26 +44,17 @@ const ResultsShellPage: React.FC = () => {
   const questionIds = useMemo(() => Object.keys(questionMap).sort(natsort), [questionMap]);
 
   useEffect(() => {
-    setEncryptedDetected(items.some((it) => isEncrypted(it.student_id)));
-  }, [items]);
+    if (items.some((it) => isEncrypted(it.student_id))) {
+      notifyEncryptedDetected();
+    }
+  }, [items, notifyEncryptedDetected]);
 
   const totalsPerSubmission = useMemo(() => buildTotals(items), [items]);
 
   useDocumentTitle(`Results - ${assessmentRes?.name ?? 'Assessment'} - GradeFlow`);
 
-  if (!enabled) {
-    return <div className="alert alert-error"><span>Assessment ID is missing.</span></div>;
-  }
-
   return (
     <section className="space-y-4">
-      <EncryptedDataGuard
-        storageKey={storageKey}
-        encryptedDetected={encryptedDetected}
-        onPassphraseReady={onPassphraseReady}
-        currentPassphrase={passphrase}
-      />
-
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Button
@@ -138,7 +117,6 @@ const ResultsShellPage: React.FC = () => {
         <ResultsOverview
           items={items}
           questionIds={questionIds}
-          passphrase={passphrase}
           onView={(studentId) => navigate(`/results/${safeId}/${encodeURIComponent(studentId)}`)}
         />
       )}
@@ -151,6 +129,18 @@ const ResultsShellPage: React.FC = () => {
         <QuestionAnalysis items={items} questionIds={questionIds} />
       )}
     </section>
+  );
+};
+
+const ResultsShellPage: React.FC = () => {
+  const { assessmentId } = useParams<{ assessmentId: string }>();
+  if (!assessmentId) {
+    return <div className="alert alert-error"><span>Assessment ID is missing.</span></div>;
+  }
+  return (
+    <AssessmentPassphraseProvider assessmentId={assessmentId}>
+      <ResultsShellInner assessmentId={assessmentId} />
+    </AssessmentPassphraseProvider>
   );
 };
 
