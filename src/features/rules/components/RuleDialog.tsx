@@ -9,8 +9,8 @@ import { HIDE_KEYS_SINGLE, HIDE_KEYS_MULTI } from '../constants';
 
 import { useRuleDefinitions, useCompatibleRuleKeys, useFindSchemaKeyByType } from '../hooks';
 import { friendlyRuleLabel } from '../helpers';
-import { enrichSchemaByConstraints } from '../helpers/constraints';
 import { augmentRulesSchemaWithQuestionIdEnums } from '../helpers/augmentations';
+import { injectEnumsFromConstraintsForQuestion } from '../helpers/constraints';
 
 import type { QuestionSetOutputQuestionMap } from '@api/models';
 import type { RuleValue } from '../types';
@@ -28,22 +28,19 @@ type RuleDialogProps = {
   error?: unknown;
 };
 
+// Seed essential fields RJSF won’t infer on its own
 const materializeDraftFromSchema = (schema: any, questionId?: string | null, initial?: any) => {
   const props = schema?.properties ?? {};
-  const out: Record<string, any> = { ...(initial ?? {}) };
+  const draft: Record<string, any> = { ...(initial ?? {}) };
 
   const typeConst = props?.type?.const ?? props?.type?.default;
-  if (typeConst) out.type = typeConst;
+  if (typeConst !== undefined && draft.type === undefined) draft.type = typeConst;
 
-  if (props?.question_id && questionId) out.question_id = questionId;
+  if (props?.question_id && questionId && draft.question_id === undefined) {
+    draft.question_id = questionId;
+  }
 
-  Object.entries<any>(props).forEach(([k, p]) => {
-    if (out[k] !== undefined || k === 'type' || k === 'question_id') return;
-    if (p.type === 'array') out[k] = Array.isArray(p.default) ? p.default : [];
-    else if (['number', 'integer', 'string', 'boolean'].includes(p.type) && p.default !== undefined) out[k] = p.default;
-  });
-
-  return out;
+  return draft;
 };
 
 const RuleDialog: React.FC<RuleDialogProps> = ({
@@ -58,49 +55,60 @@ const RuleDialog: React.FC<RuleDialogProps> = ({
   isSaving,
   error,
 }) => {
-  // Base definitions from schema file
+  // 1) Base rule definitions from schema file
   const defs = useRuleDefinitions();
 
-  // Narrow eligible schema keys for current context
+  // 2) Determine eligible rule types for context
   const eligibleKeys = useCompatibleRuleKeys(defs, questionType as any, !!questionId);
   const findKeyByType = useFindSchemaKeyByType(defs);
 
-  // Augment rule definitions with compatible question_id enums
-  const augmentedDefs = React.useMemo(() => {
+  // 3) First augmentation: restrict question_id enums by rule.question_types
+  const defsWithQidEnums = React.useMemo(() => {
     if (!questionMap) return defs;
-    // augmentRulesSchemaWithQuestionIdEnums expects the rules definitions object and a map of question_id -> schema
     return augmentRulesSchemaWithQuestionIdEnums(defs as any, questionMap as any) as Record<string, any>;
   }, [defs, questionMap]);
 
-  // Resolve concrete schema key (prefer selected key, else infer from initial rule type)
+  // 4) Second augmentation: inject enums from constraints.default for the specific questionId
+  const injectedDefs = React.useMemo(() => {
+    if (!questionMap || !questionId) return defsWithQidEnums;
+    return injectEnumsFromConstraintsForQuestion(
+      defsWithQidEnums as any,
+      questionMap as any,
+      questionId
+    ) as Record<string, any>;
+  }, [defsWithQidEnums, questionMap, questionId]);
+
+  // 5) Resolve concrete rule schema key
   const concreteKey = React.useMemo(() => {
-    if (selectedRuleKey && augmentedDefs[selectedRuleKey]) return selectedRuleKey;
+    if (selectedRuleKey && injectedDefs[selectedRuleKey]) return selectedRuleKey;
     const initType = (initialRule as any)?.type;
     if (initType) {
       const k = findKeyByType(String(initType), !!questionId);
       if (k) return k;
     }
     return eligibleKeys[0] ?? null;
-  }, [augmentedDefs, selectedRuleKey, initialRule, eligibleKeys, findKeyByType, questionId]);
+  }, [injectedDefs, selectedRuleKey, initialRule, eligibleKeys, findKeyByType, questionId]);
 
-  // Pick the base schema for the selected rule, from augmented defs
+  // 6) Pick base schema from injected defs
   const baseSchema = React.useMemo(
-    () => (concreteKey ? augmentedDefs[concreteKey] : null),
-    [augmentedDefs, concreteKey]
+    () => (concreteKey ? injectedDefs[concreteKey] : null),
+    [injectedDefs, concreteKey]
   );
 
+  // 7) Draft form data
   const [draft, setDraft] = React.useState<any>(() => {
     return baseSchema ? materializeDraftFromSchema(baseSchema, questionId, initialRule ?? {}) : (initialRule ?? {});
   });
-
   React.useEffect(() => {
     if (!baseSchema) return;
     setDraft(materializeDraftFromSchema(baseSchema, questionId, initialRule ?? {}));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [baseSchema, questionId]);
 
+  // 8) Hide boilerplate fields in UI
   const hiddenKeys = React.useMemo(() => (questionId ? [...HIDE_KEYS_SINGLE] : [...HIDE_KEYS_MULTI]), [questionId]);
 
+  // 9) Compose final schema (attach injected definitions) and UI schema
   const computed = React.useMemo(() => {
     const baseUi: Record<string, any> = {
       'ui:title': '',
@@ -113,23 +121,9 @@ const RuleDialog: React.FC<RuleDialogProps> = ({
 
     if (!baseSchema) return { schemaForRender: null as any, mergedUiSchema: baseUi };
 
-    // Enrich dynamic fields from constraints; ensure we pass augmented definitions
-    const enriched =
-      questionMap
-        ? enrichSchemaByConstraints(baseSchema, augmentedDefs, draft, questionMap, questionId)
-        : { schema: baseSchema, definitions: augmentedDefs, uiSchema: {} };
-
-    // Attach augmented definitions so question_id has the compatible enum
-    const schemaWithDefs = { ...enriched.schema, definitions: augmentedDefs };
-
-    const mergedUi = { ...baseUi };
-    Object.entries(enriched.uiSchema).forEach(([key, val]) => {
-      const isHidden = mergedUi[key]?.['ui:options']?.hidden === true;
-      if (!isHidden) mergedUi[key] = { ...(mergedUi[key] ?? {}), ...val };
-    });
-
-    return { schemaForRender: schemaWithDefs, mergedUiSchema: mergedUi };
-  }, [baseSchema, augmentedDefs, draft, questionMap, questionId, hiddenKeys]);
+    const schemaWithDefs = { ...baseSchema, definitions: injectedDefs };
+    return { schemaForRender: schemaWithDefs, mergedUiSchema: baseUi };
+  }, [baseSchema, injectedDefs, hiddenKeys]);
 
   const templates = React.useMemo(() => ({ FieldTemplate: HiddenAwareFieldTemplate }), []);
 

@@ -1,91 +1,133 @@
-import type { QuestionSetOutputQuestionMap, QuestionConstraint, RubricOutputRulesItem, RubricInputRulesItem } from '@api/models';
+type JsonObject = Record<string, any>;
 
-type RuleDraft = RubricOutputRulesItem | RubricInputRulesItem | Record<string, unknown>;
-type JsonSchema = Record<string, any>;
-type UiSchema = Record<string, any>;
+function deepClone<T>(obj: T): T {
+  return JSON.parse(JSON.stringify(obj));
+}
 
-const toStrings = (val: unknown): string[] =>
-  val == null ? [] : Array.isArray(val) ? val.map(String) : [String(val)];
-
-
-const collectConstraintOptions = (qMap: QuestionSetOutputQuestionMap, constraint: QuestionConstraint, scopedQid?: string | null): string[] => {
-  if (scopedQid && qMap[scopedQid]) {
-    const def = qMap[scopedQid] as any;
-    if (String(def?.type ?? '') !== String(constraint.type)) return [];
-    return toStrings(def?.[constraint.source]);
+function toEnumValues(value: any): string[] {
+  // Normalize the source into an array of strings suitable for enum.
+  if (Array.isArray(value)) {
+    return value
+      .map((v) => (typeof v === "string" ? v : String(v)))
+      .filter((v) => v.length > 0);
   }
-  const m = /^([^.\s]+)\.(.+)$/.exec(constraint.source ?? '');
-  if (m) {
-    const [, qid, attr] = m;
-    const def = qMap[qid] as any;
-    if (!def) return [];
-    if (String(def?.type ?? '') !== String(constraint.type)) return [];
-    return toStrings(def?.[attr]);
+  // If the source isn't an array, attempt to turn it into a single enum value.
+  if (value !== undefined && value !== null) {
+    return [String(value)];
   }
   return [];
-};
+}
 
-const injectIntoProps = (props: any, target: string, options: string[]): boolean => {
-  if (!props || !props[target] || options.length === 0) return false;
-  const prop = props[target];
-  if (!prop.type || prop.type === 'string') {
-    props[target] = { ...(prop ?? { type: 'string' }), enum: options };
-    return true;
+/**
+ * Injects enums into rule properties based on constraints for a specific question_id.
+ *
+ * For each rule in the schema:
+ *  - For each constraint in rule.constraints (from constraints.default):
+ *    - Take constraint.source from the question schema for the given question_id
+ *    - Inject those values into enums of rule[constraint.target]:
+ *        - If rule.properties[target] is an array: set items.enum
+ *        - Else: set property.enum
+ */
+export function injectEnumsFromConstraintsForQuestion(
+  rulesSchema: JsonObject,
+  questionIdToSchema: Record<string, JsonObject>,
+  questionId: string
+): JsonObject {
+  const updated = deepClone(rulesSchema);
+
+  const questionSchema = questionIdToSchema[questionId];
+  if (!questionSchema) {
+    // If the question_id isn't found, return the original (cloned) schema unchanged.
+    return updated;
   }
-  if (prop.type === 'array') {
-    const items = prop.items ?? { type: 'string' };
-    props[target] = { ...prop, items: { ...items, type: items.type ?? 'string', enum: options } };
-    return true;
-  }
-  return false;
-};
 
-const buildSelectUiForTarget = (props: any, target: string): UiSchema => {
-  const ui: UiSchema = {};
-  const prop = props?.[target];
-  if (!prop) return ui;
-  ui[target] = prop.type === 'array'
-    ? { 'ui:widget': 'select', 'ui:options': { multiple: true } }
-    : { 'ui:widget': 'select' };
-  return ui;
-};
+  // Iterate through rule definitions in the rules schema
+  for (const [defName, defSchema] of Object.entries(updated)) {
+    if (!defSchema || typeof defSchema !== "object") continue;
 
-export const enrichSchemaByConstraints = (
-  baseSchema: JsonSchema,
-  defs: Record<string, any>,
-  draft: RuleDraft,
-  qMap: QuestionSetOutputQuestionMap,
-  scopedQid?: string | null
-): { schema: JsonSchema; definitions: Record<string, any>; uiSchema: UiSchema } => {
-  const schema: JsonSchema = JSON.parse(JSON.stringify(baseSchema));
-  const definitions: Record<string, any> = JSON.parse(JSON.stringify(defs));
-  const uiSchema: UiSchema = {};
+    const props: JsonObject = defSchema.properties ?? {};
+    if (!props || typeof props !== "object") continue;
 
-  const constraints: QuestionConstraint[] = Array.isArray((draft as any)?.constraints)
-    ? ((draft as any).constraints as QuestionConstraint[])
-    : [];
+    // Constraints are defined as a schema, but may have a concrete default array we can use.
+    const constraintsSchema = props["constraints"];
+    const constraintsDefault = constraintsSchema?.default;
 
-  const applyToSchemaObject = (obj: any, c: QuestionConstraint) => {
-    const opts = collectConstraintOptions(qMap, c, scopedQid);
-    if (!c.target || opts.length === 0) return;
-    const ok = injectIntoProps(obj.properties, c.target, opts);
-    if (ok) Object.assign(uiSchema, buildSelectUiForTarget(obj.properties, c.target));
-  };
-
-  const branches = Array.isArray(schema.oneOf) ? schema.oneOf : Array.isArray(schema.anyOf) ? schema.anyOf : null;
-
-  constraints.forEach((c) => {
-    if (branches) {
-      const t = (draft as any)?.type;
-      const candidates = branches.filter((b: any) => {
-        const constType = b?.properties?.type?.const ?? b?.properties?.type?.default;
-        return t && constType ? String(constType) === String(t) : !!b?.properties?.[c.target];
-      });
-      candidates.forEach((branch: any) => applyToSchemaObject(branch, c));
-    } else {
-      applyToSchemaObject(schema, c);
+    if (!Array.isArray(constraintsDefault)) {
+      // No pre-defined constraints (or not in the expected place); skip this rule definition.
+      continue;
     }
-  });
 
-  return { schema, definitions, uiSchema };
+    // Process each constraint
+    for (const constraint of constraintsDefault) {
+      if (
+        !constraint ||
+        typeof constraint !== "object" ||
+        typeof constraint.source !== "string" ||
+        typeof constraint.target !== "string"
+      ) {
+        continue;
+      }
+
+      const sourceKey = constraint.source;
+      const targetKey = constraint.target;
+
+      const sourceValue = questionSchema[sourceKey];
+      const enumValues = toEnumValues(sourceValue);
+
+      // If no values extracted, skip injection
+      if (!Array.isArray(enumValues) || enumValues.length === 0) {
+        continue;
+      }
+
+      // Ensure target property exists
+      const targetProp = props[targetKey];
+      if (!targetProp || typeof targetProp !== "object") {
+        // Create a minimal property with enum
+        props[targetKey] = {
+          type: "string",
+          title: targetKey,
+          enum: enumValues,
+        };
+        continue;
+      }
+
+      // If target is an array property, set items.enum; otherwise, set property-level enum.
+      const isArrayType =
+        targetProp.type === "array" || typeof targetProp.items === "object";
+
+      if (isArrayType) {
+        targetProp.items = targetProp.items ?? {};
+        targetProp.items.enum = enumValues;
+      } else {
+        targetProp.enum = enumValues;
+      }
+    }
+
+    // Write back properties (explicitly)
+    defSchema.properties = props;
+    updated[defName] = defSchema;
+  }
+
+  return updated;
+}
+
+// Example usage:
+/*
+import fs from "fs";
+
+const rulesSchema = JSON.parse(fs.readFileSync("src/schemas/rules.json", "utf-8"));
+
+// Suppose your question map (instances) looks like this:
+const questionMap: Record<string, any> = {
+  Q1: { type: "CHOICE", options: ["A", "B", "C"], allow_multiple: true },
+  Q2: { type: "TEXT" },
+  Q3: { type: "CHOICE", options: ["A", "B"], allow_multiple: true },
 };
+
+// If you want to inject constraints for Q1:
+// For MultipleChoiceRule, its default constraint is { type: "CHOICE", source: "options", target: "answer" }
+// This will set:
+// - MultipleChoiceRule.properties.answer.items.enum = ["A", "B", "C"]
+const updated = injectEnumsFromConstraintsForQuestion(rulesSchema, questionMap, "Q1");
+console.log(JSON.stringify(updated, null, 2));
+*/
