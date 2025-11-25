@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import LoadingButton from '@components/ui/LoadingButton';
 import { Button } from '@components/ui/Button';
 import { IconSave, IconTrash, IconInbox, IconEdit } from '@components/ui/Icon';
 import {
@@ -104,16 +105,15 @@ const MembersTable: React.FC<MembersTableProps> = ({ items = [], onSetRole, onRe
 
           return (
             <div className="flex gap-2">
-              <Button
+              <LoadingButton
                 size="sm"
                 variant="primary"
                 onClick={() => saveEdit(user)}
                 leftIcon={<IconSave />}
-                loading={saving}
-                disabled={saving}
+                isLoading={saving}
               >
                 Save
-              </Button>
+              </LoadingButton>
               <Button size="sm" variant="ghost" onClick={cancelEdit} disabled={saving}>
                 Cancel
               </Button>

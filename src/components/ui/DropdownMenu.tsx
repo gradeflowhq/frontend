@@ -19,7 +19,7 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({ trigger, children, a
       <button tabIndex={0} className="btn btn-ghost" onClick={() => setOpen(o => !o)} onBlur={closeOnBlur}>
         {trigger}
       </button>
-      <ul tabIndex={0} className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-48 z-50">
+      <ul tabIndex={0} className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-50 z-50">
         {children}
       </ul>
     </div>

@@ -2,28 +2,24 @@ import React from 'react';
 import { NavLink, Outlet, useParams, useNavigate } from 'react-router-dom';
 import PageHeader from '@components/common/PageHeader';
 import ErrorAlert from '@components/common/ErrorAlert';
+import LoadingButton from '@components/ui/LoadingButton';
 import { Button } from '@components/ui/Button';
 import ConfirmDialog from '@components/common/ConfirmDialog';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
-import {
-  useAssessment,
-} from '@features/assessments/hooks';
-import {
-  useGrading,
-  useRunGrading,
-} from '@features/grading/hooks';
-import {
-  useRubric,
-  useRubricCoverage,
-} from '@features/rubric/hooks';
-import {
-  MembersDialog,
-} from '@features/assessments/components';
+import { buildPassphraseKey, clearPassphrase } from '@utils/passphrase';
+
+import { useAssessment } from '@features/assessments/hooks';
+import { useGrading, useRunGrading } from '@features/grading/hooks';
+import { useRubric, useRubricCoverage } from '@features/rubric/hooks';
+import { MembersDialog } from '@features/assessments/components';
 import SettingsDropdown from '@features/assessments/components/SettingsDropdown';
 import AssessmentEditModal from '@features/assessments/components/AssessmentEditModal';
 import type { AssessmentResponse, AssessmentUpdateRequest } from '@api/models';
 import { useUpdateAssessment } from '@features/assessments/hooks';
-import { AssessmentPassphraseProvider } from '@features/encryption/AssessmentPassphraseProvider';
+import {
+  AssessmentPassphraseProvider,
+  useAssessmentPassphrase,
+} from '@features/encryption/AssessmentPassphraseProvider';
 import { IconGrade } from '@components/ui/Icon';
 
 const TabsNav: React.FC<{ basePath: string }> = ({ basePath }) => {
@@ -37,6 +33,81 @@ const TabsNav: React.FC<{ basePath: string }> = ({ basePath }) => {
   );
 };
 
+// Renders the header actions and forget-passphrase confirmation inside Provider scope
+const HeaderActions: React.FC<{
+  assessmentId: string;
+  rulesCount: number;
+  hasGrading: boolean;
+  onRunGrading: () => void;
+  isGradingPending: boolean;
+  onOpenResults: () => void;
+  onOpenEdit: () => void;
+  onOpenMembers: () => void;
+}> = ({
+  assessmentId,
+  rulesCount,
+  hasGrading,
+  onRunGrading,
+  isGradingPending,
+  onOpenResults,
+  onOpenEdit,
+  onOpenMembers,
+}) => {
+  const { passphrase, clear } = useAssessmentPassphrase();
+  const [confirmForget, setConfirmForget] = React.useState(false);
+
+  const canForget = !!passphrase;
+
+  const handleForgetPassphrase = () => {
+    setConfirmForget(true);
+  };
+
+  const confirmForgetHandler = () => {
+    clearPassphrase(buildPassphraseKey(assessmentId));
+    clear();
+    setConfirmForget(false);
+  };
+
+  return (
+    <>
+      <div className="flex gap-2 items-center">
+        {rulesCount > 0 && (
+          <LoadingButton
+            type="button"
+            variant="outline"
+            className="btn-primary"
+            onClick={onRunGrading}
+            isLoading={isGradingPending}
+            leftIcon={<IconGrade />}
+          >
+            Run Grading
+          </LoadingButton>
+        )}
+        {hasGrading && (
+          <Button type="button" variant="outline" onClick={onOpenResults} title="View grading results">
+            Results
+          </Button>
+        )}
+        <SettingsDropdown
+          onEditAssessment={onOpenEdit}
+          onOpenMembers={onOpenMembers}
+          onForgetPassphrase={handleForgetPassphrase}
+          showForgetPassphrase={canForget}
+        />
+      </div>
+
+      <ConfirmDialog
+        open={confirmForget}
+        title="Forget Passphrase"
+        message="This will remove your locally stored passphrase and require re-entry to decrypt encrypted IDs. Proceed?"
+        confirmText="Forget"
+        onConfirm={confirmForgetHandler}
+        onCancel={() => setConfirmForget(false)}
+      />
+    </>
+  );
+};
+
 const AssessmentShellPage: React.FC = () => {
   const { assessmentId } = useParams<{ assessmentId: string }>();
   const navigate = useNavigate();
@@ -44,8 +115,12 @@ const AssessmentShellPage: React.FC = () => {
   const [showEdit, setShowEdit] = React.useState(false);
   const [showMembers, setShowMembers] = React.useState(false);
 
-  const { data: assessmentRes, isLoading: isLoadingAssessment, isError: isErrorAssessment, error: assessmentError } =
-    useAssessment(assessmentId!, !!assessmentId);
+  const {
+    data: assessmentRes,
+    isLoading: isLoadingAssessment,
+    isError: isErrorAssessment,
+    error: assessmentError,
+  } = useAssessment(assessmentId!, !!assessmentId);
 
   const { data: gradingRes } = useGrading(assessmentId!, !!assessmentId);
   const { data: rubricRes } = useRubric(assessmentId!);
@@ -100,51 +175,37 @@ const AssessmentShellPage: React.FC = () => {
 
   return (
     <section>
-      <PageHeader
-        title={assessmentRes?.name ?? 'Assessment'}
-        actions={
-          <div className="flex gap-2 items-center">
-            {rulesCount > 0 && (
-              <Button
-                type="button"
-                variant="outline"
-                className="btn-primary"
-                onClick={handleGradeClick}
-                disabled={runGradingMutation.isPending}
-                leftIcon={<IconGrade />}
-              >
-                {runGradingMutation.isPending ? 'Grading…' : 'Run Grading'}
-              </Button>
-            )}
-            {hasGrading && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => navigate(`/results/${assessmentId}`)}
-                title="View grading results"
-              >
-                Results
-              </Button>
-            )}
-            <SettingsDropdown onEditAssessment={() => setShowEdit(true)} onOpenMembers={() => setShowMembers(true)} />
-            <MembersDialog open={showMembers} assessmentId={assessmentId!} onClose={() => setShowMembers(false)} />
+      <AssessmentPassphraseProvider assessmentId={assessmentId!}>
+        <PageHeader
+          title={assessmentRes?.name ?? 'Assessment'}
+          actions={
+            <HeaderActions
+              assessmentId={assessmentId!}
+              rulesCount={rulesCount}
+              hasGrading={hasGrading}
+              onRunGrading={handleGradeClick}
+              isGradingPending={runGradingMutation.isPending}
+              onOpenResults={() => navigate(`/results/${assessmentId}`)}
+              onOpenEdit={() => setShowEdit(true)}
+              onOpenMembers={() => setShowMembers(true)}
+            />
+          }
+        />
+
+        {isLoadingAssessment && (
+          <div className="animate-pulse">
+            <div className="h-10 bg-base-200 rounded mb-2" />
           </div>
-        }
-      />
+        )}
+        {isErrorAssessment && <ErrorAlert error={assessmentError} />}
 
-      {isLoadingAssessment && (
-        <div className="animate-pulse">
-          <div className="h-10 bg-base-200 rounded mb-2" />
-        </div>
-      )}
-      {isErrorAssessment && <ErrorAlert error={assessmentError} />}
-
-      {!isLoadingAssessment && !isErrorAssessment && (
-        <AssessmentPassphraseProvider assessmentId={assessmentId!}>
-          <TabsNav basePath={basePath} />
-          <Outlet />
-        </AssessmentPassphraseProvider>
-      )}
+        {!isLoadingAssessment && !isErrorAssessment && (
+          <>
+            <TabsNav basePath={basePath} />
+            <Outlet />
+          </>
+        )}
+      </AssessmentPassphraseProvider>
 
       <ConfirmDialog
         open={confirmCoverage}
@@ -162,7 +223,9 @@ const AssessmentShellPage: React.FC = () => {
         open={confirmOverride}
         title="Override Existing Grading"
         message="Submissions have already been graded. Continuing will override all results and adjustments. Proceed?"
-        confirmText={runGradingMutation.isPending ? 'Grading…' : 'Proceed'}
+        confirmLoading={runGradingMutation.isPending}
+        confirmLoadingLabel="Grading…"
+        confirmText="Proceed"
         onConfirm={proceedAfterOverride}
         onCancel={() => setConfirmOverride(false)}
       />
@@ -177,6 +240,8 @@ const AssessmentShellPage: React.FC = () => {
           await updateAssessmentMutation.mutateAsync({ id, payload: formData }, { onSuccess: () => setShowEdit(false) });
         }}
       />
+
+      <MembersDialog open={showMembers} assessmentId={assessmentId!} onClose={() => setShowMembers(false)} />
     </section>
   );
 };

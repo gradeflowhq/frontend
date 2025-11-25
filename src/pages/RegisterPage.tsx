@@ -48,6 +48,7 @@ const RegisterPage: React.FC = () => {
       <SchemaForm<SignupRequest>
         schema={schema}
         uiSchema={uiSchema}
+        isSubmitting={isPending}
         onSubmit={async ({ formData }) => {
           await mutateAsync(formData);
         }}

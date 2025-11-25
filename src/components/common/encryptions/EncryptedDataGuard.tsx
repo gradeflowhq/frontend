@@ -81,9 +81,9 @@ const EncryptedDataGuard: React.FC<Props> = ({
             />
             <span className="label-text">Store passphrase locally</span>
           </label>
-          <span className="text-xs opacity-70 mt-1">
+          <div className="text-xs opacity-70">
             Stored in your browser’s local storage. Do not use on shared devices.
-          </span>
+          </div>
         </div>
       </div>
       <div className="modal-action">

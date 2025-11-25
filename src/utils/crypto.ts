@@ -72,23 +72,3 @@ export const decryptString = async (
   const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, cipher);
   return textDecoder.decode(plain);
 };
-
-// Encrypt a JSON-serializable payload (stored as encrypted string)
-export const encryptJson = async <T>(
-  obj: T,
-  passphrase: string,
-  opts?: DeriveOptions
-): Promise<string> => {
-  const json = JSON.stringify(obj);
-  return encryptString(json, passphrase, opts);
-};
-
-// Decrypt an encrypted JSON string back to object
-export const decryptJson = async <T>(
-  encoded: string,
-  passphrase: string,
-  opts?: DeriveOptions
-): Promise<T> => {
-  const json = await decryptString(encoded, passphrase, opts);
-  return JSON.parse(json) as T;
-};

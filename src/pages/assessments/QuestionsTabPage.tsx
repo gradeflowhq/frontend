@@ -1,4 +1,3 @@
-// frontend/src/pages/assessment/QuestionsTabPage.tsx
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import ErrorAlert from '@components/common/ErrorAlert';
@@ -85,7 +84,9 @@ const QuestionsTabPage: React.FC = () => {
         open={confirmInfer}
         title="Replace Questions"
         message="This will replace the existing questions by inferring from current submissions. Proceed?"
-        confirmText={inferMutation.isPending ? 'Inferring...' : 'Proceed'}
+        confirmLoading={inferMutation.isPending}
+        confirmLoadingLabel="Inferring..."
+        confirmText="Proceed"
         onConfirm={() => inferMutation.mutate(undefined, { onSuccess: () => setConfirmInfer(false) })}
         onCancel={() => setConfirmInfer(false)}
       />

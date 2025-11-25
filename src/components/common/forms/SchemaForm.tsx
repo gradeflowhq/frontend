@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from '../../ui/Button';
+import LoadingButton from '../../ui/LoadingButton';
 import { withTheme } from '@rjsf/core';
 import type { FormProps } from '@rjsf/core';
 import { Theme as DaisyUITheme } from '@rjsf/daisyui';
@@ -11,14 +11,17 @@ export type SchemaFormProps<T = any> = {
   schema: Record<string, any>;
   uiSchema?: Record<string, any>;
   formData?: T;
-  onSubmit: (data: { formData: T }) => void;
-  onChange?: (data: { formData: T }) => void;
-  onError?: (errors: any) => void;
+  onSubmit?: FormProps<T>['onSubmit'];
+  onChange?: FormProps<T>['onChange'];
+  onError?: FormProps<T>['onError'];
   disabled?: boolean;
   readonly?: boolean;
   liveValidate?: boolean;
   formProps?: Partial<FormProps<T>>;
   showSubmit?: boolean;
+  isSubmitting?: boolean;
+  submitIdleLabel?: React.ReactNode;
+  submitLoadingLabel?: React.ReactNode;
   templates?: FormProps<T>['templates'];
   formContext?: FormProps<T>['formContext'];
 };
@@ -35,6 +38,9 @@ export const SchemaForm = <T extends any>({
   liveValidate,
   formProps,
   showSubmit = true,
+  isSubmitting = false,
+  submitIdleLabel = 'Submit',
+  submitLoadingLabel = undefined,
   templates,
   formContext,
 }: SchemaFormProps<T>) => {
@@ -56,9 +62,16 @@ export const SchemaForm = <T extends any>({
     >
       {showSubmit && (
         <div className="mt-4">
-          <Button type="submit" variant="primary" className="w-full">
-            Submit
-          </Button>
+          <LoadingButton
+            type="submit"
+            variant="primary"
+            className="w-full"
+            isLoading={isSubmitting}
+            idleLabel={submitIdleLabel}
+            loadingLabel={submitLoadingLabel}
+          >
+            {submitIdleLabel}
+          </LoadingButton>
         </div>
       )}
     </DaisyUIForm>

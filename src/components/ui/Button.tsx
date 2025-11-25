@@ -29,7 +29,7 @@ type CommonProps = {
   title?: string;
 };
 
-type ButtonProps<E extends React.ElementType = 'button'> = CommonProps & {
+export type ButtonProps<E extends React.ElementType = 'button'> = CommonProps & {
   as?: E;
 } & Omit<React.ComponentPropsWithoutRef<E>, 'as' | 'children' | 'className' | 'disabled'>;
 

@@ -211,7 +211,9 @@ const SingleTargetRulesSection: React.FC<Props> = ({
         open={!!deleteTarget}
         title="Delete Rule"
         message="Are you sure you want to delete this rule?"
-        confirmText={replace.isPending ? 'Deleting...' : 'Delete'}
+        confirmLoading={replace.isPending}
+        confirmLoadingLabel="Deleting..."
+        confirmText="Delete"
         onConfirm={async () => {
           if (!deleteTarget) return;
           const nextRules = allRules.filter((r) => r !== deleteTarget.rule);

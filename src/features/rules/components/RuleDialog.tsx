@@ -1,5 +1,6 @@
 import React from 'react';
 import { IconSave } from '@components/ui/Icon';
+import LoadingButton from '@components/ui/LoadingButton';
 import { Button } from '@components/ui/Button';
 import Modal from '@components/common/Modal';
 import ErrorAlert from '@components/common/ErrorAlert';
@@ -162,16 +163,16 @@ const RuleDialog: React.FC<RuleDialogProps> = ({
 
       <div className="modal-action">
         <Button type="button" variant="ghost" onClick={onClose} disabled={!!isSaving}>Cancel</Button>
-        <Button
+        <LoadingButton
           type="button"
           variant="primary"
           onClick={() => onSave(draft as RuleValue)}
-          disabled={!!isSaving || !schemaForRender}
-          loading={!!isSaving}
+          disabled={!schemaForRender}
+          isLoading={!!isSaving}
           leftIcon={<IconSave />}
         >
           Save
-        </Button>
+        </LoadingButton>
       </div>
     </Modal>
   );

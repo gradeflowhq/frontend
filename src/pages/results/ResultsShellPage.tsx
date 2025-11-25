@@ -9,7 +9,6 @@ import { useDocumentTitle } from '@hooks/useDocumentTitle';
 // Grading feature
 import { useGrading } from '@features/grading/hooks';
 import { ResultsOverview, ResultsStats, QuestionAnalysis } from '@features/grading/components';
-import { buildTotals } from '@features/grading/helpers';
 
 // Assessments + questions (to show name and derive question IDs)
 import { useAssessment } from '@features/assessments/hooks';
@@ -48,8 +47,6 @@ const ResultsShellInner: React.FC<{ assessmentId: string }> = ({ assessmentId })
       notifyEncryptedDetected();
     }
   }, [items, notifyEncryptedDetected]);
-
-  const totalsPerSubmission = useMemo(() => buildTotals(items), [items]);
 
   useDocumentTitle(`Results - ${assessmentRes?.name ?? 'Assessment'} - GradeFlow`);
 

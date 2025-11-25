@@ -62,6 +62,7 @@ const LoginPage: React.FC = () => {
         uiSchema={uiSchema}
         templates={templates}
         formContext={formContext}
+        isSubmitting={isPending}
         onSubmit={async ({ formData }) => {
           await mutateAsync(formData);
         }}

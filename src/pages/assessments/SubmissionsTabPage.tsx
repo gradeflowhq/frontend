@@ -51,7 +51,9 @@ const SubmissionsTabPage: React.FC = () => {
         open={!!confirmDelete}
         title="Delete All Submissions"
         message="Are you sure you want to delete all submissions for this assessment?"
-        confirmText={deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+        confirmLoading={deleteMutation.isPending}
+        confirmLoadingLabel="Deleting..."
+        confirmText="Delete"
         onConfirm={() => {
           deleteMutation.mutate(undefined, { onSuccess: () => setConfirmDelete(false) });
         }}

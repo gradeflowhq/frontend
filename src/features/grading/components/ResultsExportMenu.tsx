@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { IconChevronDown, IconDownload } from '@components/ui/Icon';
-import { Button } from '@components/ui/Button';
+import LoadingButton from '@components/ui/LoadingButton';
 import { DropdownMenu } from '@components/ui/DropdownMenu';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@api';
@@ -93,19 +93,17 @@ const ResultsExportMenu: React.FC<ResultsExportMenuProps> = ({
       <>
         {savers.map((saver) => (
           <li key={saver}>
-            <Button
+            <LoadingButton
               variant="ghost"
               className="justify-start"
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => handleExport(saver)}
-              disabled={isPending}
+              disabled={btnDisabled}
+              isLoading={isPending && pendingSaver === saver}
               title={`Export as ${saver}`}
             >
               {saver}
-              {pendingSaver === saver && isPending && (
-                <span className="loading loading-spinner loading-xs ml-2" />
-              )}
-            </Button>
+            </LoadingButton>
           </li>
         ))}
       </>

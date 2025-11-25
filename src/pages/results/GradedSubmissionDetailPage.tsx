@@ -9,6 +9,7 @@ import {
   IconAlertCircle,
   IconTrash,
 } from '@components/ui/Icon';
+import LoadingButton from '@components/ui/LoadingButton';
 import { Button } from '@components/ui/Button';
 import { IconButton } from '@components/ui/IconButton';
 import ErrorAlert from '@components/common/ErrorAlert';
@@ -137,16 +138,15 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
         </div>
         <div className="flex items-center gap-2">
           {hasAnyChange && (
-            <Button
+            <LoadingButton
               variant="primary"
               onClick={onSave}
-              disabled={adjustMutation.isPending}
+              isLoading={adjustMutation.isPending}
               title="Save adjustments for edited questions"
               leftIcon={<IconSave />}
-              loading={adjustMutation.isPending}
             >
               Save Adjustments
-            </Button>
+            </LoadingButton>
           )}
           <IconButton icon={<IconChevronLeft />} onClick={gotoPrev} disabled={!prevId} aria-label="Previous" />
           <IconButton icon={<IconChevronRight />} onClick={gotoNext} disabled={!nextId} aria-label="Next" />
@@ -335,7 +335,9 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
         open={!!removeAdjustQid}
         title="Remove Adjustment"
         message="This will revert the adjusted points and feedback for this question. Proceed?"
-        confirmText={adjustMutation.isPending ? 'Removing…' : 'Remove'}
+        confirmLoading={adjustMutation.isPending}
+        confirmLoadingLabel="Removing..."
+        confirmText="Remove"
         onConfirm={() => {
           if (!current || !removeAdjustQid) return;
           const payload: GradeAdjustmentRequest = {

@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import LoadingButton from '@components/ui/LoadingButton';
 import { Button } from '@components/ui/Button';
 import { IconPlus } from '@components/ui/Icon';
 import Modal from '@components/common/Modal';
@@ -72,17 +73,18 @@ const MembersDialog: React.FC<Props> = ({ open, assessmentId, onClose }) => {
           </div>
 
           <div className="md:pb-0">
-            <Button
+            <LoadingButton
               type="button"
               variant="primary"
               onClick={() => addMember.mutate({ user_email: userEmail, role }, { onSuccess: () => { setUserEmail('') } })}
-              disabled={addMember.isPending || !userEmail}
+              disabled={!userEmail}
+              isLoading={addMember.isPending}
               leftIcon={<IconPlus />}
               className="w-full md:w-auto"
               title="Add member"
             >
-              {addMember.isPending ? 'Adding...' : 'Add'}
-            </Button>
+              Add
+            </LoadingButton>
           </div>
         </div>
       </div>
@@ -117,7 +119,9 @@ const MembersDialog: React.FC<Props> = ({ open, assessmentId, onClose }) => {
         open={!!removeTarget}
         title="Remove Member"
         message="Are you sure you want to remove this member from the assessment?"
-        confirmText={removeMember.isPending ? 'Removing...' : 'Remove'}
+        confirmLoading={removeMember.isPending}
+        confirmLoadingLabel="Removing..."
+        confirmText="Remove"
         onConfirm={() =>
           removeTarget &&
           removeMember.mutate(removeTarget, { onSuccess: () => setRemoveTarget(null) })

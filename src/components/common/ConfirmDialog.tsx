@@ -1,5 +1,6 @@
 import React from 'react';
 import { IconTrash, IconCheckCircle } from '../ui/Icon';
+import LoadingButton from '../ui/LoadingButton';
 import { Button } from '../ui/Button';
 import { createPortal } from 'react-dom';
 
@@ -9,6 +10,8 @@ type ConfirmDialogProps = {
   message?: string;
   confirmText?: string;
   cancelText?: string;
+  confirmLoading?: boolean;
+  confirmLoadingLabel?: React.ReactNode;
   onConfirm: () => void;
   onCancel: () => void;
 };
@@ -19,6 +22,8 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   message = 'Are you sure?',
   confirmText = 'Yes',
   cancelText = 'Cancel',
+  confirmLoading = false,
+  confirmLoadingLabel,
   onConfirm,
   onCancel,
 }) => {
@@ -33,9 +38,11 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           <Button type="button" variant="ghost" onClick={onCancel}>
             {cancelText}
           </Button>
-          <Button
+          <LoadingButton
             type="button"
             variant="error"
+            isLoading={confirmLoading}
+            loadingLabel={confirmLoadingLabel}
             onClick={onConfirm}
             leftIcon={
               (confirmText && /delete|remove/i.test(confirmText)) ? (
@@ -46,7 +53,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
             }
           >
             {confirmText}
-          </Button>
+          </LoadingButton>
         </div>
       </div>
       {/* Backdrop closes the modal */}

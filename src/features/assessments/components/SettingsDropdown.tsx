@@ -1,20 +1,29 @@
 import React from 'react';
-import { IconSettings, IconUsers, IconAssessment } from '@components/ui/Icon';
+import { IconSettings, IconUsers, IconAssessment, IconLock } from '@components/ui/Icon';
 import { DropdownMenu } from '@components/ui/DropdownMenu';
 import { Button } from '@components/ui/Button';
 
 type SettingsDropdownProps = {
   onEditAssessment: () => void;
-  onOpenMembers: () => void; // optional: use dialog instead of route
+  onOpenMembers: () => void;
+  onForgetPassphrase?: () => void;
+  showForgetPassphrase?: boolean;
 };
 
-const SettingsDropdown: React.FC<SettingsDropdownProps> = ({ onEditAssessment, onOpenMembers }) => {
+const SettingsDropdown: React.FC<SettingsDropdownProps> = ({
+  onEditAssessment,
+  onOpenMembers,
+  onForgetPassphrase,
+  showForgetPassphrase,
+}) => {
   return (
     <DropdownMenu
-      trigger={<>
-        <span className="sr-only">Settings</span>
-        <IconSettings />
-      </>}
+      trigger={
+        <>
+          <span className="sr-only">Settings</span>
+          <IconSettings />
+        </>
+      }
       align="end"
     >
       <li>
@@ -27,6 +36,19 @@ const SettingsDropdown: React.FC<SettingsDropdownProps> = ({ onEditAssessment, o
           Members
         </Button>
       </li>
+      {showForgetPassphrase && onForgetPassphrase && (
+        <li>
+          <Button
+            variant="ghost"
+            className="justify-start"
+            onClick={onForgetPassphrase}
+            leftIcon={<IconLock />}
+            title="Forget locally stored passphrase"
+          >
+            Forget Passphrase
+          </Button>
+        </li>
+      )}
     </DropdownMenu>
   );
 };

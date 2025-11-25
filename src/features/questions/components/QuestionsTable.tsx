@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { SchemaForm } from '@components/common/forms/SchemaForm';
 import ErrorAlert from '@components/common/ErrorAlert';
+import LoadingButton from '@components/ui/LoadingButton';
 import { Button } from '@components/ui/Button';
 import { IconInbox, IconSave, IconEdit } from '@components/ui/Icon';
 import questionsSchema from '@schemas/questions.json';
@@ -182,10 +183,11 @@ const QuestionsTable: React.FC<Props> = ({
                     </Button>
                   ) : (
                     <div className="flex gap-2">
-                      <Button
+                      <LoadingButton
                         size="sm"
                         variant="primary"
-                        disabled={updating}
+                        
+                        isLoading={updating}
                         onClick={async () => {
                           const nextQS = buildQuestionSetInput();
                           await onUpdateQuestionSet(nextQS);
@@ -193,8 +195,8 @@ const QuestionsTable: React.FC<Props> = ({
                         }}
                         leftIcon={<IconSave />}
                       >
-                        {updating ? 'Saving...' : 'Save'}
-                      </Button>
+                        Save
+                      </LoadingButton>
                       <Button
                         size="sm"
                         variant="ghost"

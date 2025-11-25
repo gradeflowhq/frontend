@@ -1,4 +1,3 @@
-// frontend/src/pages/AssessmentsPage.tsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
@@ -89,7 +88,9 @@ const AssessmentsPage: React.FC = () => {
         open={!!deleteTarget}
         title="Delete Assessment"
         message={`Are you sure you want to delete "${deleteTarget?.name}"?`}
-        confirmText={deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+        confirmLoading={deleteMutation.isPending}
+        confirmLoadingLabel="Deleting..."
+        confirmText="Delete"
         onConfirm={() => deleteTarget && deleteMutation.mutate(deleteTarget.id, { onSuccess: () => setDeleteTarget(null) })}
         onCancel={() => setDeleteTarget(null)}
       />

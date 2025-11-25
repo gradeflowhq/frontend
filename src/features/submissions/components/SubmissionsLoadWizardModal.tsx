@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import Papa from 'papaparse';
 import Modal from '@components/common/Modal';
 import ErrorAlert from '@components/common/ErrorAlert';
+import LoadingButton from '@components/ui/LoadingButton';
 import { Button } from '@components/ui/Button';
 import { IconUpload } from '@components/ui/Icon';
 import { buildPassphraseKey, readPassphrase, writePassphrase } from '@utils/passphrase';
@@ -36,7 +37,6 @@ const PreviewTable: React.FC<{ headers: string[]; rows: string[][] }> = ({ heade
 );
 
 const SubmissionsLoadWizardModal: React.FC<Props> = ({ open, assessmentId, onClose }) => {
-  const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<CsvPreview | null>(null);
   const [mapping, setMapping] = useState<CsvMapping>({ studentIdColumn: '', questionColumns: [] });
   const [encryptIds, setEncryptIds] = useState(false);
@@ -60,7 +60,6 @@ const SubmissionsLoadWizardModal: React.FC<Props> = ({ open, assessmentId, onClo
   const rows = preview?.rows ?? [];
 
   const onSelectFile = (f: File | null) => {
-    setFile(f);
     setPreview(null);
     setMapping({ studentIdColumn: '', questionColumns: [] });
     if (!f) return;
@@ -150,9 +149,9 @@ const SubmissionsLoadWizardModal: React.FC<Props> = ({ open, assessmentId, onClo
                 <input type="checkbox" className="checkbox" checked={encryptIds} onChange={(e) => setEncryptIds(e.target.checked)} />
                 <span className="label-text">Encrypt student IDs (client-side)</span>
               </label>
-              <span className="text-xs opacity-70 mt-1">
+              <div className="text-xs opacity-70 mt-1">
                 If enabled, IDs are encrypted before upload and stored encrypted on the server.
-              </span>
+              </div>
             </div>
 
             <div className="form-control md:col-span-2">
@@ -181,9 +180,9 @@ const SubmissionsLoadWizardModal: React.FC<Props> = ({ open, assessmentId, onClo
                   </label>
                 </div>
               </div>
-              <span className="text-xs opacity-70 mt-1">
+              <div className="text-xs opacity-70 mt-1">
                 Stored in your browser’s local storage. Do not use on shared devices.
-              </span>
+              </div>
             </div>
           </div>
         </>
@@ -195,7 +194,7 @@ const SubmissionsLoadWizardModal: React.FC<Props> = ({ open, assessmentId, onClo
         <Button type="button" variant="ghost" onClick={onClose} disabled={loadMutation.isPending}>
           Cancel
         </Button>
-        <Button
+        <LoadingButton
           type="button"
           variant="primary"
           onClick={async () => {
@@ -218,12 +217,13 @@ const SubmissionsLoadWizardModal: React.FC<Props> = ({ open, assessmentId, onClo
             }
             onClose();
           }}
-          disabled={loadMutation.isPending || !canSubmit}
+          disabled={!canSubmit}
+          isLoading={loadMutation.isPending}
           title={!canSubmit ? 'Select file, mapping, and passphrase (if encrypting)' : 'Upload'}
           leftIcon={<IconUpload />}
         >
-          {loadMutation.isPending ? 'Uploading...' : 'Upload'}
-        </Button>
+          Upload
+        </LoadingButton>
       </div>
     </Modal>
   );
