@@ -96,14 +96,14 @@ export const Button = forwardRef<any, ButtonProps>((props, ref) => {
     >
       {loading ? (
         <>
-          <span className="loading loading-spinner loading-xs mr-2" />
+          <span className="loading loading-spinner loading-xs" />
           {typeof children === 'string' ? children : children ?? 'Loading…'}
         </>
       ) : (
         <>
-          {leftIcon ? <span className="mr-2 inline-flex items-center">{leftIcon}</span> : null}
+          {leftIcon ? <span className="inline-flex items-center">{leftIcon}</span> : null}
           {children}
-          {rightIcon ? <span className="ml-2 inline-flex items-center">{rightIcon}</span> : null}
+          {rightIcon ? <span className="inline-flex items-center">{rightIcon}</span> : null}
         </>
       )}
     </Comp>

@@ -62,7 +62,7 @@ const ResultsShellInner: React.FC<{ assessmentId: string }> = ({ assessmentId })
             onClick={() => navigate(`/assessments/${safeId}/rules`)}
             leftIcon={<IconChevronLeft />}
           >
-            <span>{assessmentRes?.name ?? 'Assessment'}</span>
+            {assessmentRes?.name ?? 'Assessment'}
           </Button>
           <h2 className="text-xl font-semibold">Grading Results</h2>
         </div>

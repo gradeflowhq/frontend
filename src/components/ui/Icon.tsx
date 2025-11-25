@@ -20,6 +20,8 @@ import {
   FiFileText,
   FiAlertCircle,
 } from 'react-icons/fi';
+import { LuListChecks } from "react-icons/lu";
+
 
 import type { SVGProps } from 'react';
 
@@ -48,3 +50,4 @@ export const IconAlertCircle = wrap(FiAlertCircle);
 export const IconUsers = wrap(FiUsers);
 export const IconAssessment = wrap(FiFileText);
 export const IconInfer = wrap(FiZap);
+export const IconGrade = wrap(LuListChecks);

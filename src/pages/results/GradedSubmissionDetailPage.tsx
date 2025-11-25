@@ -128,8 +128,8 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
     <section className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => navigate(`/results/${safeId}`)}>
-            <IconChevronLeft /> Back
+          <Button variant="outline" onClick={() => navigate(`/results/${safeId}`)} leftIcon={<IconChevronLeft />}>
+            Back
           </Button>
           <span className="font-mono text-sm badge badge-ghost flex items-center">
             <DecryptedText value={encodedStudentId} passphrase={passphrase} mono size="sm" />

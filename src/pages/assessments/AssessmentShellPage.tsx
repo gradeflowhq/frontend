@@ -24,6 +24,7 @@ import AssessmentEditModal from '@features/assessments/components/AssessmentEdit
 import type { AssessmentResponse, AssessmentUpdateRequest } from '@api/models';
 import { useUpdateAssessment } from '@features/assessments/hooks';
 import { AssessmentPassphraseProvider } from '@features/encryption/AssessmentPassphraseProvider';
+import { IconGrade } from '@components/ui/Icon';
 
 const TabsNav: React.FC<{ basePath: string }> = ({ basePath }) => {
   const tabClass = ({ isActive }: { isActive: boolean }) => `tab ${isActive ? 'tab-active' : ''}`;
@@ -110,8 +111,9 @@ const AssessmentShellPage: React.FC = () => {
                 className="btn-primary"
                 onClick={handleGradeClick}
                 disabled={runGradingMutation.isPending}
+                leftIcon={<IconGrade />}
               >
-                {runGradingMutation.isPending ? 'Grading…' : 'Grade submissions'}
+                {runGradingMutation.isPending ? 'Grading…' : 'Run Grading'}
               </Button>
             )}
             {hasGrading && (
