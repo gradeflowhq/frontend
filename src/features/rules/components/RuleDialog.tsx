@@ -10,6 +10,7 @@ import { HIDE_KEYS_SINGLE, HIDE_KEYS_MULTI } from '../constants';
 import { useRuleDefinitions, useCompatibleRuleKeys, useFindSchemaKeyByType } from '../hooks';
 import { friendlyRuleLabel } from '../helpers';
 import { enrichSchemaByConstraints } from '../helpers/constraints';
+import { augmentRulesSchemaWithQuestionIdEnums } from '../helpers/augmentations';
 
 import type { QuestionSetOutputQuestionMap } from '@api/models';
 import type { RuleValue } from '../types';
@@ -57,22 +58,36 @@ const RuleDialog: React.FC<RuleDialogProps> = ({
   isSaving,
   error,
 }) => {
-  // Hooks must be called first in a stable order
+  // Base definitions from schema file
   const defs = useRuleDefinitions();
+
+  // Narrow eligible schema keys for current context
   const eligibleKeys = useCompatibleRuleKeys(defs, questionType as any, !!questionId);
   const findKeyByType = useFindSchemaKeyByType(defs);
 
+  // Augment rule definitions with compatible question_id enums
+  const augmentedDefs = React.useMemo(() => {
+    if (!questionMap) return defs;
+    // augmentRulesSchemaWithQuestionIdEnums expects the rules definitions object and a map of question_id -> schema
+    return augmentRulesSchemaWithQuestionIdEnums(defs as any, questionMap as any) as Record<string, any>;
+  }, [defs, questionMap]);
+
+  // Resolve concrete schema key (prefer selected key, else infer from initial rule type)
   const concreteKey = React.useMemo(() => {
-    if (selectedRuleKey && defs[selectedRuleKey]) return selectedRuleKey;
+    if (selectedRuleKey && augmentedDefs[selectedRuleKey]) return selectedRuleKey;
     const initType = (initialRule as any)?.type;
     if (initType) {
       const k = findKeyByType(String(initType), !!questionId);
       if (k) return k;
     }
     return eligibleKeys[0] ?? null;
-  }, [defs, selectedRuleKey, initialRule, eligibleKeys, findKeyByType, questionId]);
+  }, [augmentedDefs, selectedRuleKey, initialRule, eligibleKeys, findKeyByType, questionId]);
 
-  const baseSchema = React.useMemo(() => (concreteKey ? defs[concreteKey] : null), [defs, concreteKey]);
+  // Pick the base schema for the selected rule, from augmented defs
+  const baseSchema = React.useMemo(
+    () => (concreteKey ? augmentedDefs[concreteKey] : null),
+    [augmentedDefs, concreteKey]
+  );
 
   const [draft, setDraft] = React.useState<any>(() => {
     return baseSchema ? materializeDraftFromSchema(baseSchema, questionId, initialRule ?? {}) : (initialRule ?? {});
@@ -98,10 +113,14 @@ const RuleDialog: React.FC<RuleDialogProps> = ({
 
     if (!baseSchema) return { schemaForRender: null as any, mergedUiSchema: baseUi };
 
+    // Enrich dynamic fields from constraints; ensure we pass augmented definitions
     const enriched =
-      questionMap ? enrichSchemaByConstraints(baseSchema, defs, draft, questionMap, questionId) : { schema: baseSchema, definitions: defs, uiSchema: {} };
+      questionMap
+        ? enrichSchemaByConstraints(baseSchema, augmentedDefs, draft, questionMap, questionId)
+        : { schema: baseSchema, definitions: augmentedDefs, uiSchema: {} };
 
-    const schemaWithDefs = { ...enriched.schema, definitions: enriched.definitions };
+    // Attach augmented definitions so question_id has the compatible enum
+    const schemaWithDefs = { ...enriched.schema, definitions: augmentedDefs };
 
     const mergedUi = { ...baseUi };
     Object.entries(enriched.uiSchema).forEach(([key, val]) => {
@@ -110,12 +129,10 @@ const RuleDialog: React.FC<RuleDialogProps> = ({
     });
 
     return { schemaForRender: schemaWithDefs, mergedUiSchema: mergedUi };
-  }, [baseSchema, defs, draft, questionMap, questionId, hiddenKeys]);
+  }, [baseSchema, augmentedDefs, draft, questionMap, questionId, hiddenKeys]);
 
-  // Define templates hook BEFORE any conditional returns to keep hook order stable
   const templates = React.useMemo(() => ({ FieldTemplate: HiddenAwareFieldTemplate }), []);
 
-  // Decide not to render after hooks have run
   if (!open) return null;
 
   const { schemaForRender, mergedUiSchema } = computed;
@@ -124,10 +141,8 @@ const RuleDialog: React.FC<RuleDialogProps> = ({
     <Modal open={open} onClose={onClose} boxClassName="w-full max-w-2xl">
       <div className="flex items-center justify-between">
         <h3 className="font-bold text-lg">
-            {questionId && (
-                <span className='badge badge-ghost mr-2 mb-1'>{questionId}</span>
-            )}
-            {initialRule ? 'Edit Rule' : 'Add Rule'}
+          {questionId && <span className="badge badge-ghost mr-2 mb-1">{questionId}</span>}
+          {initialRule ? 'Edit Rule' : 'Add Rule'}
         </h3>
         {concreteKey && <span className="text-sm opacity-70">{friendlyRuleLabel(concreteKey)}</span>}
       </div>
