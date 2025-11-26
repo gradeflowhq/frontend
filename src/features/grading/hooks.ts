@@ -6,6 +6,7 @@ import type {
   GradeAdjustmentRequest,
   GradingExportRequest,
   GradingExportResponse,
+  GradingPreviewRequest,
  } from '@api/models';
 
 export const useGrading = (assessmentId: string, enabled = true) =>
@@ -46,4 +47,11 @@ export const useExportGrading = (assessmentId: string) =>
     mutationKey: QK.grading.export(assessmentId),
     mutationFn: async (payload: GradingExportRequest) =>
       (await api.exportGradingAssessmentsAssessmentIdGradingExportPost(assessmentId, payload)).data as GradingExportResponse,
+  });
+
+export const usePreviewGrading = (assessmentId: string) =>
+  useMutation({
+    mutationKey: ['grading', assessmentId, 'preview'],
+    mutationFn: async (payload: GradingPreviewRequest) =>
+      (await api.previewGradingAssessmentsAssessmentIdGradingPreviewPost(assessmentId, payload)).data as GradingResponse,
   });

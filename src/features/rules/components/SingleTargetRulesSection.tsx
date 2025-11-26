@@ -205,6 +205,7 @@ const SingleTargetRulesSection: React.FC<Props> = ({
         onSave={onSaveRuleDialog}
         isSaving={validateAndReplace.isPending}
         error={validateAndReplace.isError ? validateAndReplace.error : null}
+        assessmentId={assessmentId}
       />
 
       <ConfirmDialog

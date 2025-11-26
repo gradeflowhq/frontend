@@ -135,6 +135,7 @@ const MultiTargetRulesSection: React.FC<Props> = ({ rubric, assessmentId, questi
         onSave={onSaveRuleDialog}
         isSaving={validateAndReplace.isPending}
         error={validateAndReplace.isError ? validateAndReplace.error : null}
+        assessmentId={assessmentId}
       />
 
       <ConfirmDialog
