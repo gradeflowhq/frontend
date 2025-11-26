@@ -22,6 +22,7 @@ import type { GradingPreviewParams } from '@features/grading/components/GradingP
 
 import type { QuestionSetOutputQuestionMap } from '@api/models';
 import type { RuleValue } from '../types';
+import { stripEngineKeysFromRulesSchema } from '../helpers/engine';
 
 type RuleDialogProps = {
   open: boolean;
@@ -83,19 +84,25 @@ const RuleDialog: React.FC<RuleDialogProps> = ({
     >;
   }, [defsWithQidEnums, questionMap, questionId]);
 
+  const strippedDefs = React.useMemo(() => {
+    return stripEngineKeysFromRulesSchema(injectedDefs);
+  }, [injectedDefs]);
+
+  const finalDefs = strippedDefs;
+
   // Resolve concrete schema key
   const concreteKey = React.useMemo(() => {
-    if (selectedRuleKey && injectedDefs[selectedRuleKey]) return selectedRuleKey;
+    if (selectedRuleKey && finalDefs[selectedRuleKey]) return selectedRuleKey;
     const initType = (initialRule as any)?.type;
     if (initType) {
       const k = findKeyByType(String(initType), !!questionId);
       if (k) return k;
     }
     return eligibleKeys[0] ?? null;
-  }, [injectedDefs, selectedRuleKey, initialRule, eligibleKeys, findKeyByType, questionId]);
+  }, [finalDefs, selectedRuleKey, initialRule, eligibleKeys, findKeyByType, questionId]);
 
   // Base schema
-  const baseSchema = React.useMemo(() => (concreteKey ? injectedDefs[concreteKey] : null), [injectedDefs, concreteKey]);
+  const baseSchema = React.useMemo(() => (concreteKey ? finalDefs[concreteKey] : null), [finalDefs, concreteKey]);
 
   // Draft form state
   const [draft, setDraft] = React.useState<any>(() => {
@@ -121,9 +128,9 @@ const RuleDialog: React.FC<RuleDialogProps> = ({
     });
 
     if (!baseSchema) return { schemaForRender: null as any, mergedUiSchema: baseUi };
-    const schemaWithDefs = { ...baseSchema, definitions: injectedDefs };
+    const schemaWithDefs = { ...baseSchema, definitions: finalDefs };
     return { schemaForRender: schemaWithDefs, mergedUiSchema: baseUi };
-  }, [baseSchema, injectedDefs, hiddenKeys]);
+  }, [baseSchema, finalDefs, hiddenKeys]);
 
   const templates = React.useMemo(() => ({ FieldTemplate: HiddenAwareFieldTemplate }), []);
   const widgets = React.useMemo(() => ({ TextWidget: SwitchableTextWidget }), []);
