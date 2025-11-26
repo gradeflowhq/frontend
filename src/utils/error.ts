@@ -12,10 +12,23 @@ export const getErrorMessages = (error: unknown): string[] => {
 
   // Case 2: FastAPI validation error: { detail: [{ msg: string, ... }] }
   if (data && Array.isArray(data.detail)) {
-    const msgs = data.detail
-      .map((d: any) => d?.msg)
+    // extract loc and msg
+    console.log(data);
+    const messages: string[] = data.detail
+      .map((d: any) => {
+        if (d.msg && typeof d.msg === 'string') {
+          if (Array.isArray(d.loc)) {
+            const locStr = d.loc.slice(2).join(' > '); // skip 'body' and 'rule/rubric
+            return `${locStr}: ${d.msg}`;
+          }
+          return d.msg;
+        }
+        return null;
+      })
       .filter((m: any) => typeof m === 'string');
-    if (msgs.length) return msgs;
+    if (messages.length > 0) {
+      return messages;
+    }
   }
 
   // Case 3: AxiosError message
