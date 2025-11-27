@@ -149,16 +149,12 @@ const RuleDialog: React.FC<RuleDialogProps> = ({
   const runPreview = async () => {
     if (!canPreview) return;
     await previewMutation.mutateAsync({
-      use_stored_question_set: true,
-      use_stored_rubric: false,
-      use_stored_submissions: true,
-      question_set: null,
-      rubric: null,
-      raw_submissions: null,
-      rule: draft as any,
-      limit: previewParams.limit,
-      selection: previewParams.selection,
-      seed: previewParams.seed ?? null,
+      rule: (draft as any) ?? null,
+      config: {
+        limit: previewParams.limit,
+        selection: previewParams.selection,
+        seed: previewParams.seed ?? null,
+      },
     });
   };
 
