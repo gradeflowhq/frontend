@@ -7,7 +7,7 @@ import { Button } from '@components/ui/Button';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 
 // Grading feature
-import { useGrading } from '@features/grading/hooks';
+import { useGrading, useGradingJob, useJobStatus } from '@features/grading/hooks';
 import { ResultsOverview, ResultsStats, QuestionAnalysis } from '@features/grading/components';
 
 // Assessments + questions (to show name and derive question IDs)
@@ -42,11 +42,19 @@ const ResultsShellInner: React.FC<{ assessmentId: string }> = ({ assessmentId })
   const questionMap: QuestionSetOutputQuestionMap = qsRes?.question_set?.question_map ?? {};
   const questionIds = useMemo(() => Object.keys(questionMap).sort(natsort), [questionMap]);
 
+  // Detect encrypted IDs to open passphrase guard when needed
   useEffect(() => {
     if (items.some((it) => isEncrypted(it.student_id))) {
       notifyEncryptedDetected();
     }
   }, [items, notifyEncryptedDetected]);
+
+  // Job-aware grading state (show in-progress notice but keep showing existing results)
+  const { data: gradingJob } = useGradingJob(safeId, enabled);
+  const jobId = gradingJob?.job_id ?? null;
+  const { data: jobStatusRes } = useJobStatus(jobId, !!jobId);
+  const jobStatus = jobStatusRes?.status;
+  const gradingInProgress = jobStatus === 'queued' || jobStatus === 'running';
 
   useDocumentTitle(`Results - ${assessmentRes?.name ?? 'Assessment'} - GradeFlow`);
 
@@ -83,7 +91,13 @@ const ResultsShellInner: React.FC<{ assessmentId: string }> = ({ assessmentId })
       )}
       {isError && <ErrorAlert error={error} />}
 
-      {!isLoading && !isError && items.length === 0 && (
+      {gradingInProgress && (
+        <div className="alert alert-info">
+          <span>Grading is in progress. Existing results are shown below and will update when the job completes.</span>
+        </div>
+      )}
+
+      {!isLoading && !isError && items.length === 0 && !gradingInProgress && (
         <div className="alert alert-info">
           <span>No graded submissions found. Run grading first.</span>
         </div>

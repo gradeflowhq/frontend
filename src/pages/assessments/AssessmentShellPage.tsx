@@ -9,7 +9,7 @@ import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { buildPassphraseKey, clearPassphrase } from '@utils/passphrase';
 
 import { useAssessment } from '@features/assessments/hooks';
-import { useGrading, useRunGrading } from '@features/grading/hooks';
+import { useGrading, useRunGrading, useGradingJob, useJobStatus } from '@features/grading/hooks';
 import { useRubric, useRubricCoverage } from '@features/rubric/hooks';
 import { MembersDialog } from '@features/assessments/components';
 import SettingsDropdown from '@features/assessments/components/SettingsDropdown';
@@ -21,6 +21,8 @@ import {
   useAssessmentPassphrase,
 } from '@features/encryption/AssessmentPassphraseProvider';
 import { IconGrade } from '@components/ui/Icon';
+import { useQueryClient } from '@tanstack/react-query';
+import { QK } from '@api/queryKeys';
 
 const TabsNav: React.FC<{ basePath: string }> = ({ basePath }) => {
   const tabClass = ({ isActive }: { isActive: boolean }) => `tab ${isActive ? 'tab-active' : ''}`;
@@ -33,7 +35,6 @@ const TabsNav: React.FC<{ basePath: string }> = ({ basePath }) => {
   );
 };
 
-// Renders the header actions and forget-passphrase confirmation inside Provider scope
 const HeaderActions: React.FC<{
   assessmentId: string;
   rulesCount: number;
@@ -58,9 +59,7 @@ const HeaderActions: React.FC<{
 
   const canForget = !!passphrase;
 
-  const handleForgetPassphrase = () => {
-    setConfirmForget(true);
-  };
+  const handleForgetPassphrase = () => setConfirmForget(true);
 
   const confirmForgetHandler = () => {
     clearPassphrase(buildPassphraseKey(assessmentId));
@@ -78,6 +77,7 @@ const HeaderActions: React.FC<{
             className="btn-primary"
             onClick={onRunGrading}
             isLoading={isGradingPending}
+            disabled={isGradingPending}
             leftIcon={<IconGrade />}
           >
             Run Grading
@@ -126,6 +126,13 @@ const AssessmentShellPage: React.FC = () => {
   const { data: rubricRes } = useRubric(assessmentId!);
   const { data: coverageRes } = useRubricCoverage(assessmentId!);
 
+  // Job-aware grading state
+  const { data: gradingJob } = useGradingJob(assessmentId!, !!assessmentId);
+  const jobId = gradingJob?.job_id ?? null;
+  const { data: jobStatusRes } = useJobStatus(jobId, !!jobId);
+  const jobStatus = jobStatusRes?.status;
+  const isGradingInProgress = jobStatus === 'queued' || jobStatus === 'running';
+
   const runGradingMutation = useRunGrading(assessmentId!);
   const updateAssessmentMutation = useUpdateAssessment();
 
@@ -144,6 +151,41 @@ const AssessmentShellPage: React.FC = () => {
   const [confirmCoverage, setConfirmCoverage] = React.useState(false);
   const [confirmOverride, setConfirmOverride] = React.useState(false);
 
+  // Track a run we just started, so we only auto-navigate when this user action triggers completion.
+  const [awaitingNavigation, setAwaitingNavigation] = React.useState(false);
+  const [runError, setRunError] = React.useState<unknown | null>(null);
+
+  const startRunAndAwait = () => {
+    setRunError(null);
+    runGradingMutation.mutate(undefined, {
+      onSuccess: () => {
+        // We started a job; wait for jobStatus to report 'completed' or 'failed'
+        setAwaitingNavigation(true);
+      },
+      onError: (e) => {
+        setRunError(e);
+        setAwaitingNavigation(false);
+      },
+    });
+  };
+
+  const qc = useQueryClient();
+
+  // Auto-navigate to Results only when the job completes successfully after user-triggered run
+  React.useEffect(() => {
+    if (!awaitingNavigation) return;
+    if (jobStatus === 'completed') {
+      setAwaitingNavigation(false);
+      qc.invalidateQueries({ queryKey: QK.grading.item(assessmentId!) }).then(() => {
+        navigate(`/results/${assessmentId}`);
+      });
+    } else if (jobStatus === 'failed') {
+      // Show errors; do not navigate
+      setRunError(new Error('Grading job failed'));
+      setAwaitingNavigation(false);
+    }
+  }, [awaitingNavigation, jobStatus, navigate, assessmentId]);
+
   const handleGradeClick = () => {
     if ((coveragePct ?? 0) < 1) {
       setConfirmCoverage(true);
@@ -154,21 +196,19 @@ const AssessmentShellPage: React.FC = () => {
       setConfirmOverride(true);
       return;
     }
-    runGradingMutation.mutate(undefined, {
-      onSuccess: () => navigate(`/results/${assessmentId}`),
-    });
+    startRunAndAwait();
   };
 
   const proceedAfterCoverage = () => {
     setConfirmCoverage(false);
     const alreadyGraded = (gradingRes?.graded_submissions?.length ?? 0) > 0;
     if (alreadyGraded) setConfirmOverride(true);
-    else runGradingMutation.mutate(undefined, { onSuccess: () => navigate(`/results/${assessmentId}`) });
+    else startRunAndAwait();
   };
 
   const proceedAfterOverride = () => {
     setConfirmOverride(false);
-    runGradingMutation.mutate(undefined, { onSuccess: () => navigate(`/results/${assessmentId}`) });
+    startRunAndAwait();
   };
 
   useDocumentTitle(`${assessmentRes?.name ?? 'Assessment'} - GradeFlow`);
@@ -184,7 +224,7 @@ const AssessmentShellPage: React.FC = () => {
               rulesCount={rulesCount}
               hasGrading={hasGrading}
               onRunGrading={handleGradeClick}
-              isGradingPending={runGradingMutation.isPending}
+              isGradingPending={isGradingInProgress || runGradingMutation.isPending}
               onOpenResults={() => navigate(`/results/${assessmentId}`)}
               onOpenEdit={() => setShowEdit(true)}
               onOpenMembers={() => setShowMembers(true)}
@@ -198,6 +238,9 @@ const AssessmentShellPage: React.FC = () => {
           </div>
         )}
         {isErrorAssessment && <ErrorAlert error={assessmentError} />}
+
+        {/* Show job failure or run errors */}
+        {runError && <ErrorAlert error={runError} className="mb-2" />}
 
         {!isLoadingAssessment && !isErrorAssessment && (
           <>
@@ -229,7 +272,6 @@ const AssessmentShellPage: React.FC = () => {
         onConfirm={proceedAfterOverride}
         onCancel={() => setConfirmOverride(false)}
       />
-      {runGradingMutation.isError && <ErrorAlert error={runGradingMutation.error} className="mt-2" />}
 
       <AssessmentEditModal
         openItem={showEdit ? (assessmentRes as AssessmentResponse) : null}

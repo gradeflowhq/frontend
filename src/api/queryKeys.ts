@@ -20,6 +20,8 @@ export const QK = {
   grading: {
     item: (assessmentId: string) => ['grading', assessmentId] as const,
     export: (assessmentId: string) => ['grading', assessmentId, 'export'] as const,
+    job: (assessmentId: string) => ['grading', assessmentId, 'job'] as const,
+    previewJob: (assessmentId: string) => ['grading', assessmentId, 'preview', 'job'] as const,
   },
   registry: {
     submissionsSavers: ['registry', 'submissionsSavers'] as const,
