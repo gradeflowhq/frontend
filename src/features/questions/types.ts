@@ -31,7 +31,7 @@ export type QuestionId = string;
 export type QuestionType = 'TEXT' | 'NUMERIC' | 'CHOICE' | 'MULTI_VALUED';
 
 // Examples mapping (used by QuestionsTable)
-export type ExamplesByQuestion = Record<QuestionId, string[]>;
+export type ExamplesByQuestion = Record<QuestionId, unknown[]>;
 
 // Type guards
 export const isChoiceQuestion = (q: QuestionDef | undefined): q is ChoiceQuestion =>

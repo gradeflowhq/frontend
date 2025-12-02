@@ -1,5 +1,11 @@
 import React, { useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+
+import AnswerText from '@components/common/AnswerText';
+import ConfirmDialog from '@components/common/ConfirmDialog';
+import DecryptedText from '@components/common/encryptions/DecryptedText';
+import ErrorAlert from '@components/common/ErrorAlert';
+import { Button } from '@components/ui/Button';
 import {
   IconChevronLeft,
   IconChevronRight,
@@ -9,23 +15,19 @@ import {
   IconAlertCircle,
   IconTrash,
 } from '@components/ui/Icon';
-import LoadingButton from '@components/ui/LoadingButton';
-import { Button } from '@components/ui/Button';
 import { IconButton } from '@components/ui/IconButton';
-import ErrorAlert from '@components/common/ErrorAlert';
-import DecryptedText from '@components/common/encryptions/DecryptedText';
-import { isEncrypted } from '@utils/crypto';
-import { friendlyRuleLabel } from '@features/rules/helpers';
-
+import LoadingButton from '@components/ui/LoadingButton';
+import { AssessmentPassphraseProvider, useAssessmentPassphrase } from '@features/encryption/AssessmentPassphraseProvider';
 import { useGrading, useAdjustGrading } from '@features/grading/hooks';
+import { friendlyRuleLabel } from '@features/rules/helpers';
+import { isEncrypted } from '@utils/crypto';
+
 import type {
   AdjustableGradedSubmission,
   AdjustableQuestionResult,
   GradeAdjustmentRequest,
   GradeAdjustment,
 } from '@api/models';
-import ConfirmDialog from '@components/common/ConfirmDialog';
-import { AssessmentPassphraseProvider, useAssessmentPassphrase } from '@features/encryption/AssessmentPassphraseProvider';
 
 const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStudentId: string }> = ({ assessmentId, encodedStudentId }) => {
   const navigate = useNavigate();
@@ -201,6 +203,7 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
               <th title="Passed" aria-label="Passed">
                 <IconCheckCircle />
               </th>
+              <th>Answer</th>
               <th>Points</th>
               <th>Feedback</th>
               <th>Actions</th>
@@ -235,6 +238,12 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
                   </td>
 
                   <td className="align-top">
+                    <div className="max-w-xs">
+                      <AnswerText value={current.answer_map?.[qid]} maxLength={100} />
+                    </div>
+                  </td>
+
+                  <td className="align-top">
                     {!isEditing ? (
                       <div className="space-y-1">
                         <div>
@@ -242,9 +251,8 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
                           <span className="opacity-70 ml-1">/ {res.max_points}</span>
                         </div>
                         {adjustedExists && res.adjusted_points !== null && res.adjusted_points !== undefined && (
-                          <div className="text-xs opacity-70">
-                            Original: <span className="font-mono">{res.points}</span>
-                            {' '}<span className="opacity-70">/ {res.max_points}</span>
+                          <div className="badge badge-ghost badge-sm font-mono">
+                            Original: {res.points} / {res.max_points}
                           </div>
                         )}
                       </div>
@@ -275,11 +283,14 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
                   <td className="align-top">
                     {!isEditing ? (
                       <div className="space-y-1">
-                        <div>{(res.adjusted_feedback ?? res.feedback) || <span className="opacity-60">—</span>}</div>
+                        <div className="whitespace-pre-line">{(res.adjusted_feedback ?? res.feedback) || <span className="opacity-60">—</span>}</div>
                         {adjustedExists && res.adjusted_feedback !== null && res.adjusted_feedback !== undefined && (
-                          <div className="text-xs opacity-70">
-                            Original: {res.feedback || <span className="opacity-60">—</span>}
-                          </div>
+                          <details className="collapse collapse-arrow bg-base-200 mt-1">
+                            <summary className="collapse-title text-xs py-1 min-h-0">Original</summary>
+                            <div className="collapse-content text-xs whitespace-pre-line">
+                              {res.feedback || <span className="opacity-60">—</span>}
+                            </div>
+                          </details>
                         )}
                       </div>
                     ) : (

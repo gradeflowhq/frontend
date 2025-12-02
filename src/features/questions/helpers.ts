@@ -1,10 +1,9 @@
+import type { QuestionDef, QuestionId, QuestionType, ExamplesByQuestion } from './types';
 import type {
-  QuestionSetInput,
   QuestionSetOutputQuestionMap,
   QuestionSetInputQuestionMap,
   ParseSubmissionsResponse,
 } from '@api/models';
-import type { QuestionDef, QuestionId, QuestionType, ExamplesByQuestion } from './types';
 
 /**
  * Sorted question IDs (natural-ish).
@@ -31,15 +30,13 @@ export const buildExamplesFromParsed = (
   const subs = parsed?.submissions ?? [];
   subs.slice(0, sampleLimit).forEach((sub) => {
     Object.entries(sub.answer_map ?? {}).forEach(([qid, val]) => {
-      const str =
-        Array.isArray(val)
-          ? JSON.stringify(val)
-          : typeof val === 'object' && val !== null
-          ? JSON.stringify(val)
-          : String(val ?? '');
       if (!map[qid]) map[qid] = [];
       const list = map[qid];
-      if (list.length < maxPerQuestion && !list.includes(str)) list.push(str);
+      // Check for duplicates using JSON comparison
+      const isDuplicate = list.some(existing => JSON.stringify(existing) === JSON.stringify(val));
+      if (list.length < maxPerQuestion && !isDuplicate) {
+        list.push(val);
+      }
     });
   });
   return map;

@@ -21,11 +21,14 @@ const ArrayView: React.FC<{
 }> = ({ value, renderNode, path }) => {
   if (value.length === 0) return <span className="font-mono text-xs opacity-70">[]</span>;
   return (
-    <div className="space-y-2">
+    <ul className={`list bg-base-100 rounded-box border border-base-300 mb-2`}>
       {value.map((item, idx) => (
-        <div key={`${path}[${idx}]`}>{renderNode(item, `${path}[${idx}]`)}</div>
+        <li className='list-row' key={`${path}[${idx}]`}>
+          <div className="font-mono text-xs opacity-50">{idx+1}</div>
+          {renderNode(item, `${path}[${idx}]`)}
+        </li>
       ))}
-    </div>
+    </ul>
   );
 };
 

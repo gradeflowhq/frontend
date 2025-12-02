@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import ErrorAlert from '@components/common/ErrorAlert';
 import DecryptedText from '@components/common/encryptions/DecryptedText';
+import AnswerText from '@components/common/AnswerText';
 import { IconCheckCircle, IconAlertCircle } from '@components/ui/Icon';
 import type { AdjustableGradedSubmission, AdjustableQuestionResult } from '@features/grading/types';
 import { useAssessmentPassphrase } from '@features/encryption/AssessmentPassphraseProvider';
@@ -13,13 +14,6 @@ type Props = {
   error?: unknown;
   className?: string;
   maxHeightVh?: number;
-};
-
-const stringifyAnswer = (val: unknown): string => {
-  if (val === null || val === undefined) return '';
-  if (Array.isArray(val)) return JSON.stringify(val, null, 0);
-  if (typeof val === 'object') return JSON.stringify(val);
-  return String(val);
 };
 
 const GradingPreviewPanel: React.FC<Props> = ({ items, loading, error, className, maxHeightVh = 60 }) => {
@@ -87,15 +81,14 @@ const GradingPreviewPanel: React.FC<Props> = ({ items, loading, error, className
               const feedback = r?.adjusted_feedback ?? r?.feedback ?? '';
 
               const answerRaw = targetQid ? (gs.answer_map?.[targetQid] as unknown) : undefined;
-              const answerDisplay = stringifyAnswer(answerRaw);
 
               return (
                 <tr key={gs.student_id} className="align-top">
                   <td className="whitespace-pre-wrap break-words">
                     <DecryptedText value={gs.student_id} passphrase={passphrase} mono size="sm" />
                   </td>
-                  <td className="whitespace-pre-wrap break-words">
-                    {answerDisplay || <span className="opacity-60">—</span>}
+                  <td>
+                    <AnswerText value={answerRaw} />
                   </td>
                   <td>
                     {passed ? (

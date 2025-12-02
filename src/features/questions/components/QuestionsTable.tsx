@@ -4,6 +4,7 @@ import ErrorAlert from '@components/common/ErrorAlert';
 import LoadingButton from '@components/ui/LoadingButton';
 import { Button } from '@components/ui/Button';
 import { IconInbox, IconSave, IconEdit } from '@components/ui/Icon';
+import AnswerText from '@components/common/AnswerText';
 import questionsSchema from '@schemas/questions.json';
 
 import type {
@@ -22,11 +23,6 @@ type Props = {
   onUpdateQuestionSet: (next: QuestionSetInput) => Promise<void> | void;
   updating?: boolean;
   updateError?: unknown;
-};
-
-const truncate = (s: string, max = 30) => {
-  if (typeof s !== 'string') return '';
-  return s.length > max ? `${s.slice(0, max)}…` : s;
 };
 
 const QuestionsTable: React.FC<Props> = ({
@@ -161,8 +157,8 @@ const QuestionsTable: React.FC<Props> = ({
                   {examples.length ? (
                     <ul className="list-disc ml-4 text-xs">
                       {examples.slice(0, 10).map((ex, i) => (
-                        <li key={i} className="font-mono" title={ex}>
-                          {truncate(ex)}
+                        <li key={i} className="font-mono">
+                          <AnswerText value={ex} maxLength={50} />
                         </li>
                       ))}
                     </ul>

@@ -7,6 +7,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import DecryptedText from '@components/common/encryptions/DecryptedText';
+import AnswerText from '@components/common/AnswerText';
 import type { RawSubmission } from '@features/submissions/types';
 import { extractQuestionKeys } from '@features/submissions/helpers';
 import { useAssessmentPassphrase } from '@features/encryption/AssessmentPassphraseProvider';
@@ -53,15 +54,11 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({ items }) => {
           cell: ({ row }) => {
             const map = row.original.raw_answer_map ?? {};
             const value = map[qKey];
-            const display =
-              Array.isArray(value)
-                ? JSON.stringify(value)
-                : typeof value === 'object' && value !== null
-                ? JSON.stringify(value)
-                : String(value ?? '');
             return (
-              <div className="max-w-xs truncate" title={display}>
-                <span className="font-mono text-xs">{display}</span>
+              <div className="max-w-xs">
+                <span className="font-mono text-xs">
+                  <AnswerText value={value} maxLength={100} />
+                </span>
               </div>
             );
           },
