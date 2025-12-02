@@ -66,7 +66,7 @@ const GradingPreviewPanel: React.FC<Props> = ({ items, loading, error, className
           <thead className="sticky top-0 bg-base-100 z-10">
             <tr>
               <th>Student ID</th>
-              <th>{targetQid ? <span className="font-mono text-xs">Answer ({targetQid})</span> : 'Answer'}</th>
+              <th>{targetQid ? <>Answer ({targetQid})</> : 'Answer'}</th>
               <th>Passed</th>
               <th>Points</th>
               <th>Feedback</th>

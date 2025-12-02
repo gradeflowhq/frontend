@@ -3,10 +3,13 @@ import { Button } from '@components/ui/Button';
 import { IconEdit, IconTrash, IconInbox } from '@components/ui/Icon';
 import {
   createColumnHelper,
-  flexRender,
   getCoreRowModel,
+  getPaginationRowModel,
   useReactTable,
+  flexRender,
 } from '@tanstack/react-table';
+import TableShell from '@components/common/TableShell';
+import { usePaginationState } from '@hooks/usePaginationState';
 import type { AssessmentResponse } from '@api/models';
 
 type AssessmentsTableProps = {
@@ -14,9 +17,16 @@ type AssessmentsTableProps = {
   onOpen: (item: AssessmentResponse) => void;
   onEdit: (item: AssessmentResponse) => void;
   onDelete: (item: AssessmentResponse) => void;
+  initialPageSize?: number;
 };
 
-const AssessmentsTable: React.FC<AssessmentsTableProps> = ({ items, onOpen, onEdit, onDelete }) => {
+const AssessmentsTable: React.FC<AssessmentsTableProps> = ({
+  items,
+  onOpen,
+  onEdit,
+  onDelete,
+  initialPageSize = 10,
+}) => {
   const columnHelper = createColumnHelper<AssessmentResponse>();
 
   const columns = useMemo(
@@ -73,10 +83,18 @@ const AssessmentsTable: React.FC<AssessmentsTableProps> = ({ items, onOpen, onEd
     [columnHelper, onOpen, onEdit, onDelete]
   );
 
+  const { pagination, setPagination } = usePaginationState({
+    pageIndex: 0,
+    pageSize: initialPageSize,
+  });
+
   const table = useReactTable({
     data: items,
     columns,
+    state: { pagination },
+    onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     getRowId: (row) => row.id,
   });
 
@@ -96,30 +114,8 @@ const AssessmentsTable: React.FC<AssessmentsTableProps> = ({ items, onOpen, onEd
     );
   }
 
-  return (
-    <div className="overflow-x-auto rounded-box border border-base-300 bg-base-100 shadow-xs">
-      <table className="table table-zebra w-full">
-        <thead className="sticky top-0 bg-base-100">
-          {table.getHeaderGroups().map((hg) => (
-            <tr key={hg.id}>
-              {hg.headers.map((h) => (
-                <th key={h.id}>{flexRender(h.column.columnDef.header, h.getContext())}</th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {table.getRowModel().rows.map((row) => (
-            <tr key={row.id} className="hover">
-              {row.getVisibleCells().map((cell) => (
-                <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
+  // TableShell already renders header/body/pagination consistently
+  return <TableShell table={table} totalItems={items.length} />;
 };
 
 export default AssessmentsTable;

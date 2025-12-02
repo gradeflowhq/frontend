@@ -2,10 +2,13 @@ import React, { useMemo } from 'react';
 import { IconInbox } from '@components/ui/Icon';
 import {
   createColumnHelper,
-  flexRender,
   getCoreRowModel,
+  getPaginationRowModel,
   useReactTable,
+  flexRender,
 } from '@tanstack/react-table';
+import TableShell from '@components/common/TableShell';
+import { usePaginationState } from '@hooks/usePaginationState';
 import DecryptedText from '@components/common/encryptions/DecryptedText';
 import AnswerText from '@components/common/AnswerText';
 import type { RawSubmission } from '@features/submissions/types';
@@ -14,9 +17,10 @@ import { useAssessmentPassphrase } from '@features/encryption/AssessmentPassphra
 
 type SubmissionsTableProps = {
   items: RawSubmission[];
+  initialPageSize?: number;
 };
 
-const SubmissionsTable: React.FC<SubmissionsTableProps> = ({ items }) => {
+const SubmissionsTable: React.FC<SubmissionsTableProps> = ({ items, initialPageSize = 10 }) => {
   const columnHelper = createColumnHelper<RawSubmission>();
   const { passphrase, notifyEncryptedDetected } = useAssessmentPassphrase();
 
@@ -55,7 +59,7 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({ items }) => {
             const map = row.original.raw_answer_map ?? {};
             const value = map[qKey];
             return (
-              <div className="max-w-xs">
+              <div>
                 <span className="font-mono text-xs">
                   <AnswerText value={value} maxLength={100} />
                 </span>
@@ -69,10 +73,18 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({ items }) => {
     return cols;
   }, [columnHelper, passphrase, notifyEncryptedDetected, questionKeys]);
 
+  const { pagination, setPagination } = usePaginationState({
+    pageIndex: 0,
+    pageSize: initialPageSize,
+  });
+
   const table = useReactTable({
     data: items,
     columns,
+    state: { pagination },
+    onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     getRowId: (row) => row.student_id,
   });
 
@@ -92,30 +104,7 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({ items }) => {
     );
   }
 
-  return (
-    <div className="overflow-x-auto rounded-box border border-base-300 bg-base-100 shadow-xs">
-      <table className="table table-zebra w-full">
-        <thead>
-          {table.getHeaderGroups().map((hg) => (
-            <tr key={hg.id}>
-              {hg.headers.map((h) => (
-                <th key={h.id}>{flexRender(h.column.columnDef.header, h.getContext())}</th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {table.getRowModel().rows.map((row) => (
-            <tr key={row.id}>
-              {row.getVisibleCells().map((cell) => (
-                <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
+  return <TableShell table={table} totalItems={items.length} />;
 };
 
 export default SubmissionsTable;

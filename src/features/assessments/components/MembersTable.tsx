@@ -4,19 +4,28 @@ import { Button } from '@components/ui/Button';
 import { IconSave, IconTrash, IconInbox, IconEdit } from '@components/ui/Icon';
 import {
   createColumnHelper,
-  flexRender,
   getCoreRowModel,
+  getPaginationRowModel,
   useReactTable,
+  flexRender,
 } from '@tanstack/react-table';
+import TableShell from '@components/common/TableShell';
+import { usePaginationState } from '@hooks/usePaginationState';
 import type { UserResponse, UserResponseRole } from '@api/models';
 
 type MembersTableProps = {
   items: UserResponse[];
   onSetRole: (userId: string, role: UserResponseRole) => Promise<void> | void;
   onRemove: (userId: string) => void;
+  initialPageSize?: number;
 };
 
-const MembersTable: React.FC<MembersTableProps> = ({ items = [], onSetRole, onRemove }) => {
+const MembersTable: React.FC<MembersTableProps> = ({
+  items = [],
+  onSetRole,
+  onRemove,
+  initialPageSize = 10,
+}) => {
   // Track which row is being edited and the pending role for that row
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [pendingRole, setPendingRole] = useState<UserResponseRole | null>(null);
@@ -125,10 +134,18 @@ const MembersTable: React.FC<MembersTableProps> = ({ items = [], onSetRole, onRe
     [columnHelper, editingUserId, pendingRole, saving, onRemove]
   );
 
+  const { pagination, setPagination } = usePaginationState({
+    pageIndex: 0,
+    pageSize: initialPageSize,
+  });
+
   const table = useReactTable({
     data: items,
     columns,
+    state: { pagination },
+    onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     getRowId: (row) => row.id,
   });
 
@@ -148,30 +165,7 @@ const MembersTable: React.FC<MembersTableProps> = ({ items = [], onSetRole, onRe
     );
   }
 
-  return (
-    <div className="overflow-x-auto rounded-box border border-base-300">
-      <table className="table table-zebra w-full">
-        <thead>
-          {table.getHeaderGroups().map((hg) => (
-            <tr key={hg.id}>
-              {hg.headers.map((h) => (
-                <th key={h.id}>{flexRender(h.column.columnDef.header, h.getContext())}</th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {table.getRowModel().rows.map((row) => (
-            <tr key={row.id}>
-              {row.getVisibleCells().map((cell) => (
-                <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
+  return <TableShell table={table} totalItems={items.length} />;
 };
 
 export default MembersTable;
