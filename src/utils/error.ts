@@ -13,7 +13,6 @@ export const getErrorMessages = (error: unknown): string[] => {
   // Case 2: FastAPI validation error: { detail: [{ msg: string, ... }] }
   if (data && Array.isArray(data.detail)) {
     // extract loc and msg
-    console.log(data);
     const messages: string[] = data.detail
       .map((d: any) => {
         if (d.msg && typeof d.msg === 'string') {

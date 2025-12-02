@@ -9,6 +9,7 @@ import {
   flexRender,
 } from '@tanstack/react-table';
 import TableShell from '@components/common/TableShell';
+import { formatAbsolute, formatSmart } from '@utils/datetime';
 import { usePaginationState } from '@hooks/usePaginationState';
 import type { AssessmentResponse } from '@api/models';
 
@@ -50,11 +51,17 @@ const AssessmentsTable: React.FC<AssessmentsTableProps> = ({
       }),
       columnHelper.accessor('created_at', {
         header: 'Created',
-        cell: (info) => <span className="font-mono text-xs">{info.getValue()}</span>,
+        cell: (info) => 
+            <time className="font-mono text-xs" title={formatAbsolute(info.getValue(), { includeTime: true })}>
+              {formatSmart(info.getValue(), { returnBoth: false })}
+            </time>,
       }),
       columnHelper.accessor('updated_at', {
         header: 'Updated',
-        cell: (info) => <span className="font-mono text-xs">{info.getValue()}</span>,
+        cell: (info) => 
+            <time className="font-mono text-xs" title={formatAbsolute(info.getValue(), { includeTime: true })}>
+              {formatSmart(info.getValue(), { returnBoth: false })}
+            </time>,
       }),
       columnHelper.display({
         id: 'actions',
