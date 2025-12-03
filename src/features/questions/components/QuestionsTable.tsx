@@ -18,6 +18,8 @@ import type {
 } from '@api/models';
 import { getQuestionIdsSorted } from '@features/questions/helpers';
 
+const UNPARSABLE_MARKER = '__UNPARSABLE__:';
+
 type Props = {
   questionMap: QuestionSetOutputQuestionMap;
   examplesByQuestion: { [key: string]: string[] };
@@ -172,11 +174,23 @@ const QuestionsTable: React.FC<Props> = ({
                   <td className="align-top">
                     {examples.length ? (
                       <ul className="list-disc ml-4 text-xs">
-                        {examples.slice(0, 10).map((ex, i) => (
-                          <li key={i} className="font-mono">
-                            <AnswerText value={ex} maxLength={50} />
-                          </li>
-                        ))}
+                        {examples
+                          .filter((value) => !(typeof value === 'string' && value.includes(UNPARSABLE_MARKER)))
+                          .slice(0, 5)
+                          .map((ex, i) => (
+                            <li key={`clean-${i}`} className="font-mono">
+                              <AnswerText value={ex} maxLength={50} />
+                            </li>
+                          ))}
+
+                        {examples
+                          .filter((value) => typeof value === 'string' && value.includes(UNPARSABLE_MARKER))
+                          .slice(0, 5)
+                          .map((ex, i) => (
+                            <li key={`raw-${i}`} className="font-mono text-red-500">
+                              <AnswerText value={ex.replace(UNPARSABLE_MARKER, "")} maxLength={50} />
+                            </li>
+                          ))}
                       </ul>
                     ) : (
                       <span className="opacity-60">—</span>

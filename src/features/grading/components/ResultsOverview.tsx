@@ -64,19 +64,26 @@ const ResultsOverview: React.FC<Props> = ({ items, questionIds, onView, initialP
             const adjustedExists = r.adjusted_points !== undefined && r.adjusted_points !== null;
             const pointsDisplay = adjustedExists ? (r.adjusted_points as number) : r.points;
             const maxPoints = r.max_points ?? 0;
+            const graded = r.graded;
 
             return (
               <div className={adjustedExists ? 'bg-warning/10 -m-1 p-1 rounded' : ''}>
                 <div className="flex flex-col">
-                  <span className="font-mono text-sm">
-                    {pointsDisplay} / {maxPoints}
-                  </span>
-                  {adjustedExists && (
-                    <span className="font-mono text-[11px] opacity-70">
-                      Original: {r.points} / {maxPoints}
-                    </span>
+                  {!graded ? (
+                    <span className="badge badge-warning">Ungraded</span>
+                  ) : (
+                    <>
+                      <span className="font-mono text-sm">
+                        {pointsDisplay} / {maxPoints}
+                      </span>
+                      {adjustedExists && (
+                        <span className="font-mono text-[11px] opacity-70">
+                          Original: {r.points} / {maxPoints}
+                        </span>
+                      )}
+                      {renderPercentBar(pointsDisplay ?? 0, maxPoints)}
+                    </>
                   )}
-                  {renderPercentBar(pointsDisplay ?? 0, maxPoints)}
                 </div>
               </div>
             );

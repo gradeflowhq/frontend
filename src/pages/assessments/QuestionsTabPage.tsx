@@ -49,7 +49,7 @@ const QuestionsTabPage: React.FC = () => {
   const inferMutation = useInferAndParseQuestionSet(assessmentId);
 
   // Examples from parsed submissions
-  const examplesByQuestion = React.useMemo(() => buildExamplesFromParsed(parsedRes, 10, 50), [parsedRes]);
+  const examplesByQuestion = React.useMemo(() => buildExamplesFromParsed(parsedRes), [parsedRes]);
 
   return (
     <section className="space-y-6">
@@ -66,7 +66,11 @@ const QuestionsTabPage: React.FC = () => {
       )}
       {errorParsed && <ErrorAlert error={parsedError} />}
 
-      <QuestionsHeader onInfer={() => setConfirmInfer(true)} showInfer={hasSubmissions} />
+      <QuestionsHeader
+        onInfer={() => setConfirmInfer(true)}
+        showInfer={hasSubmissions}
+        assessmentId={assessmentId}
+      />
 
       {!loadingQS && !errorQS && (
         <QuestionsTable

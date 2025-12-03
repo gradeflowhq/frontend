@@ -19,22 +19,19 @@ export const getQuestionType = (q: QuestionDef | undefined): QuestionType =>
 
 /**
  * Extract example answers from parsed submissions for each question.
- * Limits to at most maxPerQuestion unique examples per question.
  */
 export const buildExamplesFromParsed = (
   parsed: ParseSubmissionsResponse | undefined,
-  maxPerQuestion = 10,
-  sampleLimit = 50
 ): ExamplesByQuestion => {
   const map: ExamplesByQuestion = {};
   const subs = parsed?.submissions ?? [];
-  subs.slice(0, sampleLimit).forEach((sub) => {
+  subs.forEach((sub) => {
     Object.entries(sub.answer_map ?? {}).forEach(([qid, val]) => {
       if (!map[qid]) map[qid] = [];
       const list = map[qid];
       // Check for duplicates using JSON comparison
       const isDuplicate = list.some(existing => JSON.stringify(existing) === JSON.stringify(val));
-      if (list.length < maxPerQuestion && !isDuplicate) {
+      if (!isDuplicate) {
         list.push(val);
       }
     });

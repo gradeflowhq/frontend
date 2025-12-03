@@ -230,7 +230,9 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
                   </td>
 
                   <td className="align-top">
-                    {res.passed ? (
+                    { !res.graded ? (
+                      <span className="badge badge-warning">Ungraded</span>
+                    ) : res.passed ? (
                       <IconCheckCircle className="text-success" title="Passed" aria-label="Passed" />
                     ) : (
                       <IconAlertCircle className="text-error" title="Failed" aria-label="Failed" />
