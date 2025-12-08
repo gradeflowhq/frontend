@@ -22,6 +22,7 @@ const QuestionsTabPage: React.FC = () => {
   const [confirmDeleteQs, setConfirmDeleteQs] = React.useState(false);
   const [openQsUpload, setOpenQsUpload] = React.useState(false);
   const [openQsImport, setOpenQsImport] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState('');
 
   if (!assessmentId) return null;
 
@@ -86,6 +87,8 @@ const QuestionsTabPage: React.FC = () => {
         onDelete={() => setConfirmDeleteQs(true)}
         showDelete={hasQuestionSet}
         disableDelete={deleteMutation.isPending}
+        searchQuery={searchQuery}
+        onSearchChange={(v) => setSearchQuery(v)}
       />
 
       {!loadingQS && !errorQS && (
@@ -97,6 +100,7 @@ const QuestionsTabPage: React.FC = () => {
           }}
           updating={updateMutation.isPending}
           updateError={updateMutation.isError ? updateMutation.error : null}
+          searchQuery={searchQuery}
         />
       )}
 

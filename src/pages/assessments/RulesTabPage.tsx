@@ -1,15 +1,13 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import { Button } from '@components/ui/Button';
 import ErrorAlert from '@components/common/ErrorAlert';
 import ConfirmDialog from '@components/common/ConfirmDialog';
-import { SingleTargetRulesSection, MultiTargetRulesSection } from '@features/rules/components';
+import { SingleTargetRulesSection, MultiTargetRulesSection, RulesHeader } from '@features/rules/components';
 import RubricUploadModal from '@features/rules/components/RubricUploadModal';
 import RubricImportModal from '@features/rules/components/RubricImportModal';
 import { useRubric, useRubricCoverage, useDeleteRubric } from '@features/rubric/hooks';
 import { useQuestionSet } from '@features/questions/hooks';
 import type { RubricOutput, QuestionSetOutputQuestionMap } from '@api/models';
-import { IconUpload, IconTrash } from '@components/ui/Icon';
 
 const RulesTabPage: React.FC = () => {
   const { assessmentId } = useParams<{ assessmentId: string }>();
@@ -63,6 +61,7 @@ const RulesTabPage: React.FC = () => {
   const [openRubricUpload, setOpenRubricUpload] = React.useState(false);
   const [openRubricImport, setOpenRubricImport] = React.useState(false);
   const [confirmDeleteRubric, setConfirmDeleteRubric] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState('');
 
   const deleteRubric = useDeleteRubric(safeId);
 
@@ -74,25 +73,15 @@ const RulesTabPage: React.FC = () => {
 
   return (
     <section className="space-y-6">
-      <div className="mb-2 flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Rules</h2>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" onClick={() => setOpenRubricUpload(true)} leftIcon={<IconUpload />}>
-            Upload
-          </Button>
-          <Button variant="ghost" onClick={() => setOpenRubricImport(true)} leftIcon={<IconUpload />}>
-            Import
-          </Button>
-          <Button
-            variant="error"
-            onClick={() => setConfirmDeleteRubric(true)}
-            leftIcon={<IconTrash />}
-            disabled={!hasRules || deleteRubric.isPending}
-          >
-            Delete
-          </Button>
-        </div>
-      </div>
+      <RulesHeader
+        onUpload={() => setOpenRubricUpload(true)}
+        onImport={() => setOpenRubricImport(true)}
+        onDelete={() => setConfirmDeleteRubric(true)}
+        disableDelete={deleteRubric.isPending}
+        hasRules={hasRules}
+        searchQuery={searchQuery}
+        onSearchChange={(v) => setSearchQuery(v)}
+      />
 
       {/* Stats */}
       {!loadingCoverage && !errorCoverage && cov && (
@@ -132,12 +121,14 @@ const RulesTabPage: React.FC = () => {
             assessmentId={safeId}
             questionMap={questionMap}
             coveredQuestionIds={coveredQuestionIds}
+            searchQuery={searchQuery}
           />
 
           <MultiTargetRulesSection
             rubric={rubric}
             assessmentId={safeId}
             questionMap={questionMap}
+            searchQuery={searchQuery}
           />
         </>
       )}

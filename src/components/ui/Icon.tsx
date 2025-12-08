@@ -19,6 +19,7 @@ import {
   FiZap,
   FiFileText,
   FiAlertCircle,
+  FiSearch,
 } from 'react-icons/fi';
 import { LuListChecks } from "react-icons/lu";
 
@@ -51,3 +52,4 @@ export const IconUsers = wrap(FiUsers);
 export const IconAssessment = wrap(FiFileText);
 export const IconInfer = wrap(FiZap);
 export const IconGrade = wrap(LuListChecks);
+export const IconSearch = wrap(FiSearch);

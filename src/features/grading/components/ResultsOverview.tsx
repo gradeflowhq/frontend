@@ -1,6 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '@api';
 import { Button } from '@components/ui/Button';
-import { IconEye } from '@components/ui/Icon';
+import { IconEye, IconSearch } from '@components/ui/Icon';
 import DecryptedText from '@components/common/encryptions/DecryptedText';
 import {
   createColumnHelper,
@@ -12,8 +14,13 @@ import TableShell from '@components/common/TableShell';
 import { usePaginationState } from '@hooks/usePaginationState';
 import type { AdjustableGradedSubmission, AdjustableQuestionResult } from '../types';
 import { useAssessmentPassphrase } from '@features/encryption/AssessmentPassphraseProvider';
+import { useDecryptedIds } from '@features/encryption/useDecryptedIds';
+import ResultsDownloadDropdown from './ResultsDownloadDropdown';
+import ResultsDownloadModal from './ResultsDownloadModal';
 
 type Props = {
+  assessmentId: string;
+  gradingInProgress: boolean;
   items: AdjustableGradedSubmission[];
   questionIds: string[];
   onView: (studentId: string) => void; // caller decides how to navigate
@@ -22,9 +29,54 @@ type Props = {
 
 type RowT = AdjustableGradedSubmission;
 
-const ResultsOverview: React.FC<Props> = ({ items, questionIds, onView, initialPageSize = 10 }) => {
-  const { passphrase } = useAssessmentPassphrase();
+const ResultsOverview: React.FC<Props> = ({
+  assessmentId,
+  gradingInProgress,
+  items,
+  questionIds,
+  onView,
+  initialPageSize = 10,
+}) => {
+  const { passphrase, notifyEncryptedDetected } = useAssessmentPassphrase();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [openDownload, setOpenDownload] = useState(false);
+  const [selectedFormat, setSelectedFormat] = useState<string | null>(null);
   const columnHelper = createColumnHelper<RowT>();
+
+  const studentIds = useMemo(() => items.map((it) => it.student_id ?? ''), [items]);
+  const decryptedIds = useDecryptedIds(studentIds, passphrase, notifyEncryptedDetected);
+
+  const filteredItems = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return items;
+    return items.filter((it) => {
+      const original = it.student_id ?? '';
+      const plain = decryptedIds[original] ?? original;
+      return plain.toLowerCase().includes(q);
+    });
+  }, [items, decryptedIds, searchQuery]);
+
+  // Fetch available download serializers from registry (CSV/JSON/YAML, etc.)
+  const { data: serializerRegistry } = useQuery({
+    queryKey: ['registry', 'gradedSubmissionsSerializers'],
+    queryFn: async () => (await api.gradedSubmissionsSerializersRegistrySerializersGradedSubmissionsGet()).data as string[],
+    staleTime: 5 * 60 * 1000,
+    enabled: true,
+  });
+
+  const formats = useMemo<string[]>(() => {
+    if (Array.isArray(serializerRegistry) && serializerRegistry.length > 0) return serializerRegistry;
+    // Fallback to CSV if registry is empty/unavailable
+    return ['CSV'];
+  }, [serializerRegistry]);
+
+  const hasItems = (items?.length ?? 0) > 0;
+  const canDownload = hasItems || gradingInProgress;
+
+  const openFormatModal = (fmt: string) => {
+    setSelectedFormat(fmt);
+    setOpenDownload(true);
+  };
 
   const renderPercentBar = (value: number, max: number) => {
     const pct = max > 0 ? Math.round((value / max) * 100) : 0;
@@ -140,7 +192,7 @@ const ResultsOverview: React.FC<Props> = ({ items, questionIds, onView, initialP
   });
 
   const table = useReactTable({
-    data: items,
+    data: filteredItems,
     columns,
     state: { pagination },
     onPaginationChange: setPagination,
@@ -149,7 +201,39 @@ const ResultsOverview: React.FC<Props> = ({ items, questionIds, onView, initialP
     getRowId: (row) => row.student_id,
   });
 
-  return <TableShell table={table} totalItems={items.length} />;
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <label className="input input-bordered flex items-center gap-2">
+          <IconSearch className="h-4 w-4 opacity-60" />
+          <input
+            type="search"
+            className="w-full grow bg-transparent focus:outline-none"
+            placeholder="Search by Student ID"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </label>
+        <ResultsDownloadDropdown
+          formats={formats}
+          canDownload={canDownload}
+          onSelect={openFormatModal}
+        />
+      </div>
+
+      <TableShell table={table} totalItems={filteredItems.length} />
+
+      <ResultsDownloadModal
+        open={openDownload}
+        assessmentId={assessmentId}
+        onClose={() => {
+          setOpenDownload(false);
+          setSelectedFormat(null);
+        }}
+        selectedFormat={selectedFormat ?? undefined}
+      />
+    </div>
+  );
 };
 
 export default ResultsOverview;

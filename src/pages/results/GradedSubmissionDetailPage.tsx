@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 import AnswerText from '@components/common/AnswerText';
@@ -14,6 +14,7 @@ import {
   IconEdit,
   IconAlertCircle,
   IconTrash,
+  IconChevronDown,
 } from '@components/ui/Icon';
 import { IconButton } from '@components/ui/IconButton';
 import LoadingButton from '@components/ui/LoadingButton';
@@ -22,6 +23,7 @@ import { useGrading, useAdjustGrading } from '@features/grading/hooks';
 import { friendlyRuleLabel } from '@features/rules/helpers';
 import { isEncrypted } from '@utils/crypto';
 import { natsort } from '@utils/sort';
+import { useDecryptedIds } from '@features/encryption/useDecryptedIds';
 
 import type {
   AdjustableGradedSubmission,
@@ -46,6 +48,9 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
   const adjustMutation = useAdjustGrading(safeId);
 
   const submissions: AdjustableGradedSubmission[] = data?.graded_submissions ?? [];
+  const studentIds = useMemo(() => submissions.map((s) => s.student_id).sort(natsort), [submissions]);
+  const decryptedIds = useDecryptedIds(studentIds, passphrase, notifyEncryptedDetected);
+
   const index = submissions.findIndex((s) => s.student_id === encodedStudentId);
   const current = index >= 0 ? submissions[index] : null;
   const prevId = index > 0 ? submissions[index - 1].student_id : null;
@@ -60,6 +65,8 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
   const [editing, setEditing] = useState<EditState>({});
   const [openEdits, setOpenEdits] = useState<Record<string, boolean>>({});
   const [removeAdjustQid, setRemoveAdjustQid] = useState<string | null>(null);
+  const [pickerQuery, setPickerQuery] = useState('');
+  const pickerInputRef = useRef<HTMLInputElement | null>(null);
 
   const startEdit = (qid: string, res: AdjustableQuestionResult) => {
     setOpenEdits((prev) => ({ ...prev, [qid]: true }));
@@ -82,6 +89,16 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
   };
 
   const hasAnyChange = useMemo(() => Object.keys(editing).length > 0, [editing]);
+
+  const studentOptions = useMemo(() => {
+    const q = pickerQuery.trim().toLowerCase();
+    return studentIds
+      .map((id) => {
+        const display = decryptedIds[id] ?? id;
+        return { encoded: id, display };
+      })
+      .filter(({ display }) => display.toLowerCase().includes(q));
+  }, [decryptedIds, pickerQuery, studentIds]);
 
   const resetEdits = () => {
     setEditing({});
@@ -108,6 +125,10 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
   const gotoNext = () => {
     if (nextId) navigate(`/results/${safeId}/${encodeURIComponent(nextId)}`);
   };
+
+  React.useEffect(() => {
+    setPickerQuery('');
+  }, [encodedStudentId]);
 
   if (!enabled) {
     return <div className="alert alert-error"><span>Assessment ID is missing.</span></div>;
@@ -140,9 +161,45 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
           <Button variant="outline" onClick={() => navigate(`/results/${safeId}`)} leftIcon={<IconChevronLeft />}>
             Back
           </Button>
-          <span className="font-mono text-sm badge badge-ghost flex items-center">
-            <DecryptedText value={encodedStudentId} passphrase={passphrase} mono size="sm" />
-          </span>
+          <div
+            className={`dropdown`}
+          >
+            <div tabindex="0" role="button" className="btn m-1">
+              <DecryptedText value={encodedStudentId} passphrase={passphrase} mono size="sm" /><IconChevronDown />
+            </div>
+            <div
+              tabIndex={0}
+              className={`dropdown-content card card-sm bg-base-100 z-1 w-64 shadow-md`}
+            >
+              <div className="p-3 space-y-2">
+                <input
+                  type="text"
+                  className="input input-bordered input-sm w-full"
+                  placeholder="Search students"
+                  value={pickerQuery}
+                  onChange={(e) => setPickerQuery(e.target.value)}
+                  ref={pickerInputRef}
+                />
+                <div className="max-h-60 overflow-y-auto divide-y divide-base-200">
+                  {studentOptions.length === 0 && (
+                    <div className="py-2 text-sm opacity-70">No students match your search.</div>
+                  )}
+                  {studentOptions.map((opt) => (
+                    <button
+                      key={opt.encoded}
+                      type="button"
+                      className="w-full text-left btn btn-ghost btn-sm justify-start"
+                      onClick={() => {
+                        navigate(`/results/${safeId}/${encodeURIComponent(opt.encoded)}`);
+                      }}
+                    >
+                      <DecryptedText value={opt.encoded} passphrase={passphrase} mono size="sm" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           {hasAnyChange && (

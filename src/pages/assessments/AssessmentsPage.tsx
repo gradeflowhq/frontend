@@ -5,7 +5,7 @@ import ConfirmDialog from '@components/common/ConfirmDialog';
 import ErrorAlert from '@components/common/ErrorAlert';
 import PageHeader from '@components/common/PageHeader';
 import { Button } from '@components/ui/Button';
-import { IconPlus } from '@components/ui/Icon';
+import { IconPlus, IconSearch } from '@components/ui/Icon';
 import {
   AssessmentsTable,
   AssessmentCreateModal,
@@ -29,6 +29,7 @@ const AssessmentsPage: React.FC = () => {
   const [showCreate, setShowCreate] = useState(false);
   const [editItem, setEditItem] = useState<AssessmentResponse | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AssessmentResponse | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { data, isLoading, isError, error } = useAssessmentsList();
   const createMutation = useCreateAssessment();
@@ -40,14 +41,36 @@ const AssessmentsPage: React.FC = () => {
     return [...list].sort(compareDateDesc((i) => i.updated_at ?? i.created_at ?? null));
   }, [data]);
 
+  const filteredItems = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return sortedItems;
+
+    return sortedItems.filter((item) => {
+      const haystacks = [item.name, item.description].filter(Boolean).map((v) => v!.toLowerCase());
+      return haystacks.some((text) => text.includes(q));
+    });
+  }, [sortedItems, searchQuery]);
+
   return (
     <section>
       <PageHeader
         title="Assessments"
         actions={
-          <Button variant="ghost" onClick={() => setShowCreate(true)} leftIcon={<IconPlus />}>
-            Add Assessment
-          </Button>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <label className="input input-bordered flex items-center gap-2">
+              <IconSearch className="h-4 w-4 opacity-60" />
+              <input
+                type="search"
+                className="w-full grow bg-transparent focus:outline-none"
+                placeholder="Search assessments"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </label>
+            <Button variant="ghost" onClick={() => setShowCreate(true)} leftIcon={<IconPlus />}>
+              Add Assessment
+            </Button>
+          </div>
         }
       />
 
@@ -62,7 +85,7 @@ const AssessmentsPage: React.FC = () => {
 
       {!isLoading && !isError && (
         <AssessmentsTable
-          items={sortedItems}
+          items={filteredItems}
           onOpen={(item) => {
             void navigate(`/assessments/${item.id}`);
           }}

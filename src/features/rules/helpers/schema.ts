@@ -5,10 +5,13 @@ export const getRuleDefinitions = (): Record<string, any> => {
   return defs || {};
 };
 
-export const friendlyRuleLabel = (key: string): string => {
-  let name = key.replace(/(QuestionRule|MultiQuestionRule|Rule)$/, '');
-  name = name.replace(/([a-z0-9])([A-Z])/g, '$1 $2').trim();
-  return name;
+export const friendlyRuleLabel = (key: unknown): string => {
+  const raw = typeof key === 'string' ? key : key != null ? String(key) : '';
+  if (!raw) return 'Unknown rule';
+
+  const withoutSuffix = raw.replace(/(QuestionRule|MultiQuestionRule|Rule)$/, '');
+  const spaced = withoutSuffix.replace(/([a-z0-9])([A-Z])/g, '$1 $2').trim();
+  return spaced || raw;
 };
 
 export const prettifyKey = (s: string): string =>

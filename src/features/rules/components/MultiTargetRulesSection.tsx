@@ -24,9 +24,10 @@ type Props = {
   rubric: RubricOutput | null;
   assessmentId: string;
   questionMap: QuestionSetOutputQuestionMap;
+  searchQuery?: string;
 };
 
-const MultiTargetRulesSection: React.FC<Props> = ({ rubric, assessmentId, questionMap }) => {
+const MultiTargetRulesSection: React.FC<Props> = ({ rubric, assessmentId, questionMap, searchQuery }) => {
   // Hooks must be called at the top level and unconditionally in a stable order
   const defs = useRuleDefinitions();
   const validateAndReplace = useValidateAndReplaceRubric(assessmentId);
@@ -61,6 +62,18 @@ const MultiTargetRulesSection: React.FC<Props> = ({ rubric, assessmentId, questi
     () => allRules.filter((r) => typeof (r as any)?.question_id !== 'string'),
     [allRules]
   );
+
+  const filteredMultiRules = useMemo(() => {
+    const q = (searchQuery ?? '').trim().toLowerCase();
+    if (!q) return multiRules;
+
+    return multiRules.filter((r) => {
+      const label = friendlyRuleLabel(r).toLowerCase();
+      if (label.includes(q)) return true;
+      const body = JSON.stringify(r ?? {}).toLowerCase();
+      return body.includes(q);
+    });
+  }, [multiRules, searchQuery]);
 
   const handleAddDropdownSelect = (ruleKey: string) => {
     setSelectedRuleKey(ruleKey);
@@ -111,11 +124,11 @@ const MultiTargetRulesSection: React.FC<Props> = ({ rubric, assessmentId, questi
         </DropdownMenu>
       </div>
 
-      {multiRules.length === 0 ? (
-        <div className="alert alert-ghost"><span>No multi-target rules yet.</span></div>
+      {filteredMultiRules.length === 0 ? (
+        <div className="alert alert-ghost"><span>No multi-target rules match your search.</span></div>
       ) : (
         <div className="mt-2 space-y-3">
-          {multiRules.map((r, idx) => (
+          {filteredMultiRules.map((r, idx) => (
             <RuleItem
               key={idx}
               rule={r}

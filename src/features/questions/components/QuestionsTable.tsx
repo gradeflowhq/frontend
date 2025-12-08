@@ -27,6 +27,7 @@ type Props = {
   updating?: boolean;
   updateError?: unknown;
   initialPageSize?: number;
+  searchQuery?: string;
 };
 
 const QuestionsTable: React.FC<Props> = ({
@@ -36,6 +37,7 @@ const QuestionsTable: React.FC<Props> = ({
   updating,
   updateError,
   initialPageSize = 10,
+  searchQuery,
 }) => {
   const [localMap, setLocalMap] = useState<QuestionSetOutputQuestionMap>({});
   const [openEdits, setOpenEdits] = useState<Record<string, boolean>>({});
@@ -52,10 +54,26 @@ const QuestionsTable: React.FC<Props> = ({
 
   const ids = useMemo(() => getQuestionIdsSorted(localMap), [localMap]);
 
+  const filteredIds = useMemo(() => {
+    const q = (searchQuery ?? '').trim().toLowerCase();
+    if (!q) return ids;
+
+    return ids.filter((qid) => {
+      const def = localMap[qid] as any;
+      const type = (def?.type as string) ?? '';
+      if (qid.toLowerCase().includes(q)) return true;
+      if (type.toLowerCase().includes(q)) return true;
+      const configText = JSON.stringify(def ?? {}).toLowerCase();
+      if (configText.includes(q)) return true;
+      const examples = examplesByQuestion[qid] ?? [];
+      return examples.some((ex) => String(ex ?? '').toLowerCase().includes(q));
+    });
+  }, [ids, localMap, examplesByQuestion, searchQuery]);
+
   const pagedIds = useMemo(() => {
     const start = pageIndex * pageSize;
-    return ids.slice(start, start + pageSize);
-  }, [ids, pageIndex, pageSize]);
+    return filteredIds.slice(start, start + pageSize);
+  }, [filteredIds, pageIndex, pageSize]);
 
   const selectRootSchema = (type: string | undefined) => {
     const dict = questionsSchema as any;
@@ -87,6 +105,14 @@ const QuestionsTable: React.FC<Props> = ({
             <p className="py-2 opacity-70">Upload submissions to infer questions.</p>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  if (filteredIds.length === 0) {
+    return (
+      <div className="alert alert-ghost">
+        <span>No questions match your search.</span>
       </div>
     );
   }
@@ -246,7 +272,7 @@ const QuestionsTable: React.FC<Props> = ({
       <PaginationControls
         pageIndex={pageIndex}
         pageSize={pageSize}
-        totalItems={ids.length}
+        totalItems={filteredIds.length}
         onPageIndexChange={setPageIndex}
         onPageSizeChange={(s) => {
           setPageSize(s);

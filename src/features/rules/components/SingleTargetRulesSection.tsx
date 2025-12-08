@@ -20,6 +20,7 @@ type Props = {
   assessmentId: string;
   questionMap: QuestionSetOutputQuestionMap;
   coveredQuestionIds: Set<string>;
+  searchQuery?: string;
 };
 
 const SingleTargetRulesSection: React.FC<Props> = ({
@@ -29,6 +30,7 @@ const SingleTargetRulesSection: React.FC<Props> = ({
   assessmentId,
   questionMap,
   coveredQuestionIds,
+  searchQuery,
 }) => {
   // Hooks must be called unconditionally
   const defs = useRuleDefinitions();
@@ -68,6 +70,26 @@ const SingleTargetRulesSection: React.FC<Props> = ({
     }
     return map;
   }, [allRules]);
+
+  const matchesRule = (rule: RuleValue, q: string) => {
+    const label = friendlyRuleLabel(rule).toLowerCase();
+    if (label.includes(q)) return true;
+    const body = JSON.stringify(rule ?? {}).toLowerCase();
+    return body.includes(q);
+  };
+
+  const filteredQuestionIds = useMemo(() => {
+    const q = (searchQuery ?? '').trim().toLowerCase();
+    if (!q) return questionIds;
+
+    return questionIds.filter((qid) => {
+      const type = (questionTypesById[qid] ?? '').toLowerCase();
+      if (qid.toLowerCase().includes(q)) return true;
+      if (type.includes(q)) return true;
+      const rules = byQuestion[qid] ?? [];
+      return rules.some((r) => matchesRule(r, q));
+    });
+  }, [questionIds, questionTypesById, byQuestion, searchQuery]);
 
   // Filter schema keys compatible with a question's type
   const compatibleKeysFor = (questionType: string) =>
@@ -120,7 +142,13 @@ const SingleTargetRulesSection: React.FC<Props> = ({
       )}
 
       <div className="mt-3 space-y-3">
-        {questionIds.map((qid) => {
+        {filteredQuestionIds.length === 0 && (
+          <div className="alert alert-ghost">
+            <span>No questions match your search.</span>
+          </div>
+        )}
+
+        {filteredQuestionIds.map((qid) => {
           const qType = questionTypesById[qid] ?? 'TEXT';
           const rules = byQuestion[qid] ?? [];
           const options = compatibleKeysFor(qType);
