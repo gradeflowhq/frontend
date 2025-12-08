@@ -12,10 +12,14 @@ import {
 import { buildExamplesFromParsed } from '@features/questions/helpers';
 import { useSubmissions } from '@features/submissions/hooks';
 import type { QuestionSetInput } from '@api/models';
+import QuestionSetUploadModal from '@features/questions/components/QuestionSetUploadModal';
+import QuestionSetImportModal from '@features/questions/components/QuestionSetImportModal';
 
 const QuestionsTabPage: React.FC = () => {
   const { assessmentId } = useParams<{ assessmentId: string }>();
   const [confirmInfer, setConfirmInfer] = React.useState(false);
+  const [openQsUpload, setOpenQsUpload] = React.useState(false);
+  const [openQsImport, setOpenQsImport] = React.useState(false);
 
   if (!assessmentId) return null;
 
@@ -49,7 +53,10 @@ const QuestionsTabPage: React.FC = () => {
   const inferMutation = useInferAndParseQuestionSet(assessmentId);
 
   // Examples from parsed submissions
-  const examplesByQuestion = React.useMemo(() => buildExamplesFromParsed(parsedRes), [parsedRes]);
+  const examplesByQuestion = React.useMemo<Record<string, string[]>>(
+    () => buildExamplesFromParsed(parsedRes) as Record<string, string[]>,
+    [parsedRes]
+  );
 
   return (
     <section className="space-y-6">
@@ -69,7 +76,8 @@ const QuestionsTabPage: React.FC = () => {
       <QuestionsHeader
         onInfer={() => setConfirmInfer(true)}
         showInfer={hasSubmissions}
-        assessmentId={assessmentId}
+        onUpload={() => setOpenQsUpload(true)}
+        onImport={() => setOpenQsImport(true)}
       />
 
       {!loadingQS && !errorQS && (
@@ -95,6 +103,17 @@ const QuestionsTabPage: React.FC = () => {
         onCancel={() => setConfirmInfer(false)}
       />
       {inferMutation.isError && <ErrorAlert error={inferMutation.error} />}
+
+      {openQsUpload && <QuestionSetUploadModal
+        open={openQsUpload}
+        assessmentId={assessmentId}
+        onClose={() => setOpenQsUpload(false)}
+      />}
+      {openQsImport && <QuestionSetImportModal
+        open={openQsImport}
+        assessmentId={assessmentId}
+        onClose={() => setOpenQsImport(false)}
+      />}
     </section>
   );
 };

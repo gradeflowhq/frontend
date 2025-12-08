@@ -13,7 +13,8 @@ const getFieldKey = (props: FieldTemplateProps): string | null => {
     return key || null;
 };
 
-const DefaultFieldTemplate = DaisyUITheme.templates?.FieldTemplate;
+const DefaultFieldTemplate =
+  DaisyUITheme.templates?.FieldTemplate as React.ComponentType<FieldTemplateProps> | undefined;
 
 const HiddenAwareFieldTemplate: React.FC<FieldTemplateProps> = (props) => {
   // Local per-node hide flag
@@ -25,6 +26,8 @@ const HiddenAwareFieldTemplate: React.FC<FieldTemplateProps> = (props) => {
   const globalHidden = key && ctx.hideKeys instanceof Set ? ctx.hideKeys.has(key) : false;
 
   if (localHidden || globalHidden) return null;
+
+  if (!DefaultFieldTemplate) return null;
 
   return <DefaultFieldTemplate {...props} />;
 };

@@ -64,6 +64,7 @@ const LoginPage: React.FC = () => {
         formContext={formContext}
         isSubmitting={isPending}
         onSubmit={async ({ formData }) => {
+          if (!formData) return;
           await mutateAsync(formData);
         }}
         formProps={{ noHtml5Validate: true }}

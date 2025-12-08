@@ -18,7 +18,7 @@ const SubmissionsTabPage: React.FC = () => {
     return <div className="alert alert-error"><span>Assessment ID is missing.</span></div>;
   }
 
-  const [showLoadCsv, setShowLoadCsv] = useState(false);
+  const [showLoadWizard, setShowLoadWizard] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const { data, isLoading, isError, error } = useSubmissions(assessmentId);
@@ -29,7 +29,7 @@ const SubmissionsTabPage: React.FC = () => {
   return (
     <section className="space-y-6">
       <SubmissionsHeader
-        onLoadCsv={() => setShowLoadCsv(true)}
+        onLoadCsv={() => setShowLoadWizard(true)}
         onDeleteAll={() => setConfirmDelete(true)}
         showDeleteAll={items.length > 0}
       />
@@ -41,9 +41,10 @@ const SubmissionsTabPage: React.FC = () => {
         <SubmissionsTable items={items} />
       )}
 
+      {/* Load Wizard (CSV -> Blob + adapter import) */}
       <SubmissionsLoadWizardModal
-        open={showLoadCsv}
-        onClose={() => setShowLoadCsv(false)}
+        open={showLoadWizard}
+        onClose={() => setShowLoadWizard(false)}
         assessmentId={assessmentId}
       />
 

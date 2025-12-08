@@ -8,13 +8,17 @@ import { IconUpload } from '@components/ui/Icon';
 import { buildPassphraseKey, readPassphrase, writePassphrase } from '@utils/passphrase';
 import { validateCsvMapping, buildUploadCsv } from '@features/submissions/helpers';
 import type { CsvPreview, CsvMapping, PassphraseContext } from '@features/submissions/types';
-import { useLoadSubmissionsCSV } from '@features/submissions/hooks';
 import { useInferAndParseQuestionSet } from '@features/questions/hooks';
 import {
   arraysEqual,
   computeNextMapping,
   sanitizeQuestions,
 } from '@features/submissions/utils/questionColumnInference';
+
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '@api';
+import { QK } from '@api/queryKeys';
+import type { ImportSubmissionsRequest, CsvRawSubmissionsConfig } from '@api/models';
 
 type Props = {
   open: boolean;
@@ -199,7 +203,6 @@ const SubmissionsLoadWizardModal: React.FC<Props> = ({ open, assessmentId, onClo
   const [storePassphrase, setStorePassphrase] = useState(false);
 
   const storageKey = buildPassphraseKey(assessmentId);
-  const loadMutation = useLoadSubmissionsCSV(assessmentId);
   const inferAndParse = useInferAndParseQuestionSet(assessmentId);
 
   // Load stored passphrase on open
@@ -268,7 +271,7 @@ const SubmissionsLoadWizardModal: React.FC<Props> = ({ open, assessmentId, onClo
     });
 
     // Use heuristics (with rows) to compute the next mapping
-    setMapping((prev) => computeNextMapping(nextHeaders, prev, { maxDefaults: 6, rowsForHeuristic: nextRows }));
+    setMapping((prev) => computeNextMapping(nextHeaders, prev, { rowsForHeuristic: nextRows }));
   }, [rawGrid, headerRow, dataStartRow, dataEndRow]);
 
   // Recompute when inputs change
@@ -348,17 +351,23 @@ const SubmissionsLoadWizardModal: React.FC<Props> = ({ open, assessmentId, onClo
     mapping.questionColumns.length > 0 &&
     (!encryptIds || !!passphrase);
 
-  const persistPassphraseIfNeeded = () => {
-    if (encryptIds && storePassphrase && passphrase) {
-      writePassphrase(storageKey, passphrase);
-    }
-  };
+  // Import submissions via adapter (CSV) with Blob data
+  const qc = useQueryClient();
+  const importMutation = useMutation({
+    mutationKey: ['submissions', assessmentId, 'import-wizard'],
+    mutationFn: async (payload: ImportSubmissionsRequest) =>
+      (await api.importSubmissionsAssessmentsAssessmentIdSubmissionsImportPut(assessmentId, payload)).data,
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: QK.submissions.list(assessmentId) });
+      onClose();
+    },
+  });
 
   if (!open) return null;
 
   return (
     <Modal open={open} onClose={onClose} boxClassName="w-full max-w-6xl">
-      <h3 className="font-bold text-lg">Load Submissions (CSV)</h3>
+      <h3 className="font-bold text-lg">Import Submissions (CSV)</h3>
 
       {/* File input */}
       <div className="form-control mt-2">
@@ -455,42 +464,55 @@ const SubmissionsLoadWizardModal: React.FC<Props> = ({ open, assessmentId, onClo
         </>
       )}
 
-      {loadMutation.isError && <ErrorAlert error={loadMutation.error} className="mt-4" />}
+      {importMutation.isError && <ErrorAlert error={importMutation.error} className="mt-4" />}
 
       <div className="modal-action">
-        <Button type="button" variant="ghost" onClick={onClose} disabled={loadMutation.isPending}>
+        <Button type="button" variant="ghost" onClick={onClose} disabled={importMutation.isPending}>
           Cancel
         </Button>
         <LoadingButton
           type="button"
           variant="primary"
           onClick={async () => {
-            if (!preview) return;
+          if (!preview) return;
 
-            const errors = validateCsvMapping(preview, mapping);
-            if (errors.length) {
-              alert(errors.join('\n'));
-              return;
-            }
+          const errors = validateCsvMapping(preview, mapping);
+          if (errors.length) {
+            alert(errors.join('\n'));
+            return;
+          }
 
-            // Persist passphrase (optional)
-            if (encryptIds && storePassphrase && passphrase) {
-              writePassphrase(storageKey, passphrase);
-            }
+          // Persist passphrase (optional)
+          if (encryptIds && storePassphrase && passphrase) {
+            writePassphrase(storageKey, passphrase);
+          }
 
-            const passCtx: PassphraseContext = { passphrase: encryptIds ? passphrase : null };
-            const { csv } = await buildUploadCsv(preview, mapping, passCtx);
+          // Build CSV (encrypting IDs client-side if chosen)
+          const passCtx: PassphraseContext = { passphrase: encryptIds ? passphrase : null };
+          const { csv } = await buildUploadCsv(preview, mapping, passCtx);
 
-            await loadMutation.mutateAsync(csv);
-            try {
-              await inferAndParse.mutateAsync();
-            } catch (e) {
-              console.warn('Inference or parsing failed after upload:', e);
-            }
-            onClose();
-          }}
+          // Adapter config for CSV import
+          const adapter: CsvRawSubmissionsConfig = {
+            name: 'csv',
+            format: 'csv',
+            student_id_column: 'student_id',
+            // Provide question columns explicitly; omit if empty
+            answer_columns: mapping.questionColumns.length ? mapping.questionColumns : undefined,
+          };
+
+          const payload = { data: csv, adapter } as any;
+
+          await importMutation.mutateAsync(payload);
+
+          // Try to infer and parse questions after import
+          try {
+            await inferAndParse.mutateAsync();
+          } catch (e) {
+            console.warn('Inference or parsing failed after upload:', e);
+          }
+        }}
           disabled={!canSubmit || !preview}
-          isLoading={loadMutation.isPending}
+          isLoading={importMutation.isPending}
           title={!canSubmit ? 'Select header/body rows, choose SID and questions, and passphrase (if encrypting)' : 'Upload'}
           leftIcon={<IconUpload />}
         >

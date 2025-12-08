@@ -33,7 +33,7 @@ const AssessmentsPage: React.FC = () => {
   const updateMutation = useUpdateAssessment();
   const deleteMutation = useDeleteAssessment();
 
-  const items = data?.items ?? [];
+  const items = (data as { items?: AssessmentResponse[] } | undefined)?.items ?? [];
 
   return (
     <section>

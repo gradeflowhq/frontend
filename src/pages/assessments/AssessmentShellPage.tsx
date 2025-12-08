@@ -240,7 +240,7 @@ const AssessmentShellPage: React.FC = () => {
         {isErrorAssessment && <ErrorAlert error={assessmentError} />}
 
         {/* Show job failure or run errors */}
-        {runError && <ErrorAlert error={runError} className="mb-2" />}
+        {!!runError && <ErrorAlert error={runError} className="mb-2" />}
 
         {!isLoadingAssessment && !isErrorAssessment && (
           <>

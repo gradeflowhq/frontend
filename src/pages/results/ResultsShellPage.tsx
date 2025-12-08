@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import ErrorAlert from '@components/common/ErrorAlert';
 import { isEncrypted } from '@utils/crypto';
 import { IconChevronLeft } from '@components/ui/Icon';
@@ -15,8 +16,12 @@ import { useAssessment } from '@features/assessments/hooks';
 import { useQuestionSet } from '@features/questions/hooks';
 
 import type { AdjustableGradedSubmission, QuestionSetOutputQuestionMap } from '@api/models';
-import ResultsExportMenu from '@features/grading/components/ResultsExportMenu';
 import { AssessmentPassphraseProvider, useAssessmentPassphrase } from '@features/encryption/AssessmentPassphraseProvider';
+
+// Download modal and dropdown
+import ResultsDownloadModal from '@features/grading/components/ResultsDownloadModal';
+import ResultsDownloadDropdown from '@features/grading/components/ResultsDownloadDropdown';
+import { api } from '@api';
 
 const natsort = (a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
 
@@ -58,6 +63,33 @@ const ResultsShellInner: React.FC<{ assessmentId: string }> = ({ assessmentId })
 
   useDocumentTitle(`Results - ${assessmentRes?.name ?? 'Assessment'} - GradeFlow`);
 
+  // Download modal state
+  const [openDownload, setOpenDownload] = useState(false);
+  const [selectedFormat, setSelectedFormat] = useState<string | null>(null);
+
+  const hasItems = (items?.length ?? 0) > 0;
+
+  // Fetch available download serializers from registry (CSV/JSON/YAML, etc.)
+  const { data: serializerRegistry } = useQuery({
+    queryKey: ['registry', 'gradedSubmissionsSerializers'],
+    queryFn: async () => (await api.gradedSubmissionsSerializersRegistrySerializersGradedSubmissionsGet()).data as string[],
+    staleTime: 5 * 60 * 1000,
+    enabled: true,
+  });
+
+  const formats = useMemo<string[]>(() => {
+    if (Array.isArray(serializerRegistry) && serializerRegistry.length > 0) return serializerRegistry;
+    // Fallback to CSV if registry is empty/unavailable
+    return ['CSV'];
+  }, [serializerRegistry]);
+
+  const canDownload = hasItems || gradingInProgress;
+
+  const openFormatModal = (fmt: string) => {
+    setSelectedFormat(fmt);
+    setOpenDownload(true);
+  };
+
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between">
@@ -73,7 +105,11 @@ const ResultsShellInner: React.FC<{ assessmentId: string }> = ({ assessmentId })
         </div>
 
         <div className="flex items-center gap-2">
-          <ResultsExportMenu assessmentId={safeId} disabled={(items?.length ?? 0) === 0} />
+          <ResultsDownloadDropdown
+            formats={formats}
+            canDownload={canDownload}
+            onSelect={openFormatModal}
+          />
         </div>
       </div>
 
@@ -139,6 +175,17 @@ const ResultsShellInner: React.FC<{ assessmentId: string }> = ({ assessmentId })
       {!isLoading && !isError && items.length > 0 && activeTab === 'analysis' && (
         <QuestionAnalysis items={items} questionIds={questionIds} />
       )}
+
+      {/* Download modal for the selected format */}
+      <ResultsDownloadModal
+        open={openDownload}
+        assessmentId={safeId}
+        onClose={() => {
+          setOpenDownload(false);
+          setSelectedFormat(null);
+        }}
+        selectedFormat={selectedFormat ?? undefined}
+      />
     </section>
   );
 };

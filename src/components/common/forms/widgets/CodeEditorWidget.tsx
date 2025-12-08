@@ -14,10 +14,8 @@ type EditorOptions = {
 const CodeEditorWidget: React.FC<WidgetProps> = ({
   id,
   value,
-  required,
   disabled,
   readonly,
-  label,
   placeholder,
   onChange,
   onBlur,

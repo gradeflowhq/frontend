@@ -7,7 +7,7 @@ export const getErrorMessages = (error: unknown): string[] => {
 
   // Case 1: { errors: string[] }
   if (data && Array.isArray(data.errors)) {
-    return data.errors.filter((e) => typeof e === 'string');
+    return data.errors.filter((e: unknown) => typeof e === 'string');
   }
 
   // Case 2: FastAPI validation error: { detail: [{ msg: string, ... }] }

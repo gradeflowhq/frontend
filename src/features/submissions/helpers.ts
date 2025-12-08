@@ -92,11 +92,6 @@ export const tryDecodeExportCsv = async (csv: string, passphraseCtx?: Passphrase
 };
 
 /**
- * Convenience guard for UI: whether a RawSubmission has an encrypted student_id.
- */
-export const isEncryptedStudentId = (row: RawSubmission): boolean => isEncrypted(row.student_id);
-
-/**
  * Validate a CSV preview + mapping before building upload CSV.
  * Ensures required columns exist and at least one question column is selected.
  */

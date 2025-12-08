@@ -55,13 +55,15 @@ function looksLikeComponentsRef(str) {
   return typeof str === 'string' && str.startsWith('#/components/schemas/');
 }
 
-function getCategory(name) {
-  if (name.includes('Rule') || name.includes('QuestionRule')) return 'rules';
-  if (name.includes('Question')) return 'questions';
-  if (name.includes('Submission')) return 'submissions';
-  if (name.includes('Request')) return 'requests';
-  if (name.includes('Response')) return 'responses';
-  return 'others';
+function getCategories(name) {
+  let categories = [];
+  if (name.includes('Rule') || name.includes('QuestionRule')) categories.push('rules');
+  if (name.includes('Question')) categories.push('questions');
+  if (name.includes('Submission')) categories.push('submissions');
+  if (name.includes('Request')) categories.push('requests');
+  if (name.includes('Response')) categories.push('responses');
+  if (categories.length === 0) categories.push('others');
+  return categories;
 }
 
 function deepClone(obj) {
@@ -236,8 +238,10 @@ async function run() {
   };
 
   for (const name of Object.keys(schemas)) {
-    const cat = getCategory(name);
-    categories[cat].add(name);
+    const catList = getCategories(name);
+    catList.forEach((cat) => {
+      categories[cat].add(name);
+    });
   }
 
   // Build self-contained buckets for the five primary categories

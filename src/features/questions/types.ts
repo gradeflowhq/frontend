@@ -32,16 +32,3 @@ export type QuestionType = 'TEXT' | 'NUMERIC' | 'CHOICE' | 'MULTI_VALUED';
 
 // Examples mapping (used by QuestionsTable)
 export type ExamplesByQuestion = Record<QuestionId, unknown[]>;
-
-// Type guards
-export const isChoiceQuestion = (q: QuestionDef | undefined): q is ChoiceQuestion =>
-  !!q && q.type === 'CHOICE';
-
-export const isMultiValuedQuestion = (q: QuestionDef | undefined): q is MultiValuedQuestion =>
-  !!q && q.type === 'MULTI_VALUED';
-
-export const isTextQuestion = (q: QuestionDef | undefined): q is TextQuestion =>
-  !!q && q.type === 'TEXT';
-
-export const isNumericQuestion = (q: QuestionDef | undefined): q is NumericQuestion =>
-  !!q && q.type === 'NUMERIC';

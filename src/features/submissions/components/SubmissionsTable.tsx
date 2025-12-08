@@ -5,7 +5,6 @@ import {
   getCoreRowModel,
   getPaginationRowModel,
   useReactTable,
-  flexRender,
 } from '@tanstack/react-table';
 import TableShell from '@components/common/TableShell';
 import { usePaginationState } from '@hooks/usePaginationState';

@@ -18,11 +18,11 @@ const SubmissionsHeader: React.FC<SubmissionsHeaderProps> = ({
       <h2 className="card-title">Submissions</h2>
       <div className="flex gap-2">
         <Button type="button" variant="ghost" onClick={onLoadCsv} leftIcon={<IconUpload />}>
-          Load from CSV
+          Import
         </Button>
         {showDeleteAll && (
           <Button type="button" variant="error" onClick={onDeleteAll} leftIcon={<IconTrash />}>
-            Delete All
+            Delete
           </Button>
         )}
       </div>

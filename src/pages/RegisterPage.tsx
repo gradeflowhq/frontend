@@ -50,6 +50,7 @@ const RegisterPage: React.FC = () => {
         uiSchema={uiSchema}
         isSubmitting={isPending}
         onSubmit={async ({ formData }) => {
+          if (!formData) return;
           await mutateAsync(formData);
         }}
         formProps={{ noHtml5Validate: true }}

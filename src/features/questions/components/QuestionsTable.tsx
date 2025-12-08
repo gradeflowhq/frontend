@@ -234,7 +234,7 @@ const QuestionsTable: React.FC<Props> = ({
                         </Button>
                       </div>
                     )}
-                    {updateError && <ErrorAlert error={updateError} className="mt-2" />}
+                        {!!updateError && <ErrorAlert error={updateError} className="mt-2" />}
                   </td>
                 </tr>
               );

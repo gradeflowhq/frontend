@@ -55,7 +55,7 @@ const ResultsOverview: React.FC<Props> = ({ items, questionIds, onView, initialP
       cols.push(
         columnHelper.display({
           id: `q:${qid}`,
-          header: <span className="font-mono text-xs">{qid}</span>,
+          header: () => <span className="font-mono text-xs">{qid}</span>,
           cell: ({ row }) => {
             const resMap = new Map<string, AdjustableQuestionResult>();
             (row.original.results ?? []).forEach((r) => resMap.set(r.question_id, r));

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import type { WidgetProps } from '@rjsf/utils';
 import CodeEditorWidget from './CodeEditorWidget';
 
@@ -29,8 +29,6 @@ const SwitchableTextWidget: React.FC<WidgetProps> = (props) => {
     onFocus,
     options,
     schema,
-    label,
-    required,
   } = props;
 
   const opts = (options || {}) as EditorOptions;

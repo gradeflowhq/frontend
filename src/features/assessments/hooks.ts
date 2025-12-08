@@ -16,7 +16,6 @@ export const useAssessmentsList = () =>
     queryKey: QK.assessments.list,
     queryFn: async () => (await api.listAssessmentsAssessmentsGet()).data as AssessmentsListResponse,
     staleTime: 2 * 60 * 1000,
-    keepPreviousData: true,
   });
 
 export const useAssessment = (id: string, enabled = true) =>

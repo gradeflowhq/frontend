@@ -214,7 +214,7 @@ const RuleDialog: React.FC<RuleDialogProps> = ({
           )}
 
           {/* Service errors (shown in both add/edit) */}
-          {error && <ErrorAlert error={error} className="mt-2" />}
+          {!!error && <ErrorAlert error={error} className="mt-2" />}
         </div>
 
         {/* Right: Preview panel (only when preview/loading/error) */}

@@ -102,7 +102,7 @@ const RuleObjectView: React.FC<{
   defs: Record<string, any>;
   renderNode: (v: any, p: string, options: RenderOptions) => React.ReactNode;
   options: RenderOptions;
-}> = ({ obj, path, defs, renderNode, options }) => {
+}> = ({ obj, path, defs: _defs, renderNode, options }) => {
   const { contextQuestionId, showActions, onEdit, onDelete } = options;
   const typeVal = obj?.type ?? '—';
 
@@ -137,7 +137,7 @@ const RuleObjectView: React.FC<{
 
       <div className="space-y-2">
         {Object.keys(obj).map((k) => {
-          if (HIDE_KEYS_SINGLE.includes(k)) return null;
+          if (HIDE_KEYS_SINGLE.includes(k as (typeof HIDE_KEYS_SINGLE)[number])) return null;
           if (k === 'question_id' && contextQuestionId && obj[k] === contextQuestionId) return null;
 
           const v = obj[k];

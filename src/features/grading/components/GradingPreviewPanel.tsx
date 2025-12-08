@@ -92,9 +92,9 @@ const GradingPreviewPanel: React.FC<Props> = ({ items, loading, error, className
                   </td>
                   <td>
                     {passed ? (
-                      <IconCheckCircle className="text-success" title="Passed" />
+                      <IconCheckCircle className="text-success" />
                     ) : (
-                      <IconAlertCircle className="text-error" title="Failed" />
+                      <IconAlertCircle className="text-error" />
                     )}
                   </td>
                   <td className="font-mono text-sm">{points} / {max}</td>

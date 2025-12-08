@@ -1,7 +1,5 @@
 import { ENGINE_KEYS } from '../constants';
 
-type JSONValue = null | boolean | number | string | JSONValue[] | { [key: string]: JSONValue };
-
 export function stripEngineKeysFromRulesSchema<T extends Record<string, any>>(
   schema: T,
   engineKeys: readonly string[] = ENGINE_KEYS

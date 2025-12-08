@@ -1,8 +1,7 @@
-import React from 'react';
 import { flexRender } from '@tanstack/react-table';
 import PaginationControls from '@components/ui/PaginationControls';
 
-type TableShellProps<T> = {
+type TableShellProps = {
   table: any;                     // TanStack table instance
   totalItems: number;             // total rows before pagination
   className?: string;
@@ -11,14 +10,14 @@ type TableShellProps<T> = {
   paddingClassName?: string;      // optional padding for controls
 };
 
-const TableShell = <T,>({
+const TableShell = ({
   table,
   totalItems,
   className,
   showZebra = true,
   headerSticky = true,
   paddingClassName = 'px-3 py-2',
-}: TableShellProps<T>) => {
+}: TableShellProps) => {
   const pageIndex = table.getState().pagination?.pageIndex ?? 0;
   const pageSize = table.getState().pagination?.pageSize ?? 10;
   const pageRows = table.getRowModel().rows;

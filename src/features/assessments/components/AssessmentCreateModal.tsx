@@ -43,12 +43,13 @@ const AssessmentCreateModal: React.FC<Props> = ({ open, isSubmitting, error, onC
         uiSchema={uiSchema}
         showSubmit={false}
         onSubmit={async ({ formData }) => {
+          if (!formData) return;
           await onSubmit(formData);
         }}
         formProps={{ noHtml5Validate: true, id: formId }}
       />
 
-      {error && <ErrorAlert error={error} className="mt-2" />}
+      {!!error && <ErrorAlert error={error} className="mt-2" />}
 
       <div className="modal-action">
         <Button type="button" variant='ghost' onClick={onClose} disabled={isSubmitting}>

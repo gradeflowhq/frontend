@@ -1,11 +1,10 @@
 import type {
   RawSubmission,
   SubmissionsResponse,
-  SetSubmissionsByDataRequest,
 } from '@api/models';
 
 // Re-export API types (single source of truth)
-export type { RawSubmission, SubmissionsResponse, SetSubmissionsByDataRequest };
+export type { RawSubmission, SubmissionsResponse };
 
 // Table row view (alias for clarity)
 export type SubmissionsTableRow = RawSubmission;

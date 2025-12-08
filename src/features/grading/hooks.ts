@@ -4,8 +4,6 @@ import { QK } from '@api/queryKeys';
 import type {
   GradingResponse,
   GradeAdjustmentRequest,
-  GradingExportRequest,
-  GradingExportResponse,
   GradingPreviewRequest,
   GradingJob,
   JobStatusResponse,
@@ -29,16 +27,6 @@ export const useGradingJob = (assessmentId: string, enabled = true) =>
       (await api.getGradingJobAssessmentsAssessmentIdGradingJobGet(assessmentId)).data as GradingJob,
     enabled,
     // Keep a short cache; we will drive polling via status below
-    staleTime: 5_000,
-  });
-
-// Read current preview job (points to job status URL)
-export const useGradingPreviewJob = (assessmentId: string, enabled = true) =>
-  useQuery({
-    queryKey: QK.grading.previewJob(assessmentId),
-    queryFn: async () =>
-      (await api.getGradingPreviewJobAssessmentsAssessmentIdGradingPreviewJobGet(assessmentId)).data as GradingJob,
-    enabled,
     staleTime: 5_000,
   });
 
@@ -84,13 +72,6 @@ export const useAdjustGrading = (assessmentId: string) => {
     },
   });
 };
-
-export const useExportGrading = (assessmentId: string) =>
-  useMutation({
-    mutationKey: QK.grading.export(assessmentId),
-    mutationFn: async (payload: GradingExportRequest) =>
-      (await api.exportGradingAssessmentsAssessmentIdGradingExportPost(assessmentId, payload)).data as GradingExportResponse,
-  });
 
 // Preview: start job, poll preview job until completion/failure, then fetch snapshot
 export const usePreviewGrading = (assessmentId: string) =>

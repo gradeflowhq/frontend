@@ -3,8 +3,8 @@ import type {
   AdjustableQuestionResult,
   GradingResponse,
   GradeAdjustmentRequest,
-  GradingExportRequest,
-  GradingExportResponse,
+  GradingDownloadRequest,
+  GradingDownloadResponse,
 } from '@api/models';
 
 export type {
@@ -12,8 +12,8 @@ export type {
   AdjustableQuestionResult,
   GradingResponse,
   GradeAdjustmentRequest,
-  GradingExportRequest,
-  GradingExportResponse,
+  GradingDownloadRequest,
+  GradingDownloadResponse,
 };
 
 // View model (optional alias)

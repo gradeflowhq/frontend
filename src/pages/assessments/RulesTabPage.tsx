@@ -1,15 +1,18 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
+import { Button } from '@components/ui/Button';
 import ErrorAlert from '@components/common/ErrorAlert';
 import { SingleTargetRulesSection, MultiTargetRulesSection } from '@features/rules/components';
+import RubricUploadModal from '@features/rules/components/RubricUploadModal';
+import RubricImportModal from '@features/rules/components/RubricImportModal';
 import { useRubric, useRubricCoverage } from '@features/rubric/hooks';
 import { useQuestionSet } from '@features/questions/hooks';
 import type { RubricOutput, QuestionSetOutputQuestionMap } from '@api/models';
+import { IconUpload } from '@components/ui/Icon';
 
 const RulesTabPage: React.FC = () => {
   const { assessmentId } = useParams<{ assessmentId: string }>();
 
-  // Always call hooks in the same order; use enabled flags rather than early return.
   const enabled = Boolean(assessmentId);
   const safeId = assessmentId ?? '';
 
@@ -56,12 +59,27 @@ const RulesTabPage: React.FC = () => {
     [cov]
   );
 
+  const [openRubricUpload, setOpenRubricUpload] = React.useState(false);
+  const [openRubricImport, setOpenRubricImport] = React.useState(false);
+
   if (!enabled) {
     return <div className="alert alert-error"><span>Assessment ID is missing.</span></div>;
   }
 
   return (
     <section className="space-y-6">
+      <div className="mb-2 flex items-center justify-between">
+        <h2 className="text-lg font-semibold">Rules</h2>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" onClick={() => setOpenRubricUpload(true)} leftIcon={<IconUpload />}>
+            Upload
+          </Button>
+          <Button variant="ghost" onClick={() => setOpenRubricImport(true)} leftIcon={<IconUpload />}>
+            Import
+          </Button>
+        </div>
+      </div>
+
       {/* Stats */}
       {!loadingCoverage && !errorCoverage && cov && (
         <div className="stats shadow bg-base-100 w-full">
@@ -109,6 +127,17 @@ const RulesTabPage: React.FC = () => {
           />
         </>
       )}
+
+      {openRubricUpload && <RubricUploadModal
+        open={openRubricUpload}
+        assessmentId={safeId}
+        onClose={() => setOpenRubricUpload(false)}
+      />}
+      {openRubricImport && <RubricImportModal
+        open={openRubricImport}
+        assessmentId={safeId}
+        onClose={() => setOpenRubricImport(false)}
+      />}
     </section>
   );
 };
