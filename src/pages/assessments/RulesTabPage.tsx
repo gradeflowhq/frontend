@@ -2,13 +2,14 @@ import React from 'react';
 import { useParams } from 'react-router-dom';
 import { Button } from '@components/ui/Button';
 import ErrorAlert from '@components/common/ErrorAlert';
+import ConfirmDialog from '@components/common/ConfirmDialog';
 import { SingleTargetRulesSection, MultiTargetRulesSection } from '@features/rules/components';
 import RubricUploadModal from '@features/rules/components/RubricUploadModal';
 import RubricImportModal from '@features/rules/components/RubricImportModal';
-import { useRubric, useRubricCoverage } from '@features/rubric/hooks';
+import { useRubric, useRubricCoverage, useDeleteRubric } from '@features/rubric/hooks';
 import { useQuestionSet } from '@features/questions/hooks';
 import type { RubricOutput, QuestionSetOutputQuestionMap } from '@api/models';
-import { IconUpload } from '@components/ui/Icon';
+import { IconUpload, IconTrash } from '@components/ui/Icon';
 
 const RulesTabPage: React.FC = () => {
   const { assessmentId } = useParams<{ assessmentId: string }>();
@@ -61,6 +62,11 @@ const RulesTabPage: React.FC = () => {
 
   const [openRubricUpload, setOpenRubricUpload] = React.useState(false);
   const [openRubricImport, setOpenRubricImport] = React.useState(false);
+  const [confirmDeleteRubric, setConfirmDeleteRubric] = React.useState(false);
+
+  const deleteRubric = useDeleteRubric(safeId);
+
+  const hasRules = (rubric?.rules?.length ?? 0) > 0;
 
   if (!enabled) {
     return <div className="alert alert-error"><span>Assessment ID is missing.</span></div>;
@@ -76,6 +82,14 @@ const RulesTabPage: React.FC = () => {
           </Button>
           <Button variant="ghost" onClick={() => setOpenRubricImport(true)} leftIcon={<IconUpload />}>
             Import
+          </Button>
+          <Button
+            variant="error"
+            onClick={() => setConfirmDeleteRubric(true)}
+            leftIcon={<IconTrash />}
+            disabled={!hasRules || deleteRubric.isPending}
+          >
+            Delete
           </Button>
         </div>
       </div>
@@ -138,6 +152,18 @@ const RulesTabPage: React.FC = () => {
         assessmentId={safeId}
         onClose={() => setOpenRubricImport(false)}
       />}
+
+      <ConfirmDialog
+        open={confirmDeleteRubric}
+        title="Delete Rules"
+        message="This will remove all rules in the rubric. Continue?"
+        confirmText="Delete"
+        confirmLoading={deleteRubric.isPending}
+        confirmLoadingLabel="Deleting..."
+        onConfirm={() => deleteRubric.mutate(undefined, { onSuccess: () => setConfirmDeleteRubric(false) })}
+        onCancel={() => setConfirmDeleteRubric(false)}
+      />
+      {deleteRubric.isError && <ErrorAlert error={deleteRubric.error} />}
     </section>
   );
 };

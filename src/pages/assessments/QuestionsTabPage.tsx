@@ -8,6 +8,7 @@ import {
   useParsedSubmissions,
   useUpdateQuestionSet,
   useInferAndParseQuestionSet,
+  useDeleteQuestionSet,
 } from '@features/questions/hooks';
 import { buildExamplesFromParsed } from '@features/questions/helpers';
 import { useSubmissions } from '@features/submissions/hooks';
@@ -18,6 +19,7 @@ import QuestionSetImportModal from '@features/questions/components/QuestionSetIm
 const QuestionsTabPage: React.FC = () => {
   const { assessmentId } = useParams<{ assessmentId: string }>();
   const [confirmInfer, setConfirmInfer] = React.useState(false);
+  const [confirmDeleteQs, setConfirmDeleteQs] = React.useState(false);
   const [openQsUpload, setOpenQsUpload] = React.useState(false);
   const [openQsImport, setOpenQsImport] = React.useState(false);
 
@@ -49,6 +51,9 @@ const QuestionsTabPage: React.FC = () => {
   // Update question set (manual edits)
   const updateMutation = useUpdateQuestionSet(assessmentId);
 
+  // Delete question set
+  const deleteMutation = useDeleteQuestionSet(assessmentId);
+
   // Infer (replace) questions from submissions, then parse
   const inferMutation = useInferAndParseQuestionSet(assessmentId);
 
@@ -78,6 +83,9 @@ const QuestionsTabPage: React.FC = () => {
         showInfer={hasSubmissions}
         onUpload={() => setOpenQsUpload(true)}
         onImport={() => setOpenQsImport(true)}
+        onDelete={() => setConfirmDeleteQs(true)}
+        showDelete={hasQuestionSet}
+        disableDelete={deleteMutation.isPending}
       />
 
       {!loadingQS && !errorQS && (
@@ -103,6 +111,18 @@ const QuestionsTabPage: React.FC = () => {
         onCancel={() => setConfirmInfer(false)}
       />
       {inferMutation.isError && <ErrorAlert error={inferMutation.error} />}
+
+      <ConfirmDialog
+        open={confirmDeleteQs}
+        title="Delete Question Set"
+        message="This will delete the stored question set and any parsed examples. Continue?"
+        confirmText="Delete"
+        confirmLoading={deleteMutation.isPending}
+        confirmLoadingLabel="Deleting..."
+        onConfirm={() => deleteMutation.mutate(undefined, { onSuccess: () => setConfirmDeleteQs(false) })}
+        onCancel={() => setConfirmDeleteQs(false)}
+      />
+      {deleteMutation.isError && <ErrorAlert error={deleteMutation.error} />}
 
       {openQsUpload && <QuestionSetUploadModal
         open={openQsUpload}

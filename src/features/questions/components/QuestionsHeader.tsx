@@ -1,12 +1,15 @@
 import React from 'react';
 import { Button } from '@components/ui/Button';
-import { IconInfer, IconUpload } from '@components/ui/Icon';
+import { IconInfer, IconUpload, IconTrash } from '@components/ui/Icon';
 
 type QuestionsHeaderProps = {
   onInfer: () => void;
   showInfer: boolean;
   onUpload?: () => void;
   onImport?: () => void;
+  onDelete?: () => void;
+  showDelete?: boolean;
+  disableDelete?: boolean;
 };
 
 const QuestionsHeader: React.FC<QuestionsHeaderProps> = ({
@@ -14,6 +17,9 @@ const QuestionsHeader: React.FC<QuestionsHeaderProps> = ({
   showInfer,
   onUpload,
   onImport,
+  onDelete,
+  showDelete,
+  disableDelete,
 }) => {
   return (
     <div className="mb-4 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
@@ -48,6 +54,18 @@ const QuestionsHeader: React.FC<QuestionsHeaderProps> = ({
         >
           Import
         </Button>
+        {showDelete && (
+          <Button
+            type="button"
+            variant="error"
+            onClick={onDelete}
+            leftIcon={<IconTrash />}
+            disabled={disableDelete}
+            title="Delete Question Set"
+          >
+            Delete
+          </Button>
+        )}
       </div>
     </div>
   );

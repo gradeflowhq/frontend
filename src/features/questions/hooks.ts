@@ -37,6 +37,21 @@ export const useUpdateQuestionSet = (assessmentId: string) => {
   });
 };
 
+export const useDeleteQuestionSet = (assessmentId: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ['questionSet', assessmentId, 'delete'],
+    mutationFn: async () => {
+      await api.deleteQuestionSetAssessmentsAssessmentIdQuestionSetDelete(assessmentId);
+    },
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: QK.questionSet.item(assessmentId) });
+      await qc.invalidateQueries({ queryKey: QK.questionSet.parsed(assessmentId) });
+      await qc.invalidateQueries({ queryKey: QK.rubric.coverage(assessmentId) });
+    },
+  });
+};
+
 // A reusable pipeline: Infer question set then parse submissions
 export const useInferAndParseQuestionSet = (assessmentId: string) => {
   const qc = useQueryClient();

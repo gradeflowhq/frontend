@@ -43,3 +43,17 @@ export const useReplaceRubric = (assessmentId: string) => {
     },
   });
 };
+
+export const useDeleteRubric = (assessmentId: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ['rubric', assessmentId, 'delete'],
+    mutationFn: async () => {
+      await api.deleteRubricAssessmentsAssessmentIdRubricDelete(assessmentId);
+    },
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: QK.rubric.item(assessmentId) });
+      await qc.invalidateQueries({ queryKey: QK.rubric.coverage(assessmentId) });
+    },
+  });
+};
