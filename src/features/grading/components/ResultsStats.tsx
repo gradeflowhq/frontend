@@ -56,6 +56,9 @@ const ResultsStats: React.FC<Props> = ({ items }) => {
             <span className="font-mono">{statsPoints.min.toFixed(2)}</span>
             <span className="opacity-70"> - {statsPoints.max.toFixed(2)}</span>
           </div>
+          <div className="stat-desc font-mono text-xs">
+            {statsPercent.min.toFixed(1)}% – {statsPercent.max.toFixed(1)}%
+          </div>
         </div>
       </div>
 
@@ -88,7 +91,7 @@ const ResultsStats: React.FC<Props> = ({ items }) => {
                 <BarChart data={histogramData} margin={{ top: 10, right: 20, bottom: 10, left: 0 }}>
                   <XAxis dataKey="bin" tick={{ fontSize: 12 }} />
                   <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
-                  <Tooltip formatter={(value: any, name: any) => [value, name === 'count' ? 'Count' : name]} />
+                  <Tooltip formatter={(value: number | string, name: string) => [value, name === 'count' ? 'Count' : name]} />
                   <Bar dataKey="count" fill="#3b82f6" />
                 </BarChart>
               </ResponsiveContainer>

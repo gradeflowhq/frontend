@@ -50,20 +50,29 @@ const QuestionAnalysis: React.FC<Props> = ({ items, questionIds }) => {
       const adjustmentCount = adjustments.length;
       const adjustmentAvg = adjustmentCount > 0 ? adjustments.reduce((s, v) => s + v, 0) / adjustmentCount : 0;
 
-      // Histogram (12 bins)
-      const bins = 12;
-      const counts = new Array(bins).fill(0);
-      if (maxPointsObserved > 0) {
-        awarded.forEach((v) => {
-          const clamped = Math.max(0, Math.min(maxPointsObserved, v));
-          const idx = Math.min(bins - 1, Math.floor((clamped / maxPointsObserved) * bins));
-          counts[idx] += 1;
-        });
-      }
-      const histogramData = counts.map((c, i) => ({
-        binLabel: `${Math.round((i / bins) * (maxPointsObserved || 1))}`,
-        count: c,
-      }));
+      // Histogram: choose bins so none are empty (chunk unique values)
+      const uniqueValues = Array.from(new Set(awarded)).sort((a, b) => a - b);
+      const maxBins = 12;
+      const binCount = Math.max(1, Math.min(maxBins, uniqueValues.length));
+
+      const chunkSize = Math.max(1, Math.ceil(uniqueValues.length / binCount));
+      const formatEdge = (value: number) => {
+        if (!isFinite(value)) return '0';
+        const decimals = Math.abs(value) >= 10 ? 1 : 2;
+        return Number(value.toFixed(decimals)).toString();
+      };
+
+      const histogramData = Array.from({ length: binCount }, (_, i) => {
+        const startIdx = i * chunkSize;
+        const endIdx = Math.min(uniqueValues.length, (i + 1) * chunkSize) - 1;
+        const startVal = uniqueValues[startIdx] ?? 0;
+        const endVal = uniqueValues[endIdx] ?? startVal;
+        const count = awarded.filter((v) => v >= startVal && v <= endVal).length;
+        return {
+          binLabel: startVal === endVal ? `${formatEdge(startVal)}` : `${formatEdge(startVal)}-${formatEdge(endVal)}`,
+          count,
+        };
+      });
 
       return {
         qid,
@@ -116,9 +125,26 @@ const QuestionAnalysis: React.FC<Props> = ({ items, questionIds }) => {
                 <BarLine label="Missing rate" pct={q.missingRatePct} hint={`${q.attempts} attempts, ${Math.max(0, totalStudents - q.attempts)} missing`} />
                 <BarLine label="Difficulty (Passed %)" pct={q.difficultyPct} />
                 <Line label="Mean"><span className="font-mono">{q.stats.mean.toFixed(2)}</span></Line>
+                <div className="flex items-center gap-2 pb-1">
+                  <progress
+                    className="progress progress-primary w-full"
+                    value={Math.max(0, Math.min(100, q.maxPointsObserved > 0 ? (q.stats.mean / q.maxPointsObserved) * 100 : 0))}
+                    max={100}
+                  />
+                  <span className="font-mono text-xs">
+                    {q.maxPointsObserved > 0 ? ((q.stats.mean / q.maxPointsObserved) * 100).toFixed(1) : '0.0'}%
+                  </span>
+                </div>
                 <Line label="Median"><span className="font-mono">{q.stats.q2.toFixed(2)}</span></Line>
                 <Line label="Std dev"><span className="font-mono">{q.stats.stdev.toFixed(2)}</span></Line>
-                <Line label="Range"><span className="font-mono">{q.stats.min.toFixed(2)} – {q.stats.max.toFixed(2)}</span></Line>
+                <Line label="Range">
+                  <span className="font-mono">
+                    {q.stats.min.toFixed(2)} – {q.stats.max.toFixed(2)}
+                  </span>
+                  <span className="font-mono text-xs opacity-70 ml-2">
+                    {q.maxPointsObserved > 0 ? ((q.stats.min / q.maxPointsObserved) * 100).toFixed(1) : '0.0'}% – {q.maxPointsObserved > 0 ? ((q.stats.max / q.maxPointsObserved) * 100).toFixed(1) : '0.0'}%
+                  </span>
+                </Line>
                 <Line label="Adjustments"><span className="font-mono">{q.adjustmentCount}</span></Line>
                 <Line label="Avg Δ points"><span className="font-mono">{q.adjustmentAvg.toFixed(2)}</span></Line>
               </div>
@@ -133,7 +159,9 @@ const QuestionAnalysis: React.FC<Props> = ({ items, questionIds }) => {
                       <BarChart data={q.histogramData} margin={{ top: 10, right: 10, bottom: 0, left: 0 }}>
                         <XAxis dataKey="binLabel" tick={{ fontSize: 11 }} />
                         <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-                        <Tooltip formatter={(value: any, name: any) => [value, name === 'count' ? 'Count' : name]} />
+                        <Tooltip
+                          formatter={(value: number | string, name: string) => [value, name === 'count' ? 'Count' : name]}
+                        />
                         <Bar dataKey="count" fill="#3b82f6" />
                       </BarChart>
                     </ResponsiveContainer>

@@ -21,6 +21,7 @@ import { AssessmentPassphraseProvider, useAssessmentPassphrase } from '@features
 import { useGrading, useAdjustGrading } from '@features/grading/hooks';
 import { friendlyRuleLabel } from '@features/rules/helpers';
 import { isEncrypted } from '@utils/crypto';
+import { natsort } from '@utils/sort';
 
 import type {
   AdjustableGradedSubmission,
@@ -49,6 +50,11 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
   const current = index >= 0 ? submissions[index] : null;
   const prevId = index > 0 ? submissions[index - 1].student_id : null;
   const nextId = index >= 0 && index < submissions.length - 1 ? submissions[index + 1].student_id : null;
+
+  const sortedResults = useMemo(() => {
+    if (!current?.results) return [] as AdjustableQuestionResult[];
+    return [...current.results].sort((a, b) => natsort(a.question_id, b.question_id));
+  }, [current]);
 
   type EditState = Record<string, { points?: number; feedback?: string }>;
   const [editing, setEditing] = useState<EditState>({});
@@ -110,14 +116,14 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
   if (isError) return <ErrorAlert error={error} />;
   if (!current) return <div className="alert alert-warning"><span>Submission not found.</span></div>;
 
-  const originalTotalPoints = (current.results ?? []).reduce((sum, r) => sum + (r.points ?? 0), 0);
-  const adjustedTotalPoints = (current.results ?? []).reduce(
+  const originalTotalPoints = sortedResults.reduce((sum, r) => sum + (r.points ?? 0), 0);
+  const adjustedTotalPoints = sortedResults.reduce(
     (sum, r) =>
       sum + (r.adjusted_points !== null && r.adjusted_points !== undefined ? r.adjusted_points : (r.points ?? 0)),
     0
   );
-  const totalMax = (current.results ?? []).reduce((sum, r) => sum + (r.max_points ?? 0), 0);
-  const adjustmentsCount = (current.results ?? []).filter(
+  const totalMax = sortedResults.reduce((sum, r) => sum + (r.max_points ?? 0), 0);
+  const adjustmentsCount = sortedResults.filter(
     (r) =>
       (r.adjusted_points !== null && r.adjusted_points !== undefined) ||
       (r.adjusted_feedback !== null && r.adjusted_feedback !== undefined)
@@ -210,7 +216,7 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
             </tr>
           </thead>
           <tbody>
-            {(current.results ?? []).map((res) => {
+            {sortedResults.map((res) => {
               const qid = res.question_id;
               const isEditing = !!openEdits[qid];
               const local = editing[qid];

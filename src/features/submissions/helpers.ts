@@ -1,6 +1,7 @@
 import Papa from 'papaparse';
 import { isEncrypted, encryptString, decryptString } from '@utils/crypto';
 import { normalizePresent } from '@utils/passphrase';
+import { natsort } from '@utils/sort';
 import type { RawSubmission, CsvPreview, CsvMapping, UploadCsvResult, PassphraseContext } from './types';
 
 /**
@@ -11,7 +12,7 @@ export const extractQuestionKeys = (items: RawSubmission[]): string[] => {
   items.forEach((row) => {
     Object.keys(row.raw_answer_map ?? {}).forEach((k) => keys.add(k));
   });
-  return Array.from(keys).sort((a, b) => a.localeCompare(b));
+  return Array.from(keys).sort(natsort);
 };
 
 /**

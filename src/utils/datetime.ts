@@ -40,9 +40,9 @@ const DEFAULT_RECENT_THRESHOLD_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 // Normalize to a Day.js instance with optional timezone applied
 const asDayjs = (v: DateInput, zone?: string) => {
-  const d = dayjs(v);
-  if (!d.isValid()) return null;
-  return zone ? d.tz(zone) : d;
+  const base = typeof v === 'string' ? dayjs.utc(v) : dayjs(v);
+  if (!base.isValid()) return null;
+  return zone ? base.tz(zone) : base.local();
 };
 
 export const formatRelative = (v: DateInput, opts?: { zone?: string; withSuffix?: boolean }) => {

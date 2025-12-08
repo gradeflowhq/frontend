@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import ErrorAlert from '@components/common/ErrorAlert';
 import { isEncrypted } from '@utils/crypto';
+import { natsort } from '@utils/sort';
 import { IconChevronLeft } from '@components/ui/Icon';
 import { Button } from '@components/ui/Button';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
@@ -22,8 +23,6 @@ import { AssessmentPassphraseProvider, useAssessmentPassphrase } from '@features
 import ResultsDownloadModal from '@features/grading/components/ResultsDownloadModal';
 import ResultsDownloadDropdown from '@features/grading/components/ResultsDownloadDropdown';
 import { api } from '@api';
-
-const natsort = (a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
 
 const ResultsShellInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) => {
   const navigate = useNavigate();

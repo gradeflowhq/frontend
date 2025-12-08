@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useDocumentTitle } from '@hooks/useDocumentTitle';
+
+import ConfirmDialog from '@components/common/ConfirmDialog';
+import ErrorAlert from '@components/common/ErrorAlert';
+import PageHeader from '@components/common/PageHeader';
 import { Button } from '@components/ui/Button';
 import { IconPlus } from '@components/ui/Icon';
-import PageHeader from '@components/common/PageHeader';
-import ErrorAlert from '@components/common/ErrorAlert';
-import ConfirmDialog from '@components/common/ConfirmDialog';
 import {
   AssessmentsTable,
   AssessmentCreateModal,
@@ -17,6 +17,8 @@ import {
   useUpdateAssessment,
   useDeleteAssessment,
 } from '@features/assessments/hooks';
+import { useDocumentTitle } from '@hooks/useDocumentTitle';
+import { compareDateDesc } from '@utils/sort';
 import type { AssessmentResponse, AssessmentCreateRequest, AssessmentUpdateRequest } from '@api/models';
 
 const AssessmentsPage: React.FC = () => {
@@ -33,7 +35,10 @@ const AssessmentsPage: React.FC = () => {
   const updateMutation = useUpdateAssessment();
   const deleteMutation = useDeleteAssessment();
 
-  const items = (data as { items?: AssessmentResponse[] } | undefined)?.items ?? [];
+  const sortedItems = useMemo(() => {
+    const list = (data as { items?: AssessmentResponse[] } | undefined)?.items ?? [];
+    return [...list].sort(compareDateDesc((i) => i.updated_at ?? i.created_at ?? null));
+  }, [data]);
 
   return (
     <section>
@@ -57,8 +62,10 @@ const AssessmentsPage: React.FC = () => {
 
       {!isLoading && !isError && (
         <AssessmentsTable
-          items={items}
-          onOpen={(item) => navigate(`/assessments/${item.id}`)}
+          items={sortedItems}
+          onOpen={(item) => {
+            void navigate(`/assessments/${item.id}`);
+          }}
           onEdit={(item) => setEditItem(item)}
           onDelete={(item) => setDeleteTarget(item)}
         />

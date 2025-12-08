@@ -5,8 +5,7 @@ import AnswerText from '@components/common/AnswerText';
 import { IconCheckCircle, IconAlertCircle } from '@components/ui/Icon';
 import type { AdjustableGradedSubmission, AdjustableQuestionResult } from '@features/grading/types';
 import { useAssessmentPassphrase } from '@features/encryption/AssessmentPassphraseProvider';
-
-const natsort = (a: string, b: string) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+import { natsort } from '@utils/sort';
 
 type Props = {
   items: AdjustableGradedSubmission[];
