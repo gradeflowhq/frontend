@@ -10,6 +10,7 @@ export type CanvasPushConfig = {
   enableRounding: boolean;
   roundingBase: number;
   gradeMode: 'points' | 'percent';
+  progressUrl?: string;
 };
 
 export type CanvasPushStore = CanvasPushConfig & {
@@ -34,6 +35,7 @@ const DEFAULT_CONFIG: CanvasPushConfig = {
   enableRounding: true,
   roundingBase: 0.5,
   gradeMode: 'points',
+  progressUrl: undefined,
 };
 
 const pickPersistable = (state: CanvasPushConfig): CanvasPushConfig => ({
@@ -45,6 +47,7 @@ const pickPersistable = (state: CanvasPushConfig): CanvasPushConfig => ({
   enableRounding: state.enableRounding,
   roundingBase: state.roundingBase,
   gradeMode: state.gradeMode,
+  progressUrl: state.progressUrl,
 });
 
 const parseConfig = (value?: Partial<CanvasPushConfig>): CanvasPushConfig => ({

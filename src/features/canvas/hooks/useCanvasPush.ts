@@ -9,7 +9,7 @@ import type { AxiosError } from 'axios';
 type PushState = 
   | { status: 'idle' }
   | { status: 'pushing' }
-  | { status: 'success'; message: string }
+  | { status: 'success'; message: string; progressUrl?: string }
   | { status: 'error'; message: string };
 
 type PushConfig = {
@@ -102,12 +102,16 @@ export const useCanvasPush = () => {
       }
 
       // Push grades
-      await client.updateGrades(config.courseId, targetAssignmentId, gradeData);
+      const response = await client.updateGrades(config.courseId, targetAssignmentId, gradeData);
+      
+      // Canvas returns the progress object directly
+      const progressUrl = response.data?.url;
       
       setPushState({
         status: 'success',
         message: `Pushed ${Object.keys(gradeData).length} grades to assignment #${targetAssignmentId}.` +
           (missing.length ? ` Skipped ${missing.length} unmapped IDs.` : ''),
+        progressUrl,
       });
     } catch (err) {
       const axiosErr = err as AxiosError<{ error?: string; errors?: string[]; message?: string }>;

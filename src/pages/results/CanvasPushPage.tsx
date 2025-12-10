@@ -9,6 +9,7 @@ import LoadingButton from '@components/ui/LoadingButton';
 import { useAssessment } from '@features/assessments/hooks';
 import { pickValue } from '@features/canvas/helpers';
 import { useCanvasData, useCourseData } from '@features/canvas/hooks/useCanvasData';
+import { useCanvasProgress } from '@features/canvas/hooks/useCanvasProgress';
 import { useCanvasPush } from '@features/canvas/hooks/useCanvasPush';
 import { useCsvGrades } from '@features/canvas/hooks/useCsvGrades';
 import { usePreparedRows } from '@features/canvas/hooks/usePreparedRows';
@@ -18,6 +19,7 @@ import { useCanvasPushStore } from '@state/canvasSettingsStore';
 import { useUserSettingsStore } from '@state/userSettingsStore';
 
 import AssignmentSection from '../../features/canvas/components/AssignmentSection';
+import CanvasPushProgressBanner from '../../features/canvas/components/CanvasPushProgressBanner';
 import CourseSelector from '../../features/canvas/components/CourseSelector';
 import PreviewSection from '../../features/canvas/components/PreviewSection';
 import { type PreviewTab } from '../../features/canvas/types';
@@ -55,6 +57,7 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
     enableRounding,
     roundingBase,
     gradeMode,
+    progressUrl,
     setConfig,
   } = useCanvasPushStore(assessmentId);
   
@@ -95,6 +98,25 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
 
   // Push logic
   const { pushState, push, setPushState } = useCanvasPush();
+
+  // Poll Canvas progress if we have a progress URL
+  const progressQuery = useCanvasProgress(
+    canvasBaseUrl,
+    canvasToken,
+    progressUrl,
+    !!progressUrl
+  );
+
+  // Store progress URL when push succeeds
+  useEffect(() => {
+    if (pushState.status === 'success' && pushState.progressUrl && pushState.progressUrl !== progressUrl) {
+      setConfig({ progressUrl: pushState.progressUrl });
+    }
+  }, [pushState, progressUrl, setConfig]);
+
+  const handleClearProgress = () => {
+    setConfig({ progressUrl: undefined });
+  };
 
   // Filter assignments by group
   const filteredAssignments = useMemo(() => {
@@ -180,7 +202,9 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
   };
 
   const isLoadingData = csvGrades.isLoading;
-  const disablePush = canvasData.missingConfig || !courseId || !csvGrades.rows.length;
+  const hasActiveJob = progressQuery.data && 
+    (progressQuery.data.workflow_state === 'queued' || progressQuery.data.workflow_state === 'running');
+  const disablePush = canvasData.missingConfig || !courseId || !csvGrades.rows.length || hasActiveJob;
 
   return (
     <section className="space-y-4">
@@ -188,6 +212,15 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
         assignmentName={assessmentRes?.name || 'Assessment'}
         onBack={() => void navigate(`/results/${assessmentId}`)}
       />
+
+      {/* Show progress banner if there's an active push job */}
+      {(pushState.status === 'pushing' || (progressUrl && progressQuery.data)) && (
+        <CanvasPushProgressBanner
+          progress={progressQuery.data}
+          isPushing={pushState.status === 'pushing'}
+          onClear={handleClearProgress}
+        />
+      )}
 
       {canvasData.missingConfig && (
         <div className="alert alert-warning flex items-center gap-3">
@@ -253,7 +286,7 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
       {pushState.status === 'error' && (
         <ErrorAlert error={new Error(pushState.message)} />
       )}
-      {pushState.status === 'success' && (
+      {pushState.status === 'success' && !progressUrl && (
         <div className="alert alert-success">
           <span>{pushState.message}</span>
         </div>
@@ -263,7 +296,7 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
         <LoadingButton
           variant="primary"
           onClick={handlePush}
-          isLoading={pushState.status === 'pushing'}
+          isLoading={pushState.status === 'pushing' || !!hasActiveJob}
           idleLabel="Push to Canvas"
           loadingLabel="Pushing..."
           disabled={disablePush}

@@ -60,6 +60,20 @@ export type CanvasCourse = {
 
 export type CanvasAssignmentSummary = Pick<CanvasAssignment, 'id' | 'name' | 'points_possible' | 'assignment_group_id'>;
 
+export type CanvasProgress = {
+  id: number;
+  context_id: number;
+  context_type: string;
+  user_id: number | null;
+  tag: string;
+  completion: number | null;
+  workflow_state: 'queued' | 'running' | 'completed' | 'failed';
+  created_at: string;
+  updated_at: string;
+  message: string | null;
+  url: string;
+};
+
 export type CanvasClientConfig = {
   canvasBaseUrl: string;
   token: string;
@@ -145,10 +159,20 @@ export const createCanvasClient = (config: CanvasClientConfig) => {
       courseId: string | number,
       assignmentId: string | number,
       gradeData: CanvasBulkUpdateRequest['grade_data']
-    ): Promise<AxiosResponse<unknown>> =>
+    ): Promise<AxiosResponse<CanvasProgress>> =>
       client.post(`/api/v1/courses/${courseId}/assignments/${assignmentId}/submissions/update_grades`, {
         grade_data: gradeData,
       }),
+    getProgress: (progressUrl: string): Promise<AxiosResponse<CanvasProgress>> => {
+      // Extract the path from the full URL (Canvas returns full URLs like https://canvas.example.com/api/v1/progress/123)
+      try {
+        const url = new URL(progressUrl);
+        return client.get(url.pathname);
+      } catch {
+        // If not a full URL, use as-is
+        return client.get(progressUrl);
+      }
+    },
     listAssignmentGroups: (courseId: string | number) =>
       client.get<CanvasAssignmentGroup[]>(`/api/v1/courses/${courseId}/assignment_groups`, {
         params: { per_page: 50 },
