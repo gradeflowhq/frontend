@@ -1,6 +1,7 @@
 import Papa from 'papaparse';
 
 import type { CanvasUserSummary } from '@api/canvasClient';
+import { parseNumber } from '@utils/format';
 
 export type CsvGradeRow = {
   studentId: string;
@@ -14,12 +15,6 @@ export type CsvGradeRow = {
 };
 
 export type IdMap = Record<string, string>;
-
-const parseNumber = (value?: string | number | null): number | undefined => {
-  if (value === undefined || value === null) return undefined;
-  const parsed = typeof value === 'number' ? value : Number(String(value).trim());
-  return Number.isFinite(parsed) ? parsed : undefined;
-};
 
 export const pickValue = (rounded?: number, raw?: number, useRounded = false): number | undefined => {
   if (useRounded) return rounded ?? raw;
@@ -73,15 +68,4 @@ export const mapCanvasId = (
   const decrypted = decryptedIds[rawId] ?? rawId;
   const normalized = normalizeId(decrypted);
   return idMap[normalized];
-};
-
-export const truncateText = (value: string, limit = 160) => {
-  if (!value) return value;
-  return value.length > limit ? `${value.slice(0, limit)}...` : value;
-};
-
-export const formatNumericValue = (value?: number | string | null) => {
-  if (value === undefined || value === null) return value as number | undefined;
-  const num = typeof value === 'number' ? value : Number(value);
-  return Number.isFinite(num) ? Number(num.toFixed(3)) : value;
 };

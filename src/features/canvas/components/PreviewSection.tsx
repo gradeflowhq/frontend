@@ -1,18 +1,19 @@
 import { createColumnHelper, getCoreRowModel, getPaginationRowModel, useReactTable } from '@tanstack/react-table';
-import React, { useCallback, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
 import TableShell from '@components/common/TableShell';
+import { formatNumericValue, truncateText } from '@utils/format';
+
 import { InfoRow, LoadingBadge } from './InfoRow';
-import { type PreviewRow, type PreviewTab } from '../types';
+import { type PreparedRow, type PreviewTab } from '../types';
 
 type PreviewSectionProps = {
-  mappedRows: PreviewRow[];
-  unmappedRows: PreviewRow[];
+  mappedRows: PreparedRow[];
+  unmappedRows: PreparedRow[];
   previewTab: PreviewTab;
   onTabChange: (tab: PreviewTab) => void;
   loadingCourseData: boolean;
   gradeMode: 'points' | 'percent';
-  roundingEnabled: boolean;
 };
 
 const PreviewSection: React.FC<PreviewSectionProps> = ({
@@ -22,58 +23,30 @@ const PreviewSection: React.FC<PreviewSectionProps> = ({
   onTabChange,
   loadingCourseData,
   gradeMode,
-  roundingEnabled,
 }) => {
-  const columnHelper = useMemo(() => createColumnHelper<PreviewRow>(), []);
+  const columnHelper = useMemo(() => createColumnHelper<PreparedRow>(), []);
 
-  const formatScore = useCallback((value?: number | string, suffix?: string) => {
-    if (value === undefined || value === null || value === '') return '—';
-    const asNum = typeof value === 'string' ? Number(value) : value;
-    const base = Number.isFinite(asNum) ? Number(asNum).toFixed(2).replace(/\.0+$/, '').replace(/\.([1-9]*)0+$/, '.$1') : String(value);
-    return suffix ? `${base}${suffix}` : base;
-  }, []);
-
-  const renderPointsCell = useCallback(
-    (row: PreviewRow) => {
-      const primary = roundingEnabled ? row.roundedPoints ?? row.points : row.points ?? row.roundedPoints;
-      const secondary = !roundingEnabled ? undefined : row.points ?? row.roundedPoints;
-      return (
-        <div className="flex flex-col gap-0.5">
-          <span className="font-mono text-xs">{formatScore(primary, ' pts')}</span>
-          {secondary !== undefined && secondary !== null && secondary !== primary && (
-            <span className="text-[11px] text-base-content/70">Raw: {formatScore(secondary, ' pts')}</span>
-          )}
-        </div>
-      );
-    },
-    [formatScore, roundingEnabled]
-  );
-
-  const renderPercentCell = useCallback(
-    (row: PreviewRow) => {
-      const primary = roundingEnabled ? row.roundedPercent ?? row.percent : row.percent ?? row.roundedPercent;
-      const secondary = !roundingEnabled ? undefined : row.percent ?? row.roundedPercent;
-      return (
-        <div className="flex flex-col gap-0.5">
-          <span className="font-mono text-xs">{formatScore(primary, '%')}</span>
-          {secondary !== undefined && secondary !== null && secondary !== primary && (
-            <span className="text-[11px] text-base-content/70">Raw: {formatScore(secondary, '%')}</span>
-          )}
-        </div>
-      );
-    },
-    [formatScore, roundingEnabled]
-  );
+  // Render a cell with primary value and optional original value if different
+  const renderScoreCell = (primary?: number | null, secondary?: number | null) => {
+    const formattedPrimary = formatNumericValue(primary);
+    const formattedSecondary = formatNumericValue(secondary);
+    const displayPrimary = formattedPrimary ?? '—';
+    
+    return (
+      <div className="flex flex-col gap-0.5">
+        <span className="font-mono text-xs">{displayPrimary}</span>
+        {formattedSecondary !== undefined && formattedSecondary !== null && formattedSecondary !== formattedPrimary && (
+          <span className="text-[11px] text-base-content/70">Original: {formattedSecondary}</span>
+        )}
+      </div>
+    );
+  };
 
   const columns = useMemo(
     () => [
-      columnHelper.accessor('gradeflowId', {
-        header: 'GradeFlow ID',
+      columnHelper.accessor('decryptedStudentId', {
+        header: 'Student ID',
         cell: (info) => <span className="font-mono text-xs">{info.getValue() || '—'}</span>,
-      }),
-      columnHelper.accessor('canvasId', {
-        header: 'Canvas ID',
-        cell: (info) => <span className="font-mono text-xs">{info.getValue() || 'Unmapped'}</span>,
       }),
       columnHelper.accessor('studentName', {
         header: 'Name',
@@ -85,10 +58,9 @@ const PreviewSection: React.FC<PreviewSectionProps> = ({
           <div className="flex items-center gap-2">
             <span>Points</span>
             {gradeMode === 'points' && <span className="badge badge-primary badge-xs">Used</span>}
-            {roundingEnabled && <span className="badge badge-outline badge-xs">Rounded</span>}
           </div>
         ),
-        cell: (info) => renderPointsCell(info.row.original),
+        cell: (info) => renderScoreCell(info.row.original.selectedPoints, info.row.original.originalPoints),
       }),
       columnHelper.display({
         id: 'percent',
@@ -96,17 +68,20 @@ const PreviewSection: React.FC<PreviewSectionProps> = ({
           <div className="flex items-center gap-2">
             <span>Percent</span>
             {gradeMode === 'percent' && <span className="badge badge-primary badge-xs">Used</span>}
-            {roundingEnabled && <span className="badge badge-outline badge-xs">Rounded</span>}
           </div>
         ),
-        cell: (info) => renderPercentCell(info.row.original),
+        cell: (info) => renderScoreCell(info.row.original.selectedPercent, info.row.original.originalPercent),
       }),
-      columnHelper.accessor('remarks', {
-        header: 'Remarks',
-        cell: (info) => <span className="text-xs whitespace-pre-wrap">{info.getValue() ?? '—'}</span>,
+      columnHelper.display({
+        id: 'comments',
+        header: 'Comments',
+        cell: (info) => {
+          const remarks = truncateText(info.row.original.comments ?? '', 130);
+          return <span className="text-xs whitespace-pre-wrap">{remarks || '—'}</span>;
+        },
       }),
     ],
-    [columnHelper, renderPercentCell, renderPointsCell, gradeMode, roundingEnabled]
+    [columnHelper, gradeMode]
   );
 
   const mappedTable = useReactTable({
@@ -132,7 +107,7 @@ const PreviewSection: React.FC<PreviewSectionProps> = ({
     <InfoRow
       title="Preview"
       description="Mapped and unmapped students."
-      action={loadingCourseData ? <LoadingBadge label="Loading roster" /> : undefined}
+      action={loadingCourseData ? <LoadingBadge label="Loading data" /> : undefined}
     >
       <div className="tabs tabs-lift">
         <button

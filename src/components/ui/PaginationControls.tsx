@@ -18,7 +18,7 @@ const PaginationControls: React.FC<Props> = ({
   totalItems,
   onPageIndexChange,
   onPageSizeChange,
-  pageSizeOptions = [10, 20, 50, 100],
+  pageSizeOptions = [5, 10, 20, 50, 100],
   className,
 }) => {
   const pageCount = Math.max(1, Math.ceil(totalItems / Math.max(1, pageSize)));

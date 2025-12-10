@@ -1,13 +1,16 @@
-export type PreviewRow = {
-  gradeflowId: string;
+export type PreparedRow = {
+  csvStudentId: string;
+  decryptedStudentId: string;
   canvasId?: string;
   studentName?: string;
-  points?: number | string;
-  roundedPoints?: number | string;
-  percent?: number | string;
-  roundedPercent?: number | string;
-  remarks?: string;
-  mapped: boolean;
+  selectedPoints?: number;
+  selectedPercent?: number;
+  maxPoints?: number;
+  originalPoints?: number;
+  roundedPoints?: number;
+  originalPercent?: number;
+  roundedPercent?: number;
+  comments?: string;
 };
 
 export type PreviewTab = 'mapped' | 'unmapped';

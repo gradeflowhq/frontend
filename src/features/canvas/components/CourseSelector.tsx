@@ -1,9 +1,9 @@
 import React from 'react';
 
 import { type CanvasCourse } from '@api/canvasClient';
-import { Button } from '@components/ui/Button';
+import LoadingButton from '@components/ui/LoadingButton';
 
-import { InfoRow, LoadingBadge } from './InfoRow';
+import { InfoRow } from './InfoRow';
 
 type CourseSelectorProps = {
   courseId: string;
@@ -25,14 +25,15 @@ const CourseSelector: React.FC<CourseSelectorProps> = ({
   <InfoRow
     title="Course"
     action={
-      <Button
+      <LoadingButton
         size="sm"
         variant="ghost"
         onClick={() => void onRefresh()}
-        disabled={loadingCourses || missingCanvasConfig}
-      >
-        {loadingCourses ? <LoadingBadge label="Refreshing" /> : 'Refresh courses'}
-      </Button>
+        disabled={missingCanvasConfig}
+        isLoading={loadingCourses}
+        idleLabel="Refresh"
+        loadingLabel="Refreshing..."
+      />
     }
   >
     <div className="space-y-2">
@@ -51,7 +52,6 @@ const CourseSelector: React.FC<CourseSelectorProps> = ({
           </option>
         ))}
       </select>
-      {loadingCourses && <LoadingBadge label="Loading courses" />}
       {!courses.length && !loadingCourses && !missingCanvasConfig && (
         <p className="text-sm text-base-content/60">No courses found. Check your Canvas access.</p>
       )}

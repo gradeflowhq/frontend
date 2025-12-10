@@ -1,8 +1,9 @@
 import React from 'react';
 
 import { type CanvasAssignmentGroup, type CanvasAssignmentSummary } from '@api/canvasClient';
+import LoadingButton from '@components/ui/LoadingButton';
 
-import { InfoRow, LoadingBadge } from './InfoRow';
+import { InfoRow } from './InfoRow';
 
 type AssignmentSectionProps = {
   loadingCourseData: boolean;
@@ -23,6 +24,7 @@ type AssignmentSectionProps = {
   onRoundingBaseChange: (value: number) => void;
   onIncludeCommentsChange: (value: boolean) => void;
   onGradeModeChange: (value: 'points' | 'percent') => void;
+  onRefresh: () => void | Promise<void>;
 };
 
 const AssignmentSection: React.FC<AssignmentSectionProps> = ({
@@ -44,15 +46,25 @@ const AssignmentSection: React.FC<AssignmentSectionProps> = ({
   onRoundingBaseChange,
   onIncludeCommentsChange,
   onGradeModeChange,
+  onRefresh,
 }) => {
-  const showNameInput = !assignmentId || assignmentId === '__new__';
+  const showNameInput = assignmentGroupId && (!assignmentId || assignments.length === 0);
   const assignmentDisabled = loadingCourseData || !assignmentGroupId;
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <InfoRow
         title="Assignment"
-        action={loadingCourseData ? <LoadingBadge label="Loading Canvas data" /> : undefined}
+        action={
+          <LoadingButton
+            size="sm"
+            variant="ghost"
+            onClick={() => void onRefresh()}
+            isLoading={loadingCourseData}
+            idleLabel="Refresh"
+            loadingLabel="Refreshing..."
+          />
+        }
       >
         <div className="space-y-4">
           <fieldset className="fieldset space-y-2">
@@ -64,7 +76,7 @@ const AssignmentSection: React.FC<AssignmentSectionProps> = ({
               onChange={(e) => onAssignmentGroupChange(e.target.value)}
             >
               <option value="" disabled>
-                Select a group first
+                Select a group
               </option>
               {assignmentGroups.map((g) => (
                 <option key={g.id} value={g.id}>
@@ -74,22 +86,24 @@ const AssignmentSection: React.FC<AssignmentSectionProps> = ({
             </select>
           </fieldset>
 
-          <fieldset className="fieldset space-y-2">
-            <legend className="fieldset-legend">Assignment</legend>
-            <select
-              className="select select-bordered"
-              value={assignmentId || '__new__'}
-              onChange={(e) => onAssignmentSelect(e.target.value)}
-              disabled={assignmentDisabled}
-            >
-              <option value="__new__">Create new assignment...</option>
-              {assignments.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.name}
-                </option>
-              ))}
-            </select>
-          </fieldset>
+          {assignmentGroupId && (
+            <fieldset className="fieldset space-y-2">
+              <legend className="fieldset-legend">Assignment</legend>
+              <select
+                className="select select-bordered"
+                value={assignmentId}
+                onChange={(e) => onAssignmentSelect(e.target.value)}
+                disabled={assignmentDisabled}
+              >
+                <option value="">Create new assignment...</option>
+                {assignments.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.name}
+                  </option>
+                ))}
+              </select>
+            </fieldset>
+          )}
 
           {showNameInput && (
             <fieldset className="fieldset space-y-2">
