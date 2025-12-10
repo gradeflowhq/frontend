@@ -1,15 +1,17 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@api';
 import Navbar from '@components/common/NavBar';
 import ErrorAlert from '@components/common/ErrorAlert';
 import ErrorBoundary from '@components/common/ErrorBoundary';
+import UserSettingsDialog from '@components/common/UserSettingsDialog';
 import { useAuthStore } from '@state/authStore';
 
 import type { MeResponse } from '@api/models';
 
 const ProtectedLayout: React.FC = () => {
+  const [showSettings, setShowSettings] = useState(false);
   const clearTokens = useAuthStore((s) => s.clearTokens);
 
   const { data, isLoading, isError, error } = useQuery({
@@ -37,7 +39,7 @@ const ProtectedLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-base-200">
-      <Navbar username={username} onLogout={onLogout} />
+      <Navbar username={username} onLogout={onLogout} onOpenSettings={() => setShowSettings(true)} />
       <main className="max-w-6xl mx-auto px-4 py-6">
         {isLoading && (
           <div className="alert alert-info">
@@ -51,6 +53,7 @@ const ProtectedLayout: React.FC = () => {
           </ErrorBoundary>
         )}
       </main>
+      <UserSettingsDialog open={showSettings} onClose={() => setShowSettings(false)} />
     </div>
   );
 };

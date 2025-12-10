@@ -1,8 +1,9 @@
 import React, { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@api';
 import { Button } from '@components/ui/Button';
-import { IconEye, IconSearch } from '@components/ui/Icon';
+import { IconCanvas, IconEye, IconSearch } from '@components/ui/Icon';
 import DecryptedText from '@components/common/encryptions/DecryptedText';
 import {
   createColumnHelper,
@@ -38,6 +39,7 @@ const ResultsOverview: React.FC<Props> = ({
   initialPageSize = 10,
 }) => {
   const { passphrase, notifyEncryptedDetected } = useAssessmentPassphrase();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [openDownload, setOpenDownload] = useState(false);
   const [selectedFormat, setSelectedFormat] = useState<string | null>(null);
@@ -214,11 +216,21 @@ const ResultsOverview: React.FC<Props> = ({
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </label>
-        <ResultsDownloadDropdown
-          formats={formats}
-          canDownload={canDownload}
-          onSelect={openFormatModal}
-        />
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+          <Button
+            variant="ghost"
+            leftIcon={<IconCanvas />}
+            onClick={() => void navigate(`/results/${assessmentId}/canvas`)}
+            disabled={!hasItems && !gradingInProgress}
+          >
+            Push to Canvas
+          </Button>
+          <ResultsDownloadDropdown
+            formats={formats}
+            canDownload={canDownload}
+            onSelect={openFormatModal}
+          />
+        </div>
       </div>
 
       <TableShell table={table} totalItems={filteredItems.length} />

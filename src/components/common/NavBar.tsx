@@ -1,14 +1,15 @@
 import React from 'react';
-import { IconChevronDown, IconLogOut } from '../ui/Icon';
+import { IconChevronDown, IconLogOut, IconSettings } from '../ui/Icon';
 import { Button } from '../ui/Button';
 import { Link } from 'react-router-dom';
 
 type NavbarProps = {
   username: string;
   onLogout: () => void;
+  onOpenSettings?: () => void;
 };
 
-const Navbar: React.FC<NavbarProps> = ({ username, onLogout }) => {
+const Navbar: React.FC<NavbarProps> = ({ username, onLogout, onOpenSettings }) => {
   return (
     <div className="navbar bg-base-100 border-b border-base-300">
       <div className="flex-1">
@@ -26,6 +27,18 @@ const Navbar: React.FC<NavbarProps> = ({ username, onLogout }) => {
             tabIndex={0}
             className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-48"
           >
+            {onOpenSettings && (
+              <li>
+                <Button
+                  variant="ghost"
+                  className="justify-start"
+                  onClick={onOpenSettings}
+                  leftIcon={<IconSettings />}
+                >
+                  Settings
+                </Button>
+              </li>
+            )}
             <li>
               <Button variant="ghost" className="justify-start" onClick={onLogout} leftIcon={<IconLogOut />}>
                 Logout

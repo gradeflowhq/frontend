@@ -10,6 +10,7 @@ import QuestionsTabPage from '@pages/assessments/QuestionsTabPage';
 import RulesTabPage from '@pages/assessments/RulesTabPage';
 import ResultsShellPage from '@pages/results/ResultsShellPage';
 import GradedSubmissionDetailPage from '@pages/results/GradedSubmissionDetailPage';
+import CanvasPushPage from '@pages/results/CanvasPushPage';
 
 import ProtectedRoute from './routes/ProtectedRoute';
 import PublicOnlyRoute from './routes/PublicOnlyRoute';
@@ -41,6 +42,7 @@ const App: React.FC = () => {
 
             <Route path="/results/:assessmentId" element={<ResultsShellPage />} />
             <Route path="/results/:assessmentId/:studentId" element={<GradedSubmissionDetailPage />} />
+            <Route path="/results/:assessmentId/canvas" element={<CanvasPushPage />} />
           </Route>
         </Route>
 

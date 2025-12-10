@@ -164,7 +164,7 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
           <div
             className={`dropdown`}
           >
-            <div tabindex="0" role="button" className="btn m-1">
+            <div tabIndex={0} role="button" className="btn m-1">
               <DecryptedText value={encodedStudentId} passphrase={passphrase} mono size="sm" /><IconChevronDown />
             </div>
             <div

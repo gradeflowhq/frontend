@@ -1,6 +1,7 @@
 # GradeFlow Frontend
 
 ## Setup
+
 Install dependencies:
 ```
 npm install
@@ -16,3 +17,9 @@ Run frontend
 ```
 npm run dev -- --host
 ```
+
+## Canvas via CORS proxy
+
+Canvas API requests originate from the browser and are proxied through the Caddy-based `cors-proxy` service.
+
+The frontend reads `VITE_CORS_PROXY_URL` (default `http://localhost:8080`); override in `frontend/.env`.

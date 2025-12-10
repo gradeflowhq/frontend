@@ -22,6 +22,7 @@ import {
   FiSearch,
 } from 'react-icons/fi';
 import { LuListChecks } from "react-icons/lu";
+import { SiCanvas } from 'react-icons/si';
 
 
 import type { SVGProps } from 'react';
@@ -53,3 +54,4 @@ export const IconAssessment = wrap(FiFileText);
 export const IconInfer = wrap(FiZap);
 export const IconGrade = wrap(LuListChecks);
 export const IconSearch = wrap(FiSearch);
+export const IconCanvas = wrap(SiCanvas);
