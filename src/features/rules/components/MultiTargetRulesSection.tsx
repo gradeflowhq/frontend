@@ -4,6 +4,7 @@ import { Button } from '@components/ui/Button';
 import { DropdownMenu } from '@components/ui/DropdownMenu';
 import ErrorAlert from '@components/common/ErrorAlert';
 import ConfirmDialog from '@components/common/ConfirmDialog';
+import { useToast } from '@components/common/ToastProvider';
 
 import RuleItem from './RuleItem';
 import RuleDialog from './RuleDialog';
@@ -33,6 +34,7 @@ const MultiTargetRulesSection: React.FC<Props> = ({ rubric, assessmentId, questi
   const validateAndReplace = useValidateAndReplaceRubric(assessmentId);
   const replace = useReplaceRubric(assessmentId);
   const findKeyByType = useFindSchemaKeyByType(defs);
+  const toast = useToast();
 
   // All rule schema keys that are multi-target (i.e., do not require question_id)
   const eligibleKeys = useCompatibleRuleKeys(defs, undefined as any, false);
@@ -98,7 +100,13 @@ const MultiTargetRulesSection: React.FC<Props> = ({ rubric, assessmentId, questi
       nextRules.push(ruleObj as RuleValue);
     }
 
-    await validateAndReplace.mutateAsync(nextRules, { onSuccess: resetRuleDialog });
+    await validateAndReplace.mutateAsync(nextRules, {
+      onSuccess: () => {
+        resetRuleDialog();
+        toast.success('Rule saved');
+      },
+      onError: () => toast.error('Save failed'),
+    });
   };
 
   return (
@@ -161,7 +169,13 @@ const MultiTargetRulesSection: React.FC<Props> = ({ rubric, assessmentId, questi
         onConfirm={async () => {
           if (!deleteTarget) return;
           const nextRules = allRules.filter((r) => r !== deleteTarget);
-          await replace.mutateAsync(nextRules, { onSuccess: resetDeleteConfirm });
+          await replace.mutateAsync(nextRules, {
+            onSuccess: () => {
+              resetDeleteConfirm();
+              toast.success('Rule deleted');
+            },
+            onError: () => toast.error('Delete failed'),
+          });
         }}
         onCancel={resetDeleteConfirm}
       />

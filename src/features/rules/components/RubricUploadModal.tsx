@@ -10,6 +10,7 @@ import { api } from '@api';
 import { QK } from '@api/queryKeys';
 import type { LoadRubricRequest } from '@api/models';
 import { fileAcceptForConfig } from '@lib/uploads';
+import { useToast } from '@components/common/ToastProvider';
 
 type Props = {
   open: boolean;
@@ -19,6 +20,7 @@ type Props = {
 
 const RubricUploadModal: React.FC<Props> = ({ open, assessmentId, onClose }) => {
   const qc = useQueryClient();
+  const toast = useToast();
   const base = (requestsSchema as any).LoadRubricRequest;
 
   const schemaForRender = useMemo(() => {
@@ -45,7 +47,9 @@ const RubricUploadModal: React.FC<Props> = ({ open, assessmentId, onClose }) => 
       await qc.invalidateQueries({ queryKey: QK.rubric.item(assessmentId) });
       await qc.invalidateQueries({ queryKey: QK.rubric.coverage(assessmentId) });
       onClose();
+      toast.success('Rubric uploaded');
     },
+    onError: () => toast.error('Upload failed'),
   });
 
   if (!open) return null;

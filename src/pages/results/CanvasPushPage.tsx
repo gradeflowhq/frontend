@@ -17,6 +17,7 @@ import { AssessmentPassphraseProvider, useAssessmentPassphrase } from '@features
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { useCanvasPushStore } from '@state/canvasSettingsStore';
 import { useUserSettingsStore } from '@state/userSettingsStore';
+import { useToast } from '@components/common/ToastProvider';
 
 import AssignmentSection from '../../features/canvas/components/AssignmentSection';
 import CanvasPushProgressBanner from '../../features/canvas/components/CanvasPushProgressBanner';
@@ -44,6 +45,7 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
   const navigate = useNavigate();
   const { passphrase, notifyEncryptedDetected } = useAssessmentPassphrase();
   const { data: assessmentRes } = useAssessment(assessmentId, true);
+  const toast = useToast();
 
   useDocumentTitle(`Push to Canvas - ${assessmentRes?.name ?? 'Assessment'} - GradeFlow`);
 
@@ -113,6 +115,14 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
       setConfig({ progressUrl: pushState.progressUrl });
     }
   }, [pushState, progressUrl, setConfig]);
+
+  useEffect(() => {
+    if (pushState.status === 'error') {
+      toast.error(pushState.message, 'Canvas push failed');
+    } else if (pushState.status === 'success' && !progressUrl) {
+      toast.success(pushState.message);
+    }
+  }, [pushState, progressUrl, toast]);
 
   const handleClearProgress = () => {
     setConfig({ progressUrl: undefined });

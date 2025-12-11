@@ -10,6 +10,7 @@ import { saveBlob } from '@lib/files';
 import { useAssessmentPassphrase } from '@features/encryption/AssessmentPassphraseProvider';
 import { tryDecodeExportCsv } from '@features/submissions/helpers';
 import type { GradingDownloadRequest, GradingDownloadResponse } from '@api/models';
+import { useToast } from '@components/common/ToastProvider';
 
 type Props = {
   open: boolean;
@@ -91,6 +92,7 @@ const materialiseDefaults = (schema: any): any => {
 
 const ResultsDownloadModal: React.FC<Props> = ({ open, assessmentId, onClose, selectedFormat }) => {
   const { passphrase } = useAssessmentPassphrase();
+  const toast = useToast();
 
   // Base schema (has oneOf with $ref)
   const baseSchema = (requestsSchema as any).GradingDownloadRequest;
@@ -134,7 +136,9 @@ const ResultsDownloadModal: React.FC<Props> = ({ open, assessmentId, onClose, se
         saveBlob(blob, filename);
       }
       onClose();
+      toast.success('Grading download started');
     },
+    onError: () => toast.error('Download failed'),
   });
 
   const uiSchema = useMemo(

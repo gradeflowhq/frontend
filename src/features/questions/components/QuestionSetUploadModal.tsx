@@ -10,6 +10,7 @@ import { api } from '@api';
 import { QK } from '@api/queryKeys';
 import type { LoadQuestionSetRequest } from '@api/models';
 import { fileAcceptForConfig } from '@lib/uploads';
+import { useToast } from '@components/common/ToastProvider';
 
 type Props = {
   open: boolean;
@@ -19,6 +20,7 @@ type Props = {
 
 const QuestionSetUploadModal: React.FC<Props> = ({ open, assessmentId, onClose }) => {
   const qc = useQueryClient();
+  const toast = useToast();
   const base = (requestsSchema as any).LoadQuestionSetRequest;
 
   const schemaForRender = useMemo(() => {
@@ -44,7 +46,9 @@ const QuestionSetUploadModal: React.FC<Props> = ({ open, assessmentId, onClose }
       await qc.invalidateQueries({ queryKey: QK.questionSet.item(assessmentId) });
       await qc.invalidateQueries({ queryKey: QK.questionSet.parsed(assessmentId) });
       onClose();
+      toast.success('Question set uploaded');
     },
+    onError: () => toast.error('Upload failed'),
   });
 
   if (!open) return null;

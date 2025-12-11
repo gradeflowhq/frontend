@@ -13,6 +13,7 @@ import {
   useRemoveMember,
 } from '../hooks';
 import type { UserResponse, UserResponseRole } from '@api/models';
+import { useToast } from '@components/common/ToastProvider';
 
 type Props = {
   open: boolean;
@@ -24,6 +25,7 @@ const MembersDialog: React.FC<Props> = ({ open, assessmentId, onClose }) => {
   const [userEmail, setUserEmail] = useState('');
   const [role, setRole] = useState<UserResponseRole>('viewer');
   const [removeTarget, setRemoveTarget] = useState<string | null>(null);
+  const toast = useToast();
 
   const { data, isLoading, isError, error } = useMembers(assessmentId, open);
   const addMember = useAddMember(assessmentId);
@@ -34,7 +36,10 @@ const MembersDialog: React.FC<Props> = ({ open, assessmentId, onClose }) => {
 
   const handleSetRole = useCallback(
     async (userId: string, r: UserResponseRole) => {
-      await setMemberRole.mutateAsync({ userId, role: r });
+      await setMemberRole.mutateAsync({ userId, role: r }, {
+        onSuccess: () => toast.success('Role updated'),
+        onError: () => toast.error('Update failed'),
+      });
     },
     [setMemberRole]
   );
@@ -76,7 +81,15 @@ const MembersDialog: React.FC<Props> = ({ open, assessmentId, onClose }) => {
             <LoadingButton
               type="button"
               variant="primary"
-              onClick={() => addMember.mutate({ user_email: userEmail, role }, { onSuccess: () => { setUserEmail('') } })}
+                onClick={() =>
+                  addMember.mutate({ user_email: userEmail, role }, {
+                    onSuccess: () => {
+                      setUserEmail('');
+                      toast.success('Member added');
+                    },
+                    onError: () => toast.error('Add failed'),
+                  })
+                }
               disabled={!userEmail}
               isLoading={addMember.isPending}
               leftIcon={<IconPlus />}
@@ -124,7 +137,13 @@ const MembersDialog: React.FC<Props> = ({ open, assessmentId, onClose }) => {
         confirmText="Remove"
         onConfirm={() =>
           removeTarget &&
-          removeMember.mutate(removeTarget, { onSuccess: () => setRemoveTarget(null) })
+          removeMember.mutate(removeTarget, {
+            onSuccess: () => {
+              setRemoveTarget(null);
+              toast.success('Member removed');
+            },
+            onError: () => toast.error('Remove failed'),
+          })
         }
         onCancel={() => setRemoveTarget(null)}
       />

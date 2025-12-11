@@ -24,6 +24,7 @@ import { friendlyRuleLabel } from '@features/rules/helpers';
 import { isEncrypted } from '@utils/crypto';
 import { natsort } from '@utils/sort';
 import { useDecryptedIds } from '@features/encryption/useDecryptedIds';
+import { useToast } from '@components/common/ToastProvider';
 
 import type {
   AdjustableGradedSubmission,
@@ -34,6 +35,7 @@ import type {
 
 const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStudentId: string }> = ({ assessmentId, encodedStudentId }) => {
   const navigate = useNavigate();
+  const toast = useToast();
 
   const safeId = assessmentId;
   const enabled = true;
@@ -116,7 +118,13 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
     if (!adjustments.length) return;
 
     const payload: GradeAdjustmentRequest = { adjustments };
-    adjustMutation.mutate(payload, { onSuccess: resetEdits });
+    adjustMutation.mutate(payload, {
+      onSuccess: () => {
+        resetEdits();
+        toast.success('Adjustments saved');
+      },
+      onError: () => toast.error('Save failed'),
+    });
   };
 
   const gotoPrev = () => {
@@ -427,7 +435,11 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
             ],
           };
           adjustMutation.mutate(payload, {
-            onSuccess: () => setRemoveAdjustQid(null),
+            onSuccess: () => {
+              setRemoveAdjustQid(null);
+              toast.success('Adjustment removed');
+            },
+            onError: () => toast.error('Remove failed'),
           });
         }}
         onCancel={() => setRemoveAdjustQid(null)}

@@ -20,6 +20,8 @@ import {
   FiFileText,
   FiAlertCircle,
   FiSearch,
+  FiInfo,
+  FiAlertTriangle,
 } from 'react-icons/fi';
 import { LuListChecks } from "react-icons/lu";
 import { SiCanvas } from 'react-icons/si';
@@ -49,9 +51,11 @@ export const IconTrash = wrap(FiTrash2);
 export const IconEdit = wrap(FiEdit2);
 export const IconSettings = wrap(FiSettings);
 export const IconAlertCircle = wrap(FiAlertCircle);
+export const IconAlertTriangle = wrap(FiAlertTriangle);
 export const IconUsers = wrap(FiUsers);
 export const IconAssessment = wrap(FiFileText);
 export const IconInfer = wrap(FiZap);
 export const IconGrade = wrap(LuListChecks);
 export const IconSearch = wrap(FiSearch);
 export const IconCanvas = wrap(SiCanvas);
+export const IconInfo = wrap(FiInfo);

@@ -10,6 +10,7 @@ import othersSchema from '@schemas/others.json';
 import type { BodyIssueTokenAuthTokenPost, TokenPairResponse } from '@api/models';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import HiddenAwareFieldTemplate from '@components/common/forms/HiddenAwareFieldTemplate';
+import { useToast } from '@components/common/ToastProvider';
 
 const getLoginSchema = () => {
   const schema = (othersSchema as any)['Body_issue_token_auth_token_post'];
@@ -20,6 +21,7 @@ const getLoginSchema = () => {
 const LoginPage: React.FC = () => {
   useDocumentTitle('Login - GradeFlow');
   const setTokens = useAuthStore((s) => s.setTokens);
+  const toast = useToast();
   const schema = useMemo(() => getLoginSchema(), []);
 
   // Keys we never want to render (global hide via HiddenAwareFieldTemplate + formContext)
@@ -43,7 +45,7 @@ const LoginPage: React.FC = () => {
   const templates = useMemo(() => ({ FieldTemplate: HiddenAwareFieldTemplate }), []);
   const formContext = useMemo(() => ({ hideKeys }), [hideKeys]);
 
-  const { mutateAsync, isPending, isError, error, isSuccess } = useMutation({
+  const { mutateAsync, isPending, isError, error } = useMutation({
     mutationKey: ['auth', 'login'],
     mutationFn: async (payload: BodyIssueTokenAuthTokenPost) => {
       const res = await api.issueTokenAuthTokenPost(payload);
@@ -52,6 +54,10 @@ const LoginPage: React.FC = () => {
     onSuccess: (tokenPair) => {
       setTokens(tokenPair);
       // ProtectedRoute will redirect to /assessments
+      toast.success('Login successful');
+    },
+    onError: (err) => {
+      toast.error(err, 'Login failed');
     },
   });
 
@@ -77,11 +83,6 @@ const LoginPage: React.FC = () => {
           </div>
         )}
         {isError && <ErrorAlert error={error} />}
-        {isSuccess && (
-          <div className="alert alert-success">
-            <span>Login successful!</span>
-          </div>
-        )}
       </div>
 
       <div className="text-sm text-center">

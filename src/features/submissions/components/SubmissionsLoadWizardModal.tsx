@@ -14,6 +14,7 @@ import {
   computeNextMapping,
   sanitizeQuestions,
 } from '@features/submissions/utils/questionColumnInference';
+import { useToast } from '@components/common/ToastProvider';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@api';
@@ -213,6 +214,7 @@ const SubmissionsLoadWizardModal: React.FC<Props> = ({ open, assessmentId, onClo
 
   const storageKey = buildPassphraseKey(assessmentId);
   const inferAndParse = useInferAndParseQuestionSet(assessmentId);
+  const toast = useToast();
 
   // Load stored passphrase on open
   useEffect(() => {
@@ -369,7 +371,9 @@ const SubmissionsLoadWizardModal: React.FC<Props> = ({ open, assessmentId, onClo
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: QK.submissions.list(assessmentId) });
       onClose();
+      toast.success('Submissions uploaded');
     },
+    onError: () => toast.error('Upload failed'),
   });
 
   if (!open) return null;
@@ -518,6 +522,7 @@ const SubmissionsLoadWizardModal: React.FC<Props> = ({ open, assessmentId, onClo
             await inferAndParse.mutateAsync();
           } catch (e) {
             console.warn('Inference or parsing failed after upload:', e);
+            toast.error('Post-upload inference failed');
           }
         }}
           disabled={!canSubmit || !preview}

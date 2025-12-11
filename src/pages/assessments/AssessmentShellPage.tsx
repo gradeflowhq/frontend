@@ -23,6 +23,7 @@ import {
 import { IconGrade } from '@components/ui/Icon';
 import { useQueryClient } from '@tanstack/react-query';
 import { QK } from '@api/queryKeys';
+import { useToast } from '@components/common/ToastProvider';
 
 const TabsNav: React.FC<{ basePath: string }> = ({ basePath }) => {
   const tabClass = ({ isActive }: { isActive: boolean }) => `tab ${isActive ? 'tab-active' : ''}`;
@@ -111,6 +112,7 @@ const HeaderActions: React.FC<{
 const AssessmentShellPage: React.FC = () => {
   const { assessmentId } = useParams<{ assessmentId: string }>();
   const navigate = useNavigate();
+  const toast = useToast();
 
   const [showEdit, setShowEdit] = React.useState(false);
   const [showMembers, setShowMembers] = React.useState(false);
@@ -161,10 +163,12 @@ const AssessmentShellPage: React.FC = () => {
       onSuccess: () => {
         // We started a job; wait for jobStatus to report 'completed' or 'failed'
         setAwaitingNavigation(true);
+        toast.info('Grading job started');
       },
       onError: (e) => {
         setRunError(e);
         setAwaitingNavigation(false);
+        toast.error('Failed to start grading');
       },
     });
   };
@@ -176,6 +180,7 @@ const AssessmentShellPage: React.FC = () => {
     if (!awaitingNavigation) return;
     if (jobStatus === 'completed') {
       setAwaitingNavigation(false);
+      toast.success('Grading completed');
       qc.invalidateQueries({ queryKey: QK.grading.item(assessmentId!) }).then(() => {
         navigate(`/results/${assessmentId}`);
       });
@@ -183,8 +188,9 @@ const AssessmentShellPage: React.FC = () => {
       // Show errors; do not navigate
       setRunError(new Error('Grading job failed'));
       setAwaitingNavigation(false);
+      toast.error('Grading job failed');
     }
-  }, [awaitingNavigation, jobStatus, navigate, assessmentId]);
+  }, [awaitingNavigation, jobStatus, navigate, assessmentId, qc, toast]);
 
   const handleGradeClick = () => {
     if ((coveragePct ?? 0) < 1) {
@@ -279,7 +285,13 @@ const AssessmentShellPage: React.FC = () => {
         error={updateAssessmentMutation.isError ? updateAssessmentMutation.error : null}
         onClose={() => setShowEdit(false)}
         onSubmit={async (id: string, formData: AssessmentUpdateRequest) => {
-          await updateAssessmentMutation.mutateAsync({ id, payload: formData }, { onSuccess: () => setShowEdit(false) });
+          await updateAssessmentMutation.mutateAsync({ id, payload: formData }, {
+            onSuccess: () => {
+              setShowEdit(false);
+              toast.success('Assessment updated');
+            },
+            onError: (err) => toast.error(err, 'Update failed'),
+          });
         }}
       />
 

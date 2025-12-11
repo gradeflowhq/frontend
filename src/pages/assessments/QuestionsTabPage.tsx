@@ -15,6 +15,7 @@ import { useSubmissions } from '@features/submissions/hooks';
 import type { QuestionSetInput } from '@api/models';
 import QuestionSetUploadModal from '@features/questions/components/QuestionSetUploadModal';
 import QuestionSetImportModal from '@features/questions/components/QuestionSetImportModal';
+import { useToast } from '@components/common/ToastProvider';
 
 const QuestionsTabPage: React.FC = () => {
   const { assessmentId } = useParams<{ assessmentId: string }>();
@@ -23,6 +24,7 @@ const QuestionsTabPage: React.FC = () => {
   const [openQsUpload, setOpenQsUpload] = React.useState(false);
   const [openQsImport, setOpenQsImport] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState('');
+  const toast = useToast();
 
   if (!assessmentId) return null;
 
@@ -96,7 +98,10 @@ const QuestionsTabPage: React.FC = () => {
           questionMap={questionMap}
           examplesByQuestion={examplesByQuestion}
           onUpdateQuestionSet={async (next: QuestionSetInput) => {
-            await updateMutation.mutateAsync(next);
+            await updateMutation.mutateAsync(next, {
+              onSuccess: () => toast.success('Question set saved'),
+              onError: () => toast.error('Save failed'),
+            });
           }}
           updating={updateMutation.isPending}
           updateError={updateMutation.isError ? updateMutation.error : null}
@@ -111,7 +116,15 @@ const QuestionsTabPage: React.FC = () => {
         confirmLoading={inferMutation.isPending}
         confirmLoadingLabel="Inferring..."
         confirmText="Proceed"
-        onConfirm={() => inferMutation.mutate(undefined, { onSuccess: () => setConfirmInfer(false) })}
+        onConfirm={() =>
+          inferMutation.mutate(undefined, {
+            onSuccess: () => {
+              setConfirmInfer(false);
+              toast.success('Questions inferred from submissions');
+            },
+            onError: () => toast.error('Inference failed'),
+          })
+        }
         onCancel={() => setConfirmInfer(false)}
       />
       {inferMutation.isError && <ErrorAlert error={inferMutation.error} />}
@@ -123,7 +136,15 @@ const QuestionsTabPage: React.FC = () => {
         confirmText="Delete"
         confirmLoading={deleteMutation.isPending}
         confirmLoadingLabel="Deleting..."
-        onConfirm={() => deleteMutation.mutate(undefined, { onSuccess: () => setConfirmDeleteQs(false) })}
+        onConfirm={() =>
+          deleteMutation.mutate(undefined, {
+            onSuccess: () => {
+              setConfirmDeleteQs(false);
+              toast.success('Question set deleted');
+            },
+            onError: () => toast.error('Delete failed'),
+          })
+        }
         onCancel={() => setConfirmDeleteQs(false)}
       />
       {deleteMutation.isError && <ErrorAlert error={deleteMutation.error} />}

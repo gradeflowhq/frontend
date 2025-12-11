@@ -7,12 +7,14 @@ import ErrorAlert from '@components/common/ErrorAlert';
 import ErrorBoundary from '@components/common/ErrorBoundary';
 import UserSettingsDialog from '@components/common/UserSettingsDialog';
 import { useAuthStore } from '@state/authStore';
+import { useToast } from '@components/common/ToastProvider';
 
 import type { MeResponse } from '@api/models';
 
 const ProtectedLayout: React.FC = () => {
   const [showSettings, setShowSettings] = useState(false);
   const clearTokens = useAuthStore((s) => s.clearTokens);
+  const toast = useToast();
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['auth', 'me'],
@@ -26,14 +28,16 @@ const ProtectedLayout: React.FC = () => {
   const onLogout = useCallback(async () => {
     try {
       await api.logoutAuthLogoutPost();
+      toast.success('Logged out');
     } catch {
       // ignore backend errors; proceed to clear client-side
+      toast.error('Logout failed');
     } finally {
       clearTokens();
       // Optional: you can navigate to /login here; guards will handle it automatically
       // navigate('/login');
     }
-  }, [clearTokens]);
+  }, [clearTokens, toast]);
 
   const username = data?.name ?? data?.email ?? 'Account';
 

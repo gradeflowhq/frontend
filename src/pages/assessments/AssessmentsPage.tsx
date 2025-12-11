@@ -19,12 +19,14 @@ import {
 } from '@features/assessments/hooks';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { compareDateDesc } from '@utils/sort';
+import { useToast } from '@components/common/ToastProvider';
 import type { AssessmentResponse, AssessmentCreateRequest, AssessmentUpdateRequest } from '@api/models';
 
 const AssessmentsPage: React.FC = () => {
   useDocumentTitle('Assessments - GradeFlow');
 
   const navigate = useNavigate();
+  const toast = useToast();
 
   const [showCreate, setShowCreate] = useState(false);
   const [editItem, setEditItem] = useState<AssessmentResponse | null>(null);
@@ -100,7 +102,13 @@ const AssessmentsPage: React.FC = () => {
         error={createMutation.isError ? createMutation.error : null}
         onClose={() => setShowCreate(false)}
         onSubmit={async (formData: AssessmentCreateRequest) => {
-          await createMutation.mutateAsync(formData, { onSuccess: () => setShowCreate(false) });
+          await createMutation.mutateAsync(formData, {
+            onSuccess: () => {
+              setShowCreate(false);
+              toast.success('Assessment created');
+            },
+            onError: () => toast.error('Create failed'),
+          });
         }}
       />
 
@@ -110,7 +118,13 @@ const AssessmentsPage: React.FC = () => {
         error={updateMutation.isError ? updateMutation.error : null}
         onClose={() => setEditItem(null)}
         onSubmit={async (id: string, formData: AssessmentUpdateRequest) => {
-          await updateMutation.mutateAsync({ id, payload: formData }, { onSuccess: () => setEditItem(null) });
+          await updateMutation.mutateAsync({ id, payload: formData }, {
+            onSuccess: () => {
+              setEditItem(null);
+              toast.success('Assessment updated');
+            },
+            onError: () => toast.error('Update failed'),
+          });
         }}
       />
 
@@ -121,7 +135,16 @@ const AssessmentsPage: React.FC = () => {
         confirmLoading={deleteMutation.isPending}
         confirmLoadingLabel="Deleting..."
         confirmText="Delete"
-        onConfirm={() => deleteTarget && deleteMutation.mutate(deleteTarget.id, { onSuccess: () => setDeleteTarget(null) })}
+        onConfirm={() =>
+          deleteTarget &&
+          deleteMutation.mutate(deleteTarget.id, {
+            onSuccess: () => {
+              setDeleteTarget(null);
+              toast.success('Assessment deleted');
+            },
+            onError: () => toast.error('Delete failed'),
+          })
+        }
         onCancel={() => setDeleteTarget(null)}
       />
       {deleteMutation.isError && <ErrorAlert error={deleteMutation.error} className="mt-2" />}

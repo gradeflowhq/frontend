@@ -10,11 +10,13 @@ import { api } from '@api';
 import { QK } from '@api/queryKeys';
 import type { ImportQuestionSetRequest } from '@api/models';
 import { fileAcceptForConfig } from '@lib/uploads';
+import { useToast } from '@components/common/ToastProvider';
 
 type Props = { open: boolean; assessmentId: string; onClose: () => void };
 
 const QuestionSetImportModal: React.FC<Props> = ({ open, assessmentId, onClose }) => {
   const qc = useQueryClient();
+  const toast = useToast();
 
   const base = (requestsSchema as any).ImportQuestionSetRequest;
   const schemaForRender = useMemo(
@@ -35,7 +37,9 @@ const QuestionSetImportModal: React.FC<Props> = ({ open, assessmentId, onClose }
       await qc.invalidateQueries({ queryKey: QK.questionSet.item(assessmentId) });
       await qc.invalidateQueries({ queryKey: QK.questionSet.parsed(assessmentId) });
       onClose();
+      toast.success('Question set imported');
     },
+    onError: () => toast.error('Import failed'),
   });
 
   if (!open) return null;

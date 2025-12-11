@@ -17,7 +17,7 @@ export const getErrorMessages = (error: unknown): string[] => {
       .map((d: any) => {
         if (d.msg && typeof d.msg === 'string') {
           if (Array.isArray(d.loc)) {
-            const locStr = d.loc.slice(2).join(' > '); // skip 'body' and 'rule/rubric
+            const locStr = d.loc.slice(1).join(' > '); // skip 'body'
             return `${locStr}: ${d.msg}`;
           }
           return d.msg;

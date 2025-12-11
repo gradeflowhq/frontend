@@ -4,6 +4,7 @@ import { Button } from '@components/ui/Button';
 import { DropdownMenu } from '@components/ui/DropdownMenu';
 import ErrorAlert from '@components/common/ErrorAlert';
 import ConfirmDialog from '@components/common/ConfirmDialog';
+import { useToast } from '@components/common/ToastProvider';
 
 import RuleItem from './RuleItem';
 import RuleDialog from './RuleDialog';
@@ -37,6 +38,7 @@ const SingleTargetRulesSection: React.FC<Props> = ({
   const validateAndReplace = useValidateAndReplaceRubric(assessmentId);
   const replace = useReplaceRubric(assessmentId);
   const findKeyByType = useFindSchemaKeyByType(defs);
+  const toast = useToast();
   // All single-target rule schema keys (question_id present)
   const singleTargetRuleKeys = useCompatibleRuleKeys(defs, undefined as any, true);
 
@@ -126,7 +128,13 @@ const SingleTargetRulesSection: React.FC<Props> = ({
       ? allRules.map((r) => (r === editingRule ? nextRule : r))
       : [...allRules, nextRule];
 
-    await validateAndReplace.mutateAsync(nextRules, { onSuccess: resetRuleDialog });
+    await validateAndReplace.mutateAsync(nextRules, {
+      onSuccess: () => {
+        resetRuleDialog();
+        toast.success('Rule saved');
+      },
+      onError: () => toast.error('Save failed'),
+    });
   };
 
   return (
@@ -246,7 +254,13 @@ const SingleTargetRulesSection: React.FC<Props> = ({
         onConfirm={async () => {
           if (!deleteTarget) return;
           const nextRules = allRules.filter((r) => r !== deleteTarget.rule);
-          await replace.mutateAsync(nextRules, { onSuccess: resetDeleteConfirm });
+          await replace.mutateAsync(nextRules, {
+            onSuccess: () => {
+              resetDeleteConfirm();
+              toast.success('Rule deleted');
+            },
+            onError: () => toast.error('Delete failed'),
+          });
         }}
         onCancel={resetDeleteConfirm}
       />

@@ -9,6 +9,7 @@ import { useAuthStore } from '@state/authStore';
 import requestsSchema from '@schemas/requests.json';
 import type { SignupRequest, TokenPairResponse } from '@api/models';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
+import { useToast } from '@components/common/ToastProvider';
 
 const getSignupSchema = () => {
   const schema = (requestsSchema as any)['SignupRequest'];
@@ -19,6 +20,7 @@ const getSignupSchema = () => {
 const RegisterPage: React.FC = () => {
   useDocumentTitle('Register - GradeFlow');
   const setTokens = useAuthStore((s) => s.setTokens);
+  const toast = useToast();
   const schema = useMemo(() => getSignupSchema(), []);
 
   const uiSchema = useMemo(
@@ -31,7 +33,7 @@ const RegisterPage: React.FC = () => {
     []
   );
 
-  const { mutateAsync, isPending, isError, error, isSuccess } = useMutation({
+  const { mutateAsync, isPending, isError, error } = useMutation({
     mutationKey: ['auth', 'signup'],
     mutationFn: async (payload: SignupRequest) => {
       const res = await api.signupAuthSignupPost(payload);
@@ -40,6 +42,10 @@ const RegisterPage: React.FC = () => {
     onSuccess: (tokenPair) => {
       setTokens(tokenPair);
       // ProtectedRoute will redirect to /assessments
+      toast.success('Signup successful');
+    },
+    onError: (err) => {
+      toast.error(err, 'Signup failed');
     },
   });
 
@@ -63,11 +69,6 @@ const RegisterPage: React.FC = () => {
           </div>
         )}
         {isError && <ErrorAlert error={error} />}
-        {isSuccess && (
-          <div className="alert alert-success">
-            <span>Signup successful!</span>
-          </div>
-        )}
       </div>
 
       <div className="mt-4 text-sm text-center">

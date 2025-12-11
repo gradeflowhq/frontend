@@ -8,6 +8,7 @@ import RubricImportModal from '@features/rules/components/RubricImportModal';
 import { useRubric, useRubricCoverage, useDeleteRubric } from '@features/rubric/hooks';
 import { useQuestionSet } from '@features/questions/hooks';
 import type { RubricOutput, QuestionSetOutputQuestionMap } from '@api/models';
+import { useToast } from '@components/common/ToastProvider';
 
 const RulesTabPage: React.FC = () => {
   const { assessmentId } = useParams<{ assessmentId: string }>();
@@ -64,6 +65,7 @@ const RulesTabPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = React.useState('');
 
   const deleteRubric = useDeleteRubric(safeId);
+  const toast = useToast();
 
   const hasRules = (rubric?.rules?.length ?? 0) > 0;
 
@@ -151,7 +153,15 @@ const RulesTabPage: React.FC = () => {
         confirmText="Delete"
         confirmLoading={deleteRubric.isPending}
         confirmLoadingLabel="Deleting..."
-        onConfirm={() => deleteRubric.mutate(undefined, { onSuccess: () => setConfirmDeleteRubric(false) })}
+        onConfirm={() =>
+          deleteRubric.mutate(undefined, {
+            onSuccess: () => {
+              setConfirmDeleteRubric(false);
+              toast.success('Rules deleted');
+            },
+            onError: () => toast.error('Delete failed'),
+          })
+        }
         onCancel={() => setConfirmDeleteRubric(false)}
       />
       {deleteRubric.isError && <ErrorAlert error={deleteRubric.error} />}

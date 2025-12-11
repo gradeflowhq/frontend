@@ -10,6 +10,7 @@ import {
   SubmissionsTable,
   SubmissionsLoadWizardModal,
 } from '@features/submissions/components';
+import { useToast } from '@components/common/ToastProvider';
 
 import type { RawSubmission } from '@api/models';
 
@@ -21,6 +22,7 @@ const SubmissionsTabPage: React.FC = () => {
 
   const { data, isLoading, isError, error } = useSubmissions(assessmentId);
   const deleteMutation = useDeleteSubmissions(assessmentId);
+  const toast = useToast();
   const { passphrase, notifyEncryptedDetected } = useAssessmentPassphrase();
 
   const items: RawSubmission[] = useMemo(() => data?.raw_submissions ?? [], [data]);
@@ -71,7 +73,13 @@ const SubmissionsTabPage: React.FC = () => {
         confirmLoadingLabel="Deleting..."
         confirmText="Delete"
         onConfirm={() => {
-          deleteMutation.mutate(undefined, { onSuccess: () => setConfirmDelete(false) });
+          deleteMutation.mutate(undefined, {
+            onSuccess: () => {
+              setConfirmDelete(false);
+              toast.success('Submissions deleted');
+            },
+            onError: () => toast.error('Delete failed'),
+          });
         }}
         onCancel={() => setConfirmDelete(false)}
       />
