@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@api';
 import { QK } from '@api/queryKeys';
@@ -9,8 +10,8 @@ export const useRubric = (assessmentId: string) =>
     queryFn: async () => {
       try {
         return (await api.getRubricAssessmentsAssessmentIdRubricGet(assessmentId)).data as RubricResponse;
-      } catch (e: any) {
-        if (e?.response?.status === 404) {
+      } catch (e: unknown) {
+        if (axios.isAxiosError(e) && e.response?.status === 404) {
           const created = await api.setRubricByModelAssessmentsAssessmentIdRubricPut(assessmentId, { rubric: { rules: [] } });
           return created.data as RubricResponse;
         }

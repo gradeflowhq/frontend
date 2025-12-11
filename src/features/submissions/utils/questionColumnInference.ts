@@ -34,7 +34,7 @@ export const HEADER_PATTERNS = {
 };
 
 // Common token separators for MRQ (multi-answers)
-export const TOKEN_SEPARATORS = /[,\|;~]+/;
+export const TOKEN_SEPARATORS = /[,|;~]+/;
 
 // Value-level metadata patterns
 export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -239,7 +239,7 @@ type ColumnSignals = {
 const computeConfidence = (s: ColumnSignals): number => {
   const normLen = Math.min(s.avgLen / AVG_LEN_CAP, 1);
 
-  let z =
+  const z =
     (s.headerKeyword ? WEIGHTS.headerKeyword : 0) +
     (s.headerPattern ? WEIGHTS.headerPattern : 0) +
     (s.isAuxiliary ? WEIGHTS.isAuxiliary : 0) +

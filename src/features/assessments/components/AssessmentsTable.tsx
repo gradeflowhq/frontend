@@ -8,6 +8,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import TableShell from '@components/common/TableShell';
+import EmptyState from '@components/common/EmptyState';
 import { formatAbsolute, formatSmart } from '@utils/datetime';
 import { usePaginationState } from '@hooks/usePaginationState';
 import type { AssessmentResponse } from '@api/models';
@@ -18,6 +19,7 @@ type AssessmentsTableProps = {
   onEdit: (item: AssessmentResponse) => void;
   onDelete: (item: AssessmentResponse) => void;
   initialPageSize?: number;
+  isLoading?: boolean;
 };
 
 const AssessmentsTable: React.FC<AssessmentsTableProps> = ({
@@ -26,6 +28,7 @@ const AssessmentsTable: React.FC<AssessmentsTableProps> = ({
   onEdit,
   onDelete,
   initialPageSize = 10,
+  isLoading = false,
 }) => {
   const columnHelper = createColumnHelper<AssessmentResponse>();
 
@@ -114,24 +117,25 @@ const AssessmentsTable: React.FC<AssessmentsTableProps> = ({
     getRowId: (row) => row.id,
   });
 
-  if (items.length === 0) {
+  if (!isLoading && items.length === 0) {
     return (
-      <div className="hero rounded-box bg-base-200 py-12">
-        <div className="hero-content text-center">
-          <div className="max-w-md">
-            <h1 className="text-2xl font-bold flex items-center justify-center">
-              <IconInbox />
-              No assessments
-            </h1>
-            <p className="py-2 opacity-70">Create your first assessment using the “New Assessment” button above.</p>
-          </div>
-        </div>
-      </div>
+      <EmptyState
+        icon={<IconInbox />}
+        title="No assessments"
+        description="Create your first assessment using the “New Assessment” button above."
+      />
     );
   }
 
   // TableShell already renders header/body/pagination consistently
-  return <TableShell table={table} totalItems={items.length} pinnedColumns={['Actions']} />;
+  return (
+    <TableShell
+      table={table}
+      totalItems={items.length}
+      pinnedColumns={['Actions']}
+      isLoading={isLoading}
+    />
+  );
 };
 
 export default AssessmentsTable;

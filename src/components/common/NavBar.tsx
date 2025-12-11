@@ -1,7 +1,7 @@
 import React from 'react';
 import { IconChevronDown, IconLogOut, IconSettings } from '../ui/Icon';
-import { Button } from '../ui/Button';
 import { Link } from 'react-router-dom';
+import { DropdownMenu } from '../ui/DropdownMenu';
 
 type NavbarProps = {
   username: string;
@@ -18,34 +18,30 @@ const Navbar: React.FC<NavbarProps> = ({ username, onLogout, onOpenSettings }) =
         </Link>
       </div>
       <div className="flex-none">
-        <div className="dropdown dropdown-end">
-          <label tabIndex={0} className="btn btn-ghost">
-            <span className="mr-2">{username}</span>
-            <IconChevronDown />
-          </label>
-            <ul
-            tabIndex={0}
-            className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-48"
-          >
-            {onOpenSettings && (
-              <li>
-                <Button
-                  variant="ghost"
-                  className="justify-start"
-                  onClick={onOpenSettings}
-                  leftIcon={<IconSettings />}
-                >
-                  Settings
-                </Button>
-              </li>
-            )}
+        <DropdownMenu
+          align="end"
+          trigger={
+            <>
+              {username}
+              <IconChevronDown />
+            </>
+          }
+        >
+          {onOpenSettings && (
             <li>
-              <Button variant="ghost" className="justify-start" onClick={onLogout} leftIcon={<IconLogOut />}>
-                Logout
-              </Button>
+              <button className="justify-start" onClick={onOpenSettings}>
+                <IconSettings />
+                Settings
+              </button>
             </li>
-          </ul>
-        </div>
+          )}
+          <li>
+            <button className="justify-start" onClick={onLogout}>
+              <IconLogOut />
+              Logout
+            </button>
+          </li>
+        </DropdownMenu>
       </div>
     </div>
   );

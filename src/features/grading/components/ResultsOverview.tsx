@@ -9,12 +9,13 @@ import {
   createColumnHelper,
   getCoreRowModel,
   getPaginationRowModel,
+  type ColumnDef,
   useReactTable,
 } from '@tanstack/react-table';
 import TableShell from '@components/common/TableShell';
 import { usePaginationState } from '@hooks/usePaginationState';
 import type { AdjustableGradedSubmission, AdjustableQuestionResult } from '../types';
-import { useAssessmentPassphrase } from '@features/encryption/AssessmentPassphraseProvider';
+import { useAssessmentPassphrase } from '@features/encryption/passphraseContext';
 import { useDecryptedIds } from '@features/encryption/useDecryptedIds';
 import ResultsDownloadDropdown from './ResultsDownloadDropdown';
 import ResultsDownloadModal from './ResultsDownloadModal';
@@ -46,7 +47,7 @@ const ResultsOverview: React.FC<Props> = ({
   const columnHelper = createColumnHelper<RowT>();
 
   const studentIds = useMemo(() => items.map((it) => it.student_id ?? ''), [items]);
-  const decryptedIds = useDecryptedIds(studentIds, passphrase, notifyEncryptedDetected);
+  const { decryptedIds, isDecrypting } = useDecryptedIds(studentIds, passphrase, notifyEncryptedDetected);
 
   const filteredItems = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -91,18 +92,27 @@ const ResultsOverview: React.FC<Props> = ({
   };
 
   const columns = useMemo(() => {
-    const cols: any[] = [];
+    const cols: ColumnDef<RowT>[] = [];
 
     // Student ID
     cols.push(
       columnHelper.display({
         id: 'student_id',
         header: 'Student ID',
-        cell: ({ row }) => (
-          <div className="flex items-center">
-            <DecryptedText value={row.original.student_id} passphrase={passphrase} mono size="sm" />
-          </div>
-        ),
+        cell: ({ row }) => {
+          const sid = row.original.student_id;
+          return (
+            <div className="flex items-center z-1">
+              <DecryptedText
+                value={sid}
+                passphrase={passphrase}
+                mono
+                size="sm"
+                showSkeletonWhileDecrypting={isDecrypting}
+              />
+            </div>
+          );
+        },
       })
     );
 
@@ -133,7 +143,7 @@ const ResultsOverview: React.FC<Props> = ({
                         {pointsDisplay}/{maxPoints}
                       </span>
                       {adjustedExists && (
-                        <span className="font-mono text-[11px] opacity-70">
+                        <span className="font-mono text-[10px] opacity-70">
                           Original: {r.points} / {maxPoints}
                         </span>
                       )}
@@ -234,7 +244,11 @@ const ResultsOverview: React.FC<Props> = ({
         </div>
       </div>
 
-      <TableShell table={table} totalItems={filteredItems.length} pinnedColumns={['Student ID', 'Actions']} />
+      <TableShell
+        table={table}
+        totalItems={filteredItems.length}
+        pinnedColumns={['Student ID', 'Actions']}
+      />
 
       <ResultsDownloadModal
         open={openDownload}

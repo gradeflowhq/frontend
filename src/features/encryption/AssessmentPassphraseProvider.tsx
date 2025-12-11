@@ -1,23 +1,14 @@
-import React, { createContext, useCallback, useContext, useMemo, useState, useEffect } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import EncryptedDataGuard from '@components/common/encryptions/EncryptedDataGuard';
 import { buildPassphraseKey, readPassphrase, normalizePresent, writePassphrase } from '@utils/passphrase';
 import { startCryptoSession } from '@utils/crypto';
-
-type Ctx = {
-  passphrase: string | null;
-  setPassphrase: (p: string | null, persist?: boolean) => void;
-  notifyEncryptedDetected: () => void;
-  clear: () => void;
-};
-
-const PassphraseCtx = createContext<Ctx | null>(null);
+import { PassphraseContext, type PassphraseCtx } from './passphraseContext';
 
 export const AssessmentPassphraseProvider: React.FC<{ assessmentId: string; children: React.ReactNode }> = ({ assessmentId, children }) => {
   const storageKey = buildPassphraseKey(assessmentId);
 
   const [passphrase, setPassphraseState] = useState<string | null>(() => readPassphrase(storageKey));
   const [encryptedDetected, setEncryptedDetected] = useState(false);
-  const [guardOpen, setGuardOpen] = useState(false);
 
   const setPassphrase = useCallback((p: string | null, persist?: boolean) => {
     const norm = normalizePresent(p);
@@ -33,25 +24,17 @@ export const AssessmentPassphraseProvider: React.FC<{ assessmentId: string; chil
     setPassphraseState(null);
   }, []);
 
-  useEffect(() => {
-    if (!encryptedDetected) return;
-    if (normalizePresent(passphrase)) {
-      setGuardOpen(false);
-      return;
-    }
-    setGuardOpen(true);
-  }, [encryptedDetected, passphrase]);
-
-  const onPassphraseReady = useCallback((p: string | null) => {
-    setPassphrase(p, true /* persist if user selected in UI */);
-    setGuardOpen(false);
+  const onPassphraseReady = useCallback((p: string | null, persist = false) => {
+    setPassphrase(p, persist);
     if (p) {
       // Initialize the crypto session so first decrypt is fast
       startCryptoSession(p).catch(() => {});
     }
   }, [setPassphrase]);
 
-  const ctx = useMemo<Ctx>(() => ({
+  const guardOpen = encryptedDetected && !normalizePresent(passphrase);
+
+  const ctx = useMemo<PassphraseCtx>(() => ({
     passphrase,
     setPassphrase,
     notifyEncryptedDetected,
@@ -59,7 +42,7 @@ export const AssessmentPassphraseProvider: React.FC<{ assessmentId: string; chil
   }), [passphrase, setPassphrase, notifyEncryptedDetected, clear]);
 
   return (
-    <PassphraseCtx.Provider value={ctx}>
+    <PassphraseContext.Provider value={ctx}>
       {children}
       {guardOpen && (
         <EncryptedDataGuard
@@ -69,12 +52,6 @@ export const AssessmentPassphraseProvider: React.FC<{ assessmentId: string; chil
           currentPassphrase={passphrase}
         />
       )}
-    </PassphraseCtx.Provider>
+    </PassphraseContext.Provider>
   );
-};
-
-export const useAssessmentPassphrase = () => {
-  const ctx = useContext(PassphraseCtx);
-  if (!ctx) throw new Error('useAssessmentPassphrase must be used inside AssessmentPassphraseProvider');
-  return ctx;
 };

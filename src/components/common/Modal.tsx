@@ -12,10 +12,12 @@ const Modal: React.FC<ModalProps> = ({ open, children, onClose, boxClassName }) 
   if (!open) return null;
 
   return createPortal(
-    <div className="modal modal-open z-50">
+    <dialog className="modal" open>
       <div className={`modal-box ${boxClassName ?? ''}`}>{children}</div>
-      <div className="modal-backdrop" onClick={onClose} aria-hidden="true" />
-    </div>,
+      <form method="dialog" className="modal-backdrop" onClick={onClose}>
+        <button aria-label="Close" />
+      </form>
+    </dialog>,
     document.body
   );
 };

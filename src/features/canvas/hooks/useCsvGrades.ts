@@ -64,12 +64,12 @@ export const useCsvGrades = (assessmentId: string, roundingBase: number, passphr
     }
   }, [rows, notifyEncrypted]);
 
-  const decryptedIds = useDecryptedIds(studentIds, passphrase, notifyEncrypted);
+  const { decryptedIds, isDecrypting } = useDecryptedIds(studentIds, passphrase, notifyEncrypted);
 
   return {
     rows,
     decryptedIds,
-    isLoading: csvQuery.isLoading,
+    isLoading: csvQuery.isLoading || isDecrypting,
     isError: csvQuery.isError,
     error: csvQuery.error,
   };

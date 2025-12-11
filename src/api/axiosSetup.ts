@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { type AxiosRequestHeaders, type InternalAxiosRequestConfig } from 'axios';
 import { api } from './index';
 import { useAuthStore } from '@state/authStore';
 
@@ -15,10 +15,10 @@ const processQueue = (newAccess: string | null) => {
 axios.interceptors.request.use((config) => {
   const accessToken = useAuthStore.getState().accessToken;
   if (accessToken) {
-    config.headers = config.headers ?? {};
-    // Only set if missing to avoid overriding custom headers
-    if (!config.headers.Authorization) {
-      (config.headers as any).Authorization = `Bearer ${accessToken}`;
+    const headers: AxiosRequestHeaders = (config.headers ?? {}) as AxiosRequestHeaders;
+    if (!headers.Authorization) {
+      headers.Authorization = `Bearer ${accessToken}`;
+      config.headers = headers;
     }
   }
   return config;
@@ -26,47 +26,53 @@ axios.interceptors.request.use((config) => {
 
 axios.interceptors.response.use(
   (res) => res,
-  async (error) => {
+  (error) => {
     const status = error?.response?.status;
-    const originalRequest = error.config;
+    const originalRequest = error.config as (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined;
 
     // Non-401 or already retried: propagate
-    if (status !== 401 || originalRequest?._retry) {
+    if (status !== 401 || !originalRequest || originalRequest._retry) {
       return Promise.reject(error);
     }
 
     originalRequest._retry = true;
 
-    return new Promise(async (resolve, reject) => {
+    return new Promise((resolve, reject) => {
       // Queue the request until refresh settles
       queue.push((newAccess) => {
         if (!newAccess) {
           originalRequest._retry = false;
-          return reject(error);
+          reject(error);
+          return;
         }
-        originalRequest.headers = originalRequest.headers ?? {};
-        originalRequest.headers.Authorization = `Bearer ${newAccess}`;
+        const headers: AxiosRequestHeaders = (originalRequest.headers ?? {}) as AxiosRequestHeaders;
+        headers.Authorization = `Bearer ${newAccess}`;
+        originalRequest.headers = headers;
         resolve(axios(originalRequest));
       });
 
       if (isRefreshing) return;
 
       isRefreshing = true;
-      try {
-        const { refreshToken } = useAuthStore.getState();
-        if (!refreshToken) throw new Error('No refresh token');
+      const executeRefresh = async () => {
+        try {
+          const { refreshToken } = useAuthStore.getState();
+          if (!refreshToken) throw new Error('No refresh token');
 
-        const res = await api.refreshAuthRefreshPost({ refresh_token: refreshToken });
-        const tokenPair = res.data;
-        useAuthStore.getState().setTokens(tokenPair);
-        isRefreshing = false;
-        processQueue(tokenPair.access_token ?? null);
-      } catch (e) {
-        isRefreshing = false;
-        useAuthStore.getState().clearTokens();
-        processQueue(null);
-        reject(error);
-      }
+          const res = await api.refreshAuthRefreshPost({ refresh_token: refreshToken });
+          const tokenPair = res.data;
+          useAuthStore.getState().setTokens(tokenPair);
+          processQueue(tokenPair.access_token ?? null);
+        } catch (e) {
+          useAuthStore.getState().clearTokens();
+          processQueue(null);
+          reject(error);
+        } finally {
+          isRefreshing = false;
+        }
+      };
+
+      void executeRefresh();
     });
   }
 );

@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import Modal from '@components/common/Modal';
 import ErrorAlert from '@components/common/ErrorAlert';
 import { SchemaForm } from '@components/common/forms/SchemaForm';
@@ -7,10 +7,11 @@ import requestsSchema from '@schemas/requests.json';
 import { useMutation } from '@tanstack/react-query';
 import { api } from '@api';
 import { saveBlob } from '@lib/files';
-import { useAssessmentPassphrase } from '@features/encryption/AssessmentPassphraseProvider';
+import { useAssessmentPassphrase } from '@features/encryption/passphraseContext';
 import { tryDecodeExportCsv } from '@features/submissions/helpers';
 import type { GradingDownloadRequest, GradingDownloadResponse } from '@api/models';
 import { useToast } from '@components/common/ToastProvider';
+import type { JSONSchema7, JSONSchema7Definition } from 'json-schema';
 
 type Props = {
   open: boolean;
@@ -19,64 +20,74 @@ type Props = {
   selectedFormat?: string; // e.g. 'CSV' | 'JSON' | 'YAML' (case-insensitive)
 };
 
+const requestSchemas = requestsSchema as Record<string, JSONSchema7>;
+
 // Resolve a $ref like "#/definitions/CsvGradedSubmissionsConfig" from requestsSchema
-const resolveRef = (node: any): any => {
-  if (node && typeof node === 'object' && typeof node.$ref === 'string') {
-    const ref: string = node.$ref;
-    const m = ref.match(/^#\/definitions\/(.+)$/);
-    if (m) {
-      const key = m[1];
-      const def = (requestsSchema as any)[key];
-      return def || node;
-    }
-  }
-  return node;
+const resolveRef = (node: JSONSchema7 | JSONSchema7Definition | undefined): JSONSchema7 | undefined => {
+  if (!node || typeof node !== 'object' || Array.isArray(node)) return undefined;
+  if (typeof node.$ref !== 'string') return node;
+
+  const match = node.$ref.match(/^#\/definitions\/(.+)$/);
+  if (!match) return node;
+  const key = match[1];
+  const def = requestSchemas[key];
+  return def ?? node;
 };
 
 // Extract serializer oneOf entries and resolve $ref
-const getResolvedSerializerOptions = (downloadSchema: any): any[] => {
-  const oneOf = downloadSchema?.properties?.serializer?.oneOf;
+const getResolvedSerializerOptions = (downloadSchema?: JSONSchema7): JSONSchema7[] => {
+  if (!downloadSchema || typeof downloadSchema !== 'object') return [];
+  const serializerDef = downloadSchema.properties?.serializer as JSONSchema7 | JSONSchema7Definition | undefined;
+  if (!serializerDef || typeof serializerDef !== 'object' || Array.isArray(serializerDef)) return [];
+  const oneOf = serializerDef.oneOf;
   if (!Array.isArray(oneOf)) return [];
-  return oneOf.map((opt) => resolveRef(opt));
+  return oneOf
+    .map((opt) => resolveRef(opt))
+    .filter((opt): opt is JSONSchema7 => !!opt);
 };
 
 // Pick the concrete serializer schema by selectedFormat (case-insensitive)
-const pickSerializerSchema = (downloadSchema: any, selectedFormat?: string): any | null => {
+const pickSerializerSchema = (downloadSchema: JSONSchema7 | undefined, selectedFormat?: string): JSONSchema7 | null => {
   const options = getResolvedSerializerOptions(downloadSchema);
   if (options.length === 0) return null;
   if (!selectedFormat) return options[0];
   const wanted = String(selectedFormat).toLowerCase();
-  const found = options.find((s: any) => String(s?.properties?.format?.const ?? '').toLowerCase() === wanted);
+  const found = options.find((s) => {
+    const formatConst = typeof s?.properties?.format === 'object' && s?.properties?.format && !Array.isArray(s.properties.format)
+      ? (s.properties.format as JSONSchema7).const
+      : undefined;
+    return String(formatConst ?? '').toLowerCase() === wanted;
+  });
   return found || options[0];
 };
 
 // Build final schema with concrete serializer (no oneOf) and attach definitions
-const buildSchemaForRender = (baseSchema: any, concreteSerializer: any) => {
-  const clone = JSON.parse(JSON.stringify(baseSchema));
-  if (clone?.properties?.serializer) {
-    clone.properties.serializer = { ...concreteSerializer };
-    delete clone.properties.serializer.oneOf;
-    delete clone.properties.serializer.discriminator;
-    delete clone.properties.serializer.$ref;
+const buildSchemaForRender = (baseSchema: JSONSchema7, concreteSerializer: JSONSchema7): JSONSchema7 => {
+  const clone: JSONSchema7 = JSON.parse(JSON.stringify(baseSchema));
+  if (clone?.properties?.serializer && typeof clone.properties.serializer === 'object' && !Array.isArray(clone.properties.serializer)) {
+    const serializer = { ...(concreteSerializer as Record<string, unknown>) } as JSONSchema7 & Record<string, unknown>;
+    delete serializer.oneOf;
+    delete serializer.discriminator;
+    delete serializer.$ref;
+    clone.properties.serializer = serializer;
   }
   // Attach definitions so nested refs resolve
-  clone.definitions = requestsSchema as any;
+  clone.definitions = requestSchemas;
   return clone;
 };
 
 // Materialise defaults/const across an object schema (only enough for our serializer config)
-const materialiseDefaults = (schema: any): any => {
+const materialiseDefaults = (schema?: JSONSchema7): unknown => {
   if (!schema || typeof schema !== 'object') return undefined;
   if (schema.type === 'object' && schema.properties) {
-    const out: Record<string, any> = {};
-    for (const [k, prop] of Object.entries<any>(schema.properties)) {
-      if (prop && typeof prop === 'object') {
-        if (prop.const !== undefined) out[k] = prop.const;
-        else if (prop.default !== undefined) out[k] = prop.default;
-        else {
-          const child = materialiseDefaults(prop);
-          if (child !== undefined) out[k] = child;
-        }
+    const out: Record<string, unknown> = {};
+    for (const [k, prop] of Object.entries(schema.properties)) {
+      if (!prop || typeof prop !== 'object' || Array.isArray(prop)) continue;
+      if (prop.const !== undefined) out[k] = prop.const;
+      else if (prop.default !== undefined) out[k] = prop.default;
+      else {
+        const child = materialiseDefaults(prop as JSONSchema7);
+        if (child !== undefined) out[k] = child;
       }
     }
     return out;
@@ -90,12 +101,12 @@ const materialiseDefaults = (schema: any): any => {
   return undefined;
 };
 
-const ResultsDownloadModal: React.FC<Props> = ({ open, assessmentId, onClose, selectedFormat }) => {
+const ResultsDownloadModalInner: React.FC<Props> = ({ open, assessmentId, onClose, selectedFormat }) => {
   const { passphrase } = useAssessmentPassphrase();
   const toast = useToast();
 
   // Base schema (has oneOf with $ref)
-  const baseSchema = (requestsSchema as any).GradingDownloadRequest;
+  const baseSchema = requestSchemas.GradingDownloadRequest;
 
   // Resolve concrete serializer by selectedFormat
   const concreteSerializer = useMemo(
@@ -110,12 +121,13 @@ const ResultsDownloadModal: React.FC<Props> = ({ open, assessmentId, onClose, se
   }, [baseSchema, concreteSerializer]);
 
   // Initial formData with defaults from the resolved serializer schema
-  const [formData, setFormData] = useState<GradingDownloadRequest | undefined>(undefined);
-  useEffect(() => {
-    if (!open || !concreteSerializer) return;
+  const initialFormData = useMemo(() => {
+    if (!concreteSerializer) return undefined;
     const serializerDefaults = materialiseDefaults(concreteSerializer);
-    setFormData({ serializer: serializerDefaults } as GradingDownloadRequest);
-  }, [open, concreteSerializer]);
+    return { serializer: serializerDefaults } as GradingDownloadRequest;
+  }, [concreteSerializer]);
+
+  const [formData, setFormData] = useState<GradingDownloadRequest | undefined>(initialFormData);
 
   const downloadMutation = useMutation({
     mutationKey: ['grading', assessmentId, 'download', (selectedFormat || 'default').toLowerCase()],
@@ -125,14 +137,15 @@ const ResultsDownloadModal: React.FC<Props> = ({ open, assessmentId, onClose, se
       const ext = (res.extension || '').toLowerCase();
       const filename = res.filename || `grading.${ext || 'txt'}`;
       const mediaType = res.media_type || 'application/octet-stream';
+      const payload = res.data;
 
       if (ext === 'csv' && passphrase) {
-        const rawText = await (res.data as any);
+        const rawText = payload instanceof Blob ? await payload.text() : String(payload ?? '');
         const decoded = await tryDecodeExportCsv(rawText, { passphrase });
         const blob = new Blob([decoded], { type: 'text/csv;charset=utf-8' });
         saveBlob(blob, filename);
       } else {
-        const blob = res.data instanceof Blob ? res.data : new Blob([res.data as any], { type: mediaType });
+        const blob = payload instanceof Blob ? payload : new Blob([payload as BlobPart], { type: mediaType });
         saveBlob(blob, filename);
       }
       onClose();
@@ -153,8 +166,6 @@ const ResultsDownloadModal: React.FC<Props> = ({ open, assessmentId, onClose, se
     []
   );
   const templates = useMemo(() => ({ FieldTemplate: HiddenAwareFieldTemplate }), []);
-
-  if (!open) return null;
 
   return (
     <Modal open={open} onClose={onClose}>
@@ -187,6 +198,11 @@ const ResultsDownloadModal: React.FC<Props> = ({ open, assessmentId, onClose, se
       {downloadMutation.isError && <ErrorAlert error={downloadMutation.error} className="mt-3" />}
     </Modal>
   );
+};
+
+const ResultsDownloadModal: React.FC<Props> = (props) => {
+  if (!props.open) return null;
+  return <ResultsDownloadModalInner key={props.selectedFormat ?? 'default'} {...props} />;
 };
 
 export default ResultsDownloadModal;

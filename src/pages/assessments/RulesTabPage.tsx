@@ -1,14 +1,18 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import ErrorAlert from '@components/common/ErrorAlert';
+
 import ConfirmDialog from '@components/common/ConfirmDialog';
-import { SingleTargetRulesSection, MultiTargetRulesSection, RulesHeader } from '@features/rules/components';
-import RubricUploadModal from '@features/rules/components/RubricUploadModal';
-import RubricImportModal from '@features/rules/components/RubricImportModal';
-import { useRubric, useRubricCoverage, useDeleteRubric } from '@features/rubric/hooks';
-import { useQuestionSet } from '@features/questions/hooks';
-import type { RubricOutput, QuestionSetOutputQuestionMap } from '@api/models';
+import EmptyState from '@components/common/EmptyState';
+import ErrorAlert from '@components/common/ErrorAlert';
 import { useToast } from '@components/common/ToastProvider';
+import { IconRules } from '@components/ui/Icon';
+import { useQuestionSet } from '@features/questions/hooks';
+import { useRubric, useRubricCoverage, useDeleteRubric } from '@features/rubric/hooks';
+import { MultiTargetRulesSection, RulesHeader, SingleTargetRulesSection } from '@features/rules/components';
+import RubricImportModal from '@features/rules/components/RubricImportModal';
+import RubricUploadModal from '@features/rules/components/RubricUploadModal';
+
+import type { RubricOutput, QuestionSetOutputQuestionMap } from '@api/models';
 
 const RulesTabPage: React.FC = () => {
   const { assessmentId } = useParams<{ assessmentId: string }>();
@@ -23,6 +27,11 @@ const RulesTabPage: React.FC = () => {
     isError: errorQS,
     error: qsError,
   } = useQuestionSet(safeId, enabled);
+
+  const qsNotFound = React.useMemo(() => {
+    const err = qsError as { response?: { status?: number } } | undefined;
+    return err?.response?.status === 404;
+  }, [qsError]);
 
   // Rubric & coverage
   const {
@@ -40,14 +49,20 @@ const RulesTabPage: React.FC = () => {
   } = useRubricCoverage(safeId);
 
   // Derive view data safely
-  const questionMap: QuestionSetOutputQuestionMap = qsRes?.question_set?.question_map ?? {};
+  const questionMap: QuestionSetOutputQuestionMap = React.useMemo(() => {
+    return qsNotFound ? {} : (qsRes?.question_set?.question_map ?? {});
+  }, [qsNotFound, qsRes]);
+  const hasQuestions = Object.keys(questionMap).length > 0;
   const questionIds = React.useMemo(
     () => Object.keys(questionMap).sort((a, b) => a.localeCompare(b, undefined, { numeric: true })),
     [questionMap]
   );
   const questionTypesById = React.useMemo(() => {
     const m: Record<string, string> = {};
-    for (const [qid, def] of Object.entries<any>(questionMap)) m[qid] = def?.type ?? 'TEXT';
+    for (const [qid, def] of Object.entries(questionMap)) {
+      const typedDef = def as { type?: string } | undefined;
+      m[qid] = typedDef?.type ?? 'TEXT';
+    }
     return m;
   }, [questionMap]);
 
@@ -69,8 +84,54 @@ const RulesTabPage: React.FC = () => {
 
   const hasRules = (rubric?.rules?.length ?? 0) > 0;
 
+  const renderSkeleton = () => (
+    <div className="space-y-4">
+      <div className="stats shadow bg-base-100 w-full animate-pulse">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="stat">
+            <div className="stat-title skeleton h-4 w-24 mb-1" />
+            <div className="stat-value skeleton h-6 w-20" />
+          </div>
+        ))}
+      </div>
+      <div className="rounded-box border border-base-300 bg-base-100 p-4 shadow-sm space-y-3 animate-pulse">
+        {[...Array(4)].map((_, i) => (
+          <div key={i} className="grid grid-cols-4 gap-3">
+            <div className="skeleton h-4 w-full" />
+            <div className="skeleton h-4 w-full" />
+            <div className="skeleton h-4 w-full" />
+            <div className="skeleton h-4 w-full" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
   if (!enabled) {
     return <div className="alert alert-error"><span>Assessment ID is missing.</span></div>;
+  }
+
+  if (!loadingQS && (qsNotFound || !hasQuestions)) {
+    return (
+      <section className="space-y-6">
+        <RulesHeader
+          onUpload={() => setOpenRubricUpload(true)}
+          onImport={() => setOpenRubricImport(true)}
+          onDelete={() => setConfirmDeleteRubric(true)}
+          disableDelete={deleteRubric.isPending}
+          hasRules={hasRules}
+          searchQuery={searchQuery}
+          onSearchChange={(v) => setSearchQuery(v)}
+          disabled
+        />
+
+        <EmptyState
+          title="Rules are locked"
+          description="Set up questions first to configure rules."
+          icon={<IconRules />}
+        />
+      </section>
+    );
   }
 
   return (
@@ -104,13 +165,9 @@ const RulesTabPage: React.FC = () => {
       )}
 
       {/* Loading/Error states */}
-      {loadingQS && <div className="alert alert-info"><span>Loading questions...</span></div>}
-      {errorQS && <ErrorAlert error={qsError} />}
-
-      {loadingRubric && <div className="alert alert-info"><span>Loading rubric...</span></div>}
+      {(loadingQS || loadingRubric || loadingCoverage) && renderSkeleton()}
+      {errorQS && !qsNotFound && <ErrorAlert error={qsError} />}
       {errorRubric && <ErrorAlert error={rubricError} />}
-
-      {loadingCoverage && <div className="alert alert-info"><span>Computing coverage...</span></div>}
       {errorCoverage && <ErrorAlert error={coverageError} />}
 
       {/* Sections */}

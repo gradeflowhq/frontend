@@ -5,14 +5,29 @@ import { QK } from '@api/queryKeys';
 import rulesSchema from '@schemas/rules.json';
 import type { RubricOutput } from './types';
 import type { RuleValue, QuestionType } from './types';
+import type { JSONSchema7 } from 'json-schema';
+
+export type RuleDefinitions = Record<string, JSONSchema7>;
+
+const extractProperties = (schema: JSONSchema7 | undefined): Record<string, unknown> => {
+  if (!schema || typeof schema !== 'object') return {};
+  const props = schema.properties;
+  return props && typeof props === 'object' ? (props as Record<string, unknown>) : {};
+};
+
+const stringArray = (value: unknown): string[] | undefined => {
+  if (!Array.isArray(value)) return undefined;
+  const arr = value.filter((v): v is string => typeof v === 'string');
+  return arr.length === value.length ? arr : undefined;
+};
 
 /**
  * Memoised access to rules schema definitions (rules.json).
  */
-export const useRuleDefinitions = (): Record<string, any> => {
+export const useRuleDefinitions = (): RuleDefinitions => {
   return useMemo(() => {
-    const defs: any = (rulesSchema as any)?.definitions ?? (rulesSchema as any);
-    return (defs || {}) as Record<string, any>;
+    const defs = (rulesSchema as { definitions?: RuleDefinitions } | RuleDefinitions)?.definitions ?? (rulesSchema as RuleDefinitions);
+    return (defs ?? {}) as RuleDefinitions;
   }, []);
 };
 
@@ -77,28 +92,23 @@ export const useReplaceRubric = (assessmentId: string) => {
  * is single-target (has question_id) or multi-target.
  */
 export const useCompatibleRuleKeys = (
-  defs: Record<string, any>,
+  defs: RuleDefinitions,
   questionType?: QuestionType,
   singleTarget?: boolean
 ): string[] => {
   return useMemo(() => {
     const keys = Object.keys(defs ?? {});
     return keys.filter((key) => {
-      const props = defs[key]?.properties ?? {};
-      const hasQid = !!props?.question_id;
+      const props = extractProperties(defs[key]);
+      const hasQid = !!props.question_id;
 
       if (singleTarget === true && !hasQid) return false;
       if (singleTarget === false && hasQid) return false;
 
-      // Allow both default and enum on question_types
-      const allowed =
-        Array.isArray(props?.question_types?.default)
-          ? props.question_types.default
-          : Array.isArray(props?.question_types?.enum)
-          ? props.question_types.enum
-          : undefined;
+      const qt = props.question_types as { default?: unknown; enum?: unknown } | undefined;
+      const allowed = stringArray(qt?.default) ?? stringArray(qt?.enum);
 
-      return !questionType || !Array.isArray(allowed) || allowed.includes(questionType);
+      return !questionType || !allowed || allowed.includes(questionType);
     });
   }, [defs, questionType, singleTarget]);
 };
@@ -107,12 +117,13 @@ export const useCompatibleRuleKeys = (
  * Resolve a concrete schema key for a rule by its type (and optional question_id requirement).
  * Useful when editing an existing rule object.
  */
-export const useFindSchemaKeyByType = (defs: Record<string, any>) => {
+export const useFindSchemaKeyByType = (defs: RuleDefinitions) => {
   return (type: string, requireQuestionId?: boolean): string | null => {
     for (const k of Object.keys(defs)) {
-      const props = defs[k]?.properties ?? {};
-      const typeConst = props?.type?.const ?? props?.type?.default;
-      const hasQid = !!props?.question_id;
+      const props = extractProperties(defs[k]);
+      const typeObj = props.type as { const?: unknown; default?: unknown } | undefined;
+      const typeConst = (typeObj?.const ?? typeObj?.default) as string | undefined;
+      const hasQid = !!props.question_id;
       if (typeConst === type && (requireQuestionId === undefined || requireQuestionId === hasQid)) return k;
     }
     return null;

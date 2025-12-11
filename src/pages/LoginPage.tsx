@@ -11,9 +11,10 @@ import type { BodyIssueTokenAuthTokenPost, TokenPairResponse } from '@api/models
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import HiddenAwareFieldTemplate from '@components/common/forms/HiddenAwareFieldTemplate';
 import { useToast } from '@components/common/ToastProvider';
+import type { JSONSchema7 } from 'json-schema';
 
-const getLoginSchema = () => {
-  const schema = (othersSchema as any)['Body_issue_token_auth_token_post'];
+const getLoginSchema = (): JSONSchema7 => {
+  const schema = (othersSchema as Record<string, JSONSchema7>)['Body_issue_token_auth_token_post'];
   if (!schema) throw new Error('Body_issue_token_auth_token_post schema not found in others.json');
   return schema;
 };
@@ -62,7 +63,17 @@ const LoginPage: React.FC = () => {
   });
 
   return (
-    <PageCard title="Login">
+    <PageCard
+      title="Login"
+      footer={
+        <div className="text-sm text-center">
+          <span className="mr-1">Don’t have an account?</span>
+          <Link to="/register" className="link link-primary">
+            Register
+          </Link>
+        </div>
+      }
+    >
       <SchemaForm<BodyIssueTokenAuthTokenPost>
         schema={schema}
         uiSchema={uiSchema}
@@ -83,13 +94,6 @@ const LoginPage: React.FC = () => {
           </div>
         )}
         {isError && <ErrorAlert error={error} />}
-      </div>
-
-      <div className="text-sm text-center">
-        <span className="mr-1">Don’t have an account?</span>
-        <Link to="/register" className="link link-primary">
-          Register
-        </Link>
       </div>
     </PageCard>
   );

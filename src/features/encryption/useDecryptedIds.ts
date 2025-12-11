@@ -9,23 +9,28 @@ const cache = new Map<string, string>();
  * Decrypt a list of values (typically student IDs) with memoization.
  * - Keeps original value when not encrypted or when decryption fails.
  * - Triggers onEncryptedDetected when any encrypted value is present.
+ * - Exposes isDecrypting so callers can show a skeleton/loader.
  */
 export const useDecryptedIds = (
   values: string[],
   passphrase?: string | null,
   onEncryptedDetected?: () => void
-): Record<string, string> => {
+): { decryptedIds: Record<string, string>; isDecrypting: boolean } => {
   const normalized = useMemo(() => Array.from(new Set(values.filter(Boolean))), [values]);
   const depsKey = useMemo(() => normalized.join('|'), [normalized]);
   const [resolved, setResolved] = useState<Record<string, string>>({});
+  const [isDecrypting, setIsDecrypting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    if (normalized.some((v) => isEncrypted(v)) && onEncryptedDetected) {
+    const hasEncrypted = normalized.some((v) => isEncrypted(v));
+    if (hasEncrypted && onEncryptedDetected) {
       onEncryptedDetected();
     }
 
     const run = async () => {
+      setIsDecrypting(hasEncrypted && Boolean(passphrase));
+
       const entries = await Promise.all(
         normalized.map(async (v) => {
           if (isEncrypted(v) && passphrase) {
@@ -44,7 +49,10 @@ export const useDecryptedIds = (
         })
       );
 
-      if (!cancelled) setResolved(Object.fromEntries(entries));
+      if (!cancelled) {
+        setResolved(Object.fromEntries(entries));
+        setIsDecrypting(false);
+      }
     };
 
     void run();
@@ -53,5 +61,5 @@ export const useDecryptedIds = (
     };
   }, [depsKey, passphrase, onEncryptedDetected, normalized]);
 
-  return resolved;
+  return { decryptedIds: resolved, isDecrypting };
 };

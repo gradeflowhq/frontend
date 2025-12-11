@@ -18,7 +18,8 @@ import {
 } from '@components/ui/Icon';
 import { IconButton } from '@components/ui/IconButton';
 import LoadingButton from '@components/ui/LoadingButton';
-import { AssessmentPassphraseProvider, useAssessmentPassphrase } from '@features/encryption/AssessmentPassphraseProvider';
+import { AssessmentPassphraseProvider } from '@features/encryption/AssessmentPassphraseProvider';
+import { useAssessmentPassphrase } from '@features/encryption/passphraseContext';
 import { useGrading, useAdjustGrading } from '@features/grading/hooks';
 import { friendlyRuleLabel } from '@features/rules/helpers';
 import { isEncrypted } from '@utils/crypto';
@@ -51,7 +52,7 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
 
   const submissions: AdjustableGradedSubmission[] = data?.graded_submissions ?? [];
   const studentIds = useMemo(() => submissions.map((s) => s.student_id).sort(natsort), [submissions]);
-  const decryptedIds = useDecryptedIds(studentIds, passphrase, notifyEncryptedDetected);
+  const { decryptedIds, isDecrypting: isDecryptingIds } = useDecryptedIds(studentIds, passphrase, notifyEncryptedDetected);
 
   const index = submissions.findIndex((s) => s.student_id === encodedStudentId);
   const current = index >= 0 ? submissions[index] : null;
@@ -208,6 +209,7 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
               </div>
             </div>
           </div>
+          {isDecryptingIds && <span className="badge badge-ghost badge-sm">Decrypting IDs...</span>}
         </div>
         <div className="flex items-center gap-2">
           {hasAnyChange && (
@@ -266,7 +268,7 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
       </div>
 
       <div className="overflow-x-auto rounded-box border border-base-300 bg-base-100 shadow-xs">
-        <table className="table table-pin-cols w-full">
+        <table className="table table-sm table-pin-cols w-full">
           <thead>
             <tr>
               <td>Question ID</td>

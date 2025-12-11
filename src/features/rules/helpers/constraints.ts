@@ -1,10 +1,10 @@
-type JsonObject = Record<string, any>;
+type JsonObject = Record<string, unknown>;
 
 function deepClone<T>(obj: T): T {
   return JSON.parse(JSON.stringify(obj));
 }
 
-function toEnumValues(value: any): string[] {
+function toEnumValues(value: unknown): string[] {
   // Normalize the source into an array of strings suitable for enum.
   if (Array.isArray(value)) {
     return value
@@ -45,11 +45,11 @@ export function injectEnumsFromConstraintsForQuestion(
   for (const [defName, defSchema] of Object.entries(updated)) {
     if (!defSchema || typeof defSchema !== "object") continue;
 
-    const props: JsonObject = defSchema.properties ?? {};
+    const props: JsonObject = (defSchema as { properties?: JsonObject }).properties ?? {};
     if (!props || typeof props !== "object") continue;
 
     // Constraints are defined as a schema, but may have a concrete default array we can use.
-    const constraintsSchema = props["constraints"];
+    const constraintsSchema = props["constraints"] as { default?: unknown } | undefined;
     const constraintsDefault = constraintsSchema?.default;
 
     if (!Array.isArray(constraintsDefault)) {
@@ -71,7 +71,7 @@ export function injectEnumsFromConstraintsForQuestion(
       const sourceKey = constraint.source;
       const targetKey = constraint.target;
 
-      const sourceValue = questionSchema[sourceKey];
+      const sourceValue = (questionSchema as Record<string, unknown>)[sourceKey];
       const enumValues = toEnumValues(sourceValue);
 
       // If no values extracted, skip injection
@@ -80,7 +80,7 @@ export function injectEnumsFromConstraintsForQuestion(
       }
 
       // Ensure target property exists
-      const targetProp = props[targetKey];
+      const targetProp = props[targetKey] as JsonObject | undefined;
       if (!targetProp || typeof targetProp !== "object") {
         // Create a minimal property with enum
         props[targetKey] = {
@@ -93,18 +93,19 @@ export function injectEnumsFromConstraintsForQuestion(
 
       // If target is an array property, set items.enum; otherwise, set property-level enum.
       const isArrayType =
-        targetProp.type === "array" || typeof targetProp.items === "object";
+        targetProp.type === "array" || typeof (targetProp as { items?: unknown }).items === "object";
 
       if (isArrayType) {
-        targetProp.items = targetProp.items ?? {};
-        targetProp.items.enum = enumValues;
+        const items = ((targetProp as { items?: Record<string, unknown> }).items ?? {}) as Record<string, unknown> & { enum?: string[] };
+        items.enum = enumValues;
+        (targetProp as { items?: Record<string, unknown> }).items = items;
       } else {
-        targetProp.enum = enumValues;
+        (targetProp as { enum?: string[] }).enum = enumValues;
       }
     }
 
     // Write back properties (explicitly)
-    defSchema.properties = props;
+    (defSchema as { properties?: JsonObject }).properties = props;
     updated[defName] = defSchema;
   }
 

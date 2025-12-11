@@ -13,8 +13,10 @@ type EditorOptions = {
 const matchesCode = (props: WidgetProps) => {
   const { id, label, schema } = props;
   const keyGuess = id?.split('_').pop() ?? '';
-  const titleGuess = (schema as any)?.title ?? label ?? '';
-  return /code/i.test(keyGuess) || /code/i.test(String(titleGuess));
+  const titleGuess = typeof schema === 'object' && schema !== null && 'title' in schema
+    ? (schema as { title?: unknown }).title
+    : undefined;
+  return /code/i.test(keyGuess) || /code/i.test(String(titleGuess ?? label ?? ''));
 };
 
 const SwitchableTextWidget: React.FC<WidgetProps> = (props) => {
@@ -31,12 +33,21 @@ const SwitchableTextWidget: React.FC<WidgetProps> = (props) => {
     schema,
   } = props;
 
-  const opts = (options || {}) as EditorOptions;
+  const opts: EditorOptions = {
+    editor: options?.editor === true,
+    language: options?.language === 'python' ? 'python' : options?.language === 'text' ? 'text' : undefined,
+    height: typeof options?.height === 'string' ? options.height : undefined,
+    placeholder: typeof options?.placeholder === 'string' ? options.placeholder : undefined,
+    readOnly: typeof options?.readOnly === 'boolean' ? options.readOnly : undefined,
+  };
   const useEditor = opts.editor === true || matchesCode(props);
 
   if (!useEditor) {
     // Prefer current value, then schema.default, else ''
-    const raw = value ?? (schema as any)?.default ?? '';
+    const schemaDefault = typeof schema === 'object' && schema !== null && 'default' in schema
+      ? (schema as { default?: unknown }).default
+      : undefined;
+    const raw = value ?? schemaDefault ?? '';
     const display = typeof raw === 'string' ? raw : String(raw);
 
     return (

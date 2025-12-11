@@ -37,7 +37,7 @@ const MultiTargetRulesSection: React.FC<Props> = ({ rubric, assessmentId, questi
   const toast = useToast();
 
   // All rule schema keys that are multi-target (i.e., do not require question_id)
-  const eligibleKeys = useCompatibleRuleKeys(defs, undefined as any, false);
+  const eligibleKeys = useCompatibleRuleKeys(defs, undefined, false);
   // Further restrict to keys named with "MultiQuestionRule"
   const multiRuleKeys = useMemo(
     () => eligibleKeys.filter((k) => k.includes('MultiQuestionRule')),
@@ -61,7 +61,7 @@ const MultiTargetRulesSection: React.FC<Props> = ({ rubric, assessmentId, questi
   const allRules: RuleValue[] = (rubric?.rules ?? []) as RuleValue[];
   // Multi-target rules are those without a string question_id
   const multiRules = useMemo(
-    () => allRules.filter((r) => typeof (r as any)?.question_id !== 'string'),
+    () => allRules.filter((r) => typeof (r as { question_id?: unknown } | null)?.question_id !== 'string'),
     [allRules]
   );
 
@@ -86,18 +86,18 @@ const MultiTargetRulesSection: React.FC<Props> = ({ rubric, assessmentId, questi
   // When editing, resolve the concrete schema key by the rule's type and open the dialog
   const handleEditRule = (rule: RuleValue) => {
     setEditingRule(rule);
-    const type = String((rule as any)?.type);
+    const type = String((rule as RuleValue | null)?.type ?? '');
     const key = findKeyByType(type, false); // multi-target => requireQuestionId = false
     setSelectedRuleKey(key);
     setDialogOpen(true);
   };
 
-  const onSaveRuleDialog = async (ruleObj: any) => {
+  const onSaveRuleDialog = async (ruleObj: RuleValue) => {
     let nextRules = [...allRules];
     if (editingRule) {
-      nextRules = nextRules.map((r) => (r === editingRule ? (ruleObj as RuleValue) : r));
+      nextRules = nextRules.map((r) => (r === editingRule ? ruleObj : r));
     } else {
-      nextRules.push(ruleObj as RuleValue);
+      nextRules.push(ruleObj);
     }
 
     await validateAndReplace.mutateAsync(nextRules, {

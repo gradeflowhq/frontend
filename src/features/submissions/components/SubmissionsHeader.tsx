@@ -35,7 +35,7 @@ const SubmissionsHeader: React.FC<SubmissionsHeaderProps> = ({
           </label>
         )}
         <DropdownMenu
-          trigger={<span className="flex items-center gap-2"><span>Manage</span><IconChevronDown /></span>}
+          trigger={<>Manage<IconChevronDown /></>}
           align="end"
         >
           <li>

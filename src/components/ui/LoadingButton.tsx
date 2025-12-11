@@ -1,11 +1,11 @@
 import React, { forwardRef } from 'react';
 import { Button, type ButtonProps } from './Button';
 
-export type LoadingButtonProps<E extends React.ElementType = 'button'> = {
+export type LoadingButtonProps = {
   isLoading?: boolean;
   loadingLabel?: React.ReactNode;
   idleLabel?: React.ReactNode;
-} & ButtonProps<E>;
+} & ButtonProps;
 
 /**
  * LoadingButton: a thin wrapper over Button that normalises loading UX.
@@ -20,7 +20,7 @@ export type LoadingButtonProps<E extends React.ElementType = 'button'> = {
  *     onClick={handleSave}
  *   />
  */
-export const LoadingButton = forwardRef<any, LoadingButtonProps>((props, ref) => {
+export const LoadingButton = forwardRef<HTMLButtonElement, LoadingButtonProps>((props, ref) => {
   const {
     isLoading = false,
     loadingLabel,
@@ -35,12 +35,12 @@ export const LoadingButton = forwardRef<any, LoadingButtonProps>((props, ref) =>
     ? (loadingLabel ?? children ?? 'Loading…')
     : (idleLabel ?? children);
 
-  const handleClick: React.MouseEventHandler = (e) => {
+  const handleClick: React.MouseEventHandler<HTMLButtonElement> = (e) => {
     if (isLoading) {
       e.preventDefault();
       return;
     }
-    onClick?.(e as any);
+    onClick?.(e);
   };
 
   return (

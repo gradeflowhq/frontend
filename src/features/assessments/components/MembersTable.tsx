@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import LoadingButton from '@components/ui/LoadingButton';
 import { Button } from '@components/ui/Button';
-import { IconSave, IconTrash, IconInbox, IconEdit } from '@components/ui/Icon';
+import { IconSave, IconTrash, IconEdit, IconUsers } from '@components/ui/Icon';
 import {
   createColumnHelper,
   getCoreRowModel,
@@ -11,12 +11,14 @@ import {
 import TableShell from '@components/common/TableShell';
 import { usePaginationState } from '@hooks/usePaginationState';
 import type { UserResponse, UserResponseRole } from '@api/models';
+import EmptyState from '@components/common/EmptyState';
 
 type MembersTableProps = {
   items: UserResponse[];
   onSetRole: (userId: string, role: UserResponseRole) => Promise<void> | void;
   onRemove: (userId: string) => void;
   initialPageSize?: number;
+  isLoading?: boolean;
 };
 
 const MembersTable: React.FC<MembersTableProps> = ({
@@ -24,6 +26,7 @@ const MembersTable: React.FC<MembersTableProps> = ({
   onSetRole,
   onRemove,
   initialPageSize = 10,
+  isLoading = false,
 }) => {
   // Track which row is being edited and the pending role for that row
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
@@ -100,11 +103,23 @@ const MembersTable: React.FC<MembersTableProps> = ({
 
           if (!isEditing) {
             return (
-              <div className="flex gap-2">
-                <Button size="sm" onClick={() => beginEdit(user)} leftIcon={<IconEdit />}>
-                  Edit
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className='btn-primary'
+                  onClick={() => beginEdit(user)}
+                  leftIcon={<IconEdit />}
+                >
+                  Edit Role
                 </Button>
-                <Button size="sm" variant="error" onClick={() => onRemove(user.id)} leftIcon={<IconTrash />}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="btn-error"
+                  onClick={() => onRemove(user.id)}
+                  leftIcon={<IconTrash />}
+                >
                   Remove
                 </Button>
               </div>
@@ -112,17 +127,18 @@ const MembersTable: React.FC<MembersTableProps> = ({
           }
 
           return (
-            <div className="flex gap-2">
+            <div className="join">
               <LoadingButton
                 size="sm"
                 variant="primary"
+                className="join-item"
                 onClick={() => saveEdit(user)}
                 leftIcon={<IconSave />}
                 isLoading={saving}
               >
                 Save
               </LoadingButton>
-              <Button size="sm" variant="ghost" onClick={cancelEdit} disabled={saving}>
+              <Button size="sm" variant="default" className="join-item" onClick={cancelEdit} disabled={saving}>
                 Cancel
               </Button>
             </div>
@@ -148,23 +164,24 @@ const MembersTable: React.FC<MembersTableProps> = ({
     getRowId: (row) => row.id,
   });
 
-  if (!Array.isArray(items) || items.length === 0) {
+  if (!isLoading && (!Array.isArray(items) || items.length === 0)) {
     return (
-      <div className="hero rounded-box bg-base-200 py-12">
-        <div className="hero-content text-center">
-          <div className="max-w-md">
-            <h1 className="text-2xl font-bold flex items-center justify-center">
-              <IconInbox />
-              No members
-            </h1>
-            <p className="py-2 opacity-70">Add members using the input above.</p>
-          </div>
-        </div>
-      </div>
+      <EmptyState
+        icon={<IconUsers />}
+        title="No members"
+        description="Add members using the input above."
+      />
     );
   }
 
-  return <TableShell table={table} totalItems={items.length} pinnedColumns={['Actions']} />;
+  return (
+    <TableShell
+      table={table}
+      totalItems={items.length}
+      pinnedColumns={['Actions']}
+      isLoading={isLoading}
+    />
+  );
 };
 
 export default MembersTable;

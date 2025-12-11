@@ -4,29 +4,33 @@ import {
   createColumnHelper,
   getCoreRowModel,
   getPaginationRowModel,
+  type ColumnDef,
   useReactTable,
 } from '@tanstack/react-table';
 import TableShell from '@components/common/TableShell';
+import EmptyState from '@components/common/EmptyState';
 import { usePaginationState } from '@hooks/usePaginationState';
 import DecryptedText from '@components/common/encryptions/DecryptedText';
 import AnswerText from '@components/common/AnswerText';
 import type { RawSubmission } from '@features/submissions/types';
 import { extractQuestionKeys } from '@features/submissions/helpers';
-import { useAssessmentPassphrase } from '@features/encryption/AssessmentPassphraseProvider';
+import { useAssessmentPassphrase } from '@features/encryption/passphraseContext';
 
 type SubmissionsTableProps = {
   items: RawSubmission[];
   initialPageSize?: number;
+  isLoading?: boolean;
+  isDecryptingIds?: boolean;
 };
 
-const SubmissionsTable: React.FC<SubmissionsTableProps> = ({ items, initialPageSize = 10 }) => {
+const SubmissionsTable: React.FC<SubmissionsTableProps> = ({ items, initialPageSize = 10, isLoading = false, isDecryptingIds = false }) => {
   const columnHelper = createColumnHelper<RawSubmission>();
   const { passphrase, notifyEncryptedDetected } = useAssessmentPassphrase();
 
   const questionKeys = useMemo(() => extractQuestionKeys(items), [items]);
 
   const columns = useMemo(() => {
-    const cols: any[] = [];
+    const cols: ColumnDef<RawSubmission>[] = [];
 
     cols.push(
       columnHelper.display({
@@ -41,6 +45,7 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({ items, initialPageS
                 passphrase={passphrase}
                 mono
                 size="sm"
+                showSkeletonWhileDecrypting={isDecryptingIds}
                 onEncryptedDetected={notifyEncryptedDetected}
               />
             </div>
@@ -70,7 +75,7 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({ items, initialPageS
     }
 
     return cols;
-  }, [columnHelper, passphrase, notifyEncryptedDetected, questionKeys]);
+  }, [columnHelper, isDecryptingIds, notifyEncryptedDetected, passphrase, questionKeys]);
 
   const { pagination, setPagination } = usePaginationState({
     pageIndex: 0,
@@ -87,23 +92,24 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({ items, initialPageS
     getRowId: (row) => row.student_id,
   });
 
-  if (items.length === 0) {
+  if (!isLoading && items.length === 0) {
     return (
-      <div className="hero rounded-box bg-base-200 py-12">
-        <div className="hero-content text-center">
-          <div className="max-w-md">
-            <h1 className="text-2xl font-bold flex items-center justify-center">
-              <IconInbox className="m-2" />
-              No submissions
-            </h1>
-            <p className="py-2 opacity-70">Load submissions using the actions above.</p>
-          </div>
-        </div>
-      </div>
+      <EmptyState
+        icon={<IconInbox />}
+        title="No submissions"
+        description="Load submissions using the actions above."
+      />
     );
   }
 
-  return <TableShell table={table} totalItems={items.length} pinnedColumns={['Student ID']} />;
+  return (
+    <TableShell
+      table={table}
+      totalItems={items.length}
+      pinnedColumns={['Student ID']}
+      isLoading={isLoading}
+    />
+  );
 };
 
 export default SubmissionsTable;

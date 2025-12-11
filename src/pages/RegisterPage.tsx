@@ -10,9 +10,10 @@ import requestsSchema from '@schemas/requests.json';
 import type { SignupRequest, TokenPairResponse } from '@api/models';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { useToast } from '@components/common/ToastProvider';
+import type { JSONSchema7 } from 'json-schema';
 
-const getSignupSchema = () => {
-  const schema = (requestsSchema as any)['SignupRequest'];
+const getSignupSchema = (): JSONSchema7 => {
+  const schema = (requestsSchema as Record<string, JSONSchema7>)['SignupRequest'];
   if (!schema) throw new Error('SignupRequest schema not found in requests.json');
   return schema;
 };
@@ -50,7 +51,17 @@ const RegisterPage: React.FC = () => {
   });
 
   return (
-    <PageCard title="Register">
+    <PageCard
+      title="Register"
+      footer={
+        <div className="text-sm text-center">
+          <span className="mr-1">Already have an account?</span>
+          <Link to="/login" className="link link-primary">
+            Login
+          </Link>
+        </div>
+      }
+    >
       <SchemaForm<SignupRequest>
         schema={schema}
         uiSchema={uiSchema}
@@ -69,13 +80,6 @@ const RegisterPage: React.FC = () => {
           </div>
         )}
         {isError && <ErrorAlert error={error} />}
-      </div>
-
-      <div className="mt-4 text-sm text-center">
-        <span className="mr-1">Already have an account?</span>
-        <Link to="/login" className="link link-primary">
-          Login
-        </Link>
       </div>
     </PageCard>
   );

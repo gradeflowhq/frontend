@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import clsx from 'clsx';
 import { decryptString, isEncrypted } from '@utils/crypto';
 import { IconLock } from '@components/ui/Icon';
@@ -17,6 +17,7 @@ type DecryptedTextProps = {
   showLockIcon?: boolean;
   onEncryptedDetected?: () => void;
   title?: string;
+  showSkeletonWhileDecrypting?: boolean; // render a skeleton while decrypting async
 };
 
 const sizeClass = (s: 'xs' | 'sm' | 'md' = 'md') =>
@@ -32,6 +33,7 @@ const DecryptedText: React.FC<DecryptedTextProps> = ({
   showLockIcon = true,
   onEncryptedDetected,
   title,
+  showSkeletonWhileDecrypting = false,
 }) => {
   const encrypted = useMemo(() => isEncrypted(value), [value]);
 
@@ -43,7 +45,8 @@ const DecryptedText: React.FC<DecryptedTextProps> = ({
   const cacheKey = encrypted && passphrase ? `${value}::${passphrase}` : null;
 
   // Keep track of last resolved plaintext to use as an immediate fallback during re-renders
-  const lastResolvedRef = useRef<string | null>(null);
+  const [lastResolved, setLastResolved] = useState<string | null>(null);
+  const [isDecrypting, setIsDecrypting] = useState(false);
 
   // Initial display:
   // - plaintext when not encrypted
@@ -53,15 +56,10 @@ const DecryptedText: React.FC<DecryptedTextProps> = ({
     if (!encrypted) return value;
     if (!passphrase) return maskedText;
     const cached = cacheKey ? plaintextCache.get(cacheKey) : undefined;
-    if (cached) {
-      lastResolvedRef.current = cached;
-      return cached;
-    }
-    // No cache yet: if we had a previously resolved value in this instance, keep showing it
-    if (lastResolvedRef.current) return lastResolvedRef.current;
-    // As a last resort, show masked (will be replaced by plaintext after decrypt)
+    if (cached) return cached;
+    if (lastResolved) return lastResolved;
     return maskedText;
-  }, [encrypted, passphrase, cacheKey, value, maskedText]);
+  }, [encrypted, passphrase, cacheKey, value, maskedText, lastResolved]);
 
   const [display, setDisplay] = useState<string>(initialDisplay);
 
@@ -71,38 +69,42 @@ const DecryptedText: React.FC<DecryptedTextProps> = ({
     const run = async () => {
       // Plaintext or no passphrase: set synchronously
       if (!encrypted) {
-        lastResolvedRef.current = value;
+        setLastResolved(value);
         setDisplay(value);
+        setIsDecrypting(false);
         return;
       }
+
       if (!passphrase) {
         setDisplay(maskedText);
+        setIsDecrypting(false);
         return;
       }
 
-      // If we already have cache, use it synchronously and skip decryption
       if (cacheKey && plaintextCache.has(cacheKey)) {
         const cached = plaintextCache.get(cacheKey)!;
-        lastResolvedRef.current = cached;
+        setLastResolved(cached);
         setDisplay(cached);
+        setIsDecrypting(false);
         return;
       }
 
+      setIsDecrypting(true);
       try {
         const plain = await decryptString(value, passphrase);
         if (cancelled) return;
-        // Update cache and UI
         if (cacheKey) plaintextCache.set(cacheKey, plain);
-        lastResolvedRef.current = plain;
+        setLastResolved(plain);
         setDisplay(plain);
+        setIsDecrypting(false);
       } catch {
         if (cancelled) return;
-        // On failure, keep masked. Do not overwrite prior resolved plaintext.
         setDisplay(maskedText);
+        setIsDecrypting(false);
       }
     };
 
-    run();
+    void run();
     return () => {
       cancelled = true;
     };
@@ -113,11 +115,17 @@ const DecryptedText: React.FC<DecryptedTextProps> = ({
 
   return (
     <span className={classes} title={title}>
-      {display}
-      {encrypted && showLockIcon && (
-        <span className="inline-flex items-center tooltip ml-1" data-tip="Stored encrypted on server">
-          <IconLock />
-        </span>
+      {isDecrypting && showSkeletonWhileDecrypting ? (
+        <span className="skeleton inline-block h-4 w-20 align-middle" aria-label="Decrypting" />
+      ) : (
+        <>
+          {display}
+          {encrypted && showLockIcon && (
+            <span className="inline-flex items-center tooltip ml-1" data-tip="Stored encrypted on server">
+              <IconLock />
+            </span>
+          )}
+        </>
       )}
     </span>
   );

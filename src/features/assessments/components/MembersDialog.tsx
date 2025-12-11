@@ -41,7 +41,7 @@ const MembersDialog: React.FC<Props> = ({ open, assessmentId, onClose }) => {
         onError: () => toast.error('Update failed'),
       });
     },
-    [setMemberRole]
+    [setMemberRole, toast]
   );
 
   if (!open) return null;
@@ -102,16 +102,16 @@ const MembersDialog: React.FC<Props> = ({ open, assessmentId, onClose }) => {
         </div>
       </div>
 
-      {isLoading && <div className="alert alert-info mt-3"><span>Loading members...</span></div>}
       {isError && <ErrorAlert error={error} className="mt-3" />}
       {addMember.isError && <ErrorAlert error={addMember.error} className="mt-3" />}
       {setMemberRole.isError && <ErrorAlert error={setMemberRole.error} className="mt-3" />}
       {removeMember.isError && <ErrorAlert error={removeMember.error} className="mt-3" />}
 
-      {!isLoading && !isError && (
+      {!isError && (
         <div className="mt-4">
           <MembersTable
             items={items}
+            isLoading={isLoading}
             onSetRole={handleSetRole}
             onRemove={(userId) => setRemoveTarget(userId)}
           />

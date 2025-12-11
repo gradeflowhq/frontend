@@ -1,8 +1,13 @@
 import type { AxiosError } from 'axios';
 
+type ErrorPayload = {
+  errors?: unknown;
+  detail?: Array<{ loc?: unknown; msg?: unknown }>;
+};
+
 export const getErrorMessages = (error: unknown): string[] => {
   // AxiosError with backend payload
-  const axErr = error as AxiosError<any>;
+  const axErr = error as AxiosError<ErrorPayload>;
   const data = axErr?.response?.data;
 
   // Case 1: { errors: string[] }
@@ -14,7 +19,7 @@ export const getErrorMessages = (error: unknown): string[] => {
   if (data && Array.isArray(data.detail)) {
     // extract loc and msg
     const messages: string[] = data.detail
-      .map((d: any) => {
+      .map((d) => {
         if (d.msg && typeof d.msg === 'string') {
           if (Array.isArray(d.loc)) {
             const locStr = d.loc.slice(1).join(' > '); // skip 'body'
@@ -24,7 +29,7 @@ export const getErrorMessages = (error: unknown): string[] => {
         }
         return null;
       })
-      .filter((m: any) => typeof m === 'string');
+      .filter((m): m is string => typeof m === 'string');
     if (messages.length > 0) {
       return messages;
     }

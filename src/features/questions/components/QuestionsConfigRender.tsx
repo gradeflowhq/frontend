@@ -1,6 +1,12 @@
 import React from 'react';
 import { prettifyKey } from '@features/rules/helpers';
 
+interface JsonObject {
+  [key: string]: JsonValue;
+}
+
+type JsonValue = string | number | boolean | null | JsonObject | JsonValue[];
+
 const HIDE_KEYS = new Set<string>(['type']);
 
 const LabeledBlock: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
@@ -15,8 +21,8 @@ const PrimitiveView: React.FC<{ value: string | number | boolean | null }> = ({ 
 );
 
 const ArrayView: React.FC<{
-  value: any[];
-  renderNode: (v: any, path: string) => React.ReactNode;
+  value: JsonValue[];
+  renderNode: (v: JsonValue, path: string) => React.ReactNode;
   path: string;
 }> = ({ value, renderNode, path }) => {
   if (value.length === 0) return <span className="font-mono text-xs opacity-70">[]</span>;
@@ -34,9 +40,9 @@ const ArrayView: React.FC<{
 
 // Standard collapsible (boxed) for inner "config"
 const CollapsibleConfigBox: React.FC<{
-  obj: any;
+  obj: JsonObject;
   path: string;
-  renderNode: (v: any, p: string) => React.ReactNode;
+  renderNode: (v: JsonValue, p: string) => React.ReactNode;
   title?: string;
   defaultOpen?: boolean;
 }> = ({ obj, path, renderNode, title = 'Configuration', defaultOpen = false }) => {
@@ -58,19 +64,20 @@ const CollapsibleConfigBox: React.FC<{
   );
 };
 
-const renderNode = (value: any, path: string): React.ReactNode => {
-  if (value === null || ['string', 'number', 'boolean'].includes(typeof value)) {
+const renderNode = (value: JsonValue, path: string): React.ReactNode => {
+  if (value === null || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
     return <PrimitiveView value={value} />;
   }
   if (Array.isArray(value)) {
     return <ArrayView value={value} renderNode={(v, p) => renderNode(v, p)} path={path} />;
   }
   if (value && typeof value === 'object') {
+    const obj = value as JsonObject;
     const keyName = path.split('.').pop() || '';
     if (keyName.toLowerCase() === 'config') {
       return (
         <CollapsibleConfigBox
-          obj={value}
+          obj={obj}
           path={path}
           renderNode={(v, p) => renderNode(v, p)}
           title="Config"
@@ -79,14 +86,14 @@ const renderNode = (value: any, path: string): React.ReactNode => {
       );
     }
 
-    const keys = Object.keys(value ?? {}).filter((k) => !HIDE_KEYS.has(k));
+    const keys = Object.keys(obj ?? {}).filter((k) => !HIDE_KEYS.has(k));
     if (keys.length === 0) return <span className="opacity-60 text-xs">{'{}'}</span>;
 
     return (
       <>
         {keys.map((k) => (
           <LabeledBlock key={`${path}.${k}`} label={prettifyKey(k)}>
-            {renderNode(value[k], `${path}.${k}`)}
+            {renderNode(obj[k] as JsonValue, `${path}.${k}`)}
           </LabeledBlock>
         ))}
       </>
@@ -99,9 +106,12 @@ const renderNode = (value: any, path: string): React.ReactNode => {
   }
 };
 
-const QuestionsConfigRender: React.FC<{ value: any }> = ({ value }) => {
+const QuestionsConfigRender: React.FC<{ value: JsonValue }> = ({ value }) => {
   if (!value || typeof value !== 'object') {
-    return <PrimitiveView value={value ?? null} />;
+    const primitive = (value === null || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean')
+      ? value
+      : null;
+    return <PrimitiveView value={primitive} />;
   }
 
   const keys = Object.keys(value ?? {}).filter((k) => !HIDE_KEYS.has(k));
@@ -109,15 +119,19 @@ const QuestionsConfigRender: React.FC<{ value: any }> = ({ value }) => {
     return <span className="opacity-60 text-xs">{'{}'}</span>;
   }
 
+  const obj = value as JsonObject;
+
   return (
     <>
       {keys.map((k) => (
         <LabeledBlock key={`$.${k}`} label={prettifyKey(k)}>
-          {renderNode(value[k], `$.${k}`)}
+          {renderNode(obj[k] as JsonValue, `$.${k}`)}
         </LabeledBlock>
       ))}
     </>
   );
 };
+
+export type { JsonValue };
 
 export default QuestionsConfigRender;

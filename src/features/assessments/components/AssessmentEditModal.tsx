@@ -6,6 +6,7 @@ import LoadingButton from '@components/ui/LoadingButton';
 import { Button } from '@components/ui/Button';
 import requestsSchema from '@schemas/requests.json';
 import type { AssessmentUpdateRequest, AssessmentResponse } from '@api/models';
+import type { JSONSchema7 } from 'json-schema';
 
 type Props = {
   openItem: AssessmentResponse | null;
@@ -15,8 +16,8 @@ type Props = {
   onSubmit: (id: string, data: AssessmentUpdateRequest) => Promise<void> | void;
 };
 
-const getUpdateSchema = () => {
-  const schema = (requestsSchema as any)['AssessmentUpdateRequest'];
+const getUpdateSchema = (): JSONSchema7 => {
+  const schema = (requestsSchema as Record<string, JSONSchema7>)['AssessmentUpdateRequest'];
   if (!schema) throw new Error('AssessmentUpdateRequest schema not found in requests.json');
   return schema;
 };

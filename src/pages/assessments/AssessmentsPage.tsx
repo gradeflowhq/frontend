@@ -70,24 +70,17 @@ const AssessmentsPage: React.FC = () => {
               />
             </label>
             <Button variant="ghost" onClick={() => setShowCreate(true)} leftIcon={<IconPlus />}>
-              Add Assessment
+              Add
             </Button>
           </div>
         }
       />
-
-      {isLoading && (
-        <div className="animate-pulse">
-          <div className="h-10 bg-base-200 rounded mb-2" />
-          <div className="h-10 bg-base-200 rounded mb-2" />
-          <div className="h-10 bg-base-200 rounded" />
-        </div>
-      )}
       {isError && <ErrorAlert error={error} />}
 
-      {!isLoading && !isError && (
+      {!isError && (
         <AssessmentsTable
           items={filteredItems}
+          isLoading={isLoading}
           onOpen={(item) => {
             void navigate(`/assessments/${item.id}`);
           }}

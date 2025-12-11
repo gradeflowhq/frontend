@@ -30,9 +30,9 @@ type CommonProps = {
   title?: string;
 };
 
-export type ButtonProps<E extends React.ElementType = 'button'> = CommonProps & {
-  as?: E;
-} & Omit<React.ComponentPropsWithoutRef<E>, 'as' | 'children' | 'className' | 'disabled'>;
+export type ButtonProps = CommonProps & {
+  as?: React.ElementType;
+} & Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'className' | 'disabled'>;
 
 const variantClass = (v: ButtonVariant = 'primary') => {
   switch (v) {
@@ -61,7 +61,10 @@ const sizeClass = (s: ButtonSize = 'md') => {
   }
 };
 
-export const Button = forwardRef<any, ButtonProps>((props, ref) => {
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function ButtonInner(
+  props,
+  ref
+) {
   const {
     as: Comp = 'button',
     variant = 'primary',
@@ -110,4 +113,5 @@ export const Button = forwardRef<any, ButtonProps>((props, ref) => {
     </Comp>
   );
 });
+
 Button.displayName = 'Button';

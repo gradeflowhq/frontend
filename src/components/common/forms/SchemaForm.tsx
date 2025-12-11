@@ -7,10 +7,10 @@ import validatorAjv8 from '@rjsf/validator-ajv8';
 
 const DaisyUIForm = withTheme(DaisyUITheme);
 
-export type SchemaFormProps<T = any> = {
-  schema: Record<string, any>;
-  uiSchema?: Record<string, any>;
-  formData?: T;
+export type SchemaFormProps<T = unknown> = {
+  schema: FormProps<T>['schema'];
+  uiSchema?: FormProps<T>['uiSchema'];
+  formData?: FormProps<T>['formData'];
   onSubmit?: FormProps<T>['onSubmit'];
   onChange?: FormProps<T>['onChange'];
   onError?: FormProps<T>['onError'];
@@ -27,7 +27,7 @@ export type SchemaFormProps<T = any> = {
   formContext?: FormProps<T>['formContext'];
 };
 
-export const SchemaForm = <T extends any>({
+export const SchemaForm = <T = unknown>({
   schema,
   uiSchema,
   formData,

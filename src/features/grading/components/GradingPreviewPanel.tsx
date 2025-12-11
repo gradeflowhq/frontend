@@ -1,11 +1,14 @@
 import React, { useMemo } from 'react';
-import ErrorAlert from '@components/common/ErrorAlert';
-import DecryptedText from '@components/common/encryptions/DecryptedText';
+
 import AnswerText from '@components/common/AnswerText';
-import { IconCheckCircle, IconAlertCircle } from '@components/ui/Icon';
-import type { AdjustableGradedSubmission, AdjustableQuestionResult } from '@features/grading/types';
-import { useAssessmentPassphrase } from '@features/encryption/AssessmentPassphraseProvider';
+import DecryptedText from '@components/common/encryptions/DecryptedText';
+import ErrorAlert from '@components/common/ErrorAlert';
+import TableSkeleton from '@components/common/TableSkeleton';
+import { IconAlertCircle, IconCheckCircle } from '@components/ui/Icon';
+import { useAssessmentPassphrase } from '@features/encryption/passphraseContext';
 import { natsort } from '@utils/sort';
+
+import type { AdjustableGradedSubmission, AdjustableQuestionResult } from '@features/grading/types';
 
 type Props = {
   items: AdjustableGradedSubmission[];
@@ -35,9 +38,7 @@ const GradingPreviewPanel: React.FC<Props> = ({ items, loading, error, className
     return (
       <div className={className}>
         <h4 className="font-semibold mb-2">Preview</h4>
-        <div className="alert alert-info">
-          <span>Previewing grading...</span>
-        </div>
+        <TableSkeleton cols={5} rows={5} className="max-h-[60vh]" />
       </div>
     );
   }
@@ -61,7 +62,7 @@ const GradingPreviewPanel: React.FC<Props> = ({ items, loading, error, className
         className="rounded-box border border-base-300 bg-base-100 shadow-xs"
         style={{ maxHeight: `${maxHeightVh}vh`, overflowX: 'auto', overflowY: 'auto' }}
       >
-        <table className="table table-zebra table-pin-cols w-full min-w-[720px]">
+        <table className="table table-sm table-zebra table-pin-cols w-full min-w-[720px]">
           <thead className="sticky top-0 bg-base-100 z-10">
             <tr>
               <th>Student ID</th>

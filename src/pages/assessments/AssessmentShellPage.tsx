@@ -1,37 +1,50 @@
+import { useQueryClient } from '@tanstack/react-query';
 import React from 'react';
 import { NavLink, Outlet, useParams, useNavigate } from 'react-router-dom';
-import PageHeader from '@components/common/PageHeader';
-import ErrorAlert from '@components/common/ErrorAlert';
-import LoadingButton from '@components/ui/LoadingButton';
-import { Button } from '@components/ui/Button';
+
+import { QK } from '@api/queryKeys';
 import ConfirmDialog from '@components/common/ConfirmDialog';
+import ErrorAlert from '@components/common/ErrorAlert';
+import PageHeader from '@components/common/PageHeader';
+import { useToast } from '@components/common/ToastProvider';
+import { Button } from '@components/ui/Button';
+import { DropdownMenu } from '@components/ui/DropdownMenu';
+import { IconGrade, IconSubmissions, IconQuestions, IconRules, IconSettings, IconEdit, IconUsers, IconLock } from '@components/ui/Icon';
+import LoadingButton from '@components/ui/LoadingButton';
+import { MembersDialog } from '@features/assessments/components';
+import AssessmentEditModal from '@features/assessments/components/AssessmentEditModal';
+import { useAssessment, useUpdateAssessment } from '@features/assessments/hooks';
+import { AssessmentPassphraseProvider } from '@features/encryption/AssessmentPassphraseProvider';
+import { useAssessmentPassphrase } from '@features/encryption/passphraseContext';
+import { useGrading, useRunGrading, useGradingJob, useJobStatus } from '@features/grading/hooks';
+import { useRubric, useRubricCoverage } from '@features/rubric/hooks';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { buildPassphraseKey, clearPassphrase } from '@utils/passphrase';
 
-import { useAssessment } from '@features/assessments/hooks';
-import { useGrading, useRunGrading, useGradingJob, useJobStatus } from '@features/grading/hooks';
-import { useRubric, useRubricCoverage } from '@features/rubric/hooks';
-import { MembersDialog } from '@features/assessments/components';
-import SettingsDropdown from '@features/assessments/components/SettingsDropdown';
-import AssessmentEditModal from '@features/assessments/components/AssessmentEditModal';
 import type { AssessmentResponse, AssessmentUpdateRequest } from '@api/models';
-import { useUpdateAssessment } from '@features/assessments/hooks';
-import {
-  AssessmentPassphraseProvider,
-  useAssessmentPassphrase,
-} from '@features/encryption/AssessmentPassphraseProvider';
-import { IconGrade } from '@components/ui/Icon';
-import { useQueryClient } from '@tanstack/react-query';
-import { QK } from '@api/queryKeys';
-import { useToast } from '@components/common/ToastProvider';
 
 const TabsNav: React.FC<{ basePath: string }> = ({ basePath }) => {
-  const tabClass = ({ isActive }: { isActive: boolean }) => `tab ${isActive ? 'tab-active' : ''}`;
+  const tabClass = ({ isActive }: { isActive: boolean }) => `tab tab-sm sm:tab-md ${isActive ? 'tab-active' : ''}`;
   return (
-    <div className="tabs tabs-lift mb-4">
-      <NavLink className={tabClass} to={`${basePath}/submissions`}>Submissions</NavLink>
-      <NavLink className={tabClass} to={`${basePath}/questions`}>Questions</NavLink>
-      <NavLink className={tabClass} to={`${basePath}/rules`}>Rules</NavLink>
+    <div className="tabs tabs-lift mb-4 flex-wrap gap-2">
+      <NavLink className={tabClass} to={`${basePath}/submissions`}>
+        <span className="flex items-center gap-2">
+          <IconSubmissions />
+          <span>Submissions</span>
+        </span>
+      </NavLink>
+      <NavLink className={tabClass} to={`${basePath}/questions`}>
+        <span className="flex items-center gap-2">
+          <IconQuestions />
+          <span>Questions</span>
+        </span>
+      </NavLink>
+      <NavLink className={tabClass} to={`${basePath}/rules`}>
+        <span className="flex items-center gap-2">
+          <IconRules />
+          <span>Rules</span>
+        </span>
+      </NavLink>
     </div>
   );
 };
@@ -70,31 +83,61 @@ const HeaderActions: React.FC<{
 
   return (
     <>
-      <div className="flex gap-2 items-center">
-        {rulesCount > 0 && (
-          <LoadingButton
-            type="button"
-            variant="outline"
-            className="btn-primary"
-            onClick={onRunGrading}
-            isLoading={isGradingPending}
-            disabled={isGradingPending}
-            leftIcon={<IconGrade />}
-          >
-            Run Grading
-          </LoadingButton>
-        )}
-        {hasGrading && (
-          <Button type="button" variant="outline" onClick={onOpenResults} title="View grading results">
-            Results
-          </Button>
-        )}
-        <SettingsDropdown
-          onEditAssessment={onOpenEdit}
-          onOpenMembers={onOpenMembers}
-          onForgetPassphrase={handleForgetPassphrase}
-          showForgetPassphrase={canForget}
-        />
+      <div className="flex flex-wrap gap-2 items-center justify-end">
+        <div className="join">
+          {rulesCount > 0 && (
+            <LoadingButton
+              type="button"
+              variant="outline"
+              className="btn-primary join-item"
+              onClick={onRunGrading}
+              isLoading={isGradingPending}
+              disabled={isGradingPending}
+              leftIcon={<IconGrade />}
+            >
+              Run
+            </LoadingButton>
+          )}
+          {hasGrading && (
+            <Button
+              type="button"
+              variant="outline"
+              className="join-item"
+              onClick={onOpenResults}
+              title="View grading results"
+            >
+              Results
+            </Button>
+          )}
+        </div>
+
+        <DropdownMenu
+          align="end"
+          trigger={
+            <IconSettings />
+          }
+        >
+          <li>
+            <button onClick={onOpenEdit}>
+              <IconEdit />
+              Assessment
+            </button>
+          </li>
+          <li>
+            <button onClick={onOpenMembers}>
+              <IconUsers />
+              Members
+            </button>
+          </li>
+          {canForget && (
+            <li>
+              <button className="text-error" onClick={handleForgetPassphrase}>
+                <IconLock />
+                Forget passphrase
+              </button>
+            </li>
+          )}
+        </DropdownMenu>
       </div>
 
       <ConfirmDialog
@@ -181,9 +224,10 @@ const AssessmentShellPage: React.FC = () => {
     if (jobStatus === 'completed') {
       setAwaitingNavigation(false);
       toast.success('Grading completed');
-      qc.invalidateQueries({ queryKey: QK.grading.item(assessmentId!) }).then(() => {
-        navigate(`/results/${assessmentId}`);
-      });
+      void (async () => {
+        await qc.invalidateQueries({ queryKey: QK.grading.item(assessmentId!) });
+        await navigate(`/results/${assessmentId}`);
+      })();
     } else if (jobStatus === 'failed') {
       // Show errors; do not navigate
       setRunError(new Error('Grading job failed'));
@@ -231,7 +275,9 @@ const AssessmentShellPage: React.FC = () => {
               hasGrading={hasGrading}
               onRunGrading={handleGradeClick}
               isGradingPending={isGradingInProgress || runGradingMutation.isPending}
-              onOpenResults={() => navigate(`/results/${assessmentId}`)}
+              onOpenResults={() => {
+                void navigate(`/results/${assessmentId}`);
+              }}
               onOpenEdit={() => setShowEdit(true)}
               onOpenMembers={() => setShowMembers(true)}
             />

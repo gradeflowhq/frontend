@@ -1,8 +1,14 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import ErrorAlert from '@components/common/ErrorAlert';
+
 import ConfirmDialog from '@components/common/ConfirmDialog';
+import ErrorAlert from '@components/common/ErrorAlert';
+import TableSkeleton from '@components/common/TableSkeleton';
+import { useToast } from '@components/common/ToastProvider';
 import { QuestionsHeader, QuestionsTable } from '@features/questions/components';
+import QuestionSetImportModal from '@features/questions/components/QuestionSetImportModal';
+import QuestionSetUploadModal from '@features/questions/components/QuestionSetUploadModal';
+import { buildExamplesFromParsed } from '@features/questions/helpers';
 import {
   useQuestionSet,
   useParsedSubmissions,
@@ -10,15 +16,14 @@ import {
   useInferAndParseQuestionSet,
   useDeleteQuestionSet,
 } from '@features/questions/hooks';
-import { buildExamplesFromParsed } from '@features/questions/helpers';
 import { useSubmissions } from '@features/submissions/hooks';
+
 import type { QuestionSetInput } from '@api/models';
-import QuestionSetUploadModal from '@features/questions/components/QuestionSetUploadModal';
-import QuestionSetImportModal from '@features/questions/components/QuestionSetImportModal';
-import { useToast } from '@components/common/ToastProvider';
 
 const QuestionsTabPage: React.FC = () => {
   const { assessmentId } = useParams<{ assessmentId: string }>();
+  const safeAssessmentId = assessmentId ?? '';
+  const enabled = Boolean(assessmentId);
   const [confirmInfer, setConfirmInfer] = React.useState(false);
   const [confirmDeleteQs, setConfirmDeleteQs] = React.useState(false);
   const [openQsUpload, setOpenQsUpload] = React.useState(false);
@@ -26,10 +31,8 @@ const QuestionsTabPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = React.useState('');
   const toast = useToast();
 
-  if (!assessmentId) return null;
-
   // Raw submissions (to decide whether to show the Infer button)
-  const { data: subsRes } = useSubmissions(assessmentId);
+  const { data: subsRes } = useSubmissions(safeAssessmentId);
   const hasSubmissions = (subsRes?.raw_submissions?.length ?? 0) > 0;
 
   // Question set
@@ -38,10 +41,15 @@ const QuestionsTabPage: React.FC = () => {
     isLoading: loadingQS,
     isError: errorQS,
     error: qsError,
-  } = useQuestionSet(assessmentId, true);
+  } = useQuestionSet(safeAssessmentId, enabled);
 
-  const questionMap = qsRes?.question_set?.question_map ?? {};
-  const hasQuestionSet = !!qsRes?.question_set && Object.keys(questionMap).length > 0;
+  const qsMissing = React.useMemo(() => {
+    const err = qsError as { response?: { status?: number; data?: { detail?: unknown } }; message?: string } | undefined;
+    return err?.response?.status === 404;
+  }, [qsError]);
+
+  const questionMap = qsMissing ? {} : (qsRes?.question_set?.question_map ?? {});
+  const hasQuestionSet = !qsMissing && !!qsRes?.question_set && Object.keys(questionMap).length > 0;
 
   // Parsed submissions (examples)
   const {
@@ -49,16 +57,19 @@ const QuestionsTabPage: React.FC = () => {
     isLoading: loadingParsed,
     isError: errorParsed,
     error: parsedError,
-  } = useParsedSubmissions(assessmentId, hasQuestionSet);
+  } = useParsedSubmissions(safeAssessmentId, hasQuestionSet && enabled);
+
+  const parsedErr = parsedError as { response?: { status?: number } } | undefined;
+  const missingSubmissions = errorParsed && parsedErr?.response?.status === 404;
 
   // Update question set (manual edits)
-  const updateMutation = useUpdateQuestionSet(assessmentId);
+  const updateMutation = useUpdateQuestionSet(safeAssessmentId);
 
   // Delete question set
-  const deleteMutation = useDeleteQuestionSet(assessmentId);
+  const deleteMutation = useDeleteQuestionSet(safeAssessmentId);
 
   // Infer (replace) questions from submissions, then parse
-  const inferMutation = useInferAndParseQuestionSet(assessmentId);
+  const inferMutation = useInferAndParseQuestionSet(safeAssessmentId);
 
   // Examples from parsed submissions
   const examplesByQuestion = React.useMemo<Record<string, string[]>>(
@@ -68,18 +79,8 @@ const QuestionsTabPage: React.FC = () => {
 
   return (
     <section className="space-y-6">
-      {loadingQS && (
-        <div className="alert alert-info">
-          <span>Loading questions...</span>
-        </div>
-      )}
-      {errorQS && <ErrorAlert error={qsError} />}
-      {loadingParsed && (
-        <div className="alert alert-info">
-          <span>Parsing submissions...</span>
-        </div>
-      )}
-      {errorParsed && <ErrorAlert error={parsedError} />}
+      {errorQS && !qsMissing && <ErrorAlert error={qsError} />}
+      {errorParsed && !missingSubmissions && <ErrorAlert error={parsedError} />}
 
       <QuestionsHeader
         onInfer={() => setConfirmInfer(true)}
@@ -93,7 +94,9 @@ const QuestionsTabPage: React.FC = () => {
         onSearchChange={(v) => setSearchQuery(v)}
       />
 
-      {!loadingQS && !errorQS && (
+      {loadingQS ? (
+        <TableSkeleton cols={5} rows={5} />
+      ) : (
         <QuestionsTable
           questionMap={questionMap}
           examplesByQuestion={examplesByQuestion}
@@ -106,6 +109,9 @@ const QuestionsTabPage: React.FC = () => {
           updating={updateMutation.isPending}
           updateError={updateMutation.isError ? updateMutation.error : null}
           searchQuery={searchQuery}
+          loadingQuestions={loadingQS}
+          loadingExamples={loadingParsed}
+          examplesError={missingSubmissions ? 'No submissions available to derive example answers yet.' : undefined}
         />
       )}
 
@@ -151,12 +157,12 @@ const QuestionsTabPage: React.FC = () => {
 
       {openQsUpload && <QuestionSetUploadModal
         open={openQsUpload}
-        assessmentId={assessmentId}
+        assessmentId={safeAssessmentId}
         onClose={() => setOpenQsUpload(false)}
       />}
       {openQsImport && <QuestionSetImportModal
         open={openQsImport}
-        assessmentId={assessmentId}
+        assessmentId={safeAssessmentId}
         onClose={() => setOpenQsImport(false)}
       />}
     </section>

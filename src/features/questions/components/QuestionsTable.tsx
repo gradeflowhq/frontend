@@ -1,12 +1,15 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { SchemaForm } from '@components/common/forms/SchemaForm';
-import ErrorAlert from '@components/common/ErrorAlert';
-import LoadingButton from '@components/ui/LoadingButton';
-import { Button } from '@components/ui/Button';
-import { IconInbox, IconSave, IconEdit } from '@components/ui/Icon';
+import React, { useMemo, useState } from 'react';
+
 import AnswerText from '@components/common/AnswerText';
-import questionsSchema from '@schemas/questions.json';
+import EmptyState from '@components/common/EmptyState';
+import ErrorAlert from '@components/common/ErrorAlert';
+import { SchemaForm } from '@components/common/forms/SchemaForm';
+import { Button } from '@components/ui/Button';
+import { IconEdit, IconQuestions, IconSave } from '@components/ui/Icon';
+import LoadingButton from '@components/ui/LoadingButton';
 import PaginationControls from '@components/ui/PaginationControls';
+import questionsSchema from '@schemas/questions.json';
+import type { JSONSchema7Definition } from 'json-schema';
 
 import type {
   QuestionSetInput,
@@ -17,17 +20,24 @@ import type {
   NumericQuestion,
 } from '@api/models';
 import { getQuestionIdsSorted } from '@features/questions/helpers';
+import type { JsonValue } from './QuestionsConfigRender';
 
 const UNPARSABLE_MARKER = '__UNPARSABLE__:';
+type QuestionDef = ChoiceQuestion | MultiValuedQuestion | TextQuestion | NumericQuestion;
+type QuestionDraft = Partial<QuestionDef>;
+type ExamplesByQuestion = Record<string, unknown[]>;
 
 type Props = {
   questionMap: QuestionSetOutputQuestionMap;
-  examplesByQuestion: { [key: string]: string[] };
+  examplesByQuestion: ExamplesByQuestion;
   onUpdateQuestionSet: (next: QuestionSetInput) => Promise<void> | void;
   updating?: boolean;
   updateError?: unknown;
   initialPageSize?: number;
   searchQuery?: string;
+  loadingQuestions?: boolean;
+  loadingExamples?: boolean;
+  examplesError?: string;
 };
 
 const QuestionsTable: React.FC<Props> = ({
@@ -38,28 +48,25 @@ const QuestionsTable: React.FC<Props> = ({
   updateError,
   initialPageSize = 10,
   searchQuery,
+  loadingQuestions = false,
+  loadingExamples = false,
+  examplesError,
 }) => {
-  const [localMap, setLocalMap] = useState<QuestionSetOutputQuestionMap>({});
+  const [drafts, setDrafts] = useState<Record<string, QuestionDraft>>({});
   const [openEdits, setOpenEdits] = useState<Record<string, boolean>>({});
 
   // pagination (simple client-side)
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(initialPageSize);
 
-  useEffect(() => {
-    setLocalMap(questionMap ?? {});
-    setOpenEdits({});
-    setPageIndex(0);
-  }, [questionMap]);
-
-  const ids = useMemo(() => getQuestionIdsSorted(localMap), [localMap]);
+  const ids = useMemo(() => getQuestionIdsSorted(questionMap), [questionMap]);
 
   const filteredIds = useMemo(() => {
     const q = (searchQuery ?? '').trim().toLowerCase();
     if (!q) return ids;
 
     return ids.filter((qid) => {
-      const def = localMap[qid] as any;
+      const def = drafts[qid] ?? (questionMap[qid] as QuestionDef | undefined);
       const type = (def?.type as string) ?? '';
       if (qid.toLowerCase().includes(q)) return true;
       if (type.toLowerCase().includes(q)) return true;
@@ -68,7 +75,7 @@ const QuestionsTable: React.FC<Props> = ({
       const examples = examplesByQuestion[qid] ?? [];
       return examples.some((ex) => String(ex ?? '').toLowerCase().includes(q));
     });
-  }, [ids, localMap, examplesByQuestion, searchQuery]);
+  }, [ids, questionMap, drafts, examplesByQuestion, searchQuery]);
 
   const pagedIds = useMemo(() => {
     const start = pageIndex * pageSize;
@@ -76,40 +83,41 @@ const QuestionsTable: React.FC<Props> = ({
   }, [filteredIds, pageIndex, pageSize]);
 
   const selectRootSchema = (type: string | undefined) => {
-    const dict = questionsSchema as any;
+    const dict = questionsSchema as Record<string, unknown>;
     switch (type) {
       case 'CHOICE':
-        return dict?.ChoiceQuestion ?? null;
+        return (dict as Record<string, unknown>).ChoiceQuestion ?? null;
       case 'MULTI_VALUED':
-        return dict?.MultiValuedQuestion ?? null;
+        return (dict as Record<string, unknown>).MultiValuedQuestion ?? null;
       case 'NUMERIC':
-        return dict?.NumericQuestion ?? null;
+        return (dict as Record<string, unknown>).NumericQuestion ?? null;
       case 'TEXT':
       default:
-        return dict?.TextQuestion ?? null;
+        return (dict as Record<string, unknown>).TextQuestion ?? null;
     }
   };
 
-  const buildQuestionSetInput = (): QuestionSetInput => ({
-    question_map: localMap as QuestionSetInput['question_map'],
-  });
+  const buildQuestionSetInput = (): QuestionSetInput => {
+    const resolvedDrafts = Object.fromEntries(
+      Object.entries(drafts).map(([qid, draft]) => [
+        qid,
+        { ...(questionMap[qid] as QuestionDef), ...(draft as QuestionDef) } as QuestionDef,
+      ])
+    );
+    return { question_map: { ...questionMap, ...resolvedDrafts } as QuestionSetInput['question_map'] };
+  };
 
-  if (!ids.length) {
+  if (!ids.length && !loadingQuestions) {
     return (
-      <div className="hero rounded-box bg-base-200 py-12">
-        <div className="hero-content text-center">
-          <div className="max-w-md">
-            <h1 className="text-2xl font-bold flex items-center justify-center">
-              <IconInbox className="m-2" /> No questions
-            </h1>
-            <p className="py-2 opacity-70">Upload submissions to infer questions.</p>
-          </div>
-        </div>
-      </div>
+      <EmptyState
+        icon={<IconQuestions />}
+        title="No questions"
+        description="Upload or import a question set, or infer from submissions."
+      />
     );
   }
 
-  if (filteredIds.length === 0) {
+  if (filteredIds.length === 0 && !loadingQuestions) {
     return (
       <div className="alert alert-ghost">
         <span>No questions match your search.</span>
@@ -119,8 +127,9 @@ const QuestionsTable: React.FC<Props> = ({
 
   return (
     <div className="overflow-hidden rounded-box border border-base-300 bg-base-100">
+      {!!updateError && <ErrorAlert error={updateError} className="mt-2" />}
       <div className="overflow-x-auto">
-        <table className="table table-pin-cols w-full">
+        <table className="table table-sm table-zebra table-pin-cols w-full">
           <thead className="sticky top-0 bg-base-100">
             <tr>
               <td>Question ID</td>
@@ -132,7 +141,10 @@ const QuestionsTable: React.FC<Props> = ({
           </thead>
           <tbody>
             {pagedIds.map((qid) => {
-              const def = localMap[qid] as ChoiceQuestion | MultiValuedQuestion | TextQuestion | NumericQuestion | any;
+              const baseDef = questionMap[qid] as QuestionDef | undefined;
+              const def = drafts[qid]
+                ? ({ ...(baseDef ?? {}), ...(drafts[qid] as QuestionDef) } as QuestionDef)
+                : baseDef;
               const type = (def?.type as string) ?? 'TEXT';
               const rootSchema = selectRootSchema(type);
               const examples = examplesByQuestion[qid] ?? [];
@@ -152,10 +164,10 @@ const QuestionsTable: React.FC<Props> = ({
                         className="select select-bordered select-sm"
                         value={type}
                         onChange={(e) => {
-                          const nextType = e.target.value;
-                          setLocalMap((prev) => ({
+                          const nextType = e.target.value as QuestionDef['type'];
+                          setDrafts((prev) => ({
                             ...prev,
-                            [qid]: { ...(prev[qid] as any), type: nextType },
+                            [qid]: { ...(questionMap[qid] as QuestionDef), ...(prev[qid] ?? {}), type: nextType },
                           }));
                         }}
                       >
@@ -169,23 +181,21 @@ const QuestionsTable: React.FC<Props> = ({
 
                   <td className="align-top">
                     {!isEditing ? (
-                      // Reuse existing renderer
-                      // eslint-disable-next-line @typescript-eslint/no-use-before-define
-                      <QuestionsConfigRender value={def} />
+                      <QuestionsConfigRender value={(def ?? baseDef ?? {}) as JsonValue} />
                     ) : rootSchema ? (
                       <div className="max-w-xl">
-                        <SchemaForm<any>
-                          schema={{ ...rootSchema, definitions: questionsSchema as any }}
+                        <SchemaForm<QuestionDef>
+                          schema={{ ...rootSchema, definitions: questionsSchema as Record<string, JSONSchema7Definition> }}
                           uiSchema={{
                             'ui:title': '',
                             'ui:options': { label: true },
                             'ui:submitButtonOptions': { norender: true },
                             type: { 'ui:widget': 'hidden', 'ui:title': '', 'ui:options': { label: false } },
                           }}
-                          formData={def as any}
+                          formData={def ?? baseDef}
                           onChange={({ formData }) => {
-                            const next = { ...(formData || {}), type };
-                            setLocalMap((prev) => ({ ...prev, [qid]: next as any }));
+                            const next = { ...(formData || {}), type } as QuestionDef;
+                            setDrafts((prev) => ({ ...prev, [qid]: next }));
                           }}
                           onSubmit={() => {}}
                           formProps={{ noHtml5Validate: true }}
@@ -198,26 +208,40 @@ const QuestionsTable: React.FC<Props> = ({
                   </td>
 
                   <td className="align-top">
-                    {examples.length ? (
+                    {loadingExamples ? (
+                      <div className="space-y-2">
+                        {[...Array(3)].map((_, i) => (
+                          <div key={i} className="skeleton h-4 w-32" />
+                        ))}
+                      </div>
+                    ) : examples.length ? (
                       <ul className="list-disc ml-4 text-xs">
                         {examples
                           .filter((value) => !(typeof value === 'string' && value.includes(UNPARSABLE_MARKER)))
                           .slice(0, 5)
-                          .map((ex, i) => (
-                            <li key={`clean-${i}`} className="font-mono">
-                              <AnswerText value={ex} maxLength={50} />
-                            </li>
-                          ))}
+                          .map((ex, i) => {
+                            const text = typeof ex === 'string' ? ex : String(ex ?? '');
+                            return (
+                              <li key={`clean-${i}`} className="font-mono">
+                                <AnswerText value={text} maxLength={50} />
+                              </li>
+                            );
+                          })}
 
                         {examples
                           .filter((value) => typeof value === 'string' && value.includes(UNPARSABLE_MARKER))
                           .slice(0, 5)
-                          .map((ex, i) => (
-                            <li key={`raw-${i}`} className="font-mono text-red-500">
-                              <AnswerText value={ex.replace(UNPARSABLE_MARKER, "")} maxLength={50} />
-                            </li>
-                          ))}
+                          .map((ex, i) => {
+                            const text = typeof ex === 'string' ? ex.replace(UNPARSABLE_MARKER, '') : String(ex ?? '');
+                            return (
+                              <li key={`raw-${i}`} className="font-mono text-red-500">
+                                <AnswerText value={text} maxLength={50} />
+                              </li>
+                            );
+                          })}
                       </ul>
+                    ) : examplesError ? (
+                      <span className="opacity-60">{examplesError}</span>
                     ) : (
                       <span className="opacity-60">—</span>
                     )}
@@ -228,7 +252,10 @@ const QuestionsTable: React.FC<Props> = ({
                       <Button
                         size="sm"
                         variant="primary"
-                        onClick={() => setOpenEdits((prev) => ({ ...prev, [qid]: true }))}
+                        onClick={() => {
+                          setOpenEdits((prev) => ({ ...prev, [qid]: true }));
+                          setDrafts((prev) => ({ ...prev, [qid]: (questionMap[qid] as QuestionDef) }));
+                        }}
                         leftIcon={<IconEdit />}
                       >
                         Edit
@@ -239,10 +266,15 @@ const QuestionsTable: React.FC<Props> = ({
                           size="sm"
                           variant="primary"
                           isLoading={updating}
-                          onClick={async () => {
+                          onClick={() => {
                             const nextQS = buildQuestionSetInput();
-                            await onUpdateQuestionSet(nextQS);
-                            setOpenEdits((prev) => ({ ...prev, [qid]: false }));
+                            void Promise.resolve(onUpdateQuestionSet(nextQS)).then(() => {
+                              setOpenEdits((prev) => ({ ...prev, [qid]: false }));
+                              setDrafts((prev) => {
+                                const { [qid]: _removed, ...rest } = prev;
+                                return rest;
+                              });
+                            });
                           }}
                           leftIcon={<IconSave />}
                         >
@@ -252,7 +284,10 @@ const QuestionsTable: React.FC<Props> = ({
                           size="sm"
                           variant="ghost"
                           onClick={() => {
-                            setLocalMap((prev) => ({ ...prev, [qid]: questionMap[qid] as any }));
+                            setDrafts((prev) => {
+                              const { [qid]: _removed, ...rest } = prev;
+                              return rest;
+                            });
                             setOpenEdits((prev) => ({ ...prev, [qid]: false }));
                           }}
                         >
@@ -260,7 +295,6 @@ const QuestionsTable: React.FC<Props> = ({
                         </Button>
                       </div>
                     )}
-                        {!!updateError && <ErrorAlert error={updateError} className="mt-2" />}
                   </th>
                 </tr>
               );
@@ -285,5 +319,6 @@ const QuestionsTable: React.FC<Props> = ({
 };
 
 // Local import to avoid circular TS errors when using the renderer above
+// eslint-disable-next-line import/order
 import QuestionsConfigRender from './QuestionsConfigRender';
 export default QuestionsTable;

@@ -12,6 +12,10 @@ import {
   FiDownload,
   FiInbox,
   FiUpload,
+  FiBarChart2,
+  FiHelpCircle,
+  FiActivity,
+  FiSliders,
   FiTrash2,
   FiEdit2,
   FiSettings,
@@ -21,6 +25,7 @@ import {
   FiAlertCircle,
   FiSearch,
   FiInfo,
+  FiLayout,
   FiAlertTriangle,
 } from 'react-icons/fi';
 import { LuListChecks } from "react-icons/lu";
@@ -47,6 +52,9 @@ export const IconLogOut = wrap(FiLogOut);
 export const IconDownload = wrap(FiDownload);
 export const IconInbox = wrap(FiInbox);
 export const IconUpload = wrap(FiUpload);
+export const IconQuestions = wrap(FiHelpCircle);
+export const IconRules = wrap(FiSliders);
+export const IconSubmissions = wrap(FiInbox);
 export const IconTrash = wrap(FiTrash2);
 export const IconEdit = wrap(FiEdit2);
 export const IconSettings = wrap(FiSettings);
@@ -59,3 +67,6 @@ export const IconGrade = wrap(LuListChecks);
 export const IconSearch = wrap(FiSearch);
 export const IconCanvas = wrap(SiCanvas);
 export const IconInfo = wrap(FiInfo);
+export const IconChart = wrap(FiBarChart2);
+export const IconActivity = wrap(FiActivity);
+export const IconLayout = wrap(FiLayout);

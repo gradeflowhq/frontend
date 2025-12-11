@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import ErrorAlert from '@components/common/ErrorAlert';
 import ConfirmDialog from '@components/common/ConfirmDialog';
-import { useAssessmentPassphrase } from '@features/encryption/AssessmentPassphraseProvider';
+import { useAssessmentPassphrase } from '@features/encryption/passphraseContext';
 import { useDecryptedIds } from '@features/encryption/useDecryptedIds';
 import { useSubmissions, useDeleteSubmissions } from '@features/submissions';
 import {
@@ -28,7 +28,7 @@ const SubmissionsTabPage: React.FC = () => {
   const items: RawSubmission[] = useMemo(() => data?.raw_submissions ?? [], [data]);
 
   const studentIds = useMemo(() => items.map((item) => item.student_id ?? ''), [items]);
-  const decryptedIds = useDecryptedIds(studentIds, passphrase, notifyEncryptedDetected);
+  const { decryptedIds, isDecrypting } = useDecryptedIds(studentIds, passphrase, notifyEncryptedDetected);
 
   const filteredItems = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -51,11 +51,14 @@ const SubmissionsTabPage: React.FC = () => {
         onSearchChange={setSearchQuery}
       />
 
-      {isLoading && <div className="alert alert-info"><span>Loading submissions...</span></div>}
       {isError && <ErrorAlert error={error} />}
 
-      {!isLoading && !isError && (
-        <SubmissionsTable items={filteredItems} />
+      {!isError && (
+        <SubmissionsTable
+          items={filteredItems}
+          isLoading={isLoading}
+          isDecryptingIds={isDecrypting}
+        />
       )}
 
       {/* Load Wizard (CSV -> Blob + adapter import) */}

@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import Modal from '@components/common/Modal';
 import { Button } from '@components/ui/Button';
-import { normalizePresent, readPassphrase, writePassphrase } from '@utils/passphrase';
+import { normalizePresent, readPassphrase } from '@utils/passphrase';
 
 type Props = {
   storageKey: string;                         // e.g., submissions_passphrase:<assessmentId>
   encryptedDetected: boolean;                 // whether page contains encrypted data
-  onPassphraseReady: (passphrase: string | null) => void;
+  onPassphraseReady: (passphrase: string | null, persist?: boolean) => void;
   currentPassphrase?: string | null;          // optional: parent-provided passphrase state
 };
 
@@ -16,40 +16,27 @@ const EncryptedDataGuard: React.FC<Props> = ({
   onPassphraseReady,
   currentPassphrase,
 }) => {
-  const [open, setOpen] = useState(false);
+  const [ignored, setIgnored] = useState(false);
   const [passphraseInput, setPassphraseInput] = useState('');
   const [store, setStore] = useState(false);
 
-  // Decide whether to open based on encryptedDetected and effective passphrase (from prop or storage)
-  useEffect(() => {
-    if (!encryptedDetected) return;
+  const effectivePassphrase = useMemo(
+    () => normalizePresent(currentPassphrase ?? readPassphrase(storageKey)),
+    [currentPassphrase, storageKey]
+  );
 
-    const effective = normalizePresent(currentPassphrase ?? readPassphrase(storageKey));
-    if (effective) {
-      onPassphraseReady(effective);
-      setOpen(false);
-    } else {
-      setOpen(true);
-    }
-  }, [encryptedDetected, storageKey, currentPassphrase, onPassphraseReady]);
-
-  // If parent later loads a passphrase, close the guard
-  useEffect(() => {
-    const effective = normalizePresent(currentPassphrase ?? null);
-    if (effective) setOpen(false);
-  }, [currentPassphrase]);
+  const open = encryptedDetected && !ignored && !effectivePassphrase;
 
   const handleUse = () => {
     const effective = normalizePresent(passphraseInput);
     if (!effective) return;
-    if (store) writePassphrase(storageKey, effective);
-    onPassphraseReady(effective);
-    setOpen(false);
+    onPassphraseReady(effective, store);
+    setIgnored(true);
   };
 
   const handleIgnore = () => {
-    onPassphraseReady(null);
-    setOpen(false);
+    onPassphraseReady(null, false);
+    setIgnored(true);
   };
 
   if (!open) return null;

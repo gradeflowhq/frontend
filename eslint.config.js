@@ -88,6 +88,25 @@ export default defineConfig([
     },
   },
 
+  // Config files without type-aware parsing
+  {
+    files: ['vite.config.ts'],
+    languageOptions: {
+      parserOptions: {
+        project: false,
+      },
+    },
+  },
+
+  {
+    files: ['orval.config.ts'],
+    languageOptions: {
+      parserOptions: {
+        project: false,
+      },
+    },
+  },
+
   // Test files (Vitest/Jest) – allow test globals
   {
     files: ['**/*.{test,spec}.{ts,tsx}'],

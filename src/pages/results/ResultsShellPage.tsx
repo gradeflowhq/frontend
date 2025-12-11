@@ -2,10 +2,12 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 import ErrorAlert from '@components/common/ErrorAlert';
+import TableSkeleton from '@components/common/TableSkeleton';
 import { Button } from '@components/ui/Button';
-import { IconChevronLeft } from '@components/ui/Icon';
+import { IconChevronLeft, IconLayout, IconChart, IconActivity } from '@components/ui/Icon';
 import { useAssessment } from '@features/assessments/hooks';
-import { AssessmentPassphraseProvider, useAssessmentPassphrase } from '@features/encryption/AssessmentPassphraseProvider';
+import { AssessmentPassphraseProvider } from '@features/encryption/AssessmentPassphraseProvider';
+import { useAssessmentPassphrase } from '@features/encryption/passphraseContext';
 import { ResultsOverview, ResultsStats, QuestionAnalysis } from '@features/grading/components';
 import { useGrading, useGradingJob, useJobStatus } from '@features/grading/hooks';
 import { useQuestionSet } from '@features/questions/hooks';
@@ -36,6 +38,7 @@ const ResultsShellInner: React.FC<{ assessmentId: string }> = ({ assessmentId })
     () => gradingData?.graded_submissions ?? [],
     [gradingData]
   );
+  const hasItems = items.length > 0;
   const questionMap: QuestionSetOutputQuestionMap = useMemo(
     () => qsRes?.question_set?.question_map ?? {},
     [qsRes]
@@ -55,6 +58,7 @@ const ResultsShellInner: React.FC<{ assessmentId: string }> = ({ assessmentId })
   const { data: jobStatusRes } = useJobStatus(jobId, !!jobId);
   const jobStatus = jobStatusRes?.status;
   const gradingInProgress = jobStatus === 'queued' || jobStatus === 'running';
+  const loadingPage = loadingAssessment || isLoading;
 
   useDocumentTitle(`Results - ${assessmentRes?.name ?? 'Assessment'} - GradeFlow`);
 
@@ -73,69 +77,67 @@ const ResultsShellInner: React.FC<{ assessmentId: string }> = ({ assessmentId })
         </div>
       </div>
 
-      {loadingAssessment && (
-        <div className="alert alert-info">
-          <span>Loading assessment…</span>
-        </div>
-      )}
       {errorAssessment && <ErrorAlert error={assessmentError} />}
-
-      {isLoading && (
-        <div className="alert alert-info">
-          <span>Loading grading results...</span>
-        </div>
-      )}
       {isError && <ErrorAlert error={error} />}
 
-      {gradingInProgress && (
-        <div className="alert alert-info">
-          <span>Grading is in progress. Existing results are shown below and will update when the job completes.</span>
-        </div>
-      )}
+      {loadingPage ? (
+        <TableSkeleton cols={5} rows={6} withHeader className="mt-2" />
+      ) : (
+        <>
+          {gradingInProgress && (
+            <div className="alert alert-info">
+              <span>Grading is in progress. Existing results are shown below and will update when the job completes.</span>
+            </div>
+          )}
 
-      {!isLoading && !isError && items.length === 0 && !gradingInProgress && (
-        <div className="alert alert-info">
-          <span>No graded submissions found. Run grading first.</span>
-        </div>
-      )}
+          {!isError && !hasItems && !gradingInProgress && (
+            <div className="alert alert-info">
+              <span>No graded submissions found. Run grading first.</span>
+            </div>
+          )}
 
-      <div className="tabs tabs-lift">
-        <button
-          className={`tab ${activeTab === 'overview' ? 'tab-active' : ''}`}
-          onClick={() => setActiveTab('overview')}
-        >
-          Overview
-        </button>
-        <button
-          className={`tab ${activeTab === 'stats' ? 'tab-active' : ''}`}
-          onClick={() => setActiveTab('stats')}
-        >
-          Stats
-        </button>
-        <button
-          className={`tab ${activeTab === 'analysis' ? 'tab-active' : ''}`}
-          onClick={() => setActiveTab('analysis')}
-        >
-          Question Analysis
-        </button>
-      </div>
+          <div className="tabs tabs-lift">
+            <button
+              className={`tab ${activeTab === 'overview' ? 'tab-active' : ''} flex items-center gap-2`}
+              onClick={() => setActiveTab('overview')}
+            >
+              <IconLayout className="h-4 w-4" />
+              <span>Overview</span>
+            </button>
+            <button
+              className={`tab ${activeTab === 'stats' ? 'tab-active' : ''} flex items-center gap-2`}
+              onClick={() => setActiveTab('stats')}
+            >
+              <IconChart className="h-4 w-4" />
+              <span>Stats</span>
+            </button>
+            <button
+              className={`tab ${activeTab === 'analysis' ? 'tab-active' : ''} flex items-center gap-2`}
+              onClick={() => setActiveTab('analysis')}
+            >
+              <IconActivity className="h-4 w-4" />
+              <span>Question Analysis</span>
+            </button>
+          </div>
 
-      {!isLoading && !isError && items.length > 0 && activeTab === 'overview' && (
-        <ResultsOverview
-          gradingInProgress={gradingInProgress}
-          items={items}
-          questionIds={questionIds}
-          onView={(studentId) => { void navigate(`/results/${safeId}/${encodeURIComponent(studentId)}`); }}
-          assessmentId={safeId}
-        />
-      )}
+          {!isError && hasItems && activeTab === 'overview' && (
+            <ResultsOverview
+              gradingInProgress={gradingInProgress}
+              items={items}
+              questionIds={questionIds}
+              onView={(studentId) => { void navigate(`/results/${safeId}/${encodeURIComponent(studentId)}`); }}
+              assessmentId={safeId}
+            />
+          )}
 
-      {!isLoading && !isError && items.length > 0 && activeTab === 'stats' && (
-        <ResultsStats items={items} />
-      )}
+          {!isError && hasItems && activeTab === 'stats' && (
+            <ResultsStats items={items} />
+          )}
 
-      {!isLoading && !isError && items.length > 0 && activeTab === 'analysis' && (
-        <QuestionAnalysis items={items} questionIds={questionIds} />
+          {!isError && hasItems && activeTab === 'analysis' && (
+            <QuestionAnalysis items={items} questionIds={questionIds} />
+          )}
+        </>
       )}
     </section>
   );

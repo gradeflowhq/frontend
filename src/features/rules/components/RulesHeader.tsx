@@ -1,4 +1,5 @@
 import React from 'react';
+
 import { Button } from '@components/ui/Button';
 import { DropdownMenu } from '@components/ui/DropdownMenu';
 import { IconChevronDown, IconUpload, IconTrash, IconSearch } from '@components/ui/Icon';
@@ -11,6 +12,7 @@ type RulesHeaderProps = {
   hasRules?: boolean;
   searchQuery?: string;
   onSearchChange?: (value: string) => void;
+  disabled?: boolean;
 };
 
 const RulesHeader: React.FC<RulesHeaderProps> = ({
@@ -21,7 +23,12 @@ const RulesHeader: React.FC<RulesHeaderProps> = ({
   hasRules,
   searchQuery,
   onSearchChange,
+  disabled = false,
 }) => {
+  const handleUpload = disabled ? undefined : onUpload;
+  const handleImport = disabled ? undefined : onImport;
+  const handleDelete = disabled ? undefined : onDelete;
+
   return (
     <div className="mb-2 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
       <h2 className="text-lg font-semibold">Rules</h2>
@@ -35,19 +42,21 @@ const RulesHeader: React.FC<RulesHeaderProps> = ({
               placeholder="Search rules"
               value={searchQuery ?? ''}
               onChange={(e) => onSearchChange(e.target.value)}
+              disabled={disabled}
             />
           </label>
         )}
         <DropdownMenu
-          trigger={<span className="flex items-center gap-2"><span>Manage</span><IconChevronDown /></span>}
+          trigger={<>Manage<IconChevronDown /></>}
           align="end"
         >
           <li>
             <Button
               variant="ghost"
               className="justify-start w-full"
-              onClick={onUpload}
+              onClick={handleUpload}
               leftIcon={<IconUpload />}
+              disabled={disabled}
             >
               Upload
             </Button>
@@ -56,8 +65,9 @@ const RulesHeader: React.FC<RulesHeaderProps> = ({
             <Button
               variant="ghost"
               className="justify-start w-full"
-              onClick={onImport}
+              onClick={handleImport}
               leftIcon={<IconUpload />}
+              disabled={disabled}
             >
               Import
             </Button>
@@ -66,9 +76,9 @@ const RulesHeader: React.FC<RulesHeaderProps> = ({
             <Button
               variant="error"
               className="justify-start w-full"
-              onClick={onDelete}
+              onClick={handleDelete}
               leftIcon={<IconTrash />}
-              disabled={!hasRules || disableDelete}
+              disabled={disabled || !hasRules || disableDelete}
             >
               Delete
             </Button>

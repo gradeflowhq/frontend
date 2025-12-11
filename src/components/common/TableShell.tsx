@@ -1,17 +1,24 @@
 import { flexRender } from '@tanstack/react-table';
+
+import TableSkeleton from '@components/common/TableSkeleton';
 import PaginationControls from '@components/ui/PaginationControls';
 
-type TableShellProps = {
-  table: any;                     // TanStack table instance
+import type { Cell, Column, Header, HeaderGroup, Row, Table } from '@tanstack/react-table';
+
+type TableShellProps<TData = unknown> = {
+  table: Table<TData>;            // TanStack table instance
   totalItems: number;             // total rows before pagination
   className?: string;
   showZebra?: boolean;
   headerSticky?: boolean;
   paddingClassName?: string;      // optional padding for controls
   pinnedColumns?: string[];       // columns to pin (by header or id)
+  dense?: boolean;                // use table-sm sizing
+  isLoading?: boolean;            // render skeleton rows when loading
+  skeletonRowCount?: number;
 };
 
-const TableShell = ({
+const TableShell = <TData,>({
   table,
   totalItems,
   className,
@@ -19,18 +26,28 @@ const TableShell = ({
   headerSticky = true,
   paddingClassName = 'px-3 py-2',
   pinnedColumns = [],
-}: TableShellProps) => {
+  dense = true,
+  isLoading = false,
+  skeletonRowCount = 6,
+}: TableShellProps<TData>) => {
+  const columnsCount = table.getVisibleFlatColumns().length || 4;
+
+  if (isLoading) {
+    return <TableSkeleton cols={columnsCount} rows={skeletonRowCount} className={className} />;
+  }
+
   const pageIndex = table.getState().pagination?.pageIndex ?? 0;
   const pageSize = table.getState().pagination?.pageSize ?? 10;
   const pageRows = table.getRowModel().rows;
 
   const enablePinning = pinnedColumns.length > 0;
 
-  const isPinned = (column: any) => {
+  const isPinned = (column: Column<TData, unknown>) => {
     if (!enablePinning) return false;
     const header = column.columnDef.header;
     const id = column.id;
-    return pinnedColumns.includes(header) || pinnedColumns.includes(id);
+    const headerLabel = typeof header === 'string' ? header : undefined;
+    return (headerLabel ? pinnedColumns.includes(headerLabel) : false) || pinnedColumns.includes(id);
   };
 
   return (
@@ -41,14 +58,14 @@ const TableShell = ({
     >
       <div className="overflow-x-auto">
         <table
-          className={`table ${showZebra ? 'table-zebra' : ''} ${
+          className={`table ${dense ? 'table-sm' : ''} ${showZebra ? 'table-zebra' : ''} ${
             enablePinning ? 'table-pin-cols' : ''
           } w-full`}
         >
           <thead className={headerSticky ? 'sticky top-0 bg-base-100' : ''}>
-            {table.getHeaderGroups().map((hg: any) => (
+            {table.getHeaderGroups().map((hg: HeaderGroup<TData>) => (
               <tr key={hg.id}>
-                {hg.headers.map((h: any) => {
+                {hg.headers.map((h: Header<TData, unknown>) => {
                   const pinned = isPinned(h.column);
                   const Component = enablePinning ? (pinned ? 'th' : 'td') : 'th';
                   return (
@@ -64,9 +81,9 @@ const TableShell = ({
             ))}
           </thead>
           <tbody>
-            {pageRows.map((row: any) => (
+            {pageRows.map((row: Row<TData>) => (
               <tr key={row.id} className="hover">
-                {row.getVisibleCells().map((cell: any) => {
+                {row.getVisibleCells().map((cell: Cell<TData, unknown>) => {
                   const pinned = isPinned(cell.column);
                   const Component = enablePinning && pinned ? 'th' : 'td';
                   return (

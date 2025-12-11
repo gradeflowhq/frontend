@@ -21,8 +21,10 @@ import GradingPreviewSettings from '@features/grading/components/GradingPreviewS
 import type { GradingPreviewParams } from '@features/grading/components/GradingPreviewSettings';
 
 import type { QuestionSetOutputQuestionMap } from '@api/models';
-import type { RuleValue } from '../types';
+import type { QuestionType, RuleValue } from '../types';
 import { stripEngineKeysFromRulesSchema } from '../helpers/engine';
+import type { JSONSchema7 } from 'json-schema';
+import type { RuleDefinitions } from '../hooks';
 
 type RuleDialogProps = {
   open: boolean;
@@ -32,16 +34,20 @@ type RuleDialogProps = {
   questionType?: string | null;
   questionMap?: QuestionSetOutputQuestionMap;
   onClose: () => void;
-  onSave: (rule: RuleValue | any) => Promise<void> | void;
+  onSave: (rule: RuleValue) => Promise<void> | void;
   isSaving?: boolean;
   error?: unknown;
   assessmentId?: string;
 };
 
 // Seed essential fields RJSF won’t infer on its own
-const materializeDraftFromSchema = (schema: any, questionId?: string | null, initial?: any) => {
-  const props = schema?.properties ?? {};
-  const draft: Record<string, any> = { ...(initial ?? {}) };
+const materializeDraftFromSchema = (
+  schema: JSONSchema7 | null,
+  questionId?: string | null,
+  initial?: RuleValue | null
+): RuleValue => {
+  const props = (schema?.properties as Record<string, JSONSchema7> | undefined) ?? {};
+  const draft: Record<string, unknown> = { ...(initial ?? {}) };
 
   const typeConst = props?.type?.const ?? props?.type?.default;
   if (typeConst !== undefined && draft.type === undefined) draft.type = typeConst;
@@ -49,7 +55,7 @@ const materializeDraftFromSchema = (schema: any, questionId?: string | null, ini
   if (props?.question_id && questionId && draft.question_id === undefined) {
     draft.question_id = questionId;
   }
-  return draft;
+  return draft as unknown as RuleValue;
 };
 
 const RuleDialog: React.FC<RuleDialogProps> = ({
@@ -67,33 +73,34 @@ const RuleDialog: React.FC<RuleDialogProps> = ({
 }) => {
   // Base rule definitions
   const defs = useRuleDefinitions();
-  const eligibleKeys = useCompatibleRuleKeys(defs, questionType as any, !!questionId);
+  const eligibleKeys = useCompatibleRuleKeys(defs, (questionType as QuestionType | undefined) ?? undefined, !!questionId);
   const findKeyByType = useFindSchemaKeyByType(defs);
 
   // Augment schemas
   const defsWithQidEnums = React.useMemo(() => {
     if (!questionMap) return defs;
-    return augmentRulesSchemaWithQuestionIdEnums(defs as any, questionMap as any) as Record<string, any>;
+    return augmentRulesSchemaWithQuestionIdEnums(defs, questionMap as Record<string, Record<string, unknown>>);
   }, [defs, questionMap]);
 
   const injectedDefs = React.useMemo(() => {
     if (!questionMap || !questionId) return defsWithQidEnums;
-    return injectEnumsFromConstraintsForQuestion(defsWithQidEnums as any, questionMap as any, questionId) as Record<
-      string,
-      any
-    >;
+    return injectEnumsFromConstraintsForQuestion(
+      defsWithQidEnums,
+      questionMap as Record<string, Record<string, unknown>>,
+      questionId
+    );
   }, [defsWithQidEnums, questionMap, questionId]);
 
   const strippedDefs = React.useMemo(() => {
     return stripEngineKeysFromRulesSchema(injectedDefs);
   }, [injectedDefs]);
 
-  const finalDefs = strippedDefs;
+  const finalDefs: RuleDefinitions = strippedDefs as RuleDefinitions;
 
   // Resolve concrete schema key
   const concreteKey = React.useMemo(() => {
     if (selectedRuleKey && finalDefs[selectedRuleKey]) return selectedRuleKey;
-    const initType = (initialRule as any)?.type;
+    const initType = initialRule?.type;
     if (initType) {
       const k = findKeyByType(String(initType), !!questionId);
       if (k) return k;
@@ -105,12 +112,12 @@ const RuleDialog: React.FC<RuleDialogProps> = ({
   const baseSchema = React.useMemo(() => (concreteKey ? finalDefs[concreteKey] : null), [finalDefs, concreteKey]);
 
   // Draft form state
-  const [draft, setDraft] = React.useState<any>(() => {
-    return baseSchema ? materializeDraftFromSchema(baseSchema, questionId, initialRule ?? {}) : (initialRule ?? {});
+  const [draft, setDraft] = React.useState<RuleValue>(() => {
+    return baseSchema ? materializeDraftFromSchema(baseSchema, questionId, initialRule ?? undefined) : (initialRule ?? ({} as RuleValue));
   });
   React.useEffect(() => {
     if (!baseSchema) return;
-    setDraft(materializeDraftFromSchema(baseSchema, questionId, initialRule ?? {}));
+    setDraft(materializeDraftFromSchema(baseSchema, questionId, initialRule ?? undefined));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [baseSchema, questionId]);
 
@@ -118,7 +125,7 @@ const RuleDialog: React.FC<RuleDialogProps> = ({
   const hiddenKeys = React.useMemo(() => (questionId ? [...HIDE_KEYS_SINGLE] : [...HIDE_KEYS_MULTI]), [questionId]);
 
   const computed = React.useMemo(() => {
-    const baseUi: Record<string, any> = {
+    const baseUi: Record<string, unknown> = {
       'ui:title': '',
       'ui:options': { label: true },
       'ui:submitButtonOptions': { norender: true },
@@ -127,7 +134,7 @@ const RuleDialog: React.FC<RuleDialogProps> = ({
       baseUi[k] = { 'ui:widget': 'hidden', 'ui:title': '', 'ui:options': { label: false } };
     });
 
-    if (!baseSchema) return { schemaForRender: null as any, mergedUiSchema: baseUi };
+    if (!baseSchema) return { schemaForRender: null as JSONSchema7 | null, mergedUiSchema: baseUi };
     const schemaWithDefs = { ...baseSchema, definitions: finalDefs };
     return { schemaForRender: schemaWithDefs, mergedUiSchema: baseUi };
   }, [baseSchema, finalDefs, hiddenKeys]);
@@ -149,7 +156,7 @@ const RuleDialog: React.FC<RuleDialogProps> = ({
   const runPreview = async () => {
     if (!canPreview) return;
     await previewMutation.mutateAsync({
-      rule: (draft as any) ?? null,
+      rule: draft ?? null,
       config: {
         limit: previewParams.limit,
         selection: previewParams.selection,
@@ -192,14 +199,14 @@ const RuleDialog: React.FC<RuleDialogProps> = ({
         {/* Left: Rule form */}
         <div>
           {schemaForRender ? (
-            <SchemaForm<any>
+            <SchemaForm<RuleValue>
               key={`rule:${concreteKey ?? 'unknown'}:${questionId ?? ''}`}
               schema={schemaForRender}
               uiSchema={mergedUiSchema}
               formData={draft}
-              onChange={({ formData }) => setDraft(formData)}
+              onChange={({ formData }) => setDraft((formData ?? draft) as RuleValue)}
               onSubmit={async ({ formData }) => {
-                await onSave(formData as RuleValue);
+                if (formData) await onSave(formData as RuleValue);
               }}
               formProps={{ noHtml5Validate: true }}
               showSubmit={false}

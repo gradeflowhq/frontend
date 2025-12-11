@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import Papa from 'papaparse';
 import Modal from '@components/common/Modal';
 import ErrorAlert from '@components/common/ErrorAlert';
@@ -8,7 +8,7 @@ import { IconUpload } from '@components/ui/Icon';
 import { buildPassphraseKey, readPassphrase, writePassphrase } from '@utils/passphrase';
 import { validateCsvMapping, buildUploadCsv } from '@features/submissions/helpers';
 import type { CsvPreview, CsvMapping, PassphraseContext } from '@features/submissions/types';
-import { useInferAndParseQuestionSet } from '@features/questions/hooks';
+import { useInferAndParseQuestionSet, useQuestionSet } from '@features/questions/hooks';
 import {
   arraysEqual,
   computeNextMapping,
@@ -192,7 +192,7 @@ const PreviewFooterControls: React.FC<{
   );
 };
 
-const SubmissionsLoadWizardModal: React.FC<Props> = ({ open, assessmentId, onClose }) => {
+const SubmissionsLoadWizardContent: React.FC<{ assessmentId: string; onClose: () => void }> = ({ assessmentId, onClose }) => {
   // Raw parsed grid (full CSV table)
   const [rawGrid, setRawGrid] = useState<string[][] | null>(null);
 
@@ -208,58 +208,43 @@ const SubmissionsLoadWizardModal: React.FC<Props> = ({ open, assessmentId, onClo
   const [dataEndRow, setDataEndRow] = useState<number | ''>('');
 
   // Encryption controls
-  const [encryptIds, setEncryptIds] = useState(false);
-  const [passphrase, setPassphrase] = useState('');
-  const [storePassphrase, setStorePassphrase] = useState(false);
-
   const storageKey = buildPassphraseKey(assessmentId);
+  const initialPassphrase = readPassphrase(storageKey) ?? '';
+  const [encryptIds, setEncryptIds] = useState(false);
+  const [passphrase, setPassphrase] = useState<string>(initialPassphrase);
+  const [storePassphrase, setStorePassphrase] = useState<boolean>(!!initialPassphrase);
+
   const inferAndParse = useInferAndParseQuestionSet(assessmentId);
+  const { data: qsRes } = useQuestionSet(assessmentId, true);
+  const hasQuestionSet = !!qsRes?.question_set && Object.keys(qsRes.question_set.question_map ?? {}).length > 0;
   const toast = useToast();
-
-  // Load stored passphrase on open
-  useEffect(() => {
-    if (!open) return;
-    const saved = readPassphrase(storageKey);
-    if (saved) {
-      setPassphrase(saved);
-      setStorePassphrase(true);
-    }
-  }, [open, storageKey]);
-
-  // Reset on close
-  useEffect(() => {
-    if (!open) return;
-    return () => {
-      setRawGrid(null);
-      setPreview(null);
-      setMapping({ studentIdColumn: '', questionColumns: [] });
-      setHeaderRow(1);
-      setDataStartRow(2);
-      setDataEndRow('');
-      setEncryptIds(false);
-    };
-  }, [open]);
 
   const headers = preview?.headers ?? [];
   const rows = preview?.rows ?? [];
 
   // Compute preview and keep mapping stable (avoid loops)
-  const recomputePreview = useCallback(() => {
-    if (!rawGrid || rawGrid.length === 0) {
-      setPreview((prevPrev) => (prevPrev ? null : prevPrev));
-      setMapping((prev) =>
-        prev.studentIdColumn !== '' || prev.questionColumns.length > 0
-          ? { studentIdColumn: '', questionColumns: [] }
-          : prev
-      );
+  const recomputePreview = useCallback((overrides: Partial<{
+    rawGrid: string[][] | null;
+    headerRow: number;
+    dataStartRow: number;
+    dataEndRow: number | '';
+  }> = {}) => {
+    const grid = overrides.rawGrid ?? rawGrid;
+    const hdrRow = overrides.headerRow ?? headerRow;
+    const startRow = overrides.dataStartRow ?? dataStartRow;
+    const endRow = overrides.dataEndRow ?? dataEndRow;
+
+    if (!grid || grid.length === 0) {
+      setPreview(null);
+      setMapping({ studentIdColumn: '', questionColumns: [] });
       return;
     }
 
-    const totalRows = rawGrid.length;
+    const totalRows = grid.length;
 
-    const hdrRow1b = clamp(headerRow || 1, 1, totalRows);
-    const start1b = clamp((dataStartRow || hdrRow1b + 1), 1, totalRows);
-    const end1b = typeof dataEndRow === 'number' && dataEndRow > 0 ? clamp(dataEndRow, 1, totalRows) : totalRows;
+    const hdrRow1b = clamp(hdrRow || 1, 1, totalRows);
+    const start1b = clamp((startRow || hdrRow1b + 1), 1, totalRows);
+    const end1b = typeof endRow === 'number' && endRow > 0 ? clamp(endRow, 1, totalRows) : totalRows;
 
     const effectiveStart1b = Math.max(start1b, hdrRow1b + 1);
     const effectiveEnd1b = Math.max(end1b, effectiveStart1b - 1);
@@ -268,10 +253,9 @@ const SubmissionsLoadWizardModal: React.FC<Props> = ({ open, assessmentId, onClo
     const startIdx = effectiveStart1b - 1;
     const endIdx = effectiveEnd1b - 1;
 
-    const nextHeaders = (rawGrid[hdrIdx] ?? []).map((h) => String(h ?? ''));
-    const nextRows = rawGrid.slice(startIdx, endIdx + 1).map((r) => r.map((c) => String(c ?? '')));
+    const nextHeaders = (grid[hdrIdx] ?? []).map((h) => String(h ?? ''));
+    const nextRows = grid.slice(startIdx, endIdx + 1).map((r) => r.map((c) => String(c ?? '')));
 
-    // Set preview if changed
     setPreview((prevPrev) => {
       if (!prevPrev) return { headers: nextHeaders, rows: nextRows };
       const sameHeaders = arraysEqual(prevPrev.headers, nextHeaders);
@@ -281,14 +265,8 @@ const SubmissionsLoadWizardModal: React.FC<Props> = ({ open, assessmentId, onClo
       return { headers: nextHeaders, rows: nextRows };
     });
 
-    // Use heuristics (with rows) to compute the next mapping
     setMapping((prev) => computeNextMapping(nextHeaders, prev, { rowsForHeuristic: nextRows }));
   }, [rawGrid, headerRow, dataStartRow, dataEndRow]);
-
-  // Recompute when inputs change
-  useEffect(() => {
-    recomputePreview();
-  }, [recomputePreview]);
 
   // File selection
   const onSelectFile = (f: File | null) => {
@@ -308,6 +286,7 @@ const SubmissionsLoadWizardModal: React.FC<Props> = ({ open, assessmentId, onClo
         setHeaderRow(1);
         setDataStartRow(2);
         setDataEndRow('');
+        recomputePreview({ rawGrid: data, headerRow: 1, dataStartRow: 2, dataEndRow: '' });
       },
       error: () => {
         setRawGrid(null);
@@ -376,10 +355,8 @@ const SubmissionsLoadWizardModal: React.FC<Props> = ({ open, assessmentId, onClo
     onError: () => toast.error('Upload failed'),
   });
 
-  if (!open) return null;
-
   return (
-    <Modal open={open} onClose={onClose} boxClassName="w-full max-w-6xl">
+    <Modal open onClose={onClose} boxClassName="w-full max-w-6xl">
       <h3 className="font-bold text-lg">Import Submissions (CSV)</h3>
 
       {/* File input */}
@@ -401,9 +378,13 @@ const SubmissionsLoadWizardModal: React.FC<Props> = ({ open, assessmentId, onClo
           dataStartRow={dataStartRow}
           dataEndRow={dataEndRow}
           onChange={({ headerRow: h, dataStartRow: s, dataEndRow: e }) => {
-            if (typeof h === 'number') setHeaderRow(h);
-            if (typeof s === 'number') setDataStartRow(s);
-            if (typeof e !== 'undefined') setDataEndRow(e);
+            const nextHeader = typeof h === 'number' ? h : headerRow;
+            const nextStart = typeof s === 'number' ? s : dataStartRow;
+            const nextEnd = typeof e !== 'undefined' ? e : dataEndRow;
+            setHeaderRow(nextHeader);
+            setDataStartRow(nextStart);
+            setDataEndRow(nextEnd);
+            recomputePreview({ headerRow: nextHeader, dataStartRow: nextStart, dataEndRow: nextEnd });
           }}
         />
       )}
@@ -486,45 +467,53 @@ const SubmissionsLoadWizardModal: React.FC<Props> = ({ open, assessmentId, onClo
         <LoadingButton
           type="button"
           variant="primary"
-          onClick={async () => {
-          if (!preview) return;
+          onClick={() => {
+            void (async () => {
+              if (!preview) return;
 
-          const errors = validateCsvMapping(preview, mapping);
-          if (errors.length) {
-            alert(errors.join('\n'));
-            return;
-          }
+              const errors = validateCsvMapping(preview, mapping);
+              if (errors.length) {
+                alert(errors.join('\n'));
+                return;
+              }
 
-          // Persist passphrase (optional)
-          if (encryptIds && storePassphrase && passphrase) {
-            writePassphrase(storageKey, passphrase);
-          }
+              // Persist passphrase (optional)
+              if (encryptIds && storePassphrase && passphrase) {
+                writePassphrase(storageKey, passphrase);
+              }
 
-          // Build CSV (encrypting IDs client-side if chosen)
-          const passCtx: PassphraseContext = { passphrase: encryptIds ? passphrase : null };
-          const { csv } = await buildUploadCsv(preview, mapping, passCtx);
+              // Build CSV (encrypting IDs client-side if chosen)
+              const passCtx: PassphraseContext = { passphrase: encryptIds ? passphrase : null };
+              const { csv } = await buildUploadCsv(preview, mapping, passCtx);
 
-          // Adapter config for CSV import
-          const adapter: CsvRawSubmissionsConfig = {
-            name: 'csv',
-            format: 'csv',
-            student_id_column: 'student_id',
-            // Provide question columns explicitly; omit if empty
-            answer_columns: mapping.questionColumns.length ? mapping.questionColumns : undefined,
-          };
+              // Adapter config for CSV import
+              const adapter: CsvRawSubmissionsConfig = {
+                name: 'csv',
+                format: 'csv',
+                student_id_column: 'student_id',
+                // Provide question columns explicitly; omit if empty
+                answer_columns: mapping.questionColumns.length ? mapping.questionColumns : undefined,
+              };
 
-          const payload = { data: csv, adapter } as any;
+              const payload: ImportSubmissionsRequest = {
+                // Backend expects str/bytes; OpenAPI types this as Blob, so cast to satisfy TS while sending plain text.
+                data: csv as unknown as Blob,
+                adapter,
+              };
 
-          await importMutation.mutateAsync(payload);
+              await importMutation.mutateAsync(payload);
 
-          // Try to infer and parse questions after import
-          try {
-            await inferAndParse.mutateAsync();
-          } catch (e) {
-            console.warn('Inference or parsing failed after upload:', e);
-            toast.error('Post-upload inference failed');
-          }
-        }}
+              // Try to infer and parse questions after import only when no question set exists yet
+              if (!hasQuestionSet) {
+                try {
+                  await inferAndParse.mutateAsync();
+                } catch (e) {
+                  console.warn('Inference or parsing failed after upload:', e);
+                  toast.error('Post-upload inference failed');
+                }
+              }
+            })();
+          }}
           disabled={!canSubmit || !preview}
           isLoading={importMutation.isPending}
           title={!canSubmit ? 'Select header/body rows, choose SID and questions, and passphrase (if encrypting)' : 'Upload'}
@@ -535,6 +524,11 @@ const SubmissionsLoadWizardModal: React.FC<Props> = ({ open, assessmentId, onClo
       </div>
     </Modal>
   );
+};
+
+const SubmissionsLoadWizardModal: React.FC<Props> = ({ open, assessmentId, onClose }) => {
+  if (!open) return null;
+  return <SubmissionsLoadWizardContent assessmentId={assessmentId} onClose={onClose} />;
 };
 
 export default SubmissionsLoadWizardModal;

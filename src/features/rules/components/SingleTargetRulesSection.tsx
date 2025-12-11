@@ -40,7 +40,7 @@ const SingleTargetRulesSection: React.FC<Props> = ({
   const findKeyByType = useFindSchemaKeyByType(defs);
   const toast = useToast();
   // All single-target rule schema keys (question_id present)
-  const singleTargetRuleKeys = useCompatibleRuleKeys(defs, undefined as any, true);
+  const singleTargetRuleKeys = useCompatibleRuleKeys(defs, undefined, true);
 
   // Local UI state
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -64,7 +64,7 @@ const SingleTargetRulesSection: React.FC<Props> = ({
   const byQuestion = useMemo(() => {
     const map: Record<string, RuleValue[]> = {};
     for (const r of allRules) {
-      const qid = (r as any)?.question_id;
+      const qid = (r as { question_id?: unknown } | null)?.question_id;
       if (typeof qid === 'string') {
         if (!map[qid]) map[qid] = [];
         map[qid].push(r);
@@ -96,14 +96,15 @@ const SingleTargetRulesSection: React.FC<Props> = ({
   // Filter schema keys compatible with a question's type
   const compatibleKeysFor = (questionType: string) =>
     singleTargetRuleKeys.filter((key) => {
-      const props = defs[key]?.properties ?? {};
-      const allowed =
-        Array.isArray(props?.question_types?.default)
-          ? props.question_types.default
-          : Array.isArray(props?.question_types?.enum)
-          ? props.question_types.enum
-          : undefined;
-      return !allowed || allowed.includes(questionType);
+      const props = defs[key]?.properties as Record<string, unknown> | undefined;
+      const qt = props?.question_types;
+      let allowed: unknown;
+      if (qt && typeof qt === 'object' && !Array.isArray(qt)) {
+        const defaults = (qt as { default?: unknown }).default;
+        const enums = (qt as { enum?: unknown }).enum;
+        allowed = Array.isArray(defaults) ? defaults : Array.isArray(enums) ? enums : undefined;
+      }
+      return !Array.isArray(allowed) || (allowed as unknown[]).includes(questionType);
     });
 
   const handleAddDropdownSelect = (qid: string, ruleKey: string) => {
@@ -115,13 +116,13 @@ const SingleTargetRulesSection: React.FC<Props> = ({
 
   const handleEdit = (qid: string, rule: RuleValue) => {
     setEditingForQid(qid);
-    const key = findKeyByType(String((rule as any)?.type), true);
+    const key = findKeyByType(String(rule.type ?? ''), true);
     setSelectedRuleKey(key);
     setEditingRule(rule);
     setDialogOpen(true);
   };
 
-  const onSaveRuleDialog = async (ruleObj: any) => {
+  const onSaveRuleDialog = async (ruleObj: RuleValue) => {
     if (!editingForQid) return;
     const nextRule = { ...ruleObj, question_id: editingForQid } as RuleValue;
     const nextRules = editingRule

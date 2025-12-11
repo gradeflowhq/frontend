@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import clsx from 'clsx';
 
 type DropdownMenuProps = {
@@ -18,27 +18,18 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({
   className,
   isItemList = true,
 }) => {
-  const [open, setOpen] = useState(false);
   const dropdownClass = clsx(
     'dropdown',
     align === 'end' && 'dropdown-end',
     position === 'top' && 'dropdown-top',
-    open && 'dropdown-open',
     className
   );
 
-  const closeOnBlur = () => setTimeout(() => setOpen(false), 100);
-
   return (
     <div className={dropdownClass}>
-      <button
-        tabIndex={0}
-        className="btn btn-ghost"
-        onClick={() => setOpen((o) => !o)}
-        onBlur={closeOnBlur}
-      >
+      <div tabIndex={0} role="button" className="btn btn-ghost">
         {trigger}
-      </button>
+      </div>
       {isItemList ? (
         <ul
           tabIndex={0}
@@ -47,7 +38,9 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({
           {children}
         </ul>
       ) : (
-        <>{children}</>
+        <div tabIndex={0} className="dropdown-content z-50">
+          {children}
+        </div>
       )}
     </div>
   );

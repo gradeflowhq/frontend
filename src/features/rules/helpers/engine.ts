@@ -1,6 +1,6 @@
 import { ENGINE_KEYS } from '../constants';
 
-export function stripEngineKeysFromRulesSchema<T extends Record<string, any>>(
+export function stripEngineKeysFromRulesSchema<T extends Record<string, unknown>>(
   schema: T,
   engineKeys: readonly string[] = ENGINE_KEYS
 ): T {
@@ -8,33 +8,36 @@ export function stripEngineKeysFromRulesSchema<T extends Record<string, any>>(
   const cloned: T = JSON.parse(JSON.stringify(schema));
 
   // The rules definitions may either be under "definitions" or at the root.
-  const container: Record<string, any> =
-    (cloned as any).definitions && typeof (cloned as any).definitions === 'object'
-      ? (cloned as any).definitions
-      : (cloned as any);
+  const container: Record<string, unknown> =
+    (cloned as { definitions?: Record<string, unknown> }).definitions &&
+    typeof (cloned as { definitions?: Record<string, unknown> }).definitions === 'object'
+      ? (cloned as { definitions?: Record<string, unknown> }).definitions!
+      : (cloned as Record<string, unknown>);
 
   // Iterate through each definition and remove ENGINE_KEYS from its "properties" and "required"
-  Object.values(container).forEach((def: any) => {
+  Object.values(container).forEach((def) => {
     if (!def || typeof def !== 'object') return;
 
+    const defObj = def as { properties?: Record<string, unknown>; required?: unknown[] } & Record<string, unknown>;
+
     // Remove from properties
-    if (def.properties && typeof def.properties === 'object') {
+    if (defObj.properties && typeof defObj.properties === 'object') {
       engineKeys.forEach((k) => {
-        if (k in def.properties) {
-          delete def.properties[k];
+        if (k in defObj.properties!) {
+          delete defObj.properties![k];
         }
       });
     }
 
     // Remove from required
-    if (Array.isArray(def.required)) {
-      def.required = def.required.filter((r: string) => !engineKeys.includes(r));
+    if (Array.isArray(defObj.required)) {
+      defObj.required = defObj.required.filter((r) => typeof r === 'string' && !engineKeys.includes(r));
     }
 
     // If defaults for those keys exist at the same level, clean them too (rare but safe)
     engineKeys.forEach((k) => {
-      if (k in def) {
-        delete def[k];
+      if (k in defObj) {
+        delete defObj[k];
       }
     });
   });

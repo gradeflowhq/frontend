@@ -12,10 +12,10 @@ type RuleItemProps = {
 const RuleItem: React.FC<RuleItemProps> = ({ rule, onEdit, onDelete, contextQuestionId }) => {
   return (
     <RuleRender
-      value={rule as any}
+      value={rule}
       contextQuestionId={contextQuestionId}
-      onEdit={onEdit as any}
-      onDelete={onDelete as any}
+      onEdit={onEdit}
+      onDelete={onDelete}
     />
   );
 };
