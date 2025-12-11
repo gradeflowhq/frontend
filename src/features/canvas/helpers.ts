@@ -51,7 +51,7 @@ export const buildUserIdMap = (users: CanvasUserSummary[]): IdMap => {
   const map: IdMap = {};
   users.forEach((u) => {
     const canvasId = u.id.toString();
-    const candidates = [canvasId, u.login_id, u.sis_user_id, u.integration_id];
+    const candidates = [canvasId, u.login_id, u.sis_user_id, u.integration_id, u.email, u.name, u.sortable_name, u.short_name, u.display_name, u.uuid];
     candidates.forEach((candidate) => {
       const norm = normalizeId(candidate);
       if (norm) map[norm] = canvasId;
