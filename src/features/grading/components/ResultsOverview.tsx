@@ -99,7 +99,9 @@ const ResultsOverview: React.FC<Props> = ({
         id: 'student_id',
         header: 'Student ID',
         cell: ({ row }) => (
-          <DecryptedText value={row.original.student_id} passphrase={passphrase} mono size="sm" />
+          <div className="flex items-center">
+            <DecryptedText value={row.original.student_id} passphrase={passphrase} mono size="sm" />
+          </div>
         ),
       })
     );
@@ -128,14 +130,13 @@ const ResultsOverview: React.FC<Props> = ({
                   ) : (
                     <>
                       <span className="font-mono text-sm">
-                        {pointsDisplay} / {maxPoints}
+                        {pointsDisplay}/{maxPoints}
                       </span>
                       {adjustedExists && (
                         <span className="font-mono text-[11px] opacity-70">
                           Original: {r.points} / {maxPoints}
                         </span>
                       )}
-                      {renderPercentBar(pointsDisplay ?? 0, maxPoints)}
                     </>
                   )}
                 </div>
@@ -163,7 +164,7 @@ const ResultsOverview: React.FC<Props> = ({
           return (
             <div className="flex flex-col">
               <span className="font-mono text-sm">
-                {totalPoints} / {totalMax}
+                {totalPoints}/{totalMax}
               </span>
               {renderPercentBar(totalPoints, totalMax)}
             </div>
@@ -233,7 +234,7 @@ const ResultsOverview: React.FC<Props> = ({
         </div>
       </div>
 
-      <TableShell table={table} totalItems={filteredItems.length} />
+      <TableShell table={table} totalItems={filteredItems.length} pinnedColumns={['Student ID', 'Actions']} />
 
       <ResultsDownloadModal
         open={openDownload}

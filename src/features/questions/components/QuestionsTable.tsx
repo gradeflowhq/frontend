@@ -120,13 +120,13 @@ const QuestionsTable: React.FC<Props> = ({
   return (
     <div className="overflow-hidden rounded-box border border-base-300 bg-base-100">
       <div className="overflow-x-auto">
-        <table className="table w-full">
+        <table className="table table-pin-cols w-full">
           <thead className="sticky top-0 bg-base-100">
             <tr>
-              <th>Question ID</th>
-              <th>Type</th>
-              <th>Configuration</th>
-              <th>Example answers</th>
+              <td>Question ID</td>
+              <td>Type</td>
+              <td>Configuration</td>
+              <td>Example answers</td>
               <th>Actions</th>
             </tr>
           </thead>
@@ -223,7 +223,7 @@ const QuestionsTable: React.FC<Props> = ({
                     )}
                   </td>
 
-                  <td className="align-top">
+                  <th className="align-top">
                     {!isEditing ? (
                       <Button
                         size="sm"
@@ -261,7 +261,7 @@ const QuestionsTable: React.FC<Props> = ({
                       </div>
                     )}
                         {!!updateError && <ErrorAlert error={updateError} className="mt-2" />}
-                  </td>
+                  </th>
                 </tr>
               );
             })}

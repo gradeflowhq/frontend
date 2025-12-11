@@ -38,16 +38,21 @@ const PreviewTable: React.FC<{
   selectedQuestions: string[];
   onToggleQuestion: (header: string) => void;
 }> = ({ headers, rows, studentIdColumn, selectedQuestions, onToggleQuestion }) => {
+  const studentIdIndex = headers.indexOf(studentIdColumn);
+
   return (
     <div className="overflow-x-auto rounded-box border border-base-300">
-      <table className="table table-compact w-full">
+      <table className="table table-compact table-pin-cols w-full">
         <thead>
           <tr>
-            {headers.map((h) => {
+            {headers.map((h, i) => {
               const isSID = studentIdColumn === h;
               const isSelected = selectedQuestions.includes(h);
+              const isPinned = i === studentIdIndex;
+              const Component = isPinned ? 'th' : 'td';
+
               return (
-                <th key={h}>
+                <Component key={h}>
                   <label
                     className="inline-flex items-center gap-2 cursor-pointer"
                     title={isSID ? 'Student ID (cannot be selected as a question)' : 'Include this column as a question'}
@@ -61,7 +66,7 @@ const PreviewTable: React.FC<{
                     />
                     <span className="font-mono text-xs">{h}</span>
                   </label>
-                </th>
+                </Component>
               );
             })}
           </tr>
@@ -69,11 +74,15 @@ const PreviewTable: React.FC<{
         <tbody>
           {rows.slice(0, 10).map((r, ri) => (
             <tr key={ri}>
-              {r.map((c, ci) => (
-                <td key={ci}>
-                  <span className="font-mono text-xs">{c}</span>
-                </td>
-              ))}
+              {r.map((c, ci) => {
+                const isPinned = ci === studentIdIndex;
+                const Component = isPinned ? 'th' : 'td';
+                return (
+                  <Component key={ci}>
+                    <span className="font-mono text-xs">{c}</span>
+                  </Component>
+                );
+              })}
             </tr>
           ))}
         </tbody>

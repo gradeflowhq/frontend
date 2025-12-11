@@ -103,7 +103,7 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({ items, initialPageS
     );
   }
 
-  return <TableShell table={table} totalItems={items.length} />;
+  return <TableShell table={table} totalItems={items.length} pinnedColumns={['Student ID']} />;
 };
 
 export default SubmissionsTable;

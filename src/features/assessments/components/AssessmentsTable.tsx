@@ -131,7 +131,7 @@ const AssessmentsTable: React.FC<AssessmentsTableProps> = ({
   }
 
   // TableShell already renders header/body/pagination consistently
-  return <TableShell table={table} totalItems={items.length} />;
+  return <TableShell table={table} totalItems={items.length} pinnedColumns={['Actions']} />;
 };
 
 export default AssessmentsTable;

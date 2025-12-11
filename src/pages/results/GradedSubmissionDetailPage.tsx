@@ -258,17 +258,17 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
       </div>
 
       <div className="overflow-x-auto rounded-box border border-base-300 bg-base-100 shadow-xs">
-        <table className="table w-full">
+        <table className="table table-pin-cols w-full">
           <thead>
             <tr>
-              <th>Question ID</th>
-              <th>Rule</th>
-              <th title="Passed" aria-label="Passed">
+              <td>Question ID</td>
+              <td>Rule</td>
+              <td title="Passed" aria-label="Passed">
                 <IconCheckCircle />
-              </th>
-              <th>Answer</th>
-              <th>Points</th>
-              <th>Feedback</th>
+              </td>
+              <td>Answer</td>
+              <td>Points</td>
+              <td>Feedback</td>
               <th>Actions</th>
             </tr>
           </thead>
@@ -376,7 +376,7 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
                     )}
                   </td>
 
-                  <td className="align-top">
+                  <th className="align-top">
                     {!isEditing ? (
                       <div className="flex gap-2">
                         <Button size="sm" onClick={() => startEdit(qid, res)} leftIcon={<IconEdit />}>
@@ -399,7 +399,7 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
                         Cancel
                       </Button>
                     )}
-                  </td>
+                  </th>
                 </tr>
               );
             })}

@@ -164,7 +164,7 @@ const MembersTable: React.FC<MembersTableProps> = ({
     );
   }
 
-  return <TableShell table={table} totalItems={items.length} />;
+  return <TableShell table={table} totalItems={items.length} pinnedColumns={['Actions']} />;
 };
 
 export default MembersTable;

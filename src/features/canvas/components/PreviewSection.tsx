@@ -124,7 +124,12 @@ const PreviewSection: React.FC<PreviewSectionProps> = ({
         </button>
       </div>
 
-      <TableShell table={activeTable} totalItems={activeRows.length} paddingClassName="px-3 py-1" />
+      <TableShell
+        table={activeTable}
+        totalItems={activeRows.length}
+        paddingClassName="px-3 py-1"
+        pinnedColumns={['Student ID']}
+      />
 
       <div className="text-sm text-base-content/70">
         {mappedRows.length} mapped / {unmappedRows.length} unmapped students.

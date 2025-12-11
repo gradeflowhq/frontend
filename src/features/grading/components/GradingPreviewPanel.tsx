@@ -61,14 +61,14 @@ const GradingPreviewPanel: React.FC<Props> = ({ items, loading, error, className
         className="rounded-box border border-base-300 bg-base-100 shadow-xs"
         style={{ maxHeight: `${maxHeightVh}vh`, overflowX: 'auto', overflowY: 'auto' }}
       >
-        <table className="table table-zebra w-full min-w-[720px]">
+        <table className="table table-zebra table-pin-cols w-full min-w-[720px]">
           <thead className="sticky top-0 bg-base-100 z-10">
             <tr>
               <th>Student ID</th>
-              <th>{targetQid ? <>Answer ({targetQid})</> : 'Answer'}</th>
-              <th>Passed</th>
-              <th>Points</th>
-              <th>Feedback</th>
+              <td>{targetQid ? <>Answer ({targetQid})</> : 'Answer'}</td>
+              <td>Passed</td>
+              <td>Points</td>
+              <td>Feedback</td>
             </tr>
           </thead>
           <tbody>
@@ -83,9 +83,9 @@ const GradingPreviewPanel: React.FC<Props> = ({ items, loading, error, className
 
               return (
                 <tr key={gs.student_id} className="align-top">
-                  <td className="whitespace-pre-wrap break-words">
+                  <th className="whitespace-pre-wrap break-words z-1">
                     <DecryptedText value={gs.student_id} passphrase={passphrase} mono size="sm" />
-                  </td>
+                  </th>
                   <td>
                     <AnswerText value={answerRaw} />
                   </td>
