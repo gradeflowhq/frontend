@@ -1,94 +1,84 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import ErrorAlert from '@components/common/ErrorAlert';
-import ConfirmDialog from '@components/common/ConfirmDialog';
-import { useAssessmentPassphrase } from '@features/encryption/passphraseContext';
-import { useDecryptedIds } from '@features/encryption/useDecryptedIds';
-import { useSubmissions, useDeleteSubmissions } from '@features/submissions';
-import {
-  SubmissionsHeader,
-  SubmissionsTable,
-  SubmissionsLoadWizardModal,
-} from '@features/submissions/components';
-import { useToast } from '@components/common/ToastProvider';
+import { useSubmissions, useSourceData } from '@features/submissions';
+import { StepIndicator } from './submissions/StepIndicator';
+import { UploadStep } from './submissions/UploadStep';
+import { ConfigureStep } from './submissions/ConfigureStep';
+import { ListStep } from './submissions/ListStep';
 
+import type { Step } from './submissions/StepIndicator';
 import type { RawSubmission } from '@api/models';
 
 const SubmissionsTabPage: React.FC = () => {
   const { assessmentId = '' } = useParams<{ assessmentId: string }>();
-  const [showLoadWizard, setShowLoadWizard] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [step, setStep] = useState<Step | null>(null);
 
+  const {
+    data: sourceData,
+    isLoading: sourceLoading,
+    isError: sourceError,
+  } = useSourceData(assessmentId);
   const { data, isLoading, isError, error } = useSubmissions(assessmentId);
-  const deleteMutation = useDeleteSubmissions(assessmentId);
-  const toast = useToast();
-  const { passphrase, notifyEncryptedDetected } = useAssessmentPassphrase();
 
   const items: RawSubmission[] = useMemo(() => data?.raw_submissions ?? [], [data]);
+  const hasSubmissions = items.length > 0;
+  const hasSource = !sourceError && !!sourceData;
 
-  const studentIds = useMemo(() => items.map((item) => item.student_id ?? ''), [items]);
-  const { decryptedIds, isDecrypting } = useDecryptedIds(studentIds, passphrase, notifyEncryptedDetected);
+  useEffect(() => {
+    if (step !== null) return;
+    if (isLoading || sourceLoading) return;
+    if (hasSubmissions) { setStep('list'); return; }
+    if (hasSource) { setStep('configure'); return; }
+    setStep('upload');
+  }, [step, isLoading, sourceLoading, hasSubmissions, hasSource]);
 
-  const filteredItems = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    if (!q) return items;
-
-    return items.filter((item) => {
-      const original = item.student_id ?? '';
-      const plain = decryptedIds[original] ?? original;
-      return plain.toLowerCase().includes(q);
-    });
-  }, [items, decryptedIds, searchQuery]);
+  if (step === null) {
+    return (
+      <div className="flex justify-center py-16">
+        <span className="loading loading-spinner loading-lg" />
+      </div>
+    );
+  }
 
   return (
-    <section className="space-y-6">
-      <SubmissionsHeader
-        onLoadCsv={() => setShowLoadWizard(true)}
-        onDeleteAll={() => setConfirmDelete(true)}
-        showDeleteAll={items.length > 0}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
+    <section className="space-y-4">
+      <StepIndicator
+        current={step}
+        hasSource={hasSource}
+        hasSubmissions={hasSubmissions}
+        onNavigate={setStep}
       />
 
-      {isError && <ErrorAlert error={error} />}
-
-      {!isError && (
-        <SubmissionsTable
-          items={filteredItems}
-          isLoading={isLoading}
-          isDecryptingIds={isDecrypting}
+      {step === 'upload' && (
+        <UploadStep
+          assessmentId={assessmentId}
+          hasExistingSource={hasSource}
+          onNext={() => setStep('configure')}
         />
       )}
 
-      {/* Load Wizard (CSV -> Blob + adapter import) */}
-      <SubmissionsLoadWizardModal
-        open={showLoadWizard}
-        onClose={() => setShowLoadWizard(false)}
-        assessmentId={assessmentId}
-      />
+      {step === 'configure' && (
+        <ConfigureStep
+          assessmentId={assessmentId}
+          onSuccess={() => setStep('list')}
+          onBack={() => setStep('upload')}
+        />
+      )}
 
-      <ConfirmDialog
-        open={!!confirmDelete}
-        title="Delete All Submissions"
-        message="Are you sure you want to delete all submissions for this assessment?"
-        confirmLoading={deleteMutation.isPending}
-        confirmLoadingLabel="Deleting..."
-        confirmText="Delete"
-        onConfirm={() => {
-          deleteMutation.mutate(undefined, {
-            onSuccess: () => {
-              setConfirmDelete(false);
-              toast.success('Submissions deleted');
-            },
-            onError: () => toast.error('Delete failed'),
-          });
-        }}
-        onCancel={() => setConfirmDelete(false)}
-      />
-      {deleteMutation.isError && <ErrorAlert error={deleteMutation.error} className="mt-2" />}
+      {step === 'list' && (
+        <ListStep
+          assessmentId={assessmentId}
+          items={items}
+          isLoading={isLoading}
+          isError={isError}
+          error={error}
+          hasSubmissions={hasSubmissions}
+          onDeleted={() => setStep(sourceData ? 'configure' : 'upload')}
+        />
+      )}
     </section>
   );
 };
 
 export default SubmissionsTabPage;
+

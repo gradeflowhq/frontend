@@ -7,11 +7,11 @@ import {
   YAxis,
   Tooltip,
 } from 'recharts';
-import type { AdjustableGradedSubmission } from '../types';
+import type { AdjustableSubmission } from '../types';
 import { buildTotals, computeStats, buildDynamicHistogram } from '../helpers';
 
 type Props = {
-  items: AdjustableGradedSubmission[];
+  items: AdjustableSubmission[];
 };
 
 const ResultsStats: React.FC<Props> = ({ items }) => {

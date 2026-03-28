@@ -8,6 +8,8 @@ export const QK = {
   },
   submissions: {
     list: (assessmentId: string) => ['submissions', assessmentId] as const,
+    source: (assessmentId: string) => ['submissions', assessmentId, 'source'] as const,
+    config: (assessmentId: string) => ['submissions', assessmentId, 'config'] as const,
   },
   questionSet: {
     item: (assessmentId: string) => ['questionSet', assessmentId] as const,

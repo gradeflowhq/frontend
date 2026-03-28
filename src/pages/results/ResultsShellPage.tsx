@@ -15,7 +15,7 @@ import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { isEncrypted } from '@utils/crypto';
 import { natsort } from '@utils/sort';
 
-import type { AdjustableGradedSubmission, QuestionSetOutputQuestionMap } from '@api/models';
+import type { AdjustableSubmission, QuestionSetOutputQuestionMap } from '@api/models';
 
 const ResultsShellInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) => {
   const navigate = useNavigate();
@@ -34,8 +34,8 @@ const ResultsShellInner: React.FC<{ assessmentId: string }> = ({ assessmentId })
   const { data: qsRes } =
     useQuestionSet(safeId, enabled);
 
-  const items: AdjustableGradedSubmission[] = useMemo(
-    () => gradingData?.graded_submissions ?? [],
+  const items: AdjustableSubmission[] = useMemo(
+    () => gradingData?.submissions ?? [],
     [gradingData]
   );
   const hasItems = items.length > 0;

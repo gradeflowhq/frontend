@@ -16,6 +16,9 @@ import type { RawSubmission } from '@features/submissions/types';
 import { extractQuestionKeys } from '@features/submissions/helpers';
 import { useAssessmentPassphrase } from '@features/encryption/passphraseContext';
 
+// Stable reference — createColumnHelper is a pure factory with no runtime state
+const columnHelper = createColumnHelper<RawSubmission>();
+
 type SubmissionsTableProps = {
   items: RawSubmission[];
   initialPageSize?: number;
@@ -24,7 +27,6 @@ type SubmissionsTableProps = {
 };
 
 const SubmissionsTable: React.FC<SubmissionsTableProps> = ({ items, initialPageSize = 10, isLoading = false, isDecryptingIds = false }) => {
-  const columnHelper = createColumnHelper<RawSubmission>();
   const { passphrase, notifyEncryptedDetected } = useAssessmentPassphrase();
 
   const questionKeys = useMemo(() => extractQuestionKeys(items), [items]);
@@ -62,11 +64,17 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({ items, initialPageS
           cell: ({ row }) => {
             const map = row.original.raw_answer_map ?? {};
             const value = map[qKey];
+            const result = (row.original.result_map ?? {})[qKey];
             return (
               <div>
                 <span className="font-mono text-xs">
                   <AnswerText value={value} maxLength={100} />
                 </span>
+                {result != null && (
+                  <div className="text-xs opacity-60 mt-0.5">
+                    {result.points} pts
+                  </div>
+                )}
               </div>
             );
           },
@@ -75,7 +83,7 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({ items, initialPageS
     }
 
     return cols;
-  }, [columnHelper, isDecryptingIds, notifyEncryptedDetected, passphrase, questionKeys]);
+  }, [isDecryptingIds, notifyEncryptedDetected, passphrase, questionKeys]);
 
   const { pagination, setPagination } = usePaginationState({
     pageIndex: 0,

@@ -14,7 +14,7 @@ import {
 } from '@tanstack/react-table';
 import TableShell from '@components/common/TableShell';
 import { usePaginationState } from '@hooks/usePaginationState';
-import type { AdjustableGradedSubmission, AdjustableQuestionResult } from '../types';
+import type { AdjustableSubmission } from '../types';
 import { useAssessmentPassphrase } from '@features/encryption/passphraseContext';
 import { useDecryptedIds } from '@features/encryption/useDecryptedIds';
 import ResultsDownloadDropdown from './ResultsDownloadDropdown';
@@ -23,13 +23,13 @@ import ResultsDownloadModal from './ResultsDownloadModal';
 type Props = {
   assessmentId: string;
   gradingInProgress: boolean;
-  items: AdjustableGradedSubmission[];
+  items: AdjustableSubmission[];
   questionIds: string[];
   onView: (studentId: string) => void; // caller decides how to navigate
   initialPageSize?: number;
 };
 
-type RowT = AdjustableGradedSubmission;
+type RowT = AdjustableSubmission;
 
 const ResultsOverview: React.FC<Props> = ({
   assessmentId,
@@ -62,7 +62,7 @@ const ResultsOverview: React.FC<Props> = ({
   // Fetch available download serializers from registry (CSV/JSON/YAML, etc.)
   const { data: serializerRegistry } = useQuery({
     queryKey: ['registry', 'gradedSubmissionsSerializers'],
-    queryFn: async () => (await api.gradedSubmissionsSerializersRegistrySerializersGradedSubmissionsGet()).data as string[],
+    queryFn: async () => (await api.submissionsSerializersRegistrySerializersSubmissionsGet()).data as string[],
     staleTime: 5 * 60 * 1000,
     enabled: true,
   });
@@ -123,9 +123,7 @@ const ResultsOverview: React.FC<Props> = ({
           id: `q:${qid}`,
           header: () => <span className="font-mono text-xs">{qid}</span>,
           cell: ({ row }) => {
-            const resMap = new Map<string, AdjustableQuestionResult>();
-            (row.original.results ?? []).forEach((r) => resMap.set(r.question_id, r));
-            const r = resMap.get(qid);
+            const r = row.original.result_map?.[qid];
             if (!r) return <span>—</span>;
             const adjustedExists = r.adjusted_points !== undefined && r.adjusted_points !== null;
             const pointsDisplay = adjustedExists ? (r.adjusted_points as number) : r.points;
@@ -163,11 +161,12 @@ const ResultsOverview: React.FC<Props> = ({
         id: 'total',
         header: 'Total',
         cell: ({ row }) => {
-          const totalPoints = (row.original.results ?? []).reduce(
-            (sum, r) => sum + (r.adjusted_points ?? r.points),
+          const resultValues = Object.values(row.original.result_map ?? {});
+          const totalPoints = resultValues.reduce(
+            (sum, r) => sum + ((r.adjusted_points ?? r.points) ?? 0),
             0
           );
-          const totalMax = (row.original.results ?? []).reduce(
+          const totalMax = resultValues.reduce(
             (sum, r) => sum + (r.max_points ?? 0),
             0
           );

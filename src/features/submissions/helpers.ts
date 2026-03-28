@@ -2,7 +2,7 @@ import Papa from 'papaparse';
 import { isEncrypted, encryptString, decryptString } from '@utils/crypto';
 import { normalizePresent } from '@utils/passphrase';
 import { natsort } from '@utils/sort';
-import type { RawSubmission, CsvPreview, CsvMapping, UploadCsvResult, PassphraseContext } from './types';
+import type { RawSubmission, CsvPreview, UploadCsvResult, PassphraseContext } from './types';
 
 /**
  * Extract unique question keys from raw submissions (sorted).
@@ -16,37 +16,32 @@ export const extractQuestionKeys = (items: RawSubmission[]): string[] => {
 };
 
 /**
- * Build an uploadable CSV string from a CsvPreview + user mapping.
- * Optionally encrypt student IDs using the provided passphrase.
+ * Build an uploadable CSV string keeping all original columns.
+ * Only the student ID values are optionally encrypted — column names are preserved.
+ * This is used for the "upload source" step where full column data is sent to the server.
  */
-export const buildUploadCsv = async (
+export const buildSourceCsv = async (
   preview: CsvPreview,
-  mapping: CsvMapping,
+  studentIdColumn: string,
   passphraseCtx?: PassphraseContext
 ): Promise<UploadCsvResult> => {
   const { headers, rows } = preview;
-  const { studentIdColumn, questionColumns } = mapping;
-
   const sidIdx = headers.indexOf(studentIdColumn);
   if (sidIdx < 0) throw new Error(`Student ID column "${studentIdColumn}" not found`);
 
-  const outHeaders = ['student_id', ...questionColumns];
   const passphrase = normalizePresent(passphraseCtx?.passphrase ?? null);
   const shouldEncrypt = !!passphrase;
 
   const outRows = await Promise.all(
     rows.map(async (r) => {
-      const sid = String(r[sidIdx] ?? '');
-      const encSid = shouldEncrypt ? await encryptString(sid, passphrase!) : sid;
-      const qVals = questionColumns.map((qc) => {
-        const idx = headers.indexOf(qc);
-        return idx >= 0 ? String(r[idx] ?? '') : '';
-      });
-      return [encSid, ...qVals];
+      const row = r.map(String);
+      const sid = row[sidIdx] ?? '';
+      row[sidIdx] = shouldEncrypt ? await encryptString(sid, passphrase!) : sid;
+      return row;
     })
   );
 
-  const csv = Papa.unparse([outHeaders, ...outRows]);
+  const csv = Papa.unparse([headers, ...outRows]);
   return { csv, encrypted: shouldEncrypt };
 };
 
@@ -90,26 +85,4 @@ export const tryDecodeExportCsv = async (csv: string, passphraseCtx?: Passphrase
   } catch {
     return csv;
   }
-};
-
-/**
- * Validate a CSV preview + mapping before building upload CSV.
- * Ensures required columns exist and at least one question column is selected.
- */
-export const validateCsvMapping = (preview: CsvPreview, mapping: CsvMapping): string[] => {
-  const messages: string[] = [];
-  const { headers } = preview;
-  const { studentIdColumn, questionColumns } = mapping;
-
-  if (!studentIdColumn) messages.push('Select a Student ID column.');
-  else if (!headers.includes(studentIdColumn)) messages.push(`Column "${studentIdColumn}" not found.`);
-
-  if (!Array.isArray(questionColumns) || questionColumns.length === 0) {
-    messages.push('Select at least one Question column.');
-  } else {
-    const missing = questionColumns.filter((qc) => !headers.includes(qc));
-    if (missing.length) messages.push(`Missing columns: ${missing.join(', ')}`);
-  }
-
-  return messages;
 };

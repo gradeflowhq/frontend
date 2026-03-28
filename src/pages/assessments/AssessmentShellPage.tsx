@@ -190,7 +190,7 @@ const AssessmentShellPage: React.FC = () => {
     return all.filter((qid) => !covered.has(qid));
   }, [cov]);
 
-  const hasGrading = (gradingRes?.graded_submissions?.length ?? 0) > 0;
+  const hasGrading = (gradingRes?.submissions?.length ?? 0) > 0;
   const basePath = `/assessments/${assessmentId}`;
 
   const [confirmCoverage, setConfirmCoverage] = React.useState(false);
@@ -241,7 +241,7 @@ const AssessmentShellPage: React.FC = () => {
       setConfirmCoverage(true);
       return;
     }
-    const alreadyGraded = (gradingRes?.graded_submissions?.length ?? 0) > 0;
+    const alreadyGraded = (gradingRes?.submissions?.length ?? 0) > 0;
     if (alreadyGraded) {
       setConfirmOverride(true);
       return;
@@ -251,7 +251,7 @@ const AssessmentShellPage: React.FC = () => {
 
   const proceedAfterCoverage = () => {
     setConfirmCoverage(false);
-    const alreadyGraded = (gradingRes?.graded_submissions?.length ?? 0) > 0;
+    const alreadyGraded = (gradingRes?.submissions?.length ?? 0) > 0;
     if (alreadyGraded) setConfirmOverride(true);
     else startRunAndAwait();
   };

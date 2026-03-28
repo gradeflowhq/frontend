@@ -1,13 +1,14 @@
-import type { AdjustableGradedSubmission, TotalsRow } from './types';
+import type { AdjustableSubmission, TotalsRow } from './types';
 
 // Compute totals per submission
-export const buildTotals = (items: AdjustableGradedSubmission[]): TotalsRow[] =>
+export const buildTotals = (items: AdjustableSubmission[]): TotalsRow[] =>
   items.map((gs) => {
-    const totalPoints = (gs.results ?? []).reduce(
-      (sum, r) => sum + (r.adjusted_points ?? r.points),
+    const resultValues = Object.values(gs.result_map ?? {});
+    const totalPoints = resultValues.reduce(
+      (sum, r) => sum + ((r.adjusted_points ?? r.points) ?? 0),
       0
     );
-    const totalMax = (gs.results ?? []).reduce((sum, r) => sum + r.max_points, 0);
+    const totalMax = resultValues.reduce((sum, r) => sum + (r.max_points ?? 0), 0);
     return { id: gs.student_id, totalPoints, totalMax };
   });
 

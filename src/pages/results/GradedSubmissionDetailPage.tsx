@@ -28,11 +28,14 @@ import { useDecryptedIds } from '@features/encryption/useDecryptedIds';
 import { useToast } from '@components/common/ToastProvider';
 
 import type {
-  AdjustableGradedSubmission,
+  AdjustableSubmission,
   AdjustableQuestionResult,
   GradeAdjustmentRequest,
   GradeAdjustment,
 } from '@api/models';
+
+type ResultWithQid = AdjustableQuestionResult & { question_id: string };
+type EditState = Record<string, { points?: number; feedback?: string }>;
 
 const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStudentId: string }> = ({ assessmentId, encodedStudentId }) => {
   const navigate = useNavigate();
@@ -50,7 +53,7 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
   const { data, isLoading, isError, error } = useGrading(safeId, enabled);
   const adjustMutation = useAdjustGrading(safeId);
 
-  const submissions: AdjustableGradedSubmission[] = data?.graded_submissions ?? [];
+  const submissions: AdjustableSubmission[] = data?.submissions ?? [];
   const studentIds = useMemo(() => submissions.map((s) => s.student_id).sort(natsort), [submissions]);
   const { decryptedIds, isDecrypting: isDecryptingIds } = useDecryptedIds(studentIds, passphrase, notifyEncryptedDetected);
 
@@ -60,11 +63,12 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
   const nextId = index >= 0 && index < submissions.length - 1 ? submissions[index + 1].student_id : null;
 
   const sortedResults = useMemo(() => {
-    if (!current?.results) return [] as AdjustableQuestionResult[];
-    return [...current.results].sort((a, b) => natsort(a.question_id, b.question_id));
+    if (!current?.result_map) return [] as ResultWithQid[];
+    return Object.entries(current.result_map)
+      .map(([qid, r]) => ({ ...r, question_id: qid }))
+      .sort((a, b) => natsort(a.question_id, b.question_id));
   }, [current]);
 
-  type EditState = Record<string, { points?: number; feedback?: string }>;
   const [editing, setEditing] = useState<EditState>({});
   const [openEdits, setOpenEdits] = useState<Record<string, boolean>>({});
   const [removeAdjustQid, setRemoveAdjustQid] = useState<string | null>(null);

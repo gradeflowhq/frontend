@@ -7,11 +7,11 @@ import {
   YAxis,
   Tooltip,
 } from 'recharts';
-import type { AdjustableGradedSubmission, AdjustableQuestionResult } from '../types';
+import type { AdjustableSubmission, AdjustableQuestionResult } from '../types';
 import { computeStats } from '../helpers';
 
 type Props = {
-  items: AdjustableGradedSubmission[];
+  items: AdjustableSubmission[];
   questionIds: string[];
 };
 
@@ -24,7 +24,7 @@ const QuestionAnalysis: React.FC<Props> = ({ items, questionIds }) => {
       let maxPointsObserved = 0;
 
       items.forEach((gs) => {
-        const res = (gs.results ?? []).find((r) => r.question_id === qid);
+        const res = gs.result_map?.[qid];
         if (res) {
           results.push(res);
           maxPointsObserved = Math.max(maxPointsObserved, res.max_points ?? 0);

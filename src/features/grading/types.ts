@@ -1,5 +1,5 @@
 import type {
-  AdjustableGradedSubmission,
+  AdjustableSubmission,
   AdjustableQuestionResult,
   GradingResponse,
   GradeAdjustmentRequest,
@@ -8,7 +8,7 @@ import type {
 } from '@api/models';
 
 export type {
-  AdjustableGradedSubmission,
+  AdjustableSubmission,
   AdjustableQuestionResult,
   GradingResponse,
   GradeAdjustmentRequest,

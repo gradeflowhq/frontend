@@ -8,10 +8,10 @@ import { IconAlertCircle, IconCheckCircle } from '@components/ui/Icon';
 import { useAssessmentPassphrase } from '@features/encryption/passphraseContext';
 import { natsort } from '@utils/sort';
 
-import type { AdjustableGradedSubmission, AdjustableQuestionResult } from '@features/grading/types';
+import type { AdjustableSubmission, AdjustableQuestionResult } from '@features/grading/types';
 
 type Props = {
-  items: AdjustableGradedSubmission[];
+  items: AdjustableSubmission[];
   loading?: boolean;
   error?: unknown;
   className?: string;
@@ -28,8 +28,8 @@ const GradingPreviewPanel: React.FC<Props> = ({ items, loading, error, className
 
   const targetQid = useMemo(() => {
     for (const gs of sorted) {
-      const r = (gs.results ?? [])[0];
-      if (r?.question_id) return r.question_id;
+      const qid = Object.keys(gs.result_map ?? {})[0];
+      if (qid) return qid;
     }
     return null;
   }, [sorted]);
@@ -74,7 +74,7 @@ const GradingPreviewPanel: React.FC<Props> = ({ items, loading, error, className
           </thead>
           <tbody>
             {sorted.map((gs) => {
-              const r: AdjustableQuestionResult | undefined = (gs.results ?? [])[0];
+              const r: AdjustableQuestionResult | undefined = targetQid ? gs.result_map?.[targetQid] : undefined;
               const passed = !!r?.passed;
               const points = r ? (r.adjusted_points ?? r.points) : 0;
               const max = r?.max_points ?? 0;

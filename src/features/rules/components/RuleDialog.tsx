@@ -182,7 +182,7 @@ const RuleDialog: React.FC<RuleDialogProps> = ({
   const hasPreview =
     previewMutation.isPending ||
     previewMutation.isError ||
-    ((previewMutation.data?.graded_submissions?.length ?? 0) > 0);
+    ((previewMutation.data?.submissions?.length ?? 0) > 0);
 
   return (
     <Modal open={open} onClose={onClose} boxClassName="w-full max-w-6xl">
@@ -228,7 +228,7 @@ const RuleDialog: React.FC<RuleDialogProps> = ({
         {hasPreview && (
           <div>
             <GradingPreviewPanel
-              items={previewMutation.data?.graded_submissions ?? []}
+              items={previewMutation.data?.submissions ?? []}
               loading={previewMutation.isPending}
               error={previewMutation.isError ? previewMutation.error : undefined}
               maxHeightVh={60}
