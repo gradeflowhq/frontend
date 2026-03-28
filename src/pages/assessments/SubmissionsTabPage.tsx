@@ -34,9 +34,13 @@ const SubmissionsTabPage: React.FC = () => {
 
   if (step === null) {
     return (
-      <div className="flex justify-center py-16">
-        <span className="loading loading-spinner loading-lg" />
-      </div>
+      <ul className="steps steps-horizontal w-full mb-6">
+        {['Upload Data', 'Configure Columns', 'Preview'].map((label) => (
+          <li key={label} className="step">
+            <div className="skeleton h-4 w-24 rounded" />
+          </li>
+        ))}
+      </ul>
     );
   }
 

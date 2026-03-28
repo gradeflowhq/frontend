@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import ErrorAlert from '@components/common/ErrorAlert';
 import LoadingButton from '@components/ui/LoadingButton';
 import { Button } from '@components/ui/Button';
+import TableSkeleton from '@components/common/TableSkeleton';
 import { IconChevronLeft, IconChevronRight } from '@components/ui/Icon';
 import {
   useSourceData, useImportConfig, useSaveImportConfig, useImportSubmissions,
@@ -122,11 +123,7 @@ export const ConfigureStep: React.FC<{
   };
 
   if (sourceLoading || sourceFetching) {
-    return (
-      <div className="flex justify-center py-16">
-        <span className="loading loading-spinner loading-lg" />
-      </div>
-    );
+    return <TableSkeleton cols={4} rows={6} />;
   }
 
   if (sourceError || !sourceData) {
