@@ -137,7 +137,7 @@ const ResultsDownloadModalInner: React.FC<Props> = ({ open, assessmentId, onClos
       const ext = (res.extension || '').toLowerCase();
       const filename = res.filename || `grading.${ext || 'txt'}`;
       const mediaType = res.media_type || 'application/octet-stream';
-      const payload = res.data;
+      const payload = res.data as string | Blob;
 
       if (ext === 'csv' && passphrase) {
         const rawText = payload instanceof Blob ? await payload.text() : String(payload ?? '');

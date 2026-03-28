@@ -4,7 +4,7 @@ import Modal from '@components/common/Modal';
 import { Button } from '@components/ui/Button';
 import { IconAlertCircle, IconCheckCircle, IconSettings } from '@components/ui/Icon';
 import LoadingButton from '@components/ui/LoadingButton';
-import { createCanvasClient, normalizeCanvasBaseUrl, sanitizeCanvasBaseInput } from '@api/canvasClient';
+import { createCanvasClient, parseCanvasBaseUrl } from '@api/canvasClient';
 import { useUserSettingsStore } from '@state/userSettingsStore';
 
 import type { AxiosError } from 'axios';
@@ -30,9 +30,13 @@ const UserSettingsDialog: React.FC<Props> = ({ open, onClose }) => {
   };
 
   const handleTestAuth = async () => {
-    const normalizedBase = normalizeCanvasBaseUrl(canvasBaseUrl);
-    if (!normalizedBase || !canvasToken) {
+    const canvasUrl = parseCanvasBaseUrl(canvasBaseUrl);
+    if (!canvasToken) {
       setTestState({ status: 'error', message: 'Enter a Canvas base URL and token first.' });
+      return;
+    }
+    if (!canvasUrl) {
+      setTestState({ status: 'error', message: 'Canvas URL must include the protocol (e.g. https://school.instructure.com).' });
       return;
     }
 
@@ -40,7 +44,7 @@ const UserSettingsDialog: React.FC<Props> = ({ open, onClose }) => {
     setTestState({ status: 'idle' });
 
     try {
-      const client = createCanvasClient({ canvasBaseUrl: normalizedBase, token: canvasToken });
+      const client = createCanvasClient({ canvasBaseUrl: canvasUrl, token: canvasToken });
       const response = await client.getCurrentUser();
 
       const displayName =
@@ -83,16 +87,20 @@ const UserSettingsDialog: React.FC<Props> = ({ open, onClose }) => {
               <div className="label"><span className="label-text">Canvas Host URL</span></div>
               <input
                 type="url"
-                className="input input-bordered w-full"
+                className={`input input-bordered w-full${canvasBaseUrl && !parseCanvasBaseUrl(canvasBaseUrl) ? ' input-error' : ''}`}
                 placeholder="https://school.instructure.com"
                 value={canvasBaseUrl}
-                onChange={(e) => setCanvasBaseUrl(sanitizeCanvasBaseInput(e.target.value))}
+                onChange={(e) => setCanvasBaseUrl(e.target.value)}
                 autoComplete="url"
               />
               <div className="label">
-                <span className="label-text-alt text-base-content/60">
-                  Example: https://school.instructure.com (do not include /api or /api/v1).
-                </span>
+                {canvasBaseUrl && !parseCanvasBaseUrl(canvasBaseUrl) ? (
+                  <span className="label-text-alt text-error">URL must start with https:// or http://</span>
+                ) : (
+                  <span className="label-text-alt text-base-content/60">
+                    Example: https://school.instructure.com (do not include /api or /api/v1).
+                  </span>
+                )}
               </div>
             </label>
 

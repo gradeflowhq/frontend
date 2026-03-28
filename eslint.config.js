@@ -69,6 +69,9 @@ export default defineConfig([
       '@typescript-eslint/no-floating-promises': 'warn',
       '@typescript-eslint/no-misused-promises': 'warn',
 
+      // Disable experimental React Compiler rules that flag valid initialization patterns
+      'react-hooks/set-state-in-effect': 'off',
+
       // Optional: keep imports tidy (grouping and order)
       'import/order': [
         'warn',
@@ -90,20 +93,15 @@ export default defineConfig([
 
   // Config files without type-aware parsing
   {
-    files: ['vite.config.ts'],
+    files: ['vite.config.ts', 'orval.config.ts'],
     languageOptions: {
       parserOptions: {
         project: false,
       },
     },
-  },
-
-  {
-    files: ['orval.config.ts'],
-    languageOptions: {
-      parserOptions: {
-        project: false,
-      },
+    rules: {
+      '@typescript-eslint/no-floating-promises': 'off',
+      '@typescript-eslint/no-misused-promises': 'off',
     },
   },
 

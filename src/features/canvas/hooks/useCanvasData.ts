@@ -1,12 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
-import { createCanvasClient, normalizeCanvasBaseUrl } from '@api/canvasClient';
+import { createCanvasClient, parseCanvasBaseUrl } from '@api/canvasClient';
 
 import type { CanvasAssignmentGroup, CanvasAssignmentSummary, CanvasUserSummary } from '@api/canvasClient';
 
 export const useCanvasData = (canvasBaseUrl: string, canvasToken: string) => {
-  const missingConfig = !normalizeCanvasBaseUrl(canvasBaseUrl) || !canvasToken;
+  const missingConfig = !parseCanvasBaseUrl(canvasBaseUrl) || !canvasToken;
 
   const coursesQuery = useQuery({
     queryKey: ['canvas', 'courses', canvasBaseUrl, canvasToken],
@@ -27,7 +27,7 @@ export const useCanvasData = (canvasBaseUrl: string, canvasToken: string) => {
 };
 
 export const useCourseData = (courseId: string, canvasBaseUrl: string, canvasToken: string) => {
-  const missingConfig = !normalizeCanvasBaseUrl(canvasBaseUrl) || !canvasToken;
+  const missingConfig = !parseCanvasBaseUrl(canvasBaseUrl) || !canvasToken;
 
   const courseDataQuery = useQuery<{
     assignmentGroups: CanvasAssignmentGroup[];

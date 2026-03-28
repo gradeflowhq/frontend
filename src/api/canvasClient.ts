@@ -49,6 +49,7 @@ export type CanvasUserSummary = {
   login_id?: string;
   sis_user_id?: string;
   integration_id?: string;
+  email?: string;
 };
 
 export type CanvasCourse = {
@@ -86,12 +87,11 @@ const DEFAULT_PROXY_BASE =
   import.meta.env.VITE_CORS_PROXY_URL ??
   'http://localhost:8080';
 
-export const sanitizeCanvasBaseInput = (value: string) => value.trim().replace(/\/+$/, '');
-
-export const normalizeCanvasBaseUrl = (value: string) => {
-  const sanitized = sanitizeCanvasBaseInput(value);
-  if (!sanitized) return '';
-  return /^https?:\/\//i.test(sanitized) ? sanitized : `https://${sanitized}`;
+export const parseCanvasBaseUrl = (value: string): string | null => {
+  const normalized = value.trim().replace(/\/+$/, '');
+  if (!normalized) return null;
+  if (!/^https?:\/\//i.test(normalized)) return null;
+  return normalized;
 };
 
 const buildAxiosClient = ({
@@ -100,11 +100,11 @@ const buildAxiosClient = ({
   corsProxyBaseUrl,
   timeoutMs = 10000,
 }: CanvasClientConfig): AxiosInstance => {
-  const normalizedBase = normalizeCanvasBaseUrl(canvasBaseUrl);
-  if (!normalizedBase) throw new Error('Canvas base URL is required');
+  const canvasUrl = parseCanvasBaseUrl(canvasBaseUrl);
+  if (!canvasUrl) throw new Error('Canvas base URL is required');
   if (!token.trim()) throw new Error('Canvas access token is required');
 
-  const parsed = new URL(normalizedBase.endsWith('/') ? normalizedBase : `${normalizedBase}/`);
+  const parsed = new URL(canvasUrl.endsWith('/') ? canvasUrl : `${canvasUrl}/`);
   const proxyBase = (corsProxyBaseUrl ?? DEFAULT_PROXY_BASE).replace(/\/+$/, '') || DEFAULT_PROXY_BASE;
   const pathPrefix = parsed.pathname.replace(/\/$/, '');
   const proxyBaseUrl = `${proxyBase}${pathPrefix}`;
