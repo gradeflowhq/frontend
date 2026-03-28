@@ -1,0 +1,718 @@
+{
+  "YamlSubmissionsConfig": {
+    "properties": {
+      "format": {
+        "type": "string",
+        "const": "yaml",
+        "title": "Format",
+        "default": "yaml"
+      },
+      "sort_keys": {
+        "type": "boolean",
+        "title": "Sort Keys",
+        "default": false
+      }
+    },
+    "type": "object",
+    "title": "YamlSubmissionsConfig"
+  },
+  "SubmissionsResponse": {
+    "properties": {
+      "raw_submissions": {
+        "items": {
+          "$ref": "#/definitions/RawSubmission"
+        },
+        "type": "array",
+        "title": "Raw Submissions"
+      }
+    },
+    "type": "object",
+    "required": [
+      "raw_submissions"
+    ],
+    "title": "SubmissionsResponse"
+  },
+  "RawSubmission": {
+    "properties": {
+      "student_id": {
+        "type": "string",
+        "title": "Student Id"
+      },
+      "result_map": {
+        "additionalProperties": {
+          "$ref": "#/definitions/QuestionResult"
+        },
+        "type": "object",
+        "title": "Result Map"
+      },
+      "raw_answer_map": {
+        "additionalProperties": {
+          "type": "string"
+        },
+        "type": "object",
+        "title": "Raw Answer Map"
+      }
+    },
+    "type": "object",
+    "required": [
+      "student_id",
+      "raw_answer_map"
+    ],
+    "title": "RawSubmission"
+  },
+  "QuestionResult": {
+    "properties": {
+      "output": {
+        "title": "Output",
+        "description": "Output generated from evaluating the answer",
+        "type": [
+          "boolean",
+          "integer",
+          "number"
+        ]
+      },
+      "passed": {
+        "type": "boolean",
+        "title": "Passed",
+        "description": "Whether the answer passed the rule check"
+      },
+      "feedback": {
+        "type": "string",
+        "title": "Feedback",
+        "description": "Feedback or comments"
+      },
+      "rule": {
+        "type": "string",
+        "title": "Rule",
+        "description": "ID of the rule that was applied"
+      },
+      "graded": {
+        "type": "boolean",
+        "title": "Graded",
+        "description": "Whether the result has been graded",
+        "default": true
+      },
+      "points": {
+        "type": "number",
+        "title": "Points",
+        "description": "Points awarded for this question"
+      },
+      "max_points": {
+        "type": "number",
+        "title": "Max Points",
+        "description": "Maximum points possible"
+      }
+    },
+    "type": "object",
+    "required": [
+      "output",
+      "passed",
+      "feedback",
+      "rule",
+      "points",
+      "max_points"
+    ],
+    "title": "QuestionResult"
+  },
+  "SubmissionsImportConfig": {
+    "properties": {
+      "answer_columns": {
+        "anyOf": [
+          {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Answer Columns"
+      },
+      "point_columns": {
+        "anyOf": [
+          {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Point Columns"
+      }
+    },
+    "type": "object",
+    "title": "SubmissionsImportConfig"
+  },
+  "Submission": {
+    "properties": {
+      "student_id": {
+        "type": "string",
+        "title": "Student Id"
+      },
+      "result_map": {
+        "additionalProperties": {
+          "$ref": "#/definitions/QuestionResult"
+        },
+        "type": "object",
+        "title": "Result Map"
+      },
+      "answer_map": {
+        "additionalProperties": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array",
+              "uniqueItems": true
+            },
+            {
+              "items": {
+                "type": [
+                  "string",
+                  "number",
+                  "integer",
+                  "null"
+                ]
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "type": "object",
+        "title": "Answer Map"
+      }
+    },
+    "type": "object",
+    "required": [
+      "student_id",
+      "answer_map"
+    ],
+    "title": "Submission"
+  },
+  "ParseSubmissionsResponse": {
+    "properties": {
+      "submissions": {
+        "items": {
+          "$ref": "#/definitions/Submission"
+        },
+        "type": "array",
+        "title": "Submissions"
+      }
+    },
+    "type": "object",
+    "required": [
+      "submissions"
+    ],
+    "title": "ParseSubmissionsResponse"
+  },
+  "ParseSubmissionsRequest": {
+    "properties": {
+      "use_stored_question_set": {
+        "type": "boolean",
+        "title": "Use Stored Question Set",
+        "default": true
+      },
+      "use_stored_submissions": {
+        "type": "boolean",
+        "title": "Use Stored Submissions",
+        "default": true
+      },
+      "question_set": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/QuestionSet"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "raw_submissions": {
+        "anyOf": [
+          {
+            "items": {
+              "$ref": "#/definitions/RawSubmission"
+            },
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Raw Submissions"
+      }
+    },
+    "type": "object",
+    "title": "ParseSubmissionsRequest"
+  },
+  "QuestionSet": {
+    "properties": {
+      "question_map": {
+        "additionalProperties": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/ChoiceQuestion"
+            },
+            {
+              "$ref": "#/definitions/MultiValuedQuestion"
+            },
+            {
+              "$ref": "#/definitions/TextQuestion"
+            },
+            {
+              "$ref": "#/definitions/NumericQuestion"
+            }
+          ],
+          "discriminator": {
+            "propertyName": "type",
+            "mapping": {
+              "CHOICE": "#/definitions/ChoiceQuestion",
+              "MULTI_VALUED": "#/definitions/MultiValuedQuestion",
+              "NUMERIC": "#/definitions/NumericQuestion",
+              "TEXT": "#/definitions/TextQuestion"
+            }
+          }
+        },
+        "type": "object",
+        "title": "Question Map"
+      }
+    },
+    "type": "object",
+    "required": [
+      "question_map"
+    ],
+    "title": "QuestionSet"
+  },
+  "TextQuestion": {
+    "properties": {
+      "max_points": {
+        "type": "number",
+        "title": "Max Points",
+        "description": "Maximum points for the question",
+        "default": 1
+      },
+      "description": {
+        "title": "Description",
+        "description": "Optional description of the question.",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "type": {
+        "type": "string",
+        "const": "TEXT",
+        "title": "Type",
+        "default": "TEXT"
+      },
+      "config": {
+        "$ref": "#/definitions/TextParserConfig",
+        "description": "Parser configuration for text questions."
+      }
+    },
+    "type": "object",
+    "title": "TextQuestion"
+  },
+  "TextParserConfig": {
+    "properties": {
+      "empty_marker": {
+        "type": "string",
+        "title": "Empty Marker",
+        "description": "Marker indicating an empty answer.",
+        "default": "N/A"
+      },
+      "trim_whitespace": {
+        "type": "boolean",
+        "title": "Trim Whitespace",
+        "description": "Whether to trim leading and trailing whitespace from raw answers.",
+        "default": true
+      },
+      "normalize_case": {
+        "type": "boolean",
+        "title": "Normalize Case",
+        "description": "Whether to normalize the case of raw answers.",
+        "default": false
+      }
+    },
+    "type": "object",
+    "title": "TextParserConfig"
+  },
+  "NumericQuestion": {
+    "properties": {
+      "max_points": {
+        "type": "number",
+        "title": "Max Points",
+        "description": "Maximum points for the question",
+        "default": 1
+      },
+      "description": {
+        "title": "Description",
+        "description": "Optional description of the question.",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "type": {
+        "type": "string",
+        "const": "NUMERIC",
+        "title": "Type",
+        "default": "NUMERIC"
+      },
+      "config": {
+        "$ref": "#/definitions/BaseParserConfig",
+        "description": "Parser configuration for numeric questions."
+      }
+    },
+    "type": "object",
+    "title": "NumericQuestion"
+  },
+  "BaseParserConfig": {
+    "properties": {
+      "empty_marker": {
+        "type": "string",
+        "title": "Empty Marker",
+        "description": "Marker indicating an empty answer.",
+        "default": "N/A"
+      }
+    },
+    "type": "object",
+    "title": "BaseParserConfig"
+  },
+  "MultiValuedQuestion": {
+    "properties": {
+      "max_points": {
+        "type": "number",
+        "title": "Max Points",
+        "description": "Maximum points for the question",
+        "default": 1
+      },
+      "description": {
+        "title": "Description",
+        "description": "Optional description of the question.",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "type": {
+        "type": "string",
+        "const": "MULTI_VALUED",
+        "title": "Type",
+        "default": "MULTI_VALUED"
+      },
+      "config": {
+        "$ref": "#/definitions/MultiValuedParserConfig",
+        "description": "Parser configuration for multi-valued questions."
+      },
+      "value_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "NUMERIC"
+          ]
+        },
+        "type": "array",
+        "title": "Value Types",
+        "description": "Expected type for each value in the answer."
+      }
+    },
+    "type": "object",
+    "required": [
+      "value_types"
+    ],
+    "title": "MultiValuedQuestion"
+  },
+  "MultiValuedParserConfig": {
+    "properties": {
+      "empty_marker": {
+        "type": "string",
+        "title": "Empty Marker",
+        "description": "Marker indicating an empty answer.",
+        "default": "N/A"
+      },
+      "trim_whitespace": {
+        "type": "boolean",
+        "title": "Trim Whitespace",
+        "description": "Whether to trim leading and trailing whitespace from raw answers.",
+        "default": true
+      },
+      "normalize_case": {
+        "type": "boolean",
+        "title": "Normalize Case",
+        "description": "Whether to normalize the case of raw answers.",
+        "default": false
+      },
+      "delimiter": {
+        "type": "string",
+        "title": "Delimiter",
+        "description": "Delimiter for separating multiple-valued raw answers.",
+        "default": ","
+      }
+    },
+    "type": "object",
+    "title": "MultiValuedParserConfig"
+  },
+  "ChoiceQuestion": {
+    "properties": {
+      "max_points": {
+        "type": "number",
+        "title": "Max Points",
+        "description": "Maximum points for the question",
+        "default": 1
+      },
+      "description": {
+        "title": "Description",
+        "description": "Optional description of the question.",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "type": {
+        "type": "string",
+        "const": "CHOICE",
+        "title": "Type",
+        "default": "CHOICE"
+      },
+      "config": {
+        "$ref": "#/definitions/MultiValuedParserConfig",
+        "description": "Parser configuration for choice questions."
+      },
+      "options": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Options",
+        "description": "Set of valid choices for this question."
+      },
+      "allow_multiple": {
+        "type": "boolean",
+        "title": "Allow Multiple",
+        "description": "Whether to allow multiple choices to be selected.",
+        "default": false
+      }
+    },
+    "type": "object",
+    "title": "ChoiceQuestion"
+  },
+  "JsonSubmissionsConfig": {
+    "properties": {
+      "format": {
+        "type": "string",
+        "const": "json",
+        "title": "Format",
+        "default": "json"
+      },
+      "ensure_ascii": {
+        "type": "boolean",
+        "title": "Ensure Ascii",
+        "default": false
+      }
+    },
+    "type": "object",
+    "title": "JsonSubmissionsConfig"
+  },
+  "CsvSubmissionsConfig": {
+    "properties": {
+      "format": {
+        "type": "string",
+        "const": "csv",
+        "title": "Format",
+        "default": "csv"
+      },
+      "student_id_column": {
+        "type": "string",
+        "title": "Student Id Column",
+        "default": "student_id"
+      },
+      "include_answers": {
+        "type": "boolean",
+        "title": "Include Answers",
+        "default": true
+      },
+      "include_per_question_results": {
+        "type": "boolean",
+        "title": "Include Per Question Results",
+        "default": true
+      },
+      "include_feedback": {
+        "type": "boolean",
+        "title": "Include Feedback",
+        "default": true
+      },
+      "include_total": {
+        "type": "boolean",
+        "title": "Include Total",
+        "default": true
+      },
+      "include_remarks": {
+        "type": "boolean",
+        "title": "Include Remarks",
+        "default": true
+      },
+      "include_rounded_total": {
+        "type": "boolean",
+        "title": "Include Rounded Total",
+        "default": true
+      },
+      "rounding_base": {
+        "type": "number",
+        "title": "Rounding Base",
+        "default": 0.5
+      }
+    },
+    "type": "object",
+    "title": "CsvSubmissionsConfig"
+  },
+  "AdjustableSubmission": {
+    "properties": {
+      "student_id": {
+        "type": "string",
+        "title": "Student Id"
+      },
+      "result_map": {
+        "additionalProperties": {
+          "$ref": "#/definitions/AdjustableQuestionResult"
+        },
+        "type": "object",
+        "title": "Result Map"
+      },
+      "answer_map": {
+        "additionalProperties": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array",
+              "uniqueItems": true
+            },
+            {
+              "items": {
+                "type": [
+                  "string",
+                  "number",
+                  "integer",
+                  "null"
+                ]
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "type": "object",
+        "title": "Answer Map"
+      }
+    },
+    "type": "object",
+    "required": [
+      "student_id",
+      "answer_map"
+    ],
+    "title": "AdjustableSubmission"
+  },
+  "AdjustableQuestionResult": {
+    "properties": {
+      "output": {
+        "title": "Output",
+        "description": "Output generated from evaluating the answer",
+        "type": [
+          "boolean",
+          "integer",
+          "number"
+        ]
+      },
+      "passed": {
+        "type": "boolean",
+        "title": "Passed",
+        "description": "Whether the answer passed the rule check"
+      },
+      "feedback": {
+        "type": "string",
+        "title": "Feedback",
+        "description": "Feedback or comments"
+      },
+      "rule": {
+        "type": "string",
+        "title": "Rule",
+        "description": "ID of the rule that was applied"
+      },
+      "graded": {
+        "type": "boolean",
+        "title": "Graded",
+        "description": "Whether the result has been graded",
+        "default": true
+      },
+      "points": {
+        "type": "number",
+        "title": "Points",
+        "description": "Points awarded for this question"
+      },
+      "max_points": {
+        "type": "number",
+        "title": "Max Points",
+        "description": "Maximum points possible"
+      },
+      "adjusted_points": {
+        "title": "Adjusted Points",
+        "description": "Adjusted points for this question",
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "adjusted_feedback": {
+        "title": "Adjusted Feedback",
+        "description": "Adjusted feedback for this question",
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "type": "object",
+    "required": [
+      "output",
+      "passed",
+      "feedback",
+      "rule",
+      "points",
+      "max_points"
+    ],
+    "title": "AdjustableQuestionResult"
+  }
+}

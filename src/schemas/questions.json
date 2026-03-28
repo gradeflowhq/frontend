@@ -1,0 +1,3032 @@
+{
+  "YamlQuestionSetConfig": {
+    "properties": {
+      "format": {
+        "type": "string",
+        "const": "yaml",
+        "title": "Format",
+        "default": "yaml"
+      }
+    },
+    "type": "object",
+    "title": "YamlQuestionSetConfig"
+  },
+  "TextQuestion": {
+    "properties": {
+      "max_points": {
+        "type": "number",
+        "title": "Max Points",
+        "description": "Maximum points for the question",
+        "default": 1
+      },
+      "description": {
+        "title": "Description",
+        "description": "Optional description of the question.",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "type": {
+        "type": "string",
+        "const": "TEXT",
+        "title": "Type",
+        "default": "TEXT"
+      },
+      "config": {
+        "$ref": "#/definitions/TextParserConfig",
+        "description": "Parser configuration for text questions."
+      }
+    },
+    "type": "object",
+    "title": "TextQuestion"
+  },
+  "TextParserConfig": {
+    "properties": {
+      "empty_marker": {
+        "type": "string",
+        "title": "Empty Marker",
+        "description": "Marker indicating an empty answer.",
+        "default": "N/A"
+      },
+      "trim_whitespace": {
+        "type": "boolean",
+        "title": "Trim Whitespace",
+        "description": "Whether to trim leading and trailing whitespace from raw answers.",
+        "default": true
+      },
+      "normalize_case": {
+        "type": "boolean",
+        "title": "Normalize Case",
+        "description": "Whether to normalize the case of raw answers.",
+        "default": false
+      }
+    },
+    "type": "object",
+    "title": "TextParserConfig"
+  },
+  "TextMatchQuestionRule": {
+    "properties": {
+      "question_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "CHOICE",
+            "NUMERIC",
+            "MULTI_VALUED"
+          ]
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Question Types",
+        "default": [
+          "TEXT",
+          "NUMERIC"
+        ]
+      },
+      "constraints": {
+        "items": {
+          "$ref": "#/definitions/QuestionConstraint"
+        },
+        "type": "array",
+        "title": "Constraints",
+        "default": []
+      },
+      "question_id": {
+        "type": "string",
+        "title": "Question Id"
+      },
+      "type": {
+        "type": "string",
+        "const": "TEXT_MATCH",
+        "title": "Type",
+        "default": "TEXT_MATCH"
+      },
+      "answers": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array",
+        "minItems": 1,
+        "title": "Answers",
+        "description": "List of acceptable exact answers"
+      }
+    },
+    "type": "object",
+    "required": [
+      "question_id",
+      "answers"
+    ],
+    "title": "TextMatchQuestionRule"
+  },
+  "QuestionConstraint": {
+    "properties": {
+      "type": {
+        "type": "string",
+        "enum": [
+          "TEXT",
+          "CHOICE",
+          "NUMERIC",
+          "MULTI_VALUED"
+        ],
+        "title": "Type"
+      },
+      "source": {
+        "type": "string",
+        "title": "Source"
+      },
+      "target": {
+        "type": "string",
+        "title": "Target"
+      }
+    },
+    "type": "object",
+    "required": [
+      "type",
+      "source",
+      "target"
+    ],
+    "title": "QuestionConstraint"
+  },
+  "SetQuestionSetByModelRequest": {
+    "properties": {
+      "question_set": {
+        "$ref": "#/definitions/QuestionSet"
+      }
+    },
+    "type": "object",
+    "required": [
+      "question_set"
+    ],
+    "title": "SetQuestionSetByModelRequest"
+  },
+  "QuestionSet": {
+    "properties": {
+      "question_map": {
+        "additionalProperties": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/ChoiceQuestion"
+            },
+            {
+              "$ref": "#/definitions/MultiValuedQuestion"
+            },
+            {
+              "$ref": "#/definitions/TextQuestion"
+            },
+            {
+              "$ref": "#/definitions/NumericQuestion"
+            }
+          ],
+          "discriminator": {
+            "propertyName": "type",
+            "mapping": {
+              "CHOICE": "#/definitions/ChoiceQuestion",
+              "MULTI_VALUED": "#/definitions/MultiValuedQuestion",
+              "NUMERIC": "#/definitions/NumericQuestion",
+              "TEXT": "#/definitions/TextQuestion"
+            }
+          }
+        },
+        "type": "object",
+        "title": "Question Map"
+      }
+    },
+    "type": "object",
+    "required": [
+      "question_map"
+    ],
+    "title": "QuestionSet"
+  },
+  "NumericQuestion": {
+    "properties": {
+      "max_points": {
+        "type": "number",
+        "title": "Max Points",
+        "description": "Maximum points for the question",
+        "default": 1
+      },
+      "description": {
+        "title": "Description",
+        "description": "Optional description of the question.",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "type": {
+        "type": "string",
+        "const": "NUMERIC",
+        "title": "Type",
+        "default": "NUMERIC"
+      },
+      "config": {
+        "$ref": "#/definitions/BaseParserConfig",
+        "description": "Parser configuration for numeric questions."
+      }
+    },
+    "type": "object",
+    "title": "NumericQuestion"
+  },
+  "BaseParserConfig": {
+    "properties": {
+      "empty_marker": {
+        "type": "string",
+        "title": "Empty Marker",
+        "description": "Marker indicating an empty answer.",
+        "default": "N/A"
+      }
+    },
+    "type": "object",
+    "title": "BaseParserConfig"
+  },
+  "MultiValuedQuestion": {
+    "properties": {
+      "max_points": {
+        "type": "number",
+        "title": "Max Points",
+        "description": "Maximum points for the question",
+        "default": 1
+      },
+      "description": {
+        "title": "Description",
+        "description": "Optional description of the question.",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "type": {
+        "type": "string",
+        "const": "MULTI_VALUED",
+        "title": "Type",
+        "default": "MULTI_VALUED"
+      },
+      "config": {
+        "$ref": "#/definitions/MultiValuedParserConfig",
+        "description": "Parser configuration for multi-valued questions."
+      },
+      "value_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "NUMERIC"
+          ]
+        },
+        "type": "array",
+        "title": "Value Types",
+        "description": "Expected type for each value in the answer."
+      }
+    },
+    "type": "object",
+    "required": [
+      "value_types"
+    ],
+    "title": "MultiValuedQuestion"
+  },
+  "MultiValuedParserConfig": {
+    "properties": {
+      "empty_marker": {
+        "type": "string",
+        "title": "Empty Marker",
+        "description": "Marker indicating an empty answer.",
+        "default": "N/A"
+      },
+      "trim_whitespace": {
+        "type": "boolean",
+        "title": "Trim Whitespace",
+        "description": "Whether to trim leading and trailing whitespace from raw answers.",
+        "default": true
+      },
+      "normalize_case": {
+        "type": "boolean",
+        "title": "Normalize Case",
+        "description": "Whether to normalize the case of raw answers.",
+        "default": false
+      },
+      "delimiter": {
+        "type": "string",
+        "title": "Delimiter",
+        "description": "Delimiter for separating multiple-valued raw answers.",
+        "default": ","
+      }
+    },
+    "type": "object",
+    "title": "MultiValuedParserConfig"
+  },
+  "ChoiceQuestion": {
+    "properties": {
+      "max_points": {
+        "type": "number",
+        "title": "Max Points",
+        "description": "Maximum points for the question",
+        "default": 1
+      },
+      "description": {
+        "title": "Description",
+        "description": "Optional description of the question.",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "type": {
+        "type": "string",
+        "const": "CHOICE",
+        "title": "Type",
+        "default": "CHOICE"
+      },
+      "config": {
+        "$ref": "#/definitions/MultiValuedParserConfig",
+        "description": "Parser configuration for choice questions."
+      },
+      "options": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Options",
+        "description": "Set of valid choices for this question."
+      },
+      "allow_multiple": {
+        "type": "boolean",
+        "title": "Allow Multiple",
+        "description": "Whether to allow multiple choices to be selected.",
+        "default": false
+      }
+    },
+    "type": "object",
+    "title": "ChoiceQuestion"
+  },
+  "RegexQuestionRule": {
+    "properties": {
+      "question_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "CHOICE",
+            "NUMERIC",
+            "MULTI_VALUED"
+          ]
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Question Types",
+        "default": [
+          "TEXT"
+        ]
+      },
+      "constraints": {
+        "items": {
+          "$ref": "#/definitions/QuestionConstraint"
+        },
+        "type": "array",
+        "title": "Constraints",
+        "default": []
+      },
+      "question_id": {
+        "type": "string",
+        "title": "Question Id"
+      },
+      "type": {
+        "type": "string",
+        "const": "REGEX",
+        "title": "Type",
+        "default": "REGEX"
+      },
+      "pattern": {
+        "type": "string",
+        "title": "Pattern",
+        "description": "Regular expression pattern to match against the answer"
+      },
+      "config": {
+        "$ref": "#/definitions/RegexConfig",
+        "description": "Configuration for regex matching behavior"
+      }
+    },
+    "type": "object",
+    "required": [
+      "question_id",
+      "pattern"
+    ],
+    "title": "RegexQuestionRule"
+  },
+  "RegexConfig": {
+    "properties": {
+      "ignore_case": {
+        "type": "boolean",
+        "title": "Ignore Case",
+        "description": "Ignore case when matching",
+        "default": false
+      },
+      "multi_line": {
+        "type": "boolean",
+        "title": "Multi Line",
+        "description": "Multi-line matching",
+        "default": false
+      },
+      "dotall": {
+        "type": "boolean",
+        "title": "Dotall",
+        "description": "Dot matches all characters including newlines",
+        "default": false
+      }
+    },
+    "type": "object",
+    "title": "RegexConfig"
+  },
+  "QuestionSetResponse": {
+    "properties": {
+      "question_set": {
+        "$ref": "#/definitions/QuestionSet"
+      }
+    },
+    "type": "object",
+    "required": [
+      "question_set"
+    ],
+    "title": "QuestionSetResponse"
+  },
+  "QuestionResult": {
+    "properties": {
+      "output": {
+        "title": "Output",
+        "description": "Output generated from evaluating the answer",
+        "type": [
+          "boolean",
+          "integer",
+          "number"
+        ]
+      },
+      "passed": {
+        "type": "boolean",
+        "title": "Passed",
+        "description": "Whether the answer passed the rule check"
+      },
+      "feedback": {
+        "type": "string",
+        "title": "Feedback",
+        "description": "Feedback or comments"
+      },
+      "rule": {
+        "type": "string",
+        "title": "Rule",
+        "description": "ID of the rule that was applied"
+      },
+      "graded": {
+        "type": "boolean",
+        "title": "Graded",
+        "description": "Whether the result has been graded",
+        "default": true
+      },
+      "points": {
+        "type": "number",
+        "title": "Points",
+        "description": "Points awarded for this question"
+      },
+      "max_points": {
+        "type": "number",
+        "title": "Max Points",
+        "description": "Maximum points possible"
+      }
+    },
+    "type": "object",
+    "required": [
+      "output",
+      "passed",
+      "feedback",
+      "rule",
+      "points",
+      "max_points"
+    ],
+    "title": "QuestionResult"
+  },
+  "ProgrammingQuestionRule": {
+    "properties": {
+      "question_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "CHOICE",
+            "NUMERIC",
+            "MULTI_VALUED"
+          ]
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Question Types",
+        "default": [
+          "TEXT"
+        ]
+      },
+      "constraints": {
+        "items": {
+          "$ref": "#/definitions/QuestionConstraint"
+        },
+        "type": "array",
+        "title": "Constraints",
+        "default": []
+      },
+      "question_id": {
+        "type": "string",
+        "title": "Question Id"
+      },
+      "type": {
+        "type": "string",
+        "const": "PROGRAMMING",
+        "title": "Type",
+        "default": "PROGRAMMING"
+      },
+      "testcases": {
+        "items": {
+          "$ref": "#/definitions/ProgrammingTestCase"
+        },
+        "type": "array",
+        "minItems": 1,
+        "title": "Testcases",
+        "description": "List of test cases to run against the code"
+      },
+      "language": {
+        "type": "string",
+        "const": "python",
+        "title": "Language",
+        "description": "Programming language of the code to be tested",
+        "default": "python"
+      },
+      "config": {
+        "$ref": "#/definitions/ProgrammingConfig",
+        "description": "Configuration for code testing"
+      },
+      "show_evaluated_expected": {
+        "type": "boolean",
+        "title": "Show Evaluated Expected",
+        "description": "Whether to show the evaluated expected output in feedback",
+        "default": true
+      },
+      "mode": {
+        "type": "string",
+        "enum": [
+          "ALL",
+          "ANY",
+          "PARTIAL"
+        ],
+        "title": "Mode",
+        "description": "Mode of test case evaluation: 'ALL' requires all test cases to pass, 'ANY' requires at least one to pass, 'PARTIAL' gives credit for each test case passed.",
+        "default": "ALL"
+      }
+    },
+    "type": "object",
+    "required": [
+      "question_id",
+      "testcases"
+    ],
+    "title": "ProgrammingQuestionRule"
+  },
+  "ProgrammingConfig": {
+    "properties": {
+      "prepend_code": {
+        "type": "string",
+        "title": "Prepend Code",
+        "description": "Code to prepend to the student's answer",
+        "default": ""
+      },
+      "append_code": {
+        "type": "string",
+        "title": "Append Code",
+        "description": "Code to append to the student's answer",
+        "default": ""
+      },
+      "indent": {
+        "type": "integer",
+        "title": "Indent",
+        "description": "Number of spaces to indent the student's code when embedding it",
+        "default": 0
+      },
+      "time_limit": {
+        "type": "integer",
+        "title": "Time Limit",
+        "description": "Time limit in seconds for code execution",
+        "default": 5
+      }
+    },
+    "type": "object",
+    "title": "ProgrammingConfig"
+  },
+  "ProgrammingTestCase": {
+    "properties": {
+      "expression": {
+        "type": "string",
+        "title": "Expression",
+        "description": "Input for the test case"
+      },
+      "expected": {
+        "type": "string",
+        "title": "Expected",
+        "description": "Expected output for the test case"
+      }
+    },
+    "type": "object",
+    "required": [
+      "expression",
+      "expected"
+    ],
+    "title": "ProgrammingTestCase"
+  },
+  "ProgrammableQuestionRule": {
+    "properties": {
+      "question_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "CHOICE",
+            "NUMERIC",
+            "MULTI_VALUED"
+          ]
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Question Types",
+        "default": [
+          "MULTI_VALUED",
+          "CHOICE",
+          "TEXT",
+          "NUMERIC"
+        ]
+      },
+      "constraints": {
+        "items": {
+          "$ref": "#/definitions/QuestionConstraint"
+        },
+        "type": "array",
+        "title": "Constraints",
+        "default": []
+      },
+      "question_id": {
+        "type": "string",
+        "title": "Question Id"
+      },
+      "type": {
+        "type": "string",
+        "const": "PROGRAMMABLE",
+        "title": "Type",
+        "default": "PROGRAMMABLE"
+      },
+      "code": {
+        "type": "string",
+        "title": "Code",
+        "description": "Code to evaluate the answer. Required variables: 'output', 'passed'. Optional variable: 'feedback'.",
+        "default": "# 'answer' variable contains the student's answer (can be str, float, list, or set)\n# You must set the following variables:\n# 'output' (float): A number between 0 and 1; max_points multiplier (only used in OUTPUT mode)\n# 'passed' (bool): Whether the answer passed (only used in PASS_FAIL mode)\n# 'feedback' (str, optional): Feedback to provide to the student\n"
+      },
+      "mode": {
+        "type": "string",
+        "enum": [
+          "PASS_FAIL",
+          "OUTPUT"
+        ],
+        "title": "Mode",
+        "description": "Mode of evaluation: 'PASS_FAIL' uses a boolean 'passed' variable, 'OUTPUT' uses the 'output' variable (0-1) for scoring.",
+        "default": "PASS_FAIL"
+      }
+    },
+    "type": "object",
+    "required": [
+      "question_id"
+    ],
+    "title": "ProgrammableQuestionRule"
+  },
+  "NumericRangeQuestionRule": {
+    "properties": {
+      "question_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "CHOICE",
+            "NUMERIC",
+            "MULTI_VALUED"
+          ]
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Question Types",
+        "default": [
+          "NUMERIC"
+        ]
+      },
+      "constraints": {
+        "items": {
+          "$ref": "#/definitions/QuestionConstraint"
+        },
+        "type": "array",
+        "title": "Constraints",
+        "default": []
+      },
+      "question_id": {
+        "type": "string",
+        "title": "Question Id"
+      },
+      "type": {
+        "type": "string",
+        "const": "NUMERIC_RANGE",
+        "title": "Type",
+        "default": "NUMERIC_RANGE"
+      },
+      "min_value": {
+        "title": "Min Value",
+        "description": "Minimum acceptable value",
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "max_value": {
+        "title": "Max Value",
+        "description": "Maximum acceptable value",
+        "type": [
+          "number",
+          "null"
+        ]
+      }
+    },
+    "type": "object",
+    "required": [
+      "question_id"
+    ],
+    "title": "NumericRangeQuestionRule"
+  },
+  "NumberEqualQuestionRule": {
+    "properties": {
+      "question_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "CHOICE",
+            "NUMERIC",
+            "MULTI_VALUED"
+          ]
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Question Types",
+        "default": [
+          "NUMERIC"
+        ]
+      },
+      "constraints": {
+        "items": {
+          "$ref": "#/definitions/QuestionConstraint"
+        },
+        "type": "array",
+        "title": "Constraints",
+        "default": []
+      },
+      "question_id": {
+        "type": "string",
+        "title": "Question Id"
+      },
+      "type": {
+        "type": "string",
+        "const": "NUMBER_EQUAL",
+        "title": "Type",
+        "default": "NUMBER_EQUAL"
+      },
+      "answers": {
+        "items": {
+          "type": [
+            "integer",
+            "number"
+          ]
+        },
+        "type": "array",
+        "minItems": 1,
+        "title": "Answers",
+        "description": "List of acceptable numeric answers"
+      },
+      "config": {
+        "$ref": "#/definitions/NumberEqualConfig",
+        "description": "Configuration for numeric equality checks"
+      }
+    },
+    "type": "object",
+    "required": [
+      "question_id",
+      "answers"
+    ],
+    "title": "NumberEqualQuestionRule"
+  },
+  "NumberEqualConfig": {
+    "properties": {
+      "approximate": {
+        "type": "boolean",
+        "title": "Approximate",
+        "description": "Whether to allow approximate matches within a tolerance",
+        "default": true
+      },
+      "tolerance": {
+        "type": "number",
+        "title": "Tolerance",
+        "description": "Tolerance for approximate equality checks (if approximate is True)",
+        "default": 0.000001
+      }
+    },
+    "type": "object",
+    "title": "NumberEqualConfig"
+  },
+  "MultipleChoiceQuestionRule": {
+    "properties": {
+      "question_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "CHOICE",
+            "NUMERIC",
+            "MULTI_VALUED"
+          ]
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Question Types",
+        "default": [
+          "CHOICE"
+        ]
+      },
+      "constraints": {
+        "items": {
+          "$ref": "#/definitions/QuestionConstraint"
+        },
+        "type": "array",
+        "title": "Constraints",
+        "default": [
+          {
+            "type": "CHOICE",
+            "source": "options",
+            "target": "answer"
+          }
+        ]
+      },
+      "question_id": {
+        "type": "string",
+        "title": "Question Id"
+      },
+      "type": {
+        "type": "string",
+        "const": "MULTIPLE_CHOICE",
+        "title": "Type",
+        "default": "MULTIPLE_CHOICE"
+      },
+      "answer": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array",
+        "minItems": 1,
+        "uniqueItems": true,
+        "title": "Answer",
+        "description": "Set of correct choices"
+      },
+      "mode": {
+        "type": "string",
+        "enum": [
+          "ALL",
+          "ANY",
+          "PARTIAL"
+        ],
+        "title": "Mode",
+        "description": "Mode of choice matching: 'ALL' requires all correct choices to be selected, 'ANY' requires at least one, 'PARTIAL' gives credit for each correct choice selected minus each incorrect choice selected.",
+        "default": "ALL"
+      }
+    },
+    "type": "object",
+    "required": [
+      "question_id",
+      "answer"
+    ],
+    "title": "MultipleChoiceQuestionRule"
+  },
+  "MultiValuedQuestionRule": {
+    "properties": {
+      "question_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "CHOICE",
+            "NUMERIC",
+            "MULTI_VALUED"
+          ]
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Question Types",
+        "default": [
+          "MULTI_VALUED"
+        ]
+      },
+      "constraints": {
+        "items": {
+          "$ref": "#/definitions/QuestionConstraint"
+        },
+        "type": "array",
+        "title": "Constraints",
+        "default": []
+      },
+      "question_id": {
+        "type": "string",
+        "title": "Question Id"
+      },
+      "type": {
+        "type": "string",
+        "const": "MULTI_VALUED",
+        "title": "Type",
+        "default": "MULTI_VALUED"
+      },
+      "rules": {
+        "items": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/BonusRule"
+            },
+            {
+              "$ref": "#/definitions/CompositeRule"
+            },
+            {
+              "$ref": "#/definitions/ProgrammableRule"
+            },
+            {
+              "$ref": "#/definitions/ProgrammingRule"
+            },
+            {
+              "$ref": "#/definitions/TextMatchRule"
+            },
+            {
+              "$ref": "#/definitions/KeywordsRule"
+            },
+            {
+              "$ref": "#/definitions/RegexRule"
+            },
+            {
+              "$ref": "#/definitions/LengthRule"
+            },
+            {
+              "$ref": "#/definitions/ManualRule"
+            },
+            {
+              "$ref": "#/definitions/MultiValuedRule"
+            },
+            {
+              "$ref": "#/definitions/MultipleChoiceRule"
+            },
+            {
+              "$ref": "#/definitions/NumberEqualRule"
+            },
+            {
+              "$ref": "#/definitions/NumericRangeRule"
+            }
+          ],
+          "discriminator": {
+            "propertyName": "type",
+            "mapping": {
+              "BONUS": "#/definitions/BonusRule",
+              "COMPOSITE": "#/definitions/CompositeRule",
+              "KEYWORDS": "#/definitions/KeywordsRule",
+              "LENGTH": "#/definitions/LengthRule",
+              "MANUAL": "#/definitions/ManualRule",
+              "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceRule",
+              "MULTI_VALUED": "#/definitions/MultiValuedRule",
+              "NUMBER_EQUAL": "#/definitions/NumberEqualRule",
+              "NUMERIC_RANGE": "#/definitions/NumericRangeRule",
+              "PROGRAMMABLE": "#/definitions/ProgrammableRule",
+              "PROGRAMMING": "#/definitions/ProgrammingRule",
+              "REGEX": "#/definitions/RegexRule",
+              "TEXT_MATCH": "#/definitions/TextMatchRule"
+            }
+          }
+        },
+        "type": "array",
+        "minItems": 1,
+        "title": "Rules",
+        "description": "List of rules to apply to each value in the multi-valued answer"
+      },
+      "aggregation": {
+        "type": "string",
+        "enum": [
+          "ALL",
+          "ANY",
+          "PARTIAL"
+        ],
+        "title": "Aggregation",
+        "description": "Aggregation method",
+        "default": "ALL"
+      }
+    },
+    "type": "object",
+    "required": [
+      "question_id",
+      "rules"
+    ],
+    "title": "MultiValuedQuestionRule"
+  },
+  "TextMatchRule": {
+    "properties": {
+      "question_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "CHOICE",
+            "NUMERIC",
+            "MULTI_VALUED"
+          ]
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Question Types",
+        "default": [
+          "TEXT",
+          "NUMERIC"
+        ]
+      },
+      "constraints": {
+        "items": {
+          "$ref": "#/definitions/QuestionConstraint"
+        },
+        "type": "array",
+        "title": "Constraints",
+        "default": []
+      },
+      "type": {
+        "type": "string",
+        "const": "TEXT_MATCH",
+        "title": "Type",
+        "default": "TEXT_MATCH"
+      },
+      "answers": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array",
+        "minItems": 1,
+        "title": "Answers",
+        "description": "List of acceptable exact answers"
+      }
+    },
+    "type": "object",
+    "required": [
+      "answers"
+    ],
+    "title": "TextMatchRule"
+  },
+  "RegexRule": {
+    "properties": {
+      "question_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "CHOICE",
+            "NUMERIC",
+            "MULTI_VALUED"
+          ]
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Question Types",
+        "default": [
+          "TEXT"
+        ]
+      },
+      "constraints": {
+        "items": {
+          "$ref": "#/definitions/QuestionConstraint"
+        },
+        "type": "array",
+        "title": "Constraints",
+        "default": []
+      },
+      "type": {
+        "type": "string",
+        "const": "REGEX",
+        "title": "Type",
+        "default": "REGEX"
+      },
+      "pattern": {
+        "type": "string",
+        "title": "Pattern",
+        "description": "Regular expression pattern to match against the answer"
+      },
+      "config": {
+        "$ref": "#/definitions/RegexConfig",
+        "description": "Configuration for regex matching behavior"
+      }
+    },
+    "type": "object",
+    "required": [
+      "pattern"
+    ],
+    "title": "RegexRule"
+  },
+  "ProgrammingRule": {
+    "properties": {
+      "question_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "CHOICE",
+            "NUMERIC",
+            "MULTI_VALUED"
+          ]
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Question Types",
+        "default": [
+          "TEXT"
+        ]
+      },
+      "constraints": {
+        "items": {
+          "$ref": "#/definitions/QuestionConstraint"
+        },
+        "type": "array",
+        "title": "Constraints",
+        "default": []
+      },
+      "type": {
+        "type": "string",
+        "const": "PROGRAMMING",
+        "title": "Type",
+        "default": "PROGRAMMING"
+      },
+      "testcases": {
+        "items": {
+          "$ref": "#/definitions/ProgrammingTestCase"
+        },
+        "type": "array",
+        "minItems": 1,
+        "title": "Testcases",
+        "description": "List of test cases to run against the code"
+      },
+      "language": {
+        "type": "string",
+        "const": "python",
+        "title": "Language",
+        "description": "Programming language of the code to be tested",
+        "default": "python"
+      },
+      "config": {
+        "$ref": "#/definitions/ProgrammingConfig",
+        "description": "Configuration for code testing"
+      },
+      "show_evaluated_expected": {
+        "type": "boolean",
+        "title": "Show Evaluated Expected",
+        "description": "Whether to show the evaluated expected output in feedback",
+        "default": true
+      },
+      "mode": {
+        "type": "string",
+        "enum": [
+          "ALL",
+          "ANY",
+          "PARTIAL"
+        ],
+        "title": "Mode",
+        "description": "Mode of test case evaluation: 'ALL' requires all test cases to pass, 'ANY' requires at least one to pass, 'PARTIAL' gives credit for each test case passed.",
+        "default": "ALL"
+      }
+    },
+    "type": "object",
+    "required": [
+      "testcases"
+    ],
+    "title": "ProgrammingRule"
+  },
+  "ProgrammableRule": {
+    "properties": {
+      "question_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "CHOICE",
+            "NUMERIC",
+            "MULTI_VALUED"
+          ]
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Question Types",
+        "default": [
+          "MULTI_VALUED",
+          "CHOICE",
+          "TEXT",
+          "NUMERIC"
+        ]
+      },
+      "constraints": {
+        "items": {
+          "$ref": "#/definitions/QuestionConstraint"
+        },
+        "type": "array",
+        "title": "Constraints",
+        "default": []
+      },
+      "type": {
+        "type": "string",
+        "const": "PROGRAMMABLE",
+        "title": "Type",
+        "default": "PROGRAMMABLE"
+      },
+      "code": {
+        "type": "string",
+        "title": "Code",
+        "description": "Code to evaluate the answer. Required variables: 'output', 'passed'. Optional variable: 'feedback'.",
+        "default": "# 'answer' variable contains the student's answer (can be str, float, list, or set)\n# You must set the following variables:\n# 'output' (float): A number between 0 and 1; max_points multiplier (only used in OUTPUT mode)\n# 'passed' (bool): Whether the answer passed (only used in PASS_FAIL mode)\n# 'feedback' (str, optional): Feedback to provide to the student\n"
+      },
+      "mode": {
+        "type": "string",
+        "enum": [
+          "PASS_FAIL",
+          "OUTPUT"
+        ],
+        "title": "Mode",
+        "description": "Mode of evaluation: 'PASS_FAIL' uses a boolean 'passed' variable, 'OUTPUT' uses the 'output' variable (0-1) for scoring.",
+        "default": "PASS_FAIL"
+      }
+    },
+    "type": "object",
+    "title": "ProgrammableRule"
+  },
+  "NumericRangeRule": {
+    "properties": {
+      "question_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "CHOICE",
+            "NUMERIC",
+            "MULTI_VALUED"
+          ]
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Question Types",
+        "default": [
+          "NUMERIC"
+        ]
+      },
+      "constraints": {
+        "items": {
+          "$ref": "#/definitions/QuestionConstraint"
+        },
+        "type": "array",
+        "title": "Constraints",
+        "default": []
+      },
+      "type": {
+        "type": "string",
+        "const": "NUMERIC_RANGE",
+        "title": "Type",
+        "default": "NUMERIC_RANGE"
+      },
+      "min_value": {
+        "title": "Min Value",
+        "description": "Minimum acceptable value",
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "max_value": {
+        "title": "Max Value",
+        "description": "Maximum acceptable value",
+        "type": [
+          "number",
+          "null"
+        ]
+      }
+    },
+    "type": "object",
+    "title": "NumericRangeRule"
+  },
+  "NumberEqualRule": {
+    "properties": {
+      "question_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "CHOICE",
+            "NUMERIC",
+            "MULTI_VALUED"
+          ]
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Question Types",
+        "default": [
+          "NUMERIC"
+        ]
+      },
+      "constraints": {
+        "items": {
+          "$ref": "#/definitions/QuestionConstraint"
+        },
+        "type": "array",
+        "title": "Constraints",
+        "default": []
+      },
+      "type": {
+        "type": "string",
+        "const": "NUMBER_EQUAL",
+        "title": "Type",
+        "default": "NUMBER_EQUAL"
+      },
+      "answers": {
+        "items": {
+          "type": [
+            "integer",
+            "number"
+          ]
+        },
+        "type": "array",
+        "minItems": 1,
+        "title": "Answers",
+        "description": "List of acceptable numeric answers"
+      },
+      "config": {
+        "$ref": "#/definitions/NumberEqualConfig",
+        "description": "Configuration for numeric equality checks"
+      }
+    },
+    "type": "object",
+    "required": [
+      "answers"
+    ],
+    "title": "NumberEqualRule"
+  },
+  "MultiValuedRule": {
+    "properties": {
+      "question_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "CHOICE",
+            "NUMERIC",
+            "MULTI_VALUED"
+          ]
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Question Types",
+        "default": [
+          "MULTI_VALUED"
+        ]
+      },
+      "constraints": {
+        "items": {
+          "$ref": "#/definitions/QuestionConstraint"
+        },
+        "type": "array",
+        "title": "Constraints",
+        "default": []
+      },
+      "type": {
+        "type": "string",
+        "const": "MULTI_VALUED",
+        "title": "Type",
+        "default": "MULTI_VALUED"
+      },
+      "rules": {
+        "items": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/BonusRule"
+            },
+            {
+              "$ref": "#/definitions/CompositeRule"
+            },
+            {
+              "$ref": "#/definitions/ProgrammableRule"
+            },
+            {
+              "$ref": "#/definitions/ProgrammingRule"
+            },
+            {
+              "$ref": "#/definitions/TextMatchRule"
+            },
+            {
+              "$ref": "#/definitions/KeywordsRule"
+            },
+            {
+              "$ref": "#/definitions/RegexRule"
+            },
+            {
+              "$ref": "#/definitions/LengthRule"
+            },
+            {
+              "$ref": "#/definitions/ManualRule"
+            },
+            {
+              "$ref": "#/definitions/MultiValuedRule"
+            },
+            {
+              "$ref": "#/definitions/MultipleChoiceRule"
+            },
+            {
+              "$ref": "#/definitions/NumberEqualRule"
+            },
+            {
+              "$ref": "#/definitions/NumericRangeRule"
+            }
+          ],
+          "discriminator": {
+            "propertyName": "type",
+            "mapping": {
+              "BONUS": "#/definitions/BonusRule",
+              "COMPOSITE": "#/definitions/CompositeRule",
+              "KEYWORDS": "#/definitions/KeywordsRule",
+              "LENGTH": "#/definitions/LengthRule",
+              "MANUAL": "#/definitions/ManualRule",
+              "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceRule",
+              "MULTI_VALUED": "#/definitions/MultiValuedRule",
+              "NUMBER_EQUAL": "#/definitions/NumberEqualRule",
+              "NUMERIC_RANGE": "#/definitions/NumericRangeRule",
+              "PROGRAMMABLE": "#/definitions/ProgrammableRule",
+              "PROGRAMMING": "#/definitions/ProgrammingRule",
+              "REGEX": "#/definitions/RegexRule",
+              "TEXT_MATCH": "#/definitions/TextMatchRule"
+            }
+          }
+        },
+        "type": "array",
+        "minItems": 1,
+        "title": "Rules",
+        "description": "List of rules to apply to each value in the multi-valued answer"
+      },
+      "aggregation": {
+        "type": "string",
+        "enum": [
+          "ALL",
+          "ANY",
+          "PARTIAL"
+        ],
+        "title": "Aggregation",
+        "description": "Aggregation method",
+        "default": "ALL"
+      }
+    },
+    "type": "object",
+    "required": [
+      "rules"
+    ],
+    "title": "MultiValuedRule"
+  },
+  "MultipleChoiceRule": {
+    "properties": {
+      "question_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "CHOICE",
+            "NUMERIC",
+            "MULTI_VALUED"
+          ]
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Question Types",
+        "default": [
+          "CHOICE"
+        ]
+      },
+      "constraints": {
+        "items": {
+          "$ref": "#/definitions/QuestionConstraint"
+        },
+        "type": "array",
+        "title": "Constraints",
+        "default": [
+          {
+            "type": "CHOICE",
+            "source": "options",
+            "target": "answer"
+          }
+        ]
+      },
+      "type": {
+        "type": "string",
+        "const": "MULTIPLE_CHOICE",
+        "title": "Type",
+        "default": "MULTIPLE_CHOICE"
+      },
+      "answer": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array",
+        "minItems": 1,
+        "uniqueItems": true,
+        "title": "Answer",
+        "description": "Set of correct choices"
+      },
+      "mode": {
+        "type": "string",
+        "enum": [
+          "ALL",
+          "ANY",
+          "PARTIAL"
+        ],
+        "title": "Mode",
+        "description": "Mode of choice matching: 'ALL' requires all correct choices to be selected, 'ANY' requires at least one, 'PARTIAL' gives credit for each correct choice selected minus each incorrect choice selected.",
+        "default": "ALL"
+      }
+    },
+    "type": "object",
+    "required": [
+      "answer"
+    ],
+    "title": "MultipleChoiceRule"
+  },
+  "ManualRule": {
+    "properties": {
+      "question_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "CHOICE",
+            "NUMERIC",
+            "MULTI_VALUED"
+          ]
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Question Types",
+        "default": [
+          "MULTI_VALUED",
+          "CHOICE",
+          "TEXT",
+          "NUMERIC"
+        ]
+      },
+      "constraints": {
+        "items": {
+          "$ref": "#/definitions/QuestionConstraint"
+        },
+        "type": "array",
+        "title": "Constraints",
+        "default": []
+      },
+      "type": {
+        "type": "string",
+        "const": "MANUAL",
+        "title": "Type",
+        "default": "MANUAL"
+      }
+    },
+    "type": "object",
+    "title": "ManualRule"
+  },
+  "LengthRule": {
+    "properties": {
+      "question_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "CHOICE",
+            "NUMERIC",
+            "MULTI_VALUED"
+          ]
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Question Types",
+        "default": [
+          "TEXT"
+        ]
+      },
+      "constraints": {
+        "items": {
+          "$ref": "#/definitions/QuestionConstraint"
+        },
+        "type": "array",
+        "title": "Constraints",
+        "default": []
+      },
+      "type": {
+        "type": "string",
+        "const": "LENGTH",
+        "title": "Type",
+        "default": "LENGTH"
+      },
+      "min_length": {
+        "title": "Min Length",
+        "description": "Minimum length of the answer",
+        "type": [
+          "integer",
+          "null"
+        ]
+      },
+      "max_length": {
+        "title": "Max Length",
+        "description": "Maximum length of the answer",
+        "type": [
+          "integer",
+          "null"
+        ]
+      },
+      "mode": {
+        "type": "string",
+        "enum": [
+          "words",
+          "characters"
+        ],
+        "title": "Mode",
+        "description": "Mode of length measurement",
+        "default": "characters"
+      }
+    },
+    "type": "object",
+    "title": "LengthRule"
+  },
+  "KeywordsRule": {
+    "properties": {
+      "question_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "CHOICE",
+            "NUMERIC",
+            "MULTI_VALUED"
+          ]
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Question Types",
+        "default": [
+          "TEXT"
+        ]
+      },
+      "constraints": {
+        "items": {
+          "$ref": "#/definitions/QuestionConstraint"
+        },
+        "type": "array",
+        "title": "Constraints",
+        "default": []
+      },
+      "type": {
+        "type": "string",
+        "const": "KEYWORDS",
+        "title": "Type",
+        "default": "KEYWORDS"
+      },
+      "keywords": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array",
+        "minItems": 1,
+        "title": "Keywords",
+        "description": "List of keywords that must be present in the answer"
+      },
+      "mode": {
+        "type": "string",
+        "enum": [
+          "ALL",
+          "ANY",
+          "PARTIAL"
+        ],
+        "title": "Mode",
+        "description": "Mode of keyword matching: 'ALL' requires all keywords to be present, 'ANY' requires at least one.'PARTIAL' gives credit for each keyword present.",
+        "default": "ALL"
+      }
+    },
+    "type": "object",
+    "required": [
+      "keywords"
+    ],
+    "title": "KeywordsRule"
+  },
+  "CompositeRule": {
+    "properties": {
+      "question_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "CHOICE",
+            "NUMERIC",
+            "MULTI_VALUED"
+          ]
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Question Types",
+        "default": [
+          "TEXT",
+          "NUMERIC"
+        ]
+      },
+      "constraints": {
+        "items": {
+          "$ref": "#/definitions/QuestionConstraint"
+        },
+        "type": "array",
+        "title": "Constraints",
+        "default": []
+      },
+      "type": {
+        "type": "string",
+        "const": "COMPOSITE",
+        "title": "Type",
+        "default": "COMPOSITE"
+      },
+      "rules": {
+        "items": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/BonusRule"
+            },
+            {
+              "$ref": "#/definitions/CompositeRule"
+            },
+            {
+              "$ref": "#/definitions/ProgrammableRule"
+            },
+            {
+              "$ref": "#/definitions/ProgrammingRule"
+            },
+            {
+              "$ref": "#/definitions/TextMatchRule"
+            },
+            {
+              "$ref": "#/definitions/KeywordsRule"
+            },
+            {
+              "$ref": "#/definitions/RegexRule"
+            },
+            {
+              "$ref": "#/definitions/LengthRule"
+            },
+            {
+              "$ref": "#/definitions/ManualRule"
+            },
+            {
+              "$ref": "#/definitions/MultiValuedRule"
+            },
+            {
+              "$ref": "#/definitions/MultipleChoiceRule"
+            },
+            {
+              "$ref": "#/definitions/NumberEqualRule"
+            },
+            {
+              "$ref": "#/definitions/NumericRangeRule"
+            }
+          ],
+          "discriminator": {
+            "propertyName": "type",
+            "mapping": {
+              "BONUS": "#/definitions/BonusRule",
+              "COMPOSITE": "#/definitions/CompositeRule",
+              "KEYWORDS": "#/definitions/KeywordsRule",
+              "LENGTH": "#/definitions/LengthRule",
+              "MANUAL": "#/definitions/ManualRule",
+              "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceRule",
+              "MULTI_VALUED": "#/definitions/MultiValuedRule",
+              "NUMBER_EQUAL": "#/definitions/NumberEqualRule",
+              "NUMERIC_RANGE": "#/definitions/NumericRangeRule",
+              "PROGRAMMABLE": "#/definitions/ProgrammableRule",
+              "PROGRAMMING": "#/definitions/ProgrammingRule",
+              "REGEX": "#/definitions/RegexRule",
+              "TEXT_MATCH": "#/definitions/TextMatchRule"
+            }
+          }
+        },
+        "type": "array",
+        "minItems": 1,
+        "title": "Rules",
+        "description": "List of rules to apply to the answer"
+      },
+      "aggregation": {
+        "type": "string",
+        "enum": [
+          "ALL",
+          "ANY",
+          "PARTIAL"
+        ],
+        "title": "Aggregation",
+        "description": "Aggregation method to combine rule results: 'ALL', 'ANY', or 'PARTIAL'",
+        "default": "ALL"
+      }
+    },
+    "type": "object",
+    "required": [
+      "rules"
+    ],
+    "title": "CompositeRule"
+  },
+  "BonusRule": {
+    "properties": {
+      "question_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "CHOICE",
+            "NUMERIC",
+            "MULTI_VALUED"
+          ]
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Question Types",
+        "default": [
+          "MULTI_VALUED",
+          "CHOICE",
+          "TEXT",
+          "NUMERIC"
+        ]
+      },
+      "constraints": {
+        "items": {
+          "$ref": "#/definitions/QuestionConstraint"
+        },
+        "type": "array",
+        "title": "Constraints",
+        "default": []
+      },
+      "type": {
+        "type": "string",
+        "const": "BONUS",
+        "title": "Type",
+        "default": "BONUS"
+      }
+    },
+    "type": "object",
+    "title": "BonusRule"
+  },
+  "MultiQuestionAssumption": {
+    "properties": {
+      "name": {
+        "title": "Name",
+        "description": "Name of the assumption",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "weight": {
+        "type": "number",
+        "maximum": 1,
+        "minimum": 0,
+        "title": "Weight",
+        "description": "Weight of the assumption",
+        "default": 1
+      },
+      "rules": {
+        "items": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/AssumptionSetQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/BonusQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/CompositeQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/ProgrammableQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/ProgrammingQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/TextMatchQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/KeywordsQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/RegexQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/LengthQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/ManualQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/MultiValuedQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/MultipleChoiceQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/NumberEqualQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/NumericRangeQuestionRule"
+            }
+          ],
+          "discriminator": {
+            "propertyName": "type",
+            "mapping": {
+              "ASSUMPTION_SET": "#/definitions/AssumptionSetQuestionRule",
+              "BONUS": "#/definitions/BonusQuestionRule",
+              "COMPOSITE": "#/definitions/CompositeQuestionRule",
+              "KEYWORDS": "#/definitions/KeywordsQuestionRule",
+              "LENGTH": "#/definitions/LengthQuestionRule",
+              "MANUAL": "#/definitions/ManualQuestionRule",
+              "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceQuestionRule",
+              "MULTI_VALUED": "#/definitions/MultiValuedQuestionRule",
+              "NUMBER_EQUAL": "#/definitions/NumberEqualQuestionRule",
+              "NUMERIC_RANGE": "#/definitions/NumericRangeQuestionRule",
+              "PROGRAMMABLE": "#/definitions/ProgrammableQuestionRule",
+              "PROGRAMMING": "#/definitions/ProgrammingQuestionRule",
+              "REGEX": "#/definitions/RegexQuestionRule",
+              "TEXT_MATCH": "#/definitions/TextMatchQuestionRule"
+            }
+          }
+        },
+        "type": "array",
+        "title": "Rules",
+        "description": "List of rules that define the assumption"
+      }
+    },
+    "type": "object",
+    "required": [
+      "rules"
+    ],
+    "title": "MultiQuestionAssumption"
+  },
+  "ManualQuestionRule": {
+    "properties": {
+      "question_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "CHOICE",
+            "NUMERIC",
+            "MULTI_VALUED"
+          ]
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Question Types",
+        "default": [
+          "MULTI_VALUED",
+          "CHOICE",
+          "TEXT",
+          "NUMERIC"
+        ]
+      },
+      "constraints": {
+        "items": {
+          "$ref": "#/definitions/QuestionConstraint"
+        },
+        "type": "array",
+        "title": "Constraints",
+        "default": []
+      },
+      "question_id": {
+        "type": "string",
+        "title": "Question Id"
+      },
+      "type": {
+        "type": "string",
+        "const": "MANUAL",
+        "title": "Type",
+        "default": "MANUAL"
+      }
+    },
+    "type": "object",
+    "required": [
+      "question_id"
+    ],
+    "title": "ManualQuestionRule"
+  },
+  "LengthQuestionRule": {
+    "properties": {
+      "question_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "CHOICE",
+            "NUMERIC",
+            "MULTI_VALUED"
+          ]
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Question Types",
+        "default": [
+          "TEXT"
+        ]
+      },
+      "constraints": {
+        "items": {
+          "$ref": "#/definitions/QuestionConstraint"
+        },
+        "type": "array",
+        "title": "Constraints",
+        "default": []
+      },
+      "question_id": {
+        "type": "string",
+        "title": "Question Id"
+      },
+      "type": {
+        "type": "string",
+        "const": "LENGTH",
+        "title": "Type",
+        "default": "LENGTH"
+      },
+      "min_length": {
+        "title": "Min Length",
+        "description": "Minimum length of the answer",
+        "type": [
+          "integer",
+          "null"
+        ]
+      },
+      "max_length": {
+        "title": "Max Length",
+        "description": "Maximum length of the answer",
+        "type": [
+          "integer",
+          "null"
+        ]
+      },
+      "mode": {
+        "type": "string",
+        "enum": [
+          "words",
+          "characters"
+        ],
+        "title": "Mode",
+        "description": "Mode of length measurement",
+        "default": "characters"
+      }
+    },
+    "type": "object",
+    "required": [
+      "question_id"
+    ],
+    "title": "LengthQuestionRule"
+  },
+  "KeywordsQuestionRule": {
+    "properties": {
+      "question_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "CHOICE",
+            "NUMERIC",
+            "MULTI_VALUED"
+          ]
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Question Types",
+        "default": [
+          "TEXT"
+        ]
+      },
+      "constraints": {
+        "items": {
+          "$ref": "#/definitions/QuestionConstraint"
+        },
+        "type": "array",
+        "title": "Constraints",
+        "default": []
+      },
+      "question_id": {
+        "type": "string",
+        "title": "Question Id"
+      },
+      "type": {
+        "type": "string",
+        "const": "KEYWORDS",
+        "title": "Type",
+        "default": "KEYWORDS"
+      },
+      "keywords": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array",
+        "minItems": 1,
+        "title": "Keywords",
+        "description": "List of keywords that must be present in the answer"
+      },
+      "mode": {
+        "type": "string",
+        "enum": [
+          "ALL",
+          "ANY",
+          "PARTIAL"
+        ],
+        "title": "Mode",
+        "description": "Mode of keyword matching: 'ALL' requires all keywords to be present, 'ANY' requires at least one.'PARTIAL' gives credit for each keyword present.",
+        "default": "ALL"
+      }
+    },
+    "type": "object",
+    "required": [
+      "question_id",
+      "keywords"
+    ],
+    "title": "KeywordsQuestionRule"
+  },
+  "CompositeQuestionRule": {
+    "properties": {
+      "question_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "CHOICE",
+            "NUMERIC",
+            "MULTI_VALUED"
+          ]
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Question Types",
+        "default": [
+          "TEXT",
+          "NUMERIC"
+        ]
+      },
+      "constraints": {
+        "items": {
+          "$ref": "#/definitions/QuestionConstraint"
+        },
+        "type": "array",
+        "title": "Constraints",
+        "default": []
+      },
+      "question_id": {
+        "type": "string",
+        "title": "Question Id"
+      },
+      "type": {
+        "type": "string",
+        "const": "COMPOSITE",
+        "title": "Type",
+        "default": "COMPOSITE"
+      },
+      "rules": {
+        "items": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/BonusRule"
+            },
+            {
+              "$ref": "#/definitions/CompositeRule"
+            },
+            {
+              "$ref": "#/definitions/ProgrammableRule"
+            },
+            {
+              "$ref": "#/definitions/ProgrammingRule"
+            },
+            {
+              "$ref": "#/definitions/TextMatchRule"
+            },
+            {
+              "$ref": "#/definitions/KeywordsRule"
+            },
+            {
+              "$ref": "#/definitions/RegexRule"
+            },
+            {
+              "$ref": "#/definitions/LengthRule"
+            },
+            {
+              "$ref": "#/definitions/ManualRule"
+            },
+            {
+              "$ref": "#/definitions/MultiValuedRule"
+            },
+            {
+              "$ref": "#/definitions/MultipleChoiceRule"
+            },
+            {
+              "$ref": "#/definitions/NumberEqualRule"
+            },
+            {
+              "$ref": "#/definitions/NumericRangeRule"
+            }
+          ],
+          "discriminator": {
+            "propertyName": "type",
+            "mapping": {
+              "BONUS": "#/definitions/BonusRule",
+              "COMPOSITE": "#/definitions/CompositeRule",
+              "KEYWORDS": "#/definitions/KeywordsRule",
+              "LENGTH": "#/definitions/LengthRule",
+              "MANUAL": "#/definitions/ManualRule",
+              "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceRule",
+              "MULTI_VALUED": "#/definitions/MultiValuedRule",
+              "NUMBER_EQUAL": "#/definitions/NumberEqualRule",
+              "NUMERIC_RANGE": "#/definitions/NumericRangeRule",
+              "PROGRAMMABLE": "#/definitions/ProgrammableRule",
+              "PROGRAMMING": "#/definitions/ProgrammingRule",
+              "REGEX": "#/definitions/RegexRule",
+              "TEXT_MATCH": "#/definitions/TextMatchRule"
+            }
+          }
+        },
+        "type": "array",
+        "minItems": 1,
+        "title": "Rules",
+        "description": "List of rules to apply to the answer"
+      },
+      "aggregation": {
+        "type": "string",
+        "enum": [
+          "ALL",
+          "ANY",
+          "PARTIAL"
+        ],
+        "title": "Aggregation",
+        "description": "Aggregation method to combine rule results: 'ALL', 'ANY', or 'PARTIAL'",
+        "default": "ALL"
+      }
+    },
+    "type": "object",
+    "required": [
+      "question_id",
+      "rules"
+    ],
+    "title": "CompositeQuestionRule"
+  },
+  "BonusQuestionRule": {
+    "properties": {
+      "question_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "CHOICE",
+            "NUMERIC",
+            "MULTI_VALUED"
+          ]
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Question Types",
+        "default": [
+          "MULTI_VALUED",
+          "CHOICE",
+          "TEXT",
+          "NUMERIC"
+        ]
+      },
+      "constraints": {
+        "items": {
+          "$ref": "#/definitions/QuestionConstraint"
+        },
+        "type": "array",
+        "title": "Constraints",
+        "default": []
+      },
+      "question_id": {
+        "type": "string",
+        "title": "Question Id"
+      },
+      "type": {
+        "type": "string",
+        "const": "BONUS",
+        "title": "Type",
+        "default": "BONUS"
+      }
+    },
+    "type": "object",
+    "required": [
+      "question_id"
+    ],
+    "title": "BonusQuestionRule"
+  },
+  "AssumptionSetQuestionRule": {
+    "properties": {
+      "question_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "CHOICE",
+            "NUMERIC",
+            "MULTI_VALUED"
+          ]
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Question Types",
+        "default": [
+          "MULTI_VALUED",
+          "CHOICE",
+          "TEXT",
+          "NUMERIC"
+        ]
+      },
+      "constraints": {
+        "items": {
+          "$ref": "#/definitions/QuestionConstraint"
+        },
+        "type": "array",
+        "title": "Constraints",
+        "default": []
+      },
+      "question_id": {
+        "type": "string",
+        "title": "Question Id"
+      },
+      "mode": {
+        "type": "string",
+        "enum": [
+          "MAX",
+          "MIN"
+        ],
+        "title": "Mode",
+        "description": "Mode to select which assumption to use",
+        "default": "MAX"
+      },
+      "type": {
+        "type": "string",
+        "const": "ASSUMPTION_SET",
+        "title": "Type",
+        "default": "ASSUMPTION_SET"
+      },
+      "assumptions": {
+        "items": {
+          "$ref": "#/definitions/Assumption"
+        },
+        "type": "array",
+        "title": "Assumptions",
+        "description": "List of assumptions in the assumption set"
+      }
+    },
+    "type": "object",
+    "required": [
+      "question_id",
+      "assumptions"
+    ],
+    "title": "AssumptionSetQuestionRule"
+  },
+  "Assumption": {
+    "properties": {
+      "name": {
+        "title": "Name",
+        "description": "Name of the assumption",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "weight": {
+        "type": "number",
+        "maximum": 1,
+        "minimum": 0,
+        "title": "Weight",
+        "description": "Weight of the assumption",
+        "default": 1
+      },
+      "rule": {
+        "oneOf": [
+          {
+            "$ref": "#/definitions/BonusRule"
+          },
+          {
+            "$ref": "#/definitions/CompositeRule"
+          },
+          {
+            "$ref": "#/definitions/ProgrammableRule"
+          },
+          {
+            "$ref": "#/definitions/ProgrammingRule"
+          },
+          {
+            "$ref": "#/definitions/TextMatchRule"
+          },
+          {
+            "$ref": "#/definitions/KeywordsRule"
+          },
+          {
+            "$ref": "#/definitions/RegexRule"
+          },
+          {
+            "$ref": "#/definitions/LengthRule"
+          },
+          {
+            "$ref": "#/definitions/ManualRule"
+          },
+          {
+            "$ref": "#/definitions/MultiValuedRule"
+          },
+          {
+            "$ref": "#/definitions/MultipleChoiceRule"
+          },
+          {
+            "$ref": "#/definitions/NumberEqualRule"
+          },
+          {
+            "$ref": "#/definitions/NumericRangeRule"
+          }
+        ],
+        "title": "Rule",
+        "description": "Rule that defines the assumption",
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "BONUS": "#/definitions/BonusRule",
+            "COMPOSITE": "#/definitions/CompositeRule",
+            "KEYWORDS": "#/definitions/KeywordsRule",
+            "LENGTH": "#/definitions/LengthRule",
+            "MANUAL": "#/definitions/ManualRule",
+            "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceRule",
+            "MULTI_VALUED": "#/definitions/MultiValuedRule",
+            "NUMBER_EQUAL": "#/definitions/NumberEqualRule",
+            "NUMERIC_RANGE": "#/definitions/NumericRangeRule",
+            "PROGRAMMABLE": "#/definitions/ProgrammableRule",
+            "PROGRAMMING": "#/definitions/ProgrammingRule",
+            "REGEX": "#/definitions/RegexRule",
+            "TEXT_MATCH": "#/definitions/TextMatchRule"
+          }
+        }
+      }
+    },
+    "type": "object",
+    "required": [
+      "rule"
+    ],
+    "title": "Assumption"
+  },
+  "LoadQuestionSetRequest": {
+    "properties": {
+      "data": {
+        "type": "string",
+        "title": "Data"
+      },
+      "serializer": {
+        "$ref": "#/definitions/YamlQuestionSetConfig"
+      }
+    },
+    "type": "object",
+    "required": [
+      "data",
+      "serializer"
+    ],
+    "title": "LoadQuestionSetRequest"
+  },
+  "InferQuestionSetRequest": {
+    "properties": {
+      "use_stored_submissions": {
+        "type": "boolean",
+        "title": "Use Stored Submissions",
+        "default": true
+      },
+      "raw_submissions": {
+        "anyOf": [
+          {
+            "items": {
+              "$ref": "#/definitions/RawSubmission"
+            },
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Raw Submissions"
+      },
+      "choice_delimiter": {
+        "type": "string",
+        "title": "Choice Delimiter",
+        "default": ","
+      },
+      "choice_option_limit": {
+        "type": "integer",
+        "title": "Choice Option Limit",
+        "default": 7
+      },
+      "multi_value_delimiter": {
+        "type": "string",
+        "title": "Multi Value Delimiter",
+        "default": "~"
+      },
+      "commit": {
+        "type": "boolean",
+        "title": "Commit",
+        "description": "If true, store as question set",
+        "default": true
+      }
+    },
+    "type": "object",
+    "title": "InferQuestionSetRequest"
+  },
+  "RawSubmission": {
+    "properties": {
+      "student_id": {
+        "type": "string",
+        "title": "Student Id"
+      },
+      "result_map": {
+        "additionalProperties": {
+          "$ref": "#/definitions/QuestionResult"
+        },
+        "type": "object",
+        "title": "Result Map"
+      },
+      "raw_answer_map": {
+        "additionalProperties": {
+          "type": "string"
+        },
+        "type": "object",
+        "title": "Raw Answer Map"
+      }
+    },
+    "type": "object",
+    "required": [
+      "student_id",
+      "raw_answer_map"
+    ],
+    "title": "RawSubmission"
+  },
+  "ImportQuestionSetRequest": {
+    "properties": {
+      "data": {
+        "title": "Data",
+        "description": "Source content; str or bytes",
+        "type": [
+          "string"
+        ],
+        "contentMediaType": "application/octet-stream"
+      },
+      "adapter": {
+        "$ref": "#/definitions/ExamplifyParseConfig"
+      }
+    },
+    "type": "object",
+    "required": [
+      "data",
+      "adapter"
+    ],
+    "title": "ImportQuestionSetRequest"
+  },
+  "ExamplifyParseConfig": {
+    "properties": {
+      "name": {
+        "type": "string",
+        "const": "examplify",
+        "title": "Name",
+        "default": "examplify"
+      },
+      "format": {
+        "type": "string",
+        "const": "csv",
+        "title": "Format",
+        "default": "csv"
+      },
+      "include_thrown_out": {
+        "type": "boolean",
+        "title": "Include Thrown Out",
+        "default": false
+      },
+      "parse_answer_string": {
+        "type": "boolean",
+        "title": "Parse Answer String",
+        "description": "Parse numeric-like FITB blanks as NUMERIC; else treat all as TEXT.",
+        "default": false
+      },
+      "skip_empty_alternatives": {
+        "type": "boolean",
+        "title": "Skip Empty Alternatives",
+        "description": "Ignore empty tokens in alternatives (e.g., trailing '|').",
+        "default": true
+      }
+    },
+    "type": "object",
+    "title": "ExamplifyParseConfig"
+  },
+  "ConditionalMultiQuestionRule": {
+    "properties": {
+      "question_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "CHOICE",
+            "NUMERIC",
+            "MULTI_VALUED"
+          ]
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Question Types",
+        "default": [
+          "MULTI_VALUED",
+          "CHOICE",
+          "TEXT",
+          "NUMERIC"
+        ]
+      },
+      "constraints": {
+        "items": {
+          "$ref": "#/definitions/QuestionConstraint"
+        },
+        "type": "array",
+        "title": "Constraints",
+        "default": []
+      },
+      "type": {
+        "type": "string",
+        "const": "CONDITIONAL",
+        "title": "Type",
+        "default": "CONDITIONAL"
+      },
+      "if_rules": {
+        "items": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/AssumptionSetQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/BonusQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/CompositeQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/ProgrammableQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/ProgrammingQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/TextMatchQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/KeywordsQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/RegexQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/LengthQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/ManualQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/MultiValuedQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/MultipleChoiceQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/NumberEqualQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/NumericRangeQuestionRule"
+            }
+          ],
+          "discriminator": {
+            "propertyName": "type",
+            "mapping": {
+              "ASSUMPTION_SET": "#/definitions/AssumptionSetQuestionRule",
+              "BONUS": "#/definitions/BonusQuestionRule",
+              "COMPOSITE": "#/definitions/CompositeQuestionRule",
+              "KEYWORDS": "#/definitions/KeywordsQuestionRule",
+              "LENGTH": "#/definitions/LengthQuestionRule",
+              "MANUAL": "#/definitions/ManualQuestionRule",
+              "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceQuestionRule",
+              "MULTI_VALUED": "#/definitions/MultiValuedQuestionRule",
+              "NUMBER_EQUAL": "#/definitions/NumberEqualQuestionRule",
+              "NUMERIC_RANGE": "#/definitions/NumericRangeQuestionRule",
+              "PROGRAMMABLE": "#/definitions/ProgrammableQuestionRule",
+              "PROGRAMMING": "#/definitions/ProgrammingQuestionRule",
+              "REGEX": "#/definitions/RegexQuestionRule",
+              "TEXT_MATCH": "#/definitions/TextMatchQuestionRule"
+            }
+          }
+        },
+        "type": "array",
+        "minItems": 1,
+        "title": "If Rules",
+        "description": "List of rules to evaluate the 'if' condition"
+      },
+      "if_aggregation": {
+        "type": "string",
+        "enum": [
+          "AND",
+          "OR"
+        ],
+        "title": "If Aggregation",
+        "description": "Aggregation mode for 'if' rules: 'AND' requires all to be true, 'OR' requires at least one to be true",
+        "default": "AND"
+      },
+      "then_rules": {
+        "items": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/AssumptionSetQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/BonusQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/CompositeQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/ProgrammableQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/ProgrammingQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/TextMatchQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/KeywordsQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/RegexQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/LengthQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/ManualQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/MultiValuedQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/MultipleChoiceQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/NumberEqualQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/NumericRangeQuestionRule"
+            }
+          ],
+          "discriminator": {
+            "propertyName": "type",
+            "mapping": {
+              "ASSUMPTION_SET": "#/definitions/AssumptionSetQuestionRule",
+              "BONUS": "#/definitions/BonusQuestionRule",
+              "COMPOSITE": "#/definitions/CompositeQuestionRule",
+              "KEYWORDS": "#/definitions/KeywordsQuestionRule",
+              "LENGTH": "#/definitions/LengthQuestionRule",
+              "MANUAL": "#/definitions/ManualQuestionRule",
+              "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceQuestionRule",
+              "MULTI_VALUED": "#/definitions/MultiValuedQuestionRule",
+              "NUMBER_EQUAL": "#/definitions/NumberEqualQuestionRule",
+              "NUMERIC_RANGE": "#/definitions/NumericRangeQuestionRule",
+              "PROGRAMMABLE": "#/definitions/ProgrammableQuestionRule",
+              "PROGRAMMING": "#/definitions/ProgrammingQuestionRule",
+              "REGEX": "#/definitions/RegexQuestionRule",
+              "TEXT_MATCH": "#/definitions/TextMatchQuestionRule"
+            }
+          }
+        },
+        "type": "array",
+        "minItems": 1,
+        "title": "Then Rules",
+        "description": "List of rules to evaluate if 'if' condition is met"
+      },
+      "else_rules": {
+        "items": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/AssumptionSetQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/BonusQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/CompositeQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/ProgrammableQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/ProgrammingQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/TextMatchQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/KeywordsQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/RegexQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/LengthQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/ManualQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/MultiValuedQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/MultipleChoiceQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/NumberEqualQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/NumericRangeQuestionRule"
+            }
+          ],
+          "discriminator": {
+            "propertyName": "type",
+            "mapping": {
+              "ASSUMPTION_SET": "#/definitions/AssumptionSetQuestionRule",
+              "BONUS": "#/definitions/BonusQuestionRule",
+              "COMPOSITE": "#/definitions/CompositeQuestionRule",
+              "KEYWORDS": "#/definitions/KeywordsQuestionRule",
+              "LENGTH": "#/definitions/LengthQuestionRule",
+              "MANUAL": "#/definitions/ManualQuestionRule",
+              "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceQuestionRule",
+              "MULTI_VALUED": "#/definitions/MultiValuedQuestionRule",
+              "NUMBER_EQUAL": "#/definitions/NumberEqualQuestionRule",
+              "NUMERIC_RANGE": "#/definitions/NumericRangeQuestionRule",
+              "PROGRAMMABLE": "#/definitions/ProgrammableQuestionRule",
+              "PROGRAMMING": "#/definitions/ProgrammingQuestionRule",
+              "REGEX": "#/definitions/RegexQuestionRule",
+              "TEXT_MATCH": "#/definitions/TextMatchQuestionRule"
+            }
+          }
+        },
+        "type": "array",
+        "title": "Else Rules",
+        "description": "List of rules to evaluate if 'if' condition is not met"
+      }
+    },
+    "type": "object",
+    "required": [
+      "if_rules",
+      "then_rules",
+      "else_rules"
+    ],
+    "title": "ConditionalMultiQuestionRule"
+  },
+  "AssumptionSetMultiQuestionRule": {
+    "properties": {
+      "question_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "CHOICE",
+            "NUMERIC",
+            "MULTI_VALUED"
+          ]
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Question Types",
+        "default": [
+          "MULTI_VALUED",
+          "CHOICE",
+          "TEXT",
+          "NUMERIC"
+        ]
+      },
+      "constraints": {
+        "items": {
+          "$ref": "#/definitions/QuestionConstraint"
+        },
+        "type": "array",
+        "title": "Constraints",
+        "default": []
+      },
+      "mode": {
+        "type": "string",
+        "enum": [
+          "MAX",
+          "MIN"
+        ],
+        "title": "Mode",
+        "description": "Mode to select which assumption to use",
+        "default": "MAX"
+      },
+      "type": {
+        "type": "string",
+        "const": "ASSUMPTION_SET_MULTI",
+        "title": "Type",
+        "default": "ASSUMPTION_SET_MULTI"
+      },
+      "assumptions": {
+        "items": {
+          "$ref": "#/definitions/MultiQuestionAssumption"
+        },
+        "type": "array",
+        "title": "Assumptions",
+        "description": "List of assumptions in the assumption set"
+      }
+    },
+    "type": "object",
+    "required": [
+      "assumptions"
+    ],
+    "title": "AssumptionSetMultiQuestionRule"
+  },
+  "AdjustableQuestionResult": {
+    "properties": {
+      "output": {
+        "title": "Output",
+        "description": "Output generated from evaluating the answer",
+        "type": [
+          "boolean",
+          "integer",
+          "number"
+        ]
+      },
+      "passed": {
+        "type": "boolean",
+        "title": "Passed",
+        "description": "Whether the answer passed the rule check"
+      },
+      "feedback": {
+        "type": "string",
+        "title": "Feedback",
+        "description": "Feedback or comments"
+      },
+      "rule": {
+        "type": "string",
+        "title": "Rule",
+        "description": "ID of the rule that was applied"
+      },
+      "graded": {
+        "type": "boolean",
+        "title": "Graded",
+        "description": "Whether the result has been graded",
+        "default": true
+      },
+      "points": {
+        "type": "number",
+        "title": "Points",
+        "description": "Points awarded for this question"
+      },
+      "max_points": {
+        "type": "number",
+        "title": "Max Points",
+        "description": "Maximum points possible"
+      },
+      "adjusted_points": {
+        "title": "Adjusted Points",
+        "description": "Adjusted points for this question",
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "adjusted_feedback": {
+        "title": "Adjusted Feedback",
+        "description": "Adjusted feedback for this question",
+        "type": [
+          "string",
+          "null"
+        ]
+      }
+    },
+    "type": "object",
+    "required": [
+      "output",
+      "passed",
+      "feedback",
+      "rule",
+      "points",
+      "max_points"
+    ],
+    "title": "AdjustableQuestionResult"
+  }
+}

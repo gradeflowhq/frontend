@@ -81,7 +81,10 @@ export type CanvasClientConfig = {
   timeoutMs?: number;
 };
 
-const DEFAULT_PROXY_BASE = import.meta.env.VITE_CORS_PROXY_URL ?? 'http://localhost:8080';
+const DEFAULT_PROXY_BASE =
+  window.__CONFIG__?.CORS_PROXY_URL ??
+  import.meta.env.VITE_CORS_PROXY_URL ??
+  'http://localhost:8080';
 
 export const sanitizeCanvasBaseInput = (value: string) => value.trim().replace(/\/+$/, '');
 

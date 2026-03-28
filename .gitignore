@@ -25,8 +25,3 @@ dist-ssr
 
 # Pytest
 .pytest_cache
-
-# Generated from backend
-src/api/gradeflowClient.ts
-src/api/models/
-src/schemas/

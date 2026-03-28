@@ -1,0 +1,4 @@
+window.__CONFIG__ = {
+  API_URL: "${API_URL}",
+  CORS_PROXY_URL: "${CORS_PROXY_URL}"
+};
