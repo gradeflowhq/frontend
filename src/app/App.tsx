@@ -1,30 +1,36 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
-import LoginPage from '@pages/LoginPage';
-import RegisterPage from '@pages/RegisterPage';
-import AssessmentsPage from '@pages/assessments/AssessmentsPage';
 import AssessmentShellPage from '@pages/assessments/AssessmentShellPage';
-import SubmissionsTabPage from '@pages/assessments/SubmissionsTabPage';
+import AssessmentsPage from '@pages/assessments/AssessmentsPage';
 import QuestionsTabPage from '@pages/assessments/QuestionsTabPage';
 import RulesTabPage from '@pages/assessments/RulesTabPage';
-import ResultsShellPage from '@pages/results/ResultsShellPage';
-import GradedSubmissionDetailPage from '@pages/results/GradedSubmissionDetailPage';
+import SubmissionsTabPage from '@pages/assessments/SubmissionsTabPage';
+import LandingPage from '@pages/LandingPage';
+import LoginPage from '@pages/LoginPage';
+import RegisterPage from '@pages/RegisterPage';
 import CanvasPushPage from '@pages/results/CanvasPushPage';
+import GradedSubmissionDetailPage from '@pages/results/GradedSubmissionDetailPage';
+import ResultsShellPage from '@pages/results/ResultsShellPage';
 
 import ProtectedRoute from './routes/ProtectedRoute';
 import PublicOnlyRoute from './routes/PublicOnlyRoute';
 import ProtectedLayout from '../layouts/ProtectedLayout';
+import PublicLayout from '../layouts/PublicLayout';
 
 const App: React.FC = () => {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public-only routes */}
+        {/* Landing page — accessible to everyone */}
+        <Route path="/" element={<LandingPage />} />
+
+        {/* Public-only routes (redirect to /assessments if already logged in) */}
         <Route element={<PublicOnlyRoute />}>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route element={<PublicLayout />}>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+          </Route>
         </Route>
 
         {/* Protected area with layout */}
@@ -47,7 +53,7 @@ const App: React.FC = () => {
         </Route>
 
         {/* Fallback */}
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );

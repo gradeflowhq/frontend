@@ -27,6 +27,9 @@ import {
   FiInfo,
   FiLayout,
   FiAlertTriangle,
+  FiCode,
+  FiLayers,
+  FiGitBranch,
 } from 'react-icons/fi';
 import { LuListChecks } from "react-icons/lu";
 import { SiCanvas } from 'react-icons/si';
@@ -70,3 +73,6 @@ export const IconInfo = wrap(FiInfo);
 export const IconChart = wrap(FiBarChart2);
 export const IconActivity = wrap(FiActivity);
 export const IconLayout = wrap(FiLayout);
+export const IconCode = wrap(FiCode);
+export const IconLayers = wrap(FiLayers);
+export const IconBranch = wrap(FiGitBranch);
