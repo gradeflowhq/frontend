@@ -26,12 +26,14 @@ const GradingPreviewPanel: React.FC<Props> = ({ items, loading, error, className
     [items]
   );
 
-  const targetQid = useMemo(() => {
+  const allQids = useMemo(() => {
+    const seen = new Set<string>();
     for (const gs of sorted) {
-      const qid = Object.keys(gs.result_map ?? {})[0];
-      if (qid) return qid;
+      for (const qid of Object.keys(gs.result_map ?? {})) {
+        seen.add(qid);
+      }
     }
-    return null;
+    return [...seen].sort((a, b) => natsort(a, b));
   }, [sorted]);
 
   if (loading) {
@@ -66,42 +68,57 @@ const GradingPreviewPanel: React.FC<Props> = ({ items, loading, error, className
           <thead className="sticky top-0 bg-base-100 z-10">
             <tr>
               <th>Student ID</th>
-              <td>{targetQid ? <>Answer ({targetQid})</> : 'Answer'}</td>
-              <td>Passed</td>
-              <td>Points</td>
-              <td>Feedback</td>
+              {allQids.map((qid) => (
+                <React.Fragment key={qid}>
+                  <td>Answer ({qid})</td>
+                  <td>Passed</td>
+                  <td>Points</td>
+                  <td>Feedback</td>
+                </React.Fragment>
+              ))}
             </tr>
           </thead>
           <tbody>
-            {sorted.map((gs) => {
-              const r: AdjustableQuestionResult | undefined = targetQid ? gs.result_map?.[targetQid] : undefined;
-              const passed = !!r?.passed;
-              const points = r ? (r.adjusted_points ?? r.points) : 0;
-              const max = r?.max_points ?? 0;
-              const feedback = r?.adjusted_feedback ?? r?.feedback ?? '';
+            {sorted.map((gs) => (
+              <tr key={gs.student_id} className="align-top">
+                <th className="whitespace-pre-wrap break-words z-1">
+                  <DecryptedText value={gs.student_id} passphrase={passphrase} mono size="sm" />
+                </th>
+                {allQids.map((qid) => {
+                  const r: AdjustableQuestionResult | undefined = gs.result_map?.[qid];
+                  const passed = !!r?.passed;
+                  const points = r ? (r.adjusted_points ?? r.points) : 0;
+                  const max = r?.max_points ?? 0;
+                  const feedback = r?.adjusted_feedback ?? r?.feedback ?? '';
+                  const answerRaw = gs.answer_map?.[qid] as unknown;
 
-              const answerRaw = targetQid ? (gs.answer_map?.[targetQid] as unknown) : undefined;
-
-              return (
-                <tr key={gs.student_id} className="align-top">
-                  <th className="whitespace-pre-wrap break-words z-1">
-                    <DecryptedText value={gs.student_id} passphrase={passphrase} mono size="sm" />
-                  </th>
-                  <td>
-                    <AnswerText value={answerRaw} />
-                  </td>
-                  <td>
-                    {passed ? (
-                      <IconCheckCircle className="text-success" />
-                    ) : (
-                      <IconAlertCircle className="text-error" />
-                    )}
-                  </td>
-                  <td className="font-mono text-sm">{points} / {max}</td>
-                  <td className="whitespace-pre-wrap break-words">{feedback || <span className="opacity-60">—</span>}</td>
-                </tr>
-              );
-            })}
+                  return (
+                    <React.Fragment key={qid}>
+                      <td>
+                        {r ? <AnswerText value={answerRaw} /> : <span className="opacity-60">—</span>}
+                      </td>
+                      <td>
+                        {r ? (
+                          passed ? (
+                            <IconCheckCircle className="text-success" />
+                          ) : (
+                            <IconAlertCircle className="text-error" />
+                          )
+                        ) : (
+                          <span className="opacity-60">—</span>
+                        )}
+                      </td>
+                      <td className="font-mono text-sm">
+                        {r ? <>{points} / {max}</> : <span className="opacity-60">—</span>}
+                      </td>
+                      <td className="whitespace-pre-wrap break-words">
+                        {r ? (feedback || <span className="opacity-60">—</span>) : <span className="opacity-60">—</span>}
+                      </td>
+                    </React.Fragment>
+                  );
+                })}
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
