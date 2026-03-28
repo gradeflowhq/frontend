@@ -67,8 +67,8 @@ export const useAdjustGrading = (assessmentId: string) => {
     mutationKey: ['grading', assessmentId, 'adjust'],
     mutationFn: async (payload: GradeAdjustmentRequest) =>
       (await api.adjustGradingAssessmentsAssessmentIdGradingAdjustPost(assessmentId, payload)).data,
-    onSuccess: async () => {
-      await qc.invalidateQueries({ queryKey: QK.grading.item(assessmentId) });
+    onSuccess: (data) => {
+      qc.setQueryData(QK.grading.item(assessmentId), data);
     },
   });
 };

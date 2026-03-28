@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 import AnswerText from '@components/common/AnswerText';
@@ -30,8 +30,6 @@ import { useToast } from '@components/common/ToastProvider';
 import type {
   AdjustableSubmission,
   AdjustableQuestionResult,
-  GradeAdjustmentRequest,
-  GradeAdjustment,
 } from '@api/models';
 
 type ResultWithQid = AdjustableQuestionResult & { question_id: string };
@@ -42,7 +40,6 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
   const toast = useToast();
 
   const safeId = assessmentId;
-  const enabled = true;
 
   const { passphrase, notifyEncryptedDetected } = useAssessmentPassphrase();
   const [encryptedDetected] = useState<boolean>(() => isEncrypted(encodedStudentId));
@@ -50,7 +47,7 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
     if (encryptedDetected) notifyEncryptedDetected();
   }, [encryptedDetected, notifyEncryptedDetected]);
 
-  const { data, isLoading, isError, error } = useGrading(safeId, enabled);
+  const { data, isLoading, isError, error } = useGrading(safeId);
   const adjustMutation = useAdjustGrading(safeId);
 
   const submissions: AdjustableSubmission[] = data?.submissions ?? [];
@@ -73,7 +70,28 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
   const [openEdits, setOpenEdits] = useState<Record<string, boolean>>({});
   const [removeAdjustQid, setRemoveAdjustQid] = useState<string | null>(null);
   const [pickerQuery, setPickerQuery] = useState('');
-  const pickerInputRef = useRef<HTMLInputElement | null>(null);
+
+  const allQids = useMemo(() => sortedResults.map((r) => r.question_id), [sortedResults]);
+  const [selectedQids, setSelectedQids] = useState<Set<string> | null>(null); // null = all
+  const visibleResults = useMemo(
+    () => (selectedQids === null ? sortedResults : sortedResults.filter((r) => selectedQids.has(r.question_id))),
+    [sortedResults, selectedQids],
+  );
+
+  const toggleQid = (qid: string) => {
+    setSelectedQids((prev) => {
+      const base = prev ?? new Set(allQids);
+      const next = new Set(base);
+      if (next.has(qid)) {
+        next.delete(qid);
+      } else {
+        next.add(qid);
+      }
+      return next.size === allQids.length ? null : next;
+    });
+  };
+
+  const activeFilterCount = selectedQids === null ? 0 : allQids.length - selectedQids.size;
 
   const startEdit = (qid: string, res: AdjustableQuestionResult) => {
     setOpenEdits((prev) => ({ ...prev, [qid]: true }));
@@ -95,8 +113,6 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
     });
   };
 
-  const hasAnyChange = useMemo(() => Object.keys(editing).length > 0, [editing]);
-
   const studentOptions = useMemo(() => {
     const q = pickerQuery.trim().toLowerCase();
     return studentIds
@@ -107,29 +123,22 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
       .filter(({ display }) => display.toLowerCase().includes(q));
   }, [decryptedIds, pickerQuery, studentIds]);
 
-  const resetEdits = () => {
-    setEditing({});
-    setOpenEdits({});
-  };
-
-  const onSave = () => {
+  const saveEdit = async (qid: string) => {
     if (!current) return;
-    const adjustments: GradeAdjustment[] = Object.entries(editing).map(([qid, e]) => ({
-      student_id: current.student_id,
-      question_id: qid,
-      adjusted_points: e.points ?? null,
-      adjusted_feedback: e.feedback ?? null,
-    }));
-    if (!adjustments.length) return;
-
-    const payload: GradeAdjustmentRequest = { adjustments };
-    adjustMutation.mutate(payload, {
-      onSuccess: () => {
-        resetEdits();
-        toast.success('Adjustments saved');
-      },
-      onError: () => toast.error('Save failed'),
-    });
+    const e = editing[qid];
+    if (!e) return;
+    try {
+      await adjustMutation.mutateAsync({
+        student_id: current.student_id,
+        question_id: qid,
+        adjusted_points: e.points ?? null,
+        adjusted_feedback: e.feedback ?? null,
+      });
+      cancelEdit(qid);
+      toast.success('Adjustment saved');
+    } catch {
+      toast.error('Save failed');
+    }
   };
 
   const gotoPrev = () => {
@@ -141,11 +150,10 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
 
   React.useEffect(() => {
     setPickerQuery('');
+    setEditing({});
+    setOpenEdits({});
   }, [encodedStudentId]);
 
-  if (!enabled) {
-    return <div className="alert alert-error"><span>Assessment ID is missing.</span></div>;
-  }
   if (isLoading) return <div className="alert alert-info"><span>Loading submission...</span></div>;
   if (isError) return <ErrorAlert error={error} />;
   if (!current) return <div className="alert alert-warning"><span>Submission not found.</span></div>;
@@ -174,16 +182,11 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
           <Button variant="outline" onClick={() => navigate(`/results/${safeId}`)} leftIcon={<IconChevronLeft />}>
             Back
           </Button>
-          <div
-            className={`dropdown`}
-          >
+          <div className="dropdown">
             <div tabIndex={0} role="button" className="btn m-1">
               <DecryptedText value={encodedStudentId} passphrase={passphrase} mono size="sm" /><IconChevronDown />
             </div>
-            <div
-              tabIndex={0}
-              className={`dropdown-content card card-sm bg-base-100 z-1 w-64 shadow-md`}
-            >
+            <div tabIndex={0} className="dropdown-content card card-sm bg-base-100 z-1 w-64 shadow-md">
               <div className="p-3 space-y-2">
                 <input
                   type="text"
@@ -191,7 +194,6 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
                   placeholder="Search students"
                   value={pickerQuery}
                   onChange={(e) => setPickerQuery(e.target.value)}
-                  ref={pickerInputRef}
                 />
                 <div className="max-h-60 overflow-y-auto divide-y divide-base-200">
                   {studentOptions.length === 0 && (
@@ -216,17 +218,7 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
           {isDecryptingIds && <span className="badge badge-ghost badge-sm">Decrypting IDs...</span>}
         </div>
         <div className="flex items-center gap-2">
-          {hasAnyChange && (
-            <LoadingButton
-              variant="primary"
-              onClick={onSave}
-              isLoading={adjustMutation.isPending}
-              title="Save adjustments for edited questions"
-              leftIcon={<IconSave />}
-            >
-              Save Adjustments
-            </LoadingButton>
-          )}
+
           <IconButton icon={<IconChevronLeft />} onClick={gotoPrev} disabled={!prevId} aria-label="Previous" />
           <IconButton icon={<IconChevronRight />} onClick={gotoNext} disabled={!nextId} aria-label="Next" />
         </div>
@@ -271,6 +263,52 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
         </div>
       </div>
 
+      <div className="flex items-center justify-between px-1">
+          <span className="text-sm font-medium">
+            Showing {visibleResults.length} / {allQids.length} questions
+            {activeFilterCount > 0 && (
+              <span className="ml-2 badge badge-warning badge-sm">{activeFilterCount} hidden</span>
+            )}
+          </span>
+          <div className="dropdown dropdown-end">
+            <div tabIndex={0} role="button" className="btn btn-sm btn-ghost">
+              Filter Questions {activeFilterCount > 0 && <span className="badge badge-warning badge-xs ml-1">{activeFilterCount}</span>}
+            </div>
+            <div tabIndex={0} className="dropdown-content card card-sm bg-base-100 z-50 w-56 shadow-md">
+              <div className="p-2 space-y-1">
+                <div className="flex gap-1">
+                  <button
+                    type="button"
+                    className="btn btn-xs btn-ghost flex-1"
+                    onClick={() => setSelectedQids(null)}
+                  >
+                    Show all
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-xs btn-ghost flex-1"
+                    onClick={() => setSelectedQids(new Set())}
+                  >
+                    Hide all
+                  </button>
+                </div>
+                <div className="divider my-0" />
+                {allQids.map((qid) => (
+                  <label key={qid} className="flex items-center gap-2 cursor-pointer px-1 py-0.5 hover:bg-base-200 rounded">
+                    <input
+                      type="checkbox"
+                      className="checkbox checkbox-xs"
+                      checked={selectedQids === null || selectedQids.has(qid)}
+                      onChange={() => toggleQid(qid)}
+                    />
+                    <span className="font-mono text-xs">{qid}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
       <div className="overflow-x-auto rounded-box border border-base-300 bg-base-100 shadow-xs">
         <table className="table table-sm table-pin-cols w-full">
           <thead>
@@ -287,7 +325,7 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
             </tr>
           </thead>
           <tbody>
-            {sortedResults.map((res) => {
+            {visibleResults.map((res) => {
               const qid = res.question_id;
               const isEditing = !!openEdits[qid];
               const local = editing[qid];
@@ -409,9 +447,20 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
                         )}
                       </div>
                     ) : (
-                      <Button size="sm" variant="ghost" onClick={() => cancelEdit(qid)}>
-                        Cancel
-                      </Button>
+                      <div className="flex gap-2">
+                        <LoadingButton
+                          size="sm"
+                          variant="primary"
+                          onClick={() => saveEdit(qid)}
+                          isLoading={adjustMutation.isPending}
+                          leftIcon={<IconSave />}
+                        >
+                          Save
+                        </LoadingButton>
+                        <Button size="sm" variant="ghost" onClick={() => cancelEdit(qid)}>
+                          Cancel
+                        </Button>
+                      </div>
                     )}
                   </th>
                 </tr>
@@ -430,23 +479,21 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
         confirmText="Remove"
         onConfirm={() => {
           if (!current || !removeAdjustQid) return;
-          const payload: GradeAdjustmentRequest = {
-            adjustments: [
-              {
-                student_id: current.student_id,
-                question_id: removeAdjustQid,
-                adjusted_points: null,
-                adjusted_feedback: null,
-              },
-            ],
-          };
-          adjustMutation.mutate(payload, {
-            onSuccess: () => {
-              setRemoveAdjustQid(null);
-              toast.success('Adjustment removed');
+          adjustMutation.mutate(
+            {
+              student_id: current.student_id,
+              question_id: removeAdjustQid,
+              adjusted_points: null,
+              adjusted_feedback: null,
             },
-            onError: () => toast.error('Remove failed'),
-          });
+            {
+              onSuccess: () => {
+                setRemoveAdjustQid(null);
+                toast.success('Adjustment removed');
+              },
+              onError: () => toast.error('Remove failed'),
+            },
+          );
         }}
         onCancel={() => setRemoveAdjustQid(null)}
       />
