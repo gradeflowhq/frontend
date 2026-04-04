@@ -1,4 +1,5 @@
 import rulesSchema from '@schemas/rules.json';
+
 import type { JSONSchema7 } from 'json-schema';
 
 export const getRuleDefinitions = (): Record<string, JSONSchema7> => {

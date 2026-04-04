@@ -1,7 +1,7 @@
+import { Select, Button, Text, Stack } from '@mantine/core';
 import React from 'react';
 
 import { type CanvasCourse } from '@api/canvasClient';
-import LoadingButton from '@components/ui/LoadingButton';
 
 import { InfoRow } from './InfoRow';
 
@@ -25,37 +25,33 @@ const CourseSelector: React.FC<CourseSelectorProps> = ({
   <InfoRow
     title="Course"
     action={
-      <LoadingButton
+      <Button
         size="sm"
-        variant="ghost"
-        onClick={() => void onRefresh()}
+        variant="subtle"
+        loading={loadingCourses}
         disabled={missingCanvasConfig}
-        isLoading={loadingCourses}
-        idleLabel="Refresh"
-        loadingLabel="Refreshing..."
-      />
+        onClick={() => void onRefresh()}
+      >
+        Refresh
+      </Button>
     }
   >
-    <div className="space-y-2">
-      <select
-        className="select select-bordered w-full"
+    <Stack gap="xs">
+      <Select
+        label="Course"
         disabled={loadingCourses || missingCanvasConfig || !courses.length}
-        value={courseId}
-        onChange={(e) => onCourseChange(e.target.value)}
-      >
-        <option value="" disabled>
-          Select a course
-        </option>
-        {courses.map((c) => (
-          <option key={c.id} value={c.id}>
-            {c.name} {c.course_code ? `(${c.course_code})` : ''}
-          </option>
-        ))}
-      </select>
+        value={courseId || null}
+        onChange={(v) => onCourseChange(v ?? '')}
+        data={courses.map((c) => ({
+          value: String(c.id),
+          label: `${c.name}${c.course_code ? ` (${c.course_code})` : ''}`,
+        }))}
+        placeholder="Select a course"
+      />
       {!courses.length && !loadingCourses && !missingCanvasConfig && (
-        <p className="text-sm text-base-content/60">No courses found. Check your Canvas access.</p>
+        <Text size="sm" c="dimmed">No courses found. Check your Canvas access.</Text>
       )}
-    </div>
+    </Stack>
   </InfoRow>
 );
 

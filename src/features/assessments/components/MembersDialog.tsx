@@ -1,10 +1,10 @@
+import { Modal, TextInput, Select, Button, Group, Alert, Text } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
+import { IconPlus } from '@tabler/icons-react';
 import React, { useState, useCallback } from 'react';
-import LoadingButton from '@components/ui/LoadingButton';
-import { Button } from '@components/ui/Button';
-import { IconPlus } from '@components/ui/Icon';
-import Modal from '@components/common/Modal';
-import ErrorAlert from '@components/common/ErrorAlert';
-import ConfirmDialog from '@components/common/ConfirmDialog';
+
+import { getErrorMessages } from '@utils/error';
+
 import MembersTable from './MembersTable';
 import {
   useMembers,
@@ -12,8 +12,8 @@ import {
   useSetMemberRole,
   useRemoveMember,
 } from '../hooks';
+
 import type { UserResponse, UserResponseRole } from '@api/models';
-import { useToast } from '@components/common/ToastProvider';
 
 type Props = {
   open: boolean;
@@ -25,7 +25,6 @@ const MembersDialog: React.FC<Props> = ({ open, assessmentId, onClose }) => {
   const [userEmail, setUserEmail] = useState('');
   const [role, setRole] = useState<UserResponseRole>('viewer');
   const [removeTarget, setRemoveTarget] = useState<string | null>(null);
-  const toast = useToast();
 
   const { data, isLoading, isError, error } = useMembers(assessmentId, open);
   const addMember = useAddMember(assessmentId);
@@ -37,116 +36,111 @@ const MembersDialog: React.FC<Props> = ({ open, assessmentId, onClose }) => {
   const handleSetRole = useCallback(
     async (userId: string, r: UserResponseRole) => {
       await setMemberRole.mutateAsync({ userId, role: r }, {
-        onSuccess: () => toast.success('Role updated'),
-        onError: () => toast.error('Update failed'),
+        onSuccess: () => notifications.show({ color: 'green', message: 'Role updated' }),
+        onError: () => notifications.show({ color: 'red', message: 'Update failed' }),
       });
     },
-    [setMemberRole, toast]
+    [setMemberRole]
   );
 
   if (!open) return null;
 
   return (
-    <Modal open={open} onClose={onClose} boxClassName="w-full max-w-3xl">
-      <h3 className="font-bold text-lg">Members</h3>
+    <Modal opened={open} onClose={onClose} title="Members" size="xl">
+      <Group align="flex-end" mb="md">
+        <TextInput
+          label="User email"
+          type="email"
+          placeholder="user@example.com"
+          style={{ flex: 1 }}
+          value={userEmail}
+          onChange={(e) => setUserEmail(e.currentTarget.value)}
+        />
+        <Select
+          label="Role"
+          data={['owner', 'editor', 'viewer']}
+          value={role}
+          onChange={(v) => setRole((v ?? 'viewer') as UserResponseRole)}
+          w={192}
+        />
+        <Button
+          leftSection={<IconPlus size={16} />}
+          loading={addMember.isPending}
+          disabled={!userEmail}
+          onClick={() =>
+            addMember.mutate({ user_email: userEmail, role }, {
+              onSuccess: () => {
+                setUserEmail('');
+                notifications.show({ color: 'green', message: 'Member added' });
+              },
+              onError: () => notifications.show({ color: 'red', message: 'Add failed' }),
+            })
+          }
+        >
+          Add
+        </Button>
+      </Group>
 
-      {/* One-line Add row */}
-      <div className="mt-3">
-        <div className="flex flex-col gap-2 md:flex-row md:items-end">
-          <div className="form-control md:flex-1">
-            <label className="label"><span className="label-text">User email</span></label>
-            <input
-              type="email"
-              className="input input-bordered w-full"
-              placeholder="user@example.com"
-              value={userEmail}
-              onChange={(e) => setUserEmail(e.target.value)}
-            />
-          </div>
-
-          <div className="form-control md:w-48">
-            <label className="label"><span className="label-text">Role</span></label>
-            <select
-              className="select select-bordered w-full"
-              value={role}
-              onChange={(e) => setRole(e.target.value as UserResponseRole)}
-            >
-              <option value="owner">owner</option>
-              <option value="editor">editor</option>
-              <option value="viewer">viewer</option>
-            </select>
-          </div>
-
-          <div className="md:pb-0">
-            <LoadingButton
-              type="button"
-              variant="primary"
-                onClick={() =>
-                  addMember.mutate({ user_email: userEmail, role }, {
-                    onSuccess: () => {
-                      setUserEmail('');
-                      toast.success('Member added');
-                    },
-                    onError: () => toast.error('Add failed'),
-                  })
-                }
-              disabled={!userEmail}
-              isLoading={addMember.isPending}
-              leftIcon={<IconPlus />}
-              className="w-full md:w-auto"
-              title="Add member"
-            >
-              Add
-            </LoadingButton>
-          </div>
-        </div>
-      </div>
-
-      {isError && <ErrorAlert error={error} className="mt-3" />}
-      {addMember.isError && <ErrorAlert error={addMember.error} className="mt-3" />}
-      {setMemberRole.isError && <ErrorAlert error={setMemberRole.error} className="mt-3" />}
-      {removeMember.isError && <ErrorAlert error={removeMember.error} className="mt-3" />}
-
-      {!isError && (
-        <div className="mt-4">
-          <MembersTable
-            items={items}
-            isLoading={isLoading}
-            onSetRole={handleSetRole}
-            onRemove={(userId) => setRemoveTarget(userId)}
-          />
-        </div>
+      {isError && (
+        <Alert color="red" mb="md">{getErrorMessages(error).join(' ')}</Alert>
+      )}
+      {addMember.isError && (
+        <Alert color="red" mb="md">{getErrorMessages(addMember.error).join(' ')}</Alert>
+      )}
+      {setMemberRole.isError && (
+        <Alert color="red" mb="md">{getErrorMessages(setMemberRole.error).join(' ')}</Alert>
+      )}
+      {removeMember.isError && (
+        <Alert color="red" mb="md">{getErrorMessages(removeMember.error).join(' ')}</Alert>
       )}
 
-      <div className="modal-action">
+      {!isError && (
+        <MembersTable
+          items={items}
+          isLoading={isLoading}
+          onSetRole={handleSetRole}
+          onRemove={(userId) => setRemoveTarget(userId)}
+        />
+      )}
+
+      <Group justify="flex-end" mt="md">
         <Button
-          type="button"
+          variant="subtle"
           onClick={onClose}
           disabled={addMember.isPending || setMemberRole.isPending || removeMember.isPending}
         >
           Close
         </Button>
-      </div>
+      </Group>
 
-      <ConfirmDialog
-        open={!!removeTarget}
+      {/* Confirm remove member */}
+      <Modal
+        opened={!!removeTarget}
+        onClose={() => setRemoveTarget(null)}
         title="Remove Member"
-        message="Are you sure you want to remove this member from the assessment?"
-        confirmLoading={removeMember.isPending}
-        confirmLoadingLabel="Removing..."
-        confirmText="Remove"
-        onConfirm={() =>
-          removeTarget &&
-          removeMember.mutate(removeTarget, {
-            onSuccess: () => {
-              setRemoveTarget(null);
-              toast.success('Member removed');
-            },
-            onError: () => toast.error('Remove failed'),
-          })
-        }
-        onCancel={() => setRemoveTarget(null)}
-      />
+        size="sm"
+      >
+        <Text mb="md">Are you sure you want to remove this member from the assessment?</Text>
+        <Group justify="flex-end">
+          <Button variant="subtle" onClick={() => setRemoveTarget(null)}>Cancel</Button>
+          <Button
+            color="red"
+            loading={removeMember.isPending}
+            onClick={() =>
+              removeTarget &&
+              removeMember.mutate(removeTarget, {
+                onSuccess: () => {
+                  setRemoveTarget(null);
+                  notifications.show({ color: 'green', message: 'Member removed' });
+                },
+                onError: () => notifications.show({ color: 'red', message: 'Remove failed' }),
+              })
+            }
+          >
+            Remove
+          </Button>
+        </Group>
+      </Modal>
     </Modal>
   );
 };

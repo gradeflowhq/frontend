@@ -1,7 +1,9 @@
 import React, { useCallback, useMemo, useState } from 'react';
+
 import EncryptedDataGuard from '@components/common/encryptions/EncryptedDataGuard';
-import { buildPassphraseKey, readPassphrase, normalizePresent, writePassphrase } from '@utils/passphrase';
 import { startCryptoSession } from '@utils/crypto';
+import { buildPassphraseKey, readPassphrase, normalizePresent, writePassphrase } from '@utils/passphrase';
+
 import { PassphraseContext, type PassphraseCtx } from './passphraseContext';
 
 export const AssessmentPassphraseProvider: React.FC<{ assessmentId: string; children: React.ReactNode }> = ({ assessmentId, children }) => {

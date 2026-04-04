@@ -1,16 +1,19 @@
-import React, { useMemo, useState } from 'react';
-import Modal from '@components/common/Modal';
-import ErrorAlert from '@components/common/ErrorAlert';
-import { SchemaForm } from '@components/common/forms/SchemaForm';
-import HiddenAwareFieldTemplate from '@components/common/forms/HiddenAwareFieldTemplate';
-import requestsSchema from '@schemas/requests.json';
+import { Modal, Alert } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
+import { IconAlertCircle } from '@tabler/icons-react';
 import { useMutation } from '@tanstack/react-query';
+import React, { useMemo, useState } from 'react';
+
 import { api } from '@api';
-import { saveBlob } from '@lib/files';
+import HiddenAwareFieldTemplate from '@components/common/forms/HiddenAwareFieldTemplate';
+import { SchemaForm } from '@components/common/forms/SchemaForm';
 import { useAssessmentPassphrase } from '@features/encryption/passphraseContext';
 import { tryDecodeExportCsv } from '@features/submissions/helpers';
+import { saveBlob } from '@lib/files';
+import requestsSchema from '@schemas/requests.json';
+import { getErrorMessages } from '@utils/error';
+
 import type { GradingDownloadRequest, GradingDownloadResponse } from '@api/models';
-import { useToast } from '@components/common/ToastProvider';
 import type { JSONSchema7, JSONSchema7Definition } from 'json-schema';
 
 type Props = {
@@ -103,7 +106,6 @@ const materialiseDefaults = (schema?: JSONSchema7): unknown => {
 
 const ResultsDownloadModalInner: React.FC<Props> = ({ open, assessmentId, onClose, selectedFormat }) => {
   const { passphrase } = useAssessmentPassphrase();
-  const toast = useToast();
 
   // Base schema (has oneOf with $ref)
   const baseSchema = requestSchemas.GradingDownloadRequest;
@@ -149,9 +151,9 @@ const ResultsDownloadModalInner: React.FC<Props> = ({ open, assessmentId, onClos
         saveBlob(blob, filename);
       }
       onClose();
-      toast.success('Grading download started');
+      notifications.show({ color: 'green', message: 'Grading download started' });
     },
-    onError: () => toast.error('Download failed'),
+    onError: () => notifications.show({ color: 'red', message: 'Download failed' }),
   });
 
   const uiSchema = useMemo(
@@ -168,15 +170,9 @@ const ResultsDownloadModalInner: React.FC<Props> = ({ open, assessmentId, onClos
   const templates = useMemo(() => ({ FieldTemplate: HiddenAwareFieldTemplate }), []);
 
   return (
-    <Modal open={open} onClose={onClose}>
-      <h3 className="font-bold text-lg">
-        Download Grading{selectedFormat ? ` (${selectedFormat.toUpperCase()})` : ''}
-      </h3>
-
+    <Modal opened={open} onClose={onClose} title={`Download Grading${selectedFormat ? ` (${selectedFormat.toUpperCase()})` : ''}`}>
       {!schemaForRender ? (
-        <div className="alert alert-warning mt-2">
-          <span>Download schema not available.</span>
-        </div>
+        <Alert color="yellow" mt="sm">Download schema not available.</Alert>
       ) : (
         <SchemaForm<GradingDownloadRequest>
           schema={schemaForRender}
@@ -187,15 +183,19 @@ const ResultsDownloadModalInner: React.FC<Props> = ({ open, assessmentId, onClos
           submitLoadingLabel="Downloading…"
           onChange={({ formData }) => setFormData(formData)}
           isSubmitting={downloadMutation.isPending}
-          onSubmit={async ({ formData }) => {
+          onSubmit={({ formData }) => {
             if (!formData) return;
-            await downloadMutation.mutateAsync(formData);
+            void downloadMutation.mutateAsync(formData);
           }}
           formProps={{ noHtml5Validate: true }}
         />
       )}
 
-      {downloadMutation.isError && <ErrorAlert error={downloadMutation.error} className="mt-3" />}
+      {downloadMutation.isError && (
+        <Alert color="red" icon={<IconAlertCircle size={16} />} mt="md">
+          {getErrorMessages(downloadMutation.error).join(' ')}
+        </Alert>
+      )}
     </Modal>
   );
 };

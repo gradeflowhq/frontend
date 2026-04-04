@@ -1,3 +1,4 @@
+import { Stack, Group, Title, Text } from '@mantine/core';
 import React from 'react';
 
 type PageHeaderProps = {
@@ -6,16 +7,14 @@ type PageHeaderProps = {
   breadcrumbs?: React.ReactNode;
 };
 
-const PageHeader: React.FC<PageHeaderProps> = ({ title, actions, breadcrumbs }) => {
-  return (
-    <div className="mb-4">
-      {breadcrumbs && <div className="text-sm mb-2 opacity-70">{breadcrumbs}</div>}
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">{title}</h2>
-        {actions}
-      </div>
-    </div>
-  );
-};
+const PageHeader: React.FC<PageHeaderProps> = ({ title, actions, breadcrumbs }) => (
+  <Stack gap="xs" mb="md">
+    {breadcrumbs && <Text size="sm" c="dimmed">{breadcrumbs}</Text>}
+    <Group justify="space-between">
+      <Title order={2}>{title}</Title>
+      {actions}
+    </Group>
+  </Stack>
+);
 
 export default PageHeader;

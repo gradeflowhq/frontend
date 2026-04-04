@@ -1,8 +1,6 @@
+import { Group, Title, TextInput, Menu, Button } from '@mantine/core';
+import { IconChevronDown, IconSearch, IconTrash, IconUpload } from '@tabler/icons-react';
 import React from 'react';
-
-import { Button } from '@components/ui/Button';
-import { DropdownMenu } from '@components/ui/DropdownMenu';
-import { IconChevronDown, IconUpload, IconTrash, IconSearch } from '@components/ui/Icon';
 
 type RulesHeaderProps = {
   onUpload?: () => void;
@@ -25,67 +23,45 @@ const RulesHeader: React.FC<RulesHeaderProps> = ({
   onSearchChange,
   disabled = false,
 }) => {
-  const handleUpload = disabled ? undefined : onUpload;
-  const handleImport = disabled ? undefined : onImport;
-  const handleDelete = disabled ? undefined : onDelete;
-
   return (
-    <div className="mb-2 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-      <h2 className="text-lg font-semibold">Rules</h2>
-      <div className="flex items-center gap-2">
+    <Group justify="space-between" mb="sm" wrap="wrap">
+      <Title order={4}>Rules</Title>
+      <Group gap="sm">
         {onSearchChange && (
-          <label className="input input-bordered flex items-center gap-2">
-            <IconSearch className="h-4 w-4 opacity-60" />
-            <input
-              type="search"
-              className="w-full grow bg-transparent focus:outline-none"
-              placeholder="Search rules"
-              value={searchQuery ?? ''}
-              onChange={(e) => onSearchChange(e.target.value)}
-              disabled={disabled}
-            />
-          </label>
+          <TextInput
+            leftSection={<IconSearch size={16} />}
+            placeholder="Search rules"
+            value={searchQuery ?? ''}
+            onChange={(e) => onSearchChange(e.target.value)}
+            disabled={disabled}
+          />
         )}
-        <DropdownMenu
-          trigger={<>Manage<IconChevronDown /></>}
-          align="end"
-        >
-          <li>
-            <Button
-              variant="ghost"
-              className="justify-start w-full"
-              onClick={handleUpload}
-              leftIcon={<IconUpload />}
-              disabled={disabled}
-            >
+        <Menu position="bottom-end">
+          <Menu.Target>
+            <Button variant="subtle" rightSection={<IconChevronDown size={16} />} disabled={disabled}>
+              Manage
+            </Button>
+          </Menu.Target>
+          <Menu.Dropdown>
+            <Menu.Item leftSection={<IconUpload size={16} />} onClick={disabled ? undefined : onUpload} disabled={disabled}>
               Upload
-            </Button>
-          </li>
-          <li>
-            <Button
-              variant="ghost"
-              className="justify-start w-full"
-              onClick={handleImport}
-              leftIcon={<IconUpload />}
-              disabled={disabled}
-            >
+            </Menu.Item>
+            <Menu.Item leftSection={<IconUpload size={16} />} onClick={disabled ? undefined : onImport} disabled={disabled}>
               Import
-            </Button>
-          </li>
-          <li>
-            <Button
-              variant="error"
-              className="justify-start w-full"
-              onClick={handleDelete}
-              leftIcon={<IconTrash />}
+            </Menu.Item>
+            <Menu.Divider />
+            <Menu.Item
+              color="red"
+              leftSection={<IconTrash size={16} />}
+              onClick={disabled ? undefined : onDelete}
               disabled={disabled || !hasRules || disableDelete}
             >
               Delete
-            </Button>
-          </li>
-        </DropdownMenu>
-      </div>
-    </div>
+            </Menu.Item>
+          </Menu.Dropdown>
+        </Menu>
+      </Group>
+    </Group>
   );
 };
 

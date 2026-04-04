@@ -1,11 +1,10 @@
+import { Button, Group, TextInput, Modal, Text, Alert } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
+import { IconPlus, IconSearch } from '@tabler/icons-react';
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import ConfirmDialog from '@components/common/ConfirmDialog';
-import ErrorAlert from '@components/common/ErrorAlert';
 import PageHeader from '@components/common/PageHeader';
-import { Button } from '@components/ui/Button';
-import { IconPlus, IconSearch } from '@components/ui/Icon';
 import {
   AssessmentsTable,
   AssessmentCreateModal,
@@ -18,15 +17,15 @@ import {
   useDeleteAssessment,
 } from '@features/assessments/hooks';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
+import { getErrorMessages } from '@utils/error';
 import { compareDateDesc } from '@utils/sort';
-import { useToast } from '@components/common/ToastProvider';
+
 import type { AssessmentResponse, AssessmentCreateRequest, AssessmentUpdateRequest } from '@api/models';
 
 const AssessmentsPage: React.FC = () => {
   useDocumentTitle('Assessments - GradeFlow');
 
   const navigate = useNavigate();
-  const toast = useToast();
 
   const [showCreate, setShowCreate] = useState(false);
   const [editItem, setEditItem] = useState<AssessmentResponse | null>(null);
@@ -58,24 +57,20 @@ const AssessmentsPage: React.FC = () => {
       <PageHeader
         title="Assessments"
         actions={
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <label className="input input-bordered flex items-center gap-2">
-              <IconSearch className="h-4 w-4 opacity-60" />
-              <input
-                type="search"
-                className="w-full grow bg-transparent focus:outline-none"
-                placeholder="Search assessments"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </label>
-            <Button variant="ghost" onClick={() => setShowCreate(true)} leftIcon={<IconPlus />}>
+          <Group gap="sm" wrap="nowrap">
+            <TextInput
+              leftSection={<IconSearch size={16} />}
+              placeholder="Search assessments"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <Button variant="default" onClick={() => setShowCreate(true)} leftSection={<IconPlus size={16} />}>
               Add
             </Button>
-          </div>
+          </Group>
         }
       />
-      {isError && <ErrorAlert error={error} />}
+      {isError && <Alert color="red" mb="md">{getErrorMessages(error).join(' ')}</Alert>}
 
       {!isError && (
         <AssessmentsTable
@@ -98,9 +93,9 @@ const AssessmentsPage: React.FC = () => {
           await createMutation.mutateAsync(formData, {
             onSuccess: () => {
               setShowCreate(false);
-              toast.success('Assessment created');
+              notifications.show({ color: 'green', message: 'Assessment created' });
             },
-            onError: () => toast.error('Create failed'),
+            onError: () => notifications.show({ color: 'red', message: 'Create failed' }),
           });
         }}
       />
@@ -114,33 +109,42 @@ const AssessmentsPage: React.FC = () => {
           await updateMutation.mutateAsync({ id, payload: formData }, {
             onSuccess: () => {
               setEditItem(null);
-              toast.success('Assessment updated');
+              notifications.show({ color: 'green', message: 'Assessment updated' });
             },
-            onError: () => toast.error('Update failed'),
+            onError: () => notifications.show({ color: 'red', message: 'Update failed' }),
           });
         }}
       />
 
-      <ConfirmDialog
-        open={!!deleteTarget}
+      <Modal
+        opened={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
         title="Delete Assessment"
-        message={`Are you sure you want to delete "${deleteTarget?.name}"?`}
-        confirmLoading={deleteMutation.isPending}
-        confirmLoadingLabel="Deleting..."
-        confirmText="Delete"
-        onConfirm={() =>
-          deleteTarget &&
-          deleteMutation.mutate(deleteTarget.id, {
-            onSuccess: () => {
-              setDeleteTarget(null);
-              toast.success('Assessment deleted');
-            },
-            onError: () => toast.error('Delete failed'),
-          })
-        }
-        onCancel={() => setDeleteTarget(null)}
-      />
-      {deleteMutation.isError && <ErrorAlert error={deleteMutation.error} className="mt-2" />}
+      >
+        <Text mb="md">Are you sure you want to delete &quot;{deleteTarget?.name}&quot;?</Text>
+        <Group justify="flex-end">
+          <Button variant="default" onClick={() => setDeleteTarget(null)}>Cancel</Button>
+          <Button
+            color="red"
+            loading={deleteMutation.isPending}
+            onClick={() =>
+              deleteTarget &&
+              deleteMutation.mutate(deleteTarget.id, {
+                onSuccess: () => {
+                  setDeleteTarget(null);
+                  notifications.show({ color: 'green', message: 'Assessment deleted' });
+                },
+                onError: () => notifications.show({ color: 'red', message: 'Delete failed' }),
+              })
+            }
+          >
+            Delete
+          </Button>
+        </Group>
+        {deleteMutation.isError && (
+          <Alert color="red" mt="sm">{getErrorMessages(deleteMutation.error).join(' ')}</Alert>
+        )}
+      </Modal>
     </section>
   );
 };

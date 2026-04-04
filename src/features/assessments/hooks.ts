@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
 import { api } from '@api';
 import { QK } from '@api/queryKeys';
+
 import type {
   AssessmentsListResponse,
   AssessmentResponse,
@@ -42,8 +44,8 @@ export const useUpdateAssessment = () => {
     mutationFn: async ({ id, payload }: { id: string; payload: AssessmentUpdateRequest }) =>
       (await api.updateAssessmentAssessmentsAssessmentIdPatch(id, payload)).data as AssessmentResponse,
     onSuccess: (_res, vars) => {
-      qc.invalidateQueries({ queryKey: QK.assessments.list });
-      qc.invalidateQueries({ queryKey: QK.assessments.item(vars.id) });
+      void qc.invalidateQueries({ queryKey: QK.assessments.list });
+      void qc.invalidateQueries({ queryKey: QK.assessments.item(vars.id) });
     },
   });
 };

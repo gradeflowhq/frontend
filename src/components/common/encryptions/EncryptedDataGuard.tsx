@@ -1,6 +1,6 @@
+import { Modal, PasswordInput, Checkbox, Text, Group, Button, Stack } from '@mantine/core';
 import React, { useMemo, useState } from 'react';
-import Modal from '@components/common/Modal';
-import { Button } from '@components/ui/Button';
+
 import { normalizePresent, readPassphrase } from '@utils/passphrase';
 
 type Props = {
@@ -42,45 +42,38 @@ const EncryptedDataGuard: React.FC<Props> = ({
   if (!open) return null;
 
   return (
-    <Modal open={open} onClose={handleIgnore} boxClassName="w-full max-w-md">
-      <h3 className="font-bold text-lg">Encrypted Data Detected</h3>
-      <p className="mt-2">
-        This page contains encrypted data. Enter a passphrase to decrypt student IDs, or ignore to view masked IDs.
-      </p>
-      <div className="mt-4 grid grid-cols-1 gap-3">
-        <div>
-          <label className="label"><span className="label-text">Passphrase</span></label>
-          <input
-            type="password"
-            className="input input-bordered w-full"
-            value={passphraseInput}
-            onChange={(e) => setPassphraseInput(e.target.value)}
-            placeholder="Enter passphrase"
+    <Modal
+      opened={open}
+      onClose={handleIgnore}
+      title="Encrypted Data Detected"
+      size="md"
+    >
+      <Stack gap="md">
+        <Text>
+          This page contains encrypted data. Enter a passphrase to decrypt student IDs,
+          or ignore to view masked IDs.
+        </Text>
+        <PasswordInput
+          label="Passphrase"
+          placeholder="Enter passphrase"
+          value={passphraseInput}
+          onChange={(e) => setPassphraseInput(e.currentTarget.value)}
+        />
+        <Stack gap={4}>
+          <Checkbox
+            label="Store passphrase locally"
+            checked={store}
+            onChange={(e) => setStore(e.currentTarget.checked)}
           />
-        </div>
-        <div className="form-control">
-          <label className="label cursor-pointer justify-start gap-3">
-            <input
-              type="checkbox"
-              className="checkbox"
-              checked={store}
-              onChange={(e) => setStore(e.target.checked)}
-            />
-            <span className="label-text">Store passphrase locally</span>
-          </label>
-          <div className="text-xs opacity-70">
-            Stored in your browser’s local storage. Do not use on shared devices.
-          </div>
-        </div>
-      </div>
-      <div className="modal-action">
-        <Button type="button" variant="ghost" onClick={handleIgnore}>
-          Ignore
-        </Button>
-        <Button type="button" variant="primary" onClick={handleUse} disabled={!passphraseInput}>
-          Use Passphrase
-        </Button>
-      </div>
+          <Text size="xs" c="dimmed">
+            Stored in your browser's local storage. Do not use on shared devices.
+          </Text>
+        </Stack>
+      </Stack>
+      <Group justify="flex-end" mt="md">
+        <Button variant="subtle" onClick={handleIgnore}>Ignore</Button>
+        <Button onClick={handleUse} disabled={!passphraseInput}>Use Passphrase</Button>
+      </Group>
     </Modal>
   );
 };

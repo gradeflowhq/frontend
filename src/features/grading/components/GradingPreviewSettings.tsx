@@ -1,3 +1,4 @@
+import { Card, Text, SimpleGrid, NumberInput, Select } from '@mantine/core';
 import React from 'react';
 
 export type GradingPreviewParams = {
@@ -9,55 +10,38 @@ export type GradingPreviewParams = {
 type Props = {
   value: GradingPreviewParams;
   onChange: (next: GradingPreviewParams) => void;
-  className?: string;
 };
 
-const GradingPreviewSettings: React.FC<Props> = ({ value, onChange, className }) => {
+const GradingPreviewSettings: React.FC<Props> = ({ value, onChange }) => {
   const { limit, selection, seed } = value;
   return (
-    <div tabIndex={0} className={`card bg-base-100 border border-base-300 shadow-xs p-3 ${className ?? ''}`}>
-      <h4 className="font-semibold mb-2">Preview Settings</h4>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <div className="form-control">
-          <label className="label"><span className="label-text">Limit</span></label>
-          <input
-            type="number"
-            min={1}
-            className="input input-bordered w-full"
-            value={limit}
-            onChange={(e) =>
-              onChange({ ...value, limit: Number(e.target.value) || 1 })
-            }
-          />
-        </div>
-        <div className="form-control">
-          <label className="label"><span className="label-text">Selection</span></label>
-          <select
-            className="select select-bordered w-full"
-            value={selection}
-            onChange={(e) =>
-              onChange({ ...value, selection: e.target.value as 'first' | 'random' })
-            }
-          >
-            <option value="first">first</option>
-            <option value="random">random</option>
-          </select>
-        </div>
-        <div className="form-control">
-          <label className="label"><span className="label-text">Seed (optional)</span></label>
-          <input
-            type="number"
-            className="input input-bordered w-full"
-            value={seed ?? ''}
-            onChange={(e) =>
-              onChange({ ...value, seed: e.target.value === '' ? null : Number(e.target.value) })
-            }
-            disabled={selection !== 'random'}
-            placeholder="Only for random selection"
-          />
-        </div>
-      </div>
-    </div>
+    <Card withBorder shadow="xs" p="md">
+      <Text fw={600} mb="sm">Preview Settings</Text>
+      <SimpleGrid cols={{ base: 1, md: 3 }} spacing="sm">
+        <NumberInput
+          label="Limit"
+          min={1}
+          value={limit}
+          onChange={(v) => onChange({ ...value, limit: Number(v) || 1 })}
+        />
+        <Select
+          label="Selection"
+          value={selection}
+          onChange={(v) => onChange({ ...value, selection: v as 'first' | 'random' })}
+          data={[
+            { value: 'first', label: 'first' },
+            { value: 'random', label: 'random' },
+          ]}
+        />
+        <NumberInput
+          label="Seed (optional)"
+          value={seed ?? ''}
+          onChange={(v) => onChange({ ...value, seed: v === '' ? null : Number(v) })}
+          disabled={selection !== 'random'}
+          placeholder="Only for random selection"
+        />
+      </SimpleGrid>
+    </Card>
   );
 };
 

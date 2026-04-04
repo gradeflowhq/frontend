@@ -1,12 +1,12 @@
-import React, { useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import React, { useMemo } from 'react';
 
 import { api } from '@api';
 import { QK } from '@api/queryKeys';
 import SchemaRequestModal from '@components/common/forms/SchemaRequestModal';
 import FileOrTextWidget from '@components/common/forms/widgets/FileOrTextWidget';
-import requestsSchema from '@schemas/requests.json';
 import { fileAcceptForConfig, type HasFormatField } from '@lib/uploads';
+import requestsSchema from '@schemas/requests.json';
 
 import type { ImportQuestionSetRequest } from '@api/models';
 import type { JSONSchema7 } from 'json-schema';

@@ -1,30 +1,28 @@
+import { Modal, Button, Alert, Group, Title, Text, Badge, Tabs, Box } from '@mantine/core';
+import { IconDeviceFloppy, IconPlayerPlay } from '@tabler/icons-react';
 import React from 'react';
-import { IconSave, IconSettings } from '@components/ui/Icon';
-import LoadingButton from '@components/ui/LoadingButton';
-import { Button } from '@components/ui/Button';
-import Modal from '@components/common/Modal';
-import ErrorAlert from '@components/common/ErrorAlert';
-import { SchemaForm } from '@components/common/forms/SchemaForm';
+
 import HiddenAwareFieldTemplate from '@components/common/forms/HiddenAwareFieldTemplate';
-import { DropdownMenu } from '@components/ui/DropdownMenu';
+import { SchemaForm } from '@components/common/forms/SchemaForm';
 import SwitchableTextWidget from '@components/common/forms/widgets/SwitchableTextWidget';
+import GradingPreviewPanel from '@features/grading/components/GradingPreviewPanel';
+import GradingPreviewSettings from '@features/grading/components/GradingPreviewSettings';
+import { usePreviewGrading } from '@features/grading/hooks';
+import { getErrorMessages } from '@utils/error';
 
 import { HIDE_KEYS_SINGLE, HIDE_KEYS_MULTI } from '../constants';
-import { useRuleDefinitions, useCompatibleRuleKeys, useFindSchemaKeyByType } from '../hooks';
 import { friendlyRuleLabel } from '../helpers';
 import { augmentRulesSchemaWithQuestionIdEnums } from '../helpers/augmentations';
 import { injectEnumsFromConstraintsForQuestion } from '../helpers/constraints';
-
-import { usePreviewGrading } from '@features/grading/hooks';
-import GradingPreviewPanel from '@features/grading/components/GradingPreviewPanel';
-import GradingPreviewSettings from '@features/grading/components/GradingPreviewSettings';
-import type { GradingPreviewParams } from '@features/grading/components/GradingPreviewSettings';
-
-import type { QuestionSetOutputQuestionMap } from '@api/models';
-import type { QuestionType, RuleValue } from '../types';
 import { stripEngineKeysFromRulesSchema } from '../helpers/engine';
-import type { JSONSchema7 } from 'json-schema';
+import { useRuleDefinitions, useCompatibleRuleKeys, useFindSchemaKeyByType } from '../hooks';
+
+
 import type { RuleDefinitions } from '../hooks';
+import type { QuestionType, RuleValue } from '../types';
+import type { QuestionSetOutputQuestionMap } from '@api/models';
+import type { GradingPreviewParams } from '@features/grading/components/GradingPreviewSettings';
+import type { JSONSchema7 } from 'json-schema';
 
 type RuleDialogProps = {
   open: boolean;
@@ -40,7 +38,6 @@ type RuleDialogProps = {
   assessmentId?: string;
 };
 
-// Seed essential fields RJSF won’t infer on its own
 const materializeDraftFromSchema = (
   schema: JSONSchema7 | null,
   questionId?: string | null,
@@ -48,10 +45,8 @@ const materializeDraftFromSchema = (
 ): RuleValue => {
   const props = (schema?.properties as Record<string, JSONSchema7> | undefined) ?? {};
   const draft: Record<string, unknown> = { ...(initial ?? {}) };
-
   const typeConst = props?.type?.const ?? props?.type?.default;
   if (typeConst !== undefined && draft.type === undefined) draft.type = typeConst;
-
   if (props?.question_id && questionId && draft.question_id === undefined) {
     draft.question_id = questionId;
   }
@@ -71,12 +66,10 @@ const RuleDialog: React.FC<RuleDialogProps> = ({
   error,
   assessmentId,
 }) => {
-  // Base rule definitions
   const defs = useRuleDefinitions();
   const eligibleKeys = useCompatibleRuleKeys(defs, (questionType as QuestionType | undefined) ?? undefined, !!questionId);
   const findKeyByType = useFindSchemaKeyByType(defs);
 
-  // Augment schemas
   const defsWithQidEnums = React.useMemo(() => {
     if (!questionMap) return defs;
     return augmentRulesSchemaWithQuestionIdEnums(defs, questionMap as Record<string, Record<string, unknown>>);
@@ -91,13 +84,9 @@ const RuleDialog: React.FC<RuleDialogProps> = ({
     );
   }, [defsWithQidEnums, questionMap, questionId]);
 
-  const strippedDefs = React.useMemo(() => {
-    return stripEngineKeysFromRulesSchema(injectedDefs);
-  }, [injectedDefs]);
-
+  const strippedDefs = React.useMemo(() => stripEngineKeysFromRulesSchema(injectedDefs), [injectedDefs]);
   const finalDefs: RuleDefinitions = strippedDefs as RuleDefinitions;
 
-  // Resolve concrete schema key
   const concreteKey = React.useMemo(() => {
     if (selectedRuleKey && finalDefs[selectedRuleKey]) return selectedRuleKey;
     const initType = initialRule?.type;
@@ -108,20 +97,17 @@ const RuleDialog: React.FC<RuleDialogProps> = ({
     return eligibleKeys[0] ?? null;
   }, [finalDefs, selectedRuleKey, initialRule, eligibleKeys, findKeyByType, questionId]);
 
-  // Base schema
   const baseSchema = React.useMemo(() => (concreteKey ? finalDefs[concreteKey] : null), [finalDefs, concreteKey]);
 
-  // Draft form state
-  const [draft, setDraft] = React.useState<RuleValue>(() => {
-    return baseSchema ? materializeDraftFromSchema(baseSchema, questionId, initialRule ?? undefined) : (initialRule ?? ({} as RuleValue));
-  });
+  const [draft, setDraft] = React.useState<RuleValue>(() =>
+    baseSchema ? materializeDraftFromSchema(baseSchema, questionId, initialRule ?? undefined) : (initialRule ?? ({} as RuleValue))
+  );
   React.useEffect(() => {
     if (!baseSchema) return;
     setDraft(materializeDraftFromSchema(baseSchema, questionId, initialRule ?? undefined));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [baseSchema, questionId]);
 
-  // Hide boilerplate fields in UI
   const hiddenKeys = React.useMemo(() => (questionId ? [...HIDE_KEYS_SINGLE] : [...HIDE_KEYS_MULTI]), [questionId]);
 
   const computed = React.useMemo(() => {
@@ -133,7 +119,6 @@ const RuleDialog: React.FC<RuleDialogProps> = ({
     hiddenKeys.forEach((k) => {
       baseUi[k] = { 'ui:widget': 'hidden', 'ui:title': '', 'ui:options': { label: false } };
     });
-
     if (!baseSchema) return { schemaForRender: null as JSONSchema7 | null, mergedUiSchema: baseUi };
     const schemaWithDefs = { ...baseSchema, definitions: finalDefs };
     return { schemaForRender: schemaWithDefs, mergedUiSchema: baseUi };
@@ -142,14 +127,14 @@ const RuleDialog: React.FC<RuleDialogProps> = ({
   const templates = React.useMemo(() => ({ FieldTemplate: HiddenAwareFieldTemplate }), []);
   const widgets = React.useMemo(() => ({ TextWidget: SwitchableTextWidget }), []);
 
-  // Preview params
+  const [activeTab, setActiveTab] = React.useState<string>('config');
+
   const [previewParams, setPreviewParams] = React.useState<GradingPreviewParams>({
     limit: 5,
     selection: 'first',
     seed: null,
   });
 
-  // Preview mutation
   const previewMutation = usePreviewGrading(assessmentId ?? '');
   const canPreview = !!assessmentId && !!computed.schemaForRender;
 
@@ -165,119 +150,107 @@ const RuleDialog: React.FC<RuleDialogProps> = ({
     });
   };
 
-  // Clear errors/preview/etc when opening dialog
   React.useEffect(() => {
     if (open) {
-      previewMutation.reset(); // clears data/error/isPending state
+      previewMutation.reset();
       setPreviewParams({ limit: 5, selection: 'first', seed: null });
+      setActiveTab('config');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  if (!open) return null;
-
   const { schemaForRender, mergedUiSchema } = computed;
 
-  // Decide whether to show the preview column
-  const hasPreview =
-    previewMutation.isPending ||
-    previewMutation.isError ||
-    ((previewMutation.data?.submissions?.length ?? 0) > 0);
-
   return (
-    <Modal open={open} onClose={onClose} boxClassName="w-full max-w-6xl">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="font-bold text-lg">
-          {questionId && <span className="badge badge-ghost mr-2 mb-1">{questionId}</span>}
-          {initialRule ? 'Edit Rule' : 'Add Rule'}
-        </h3>
-        {concreteKey && <span className="text-sm opacity-70">{friendlyRuleLabel(concreteKey)}</span>}
-      </div>
+    <Modal
+      opened={open}
+      onClose={onClose}
+      size="5xl"
+      styles={{ body: { padding: 0, display: 'flex', flexDirection: 'column', maxHeight: 'min(80vh, 720px)' } }}
+      title={
+        <Group gap="xs">
+          {questionId && <Badge variant="light" color="gray">{questionId}</Badge>}
+          <Title order={4}>{initialRule ? 'Edit Rule' : 'Add Rule'}</Title>
+          {concreteKey && <Text size="sm" c="dimmed">{friendlyRuleLabel(concreteKey)}</Text>}
+        </Group>
+      }
+    >
+      <Tabs
+        value={activeTab}
+        onChange={(v) => v && setActiveTab(v)}
+        style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+      >
+        <Tabs.List px="md" pt="xs">
+          <Tabs.Tab value="config">Configure</Tabs.Tab>
+          {canPreview && <Tabs.Tab value="preview">Preview</Tabs.Tab>}
+        </Tabs.List>
 
-      {/* One or two-column layout depending on preview visibility */}
-      <div className={`grid grid-cols-1 ${hasPreview ? 'md:grid-cols-2' : ''} gap-4`}>
-        {/* Left: Rule form */}
-        <div>
-          {schemaForRender ? (
-            <SchemaForm<RuleValue>
-              key={`rule:${concreteKey ?? 'unknown'}:${questionId ?? ''}`}
-              schema={schemaForRender}
-              uiSchema={mergedUiSchema}
-              formData={draft}
-              onChange={({ formData }) => setDraft((formData ?? draft) as RuleValue)}
-              onSubmit={async ({ formData }) => {
-                if (formData) await onSave(formData as RuleValue);
-              }}
-              formProps={{ noHtml5Validate: true }}
-              showSubmit={false}
-              templates={templates}
-              widgets={widgets}
-              formContext={{ hideKeys: new Set(hiddenKeys) }}
-            />
-          ) : (
-            <div className="alert alert-warning mt-2">
-              <span>Rule schema not found.</span>
-            </div>
-          )}
+        <Box style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
+          <Tabs.Panel value="config">
+            {schemaForRender ? (
+              <SchemaForm<RuleValue>
+                key={`rule:${concreteKey ?? 'unknown'}:${questionId ?? ''}`}
+                schema={schemaForRender}
+                uiSchema={mergedUiSchema}
+                formData={draft}
+                onChange={({ formData }) => setDraft((formData ?? draft) as RuleValue)}
+                onSubmit={({ formData }) => {
+                  if (formData) void onSave(formData as RuleValue);
+                }}
+                formProps={{ noHtml5Validate: true }}
+                showSubmit={false}
+                templates={templates}
+                widgets={widgets}
+                formContext={{ hideKeys: new Set(hiddenKeys) }}
+              />
+            ) : (
+              <Alert color="yellow" mt="sm">Rule schema not found.</Alert>
+            )}
+            {!!error && (
+              <Alert color="red" mt="sm">{getErrorMessages(error).join(' ')}</Alert>
+            )}
+          </Tabs.Panel>
 
-          {/* Service errors (shown in both add/edit) */}
-          {!!error && <ErrorAlert error={error} className="mt-2" />}
-        </div>
+          <Tabs.Panel value="preview">
+            <GradingPreviewSettings value={previewParams} onChange={setPreviewParams} />
+            <Group justify="flex-end" mt="sm">
+              <Button
+                leftSection={<IconPlayerPlay size={16} />}
+                onClick={() => void runPreview()}
+                loading={previewMutation.isPending}
+              >
+                Run Preview
+              </Button>
+            </Group>
+            {(previewMutation.isPending || previewMutation.isError || (previewMutation.data?.submissions?.length ?? 0) > 0) && (
+              <Box mt="md">
+                <GradingPreviewPanel
+                  items={previewMutation.data?.submissions ?? []}
+                  loading={previewMutation.isPending}
+                  error={previewMutation.isError ? previewMutation.error : undefined}
+                  maxHeightVh={200}
+                />
+              </Box>
+            )}
+          </Tabs.Panel>
+        </Box>
+      </Tabs>
 
-        {/* Right: Preview panel (only when preview/loading/error) */}
-        {hasPreview && (
-          <div>
-            <GradingPreviewPanel
-              items={previewMutation.data?.submissions ?? []}
-              loading={previewMutation.isPending}
-              error={previewMutation.isError ? previewMutation.error : undefined}
-              maxHeightVh={60}
-            />
-          </div>
-        )}
-      </div>
-
-      {/* Bottom-right global action bar */}
-      <div className="mt-4 flex items-center justify-end gap-2">
-        <Button type="button" variant="ghost" onClick={onClose} disabled={!!isSaving}>
-          Cancel
-        </Button>
-
-        <div className="join">
-          <LoadingButton
-            type="button"
-            variant="outline"
-            className="join-item"
-            onClick={runPreview}
-            isLoading={previewMutation.isPending}
-            disabled={!canPreview}
-            title={!assessmentId ? 'Assessment missing' : 'Run preview'}
+      <Box style={{ borderTop: '1px solid var(--mantine-color-default-border)', padding: '12px 16px', flexShrink: 0 }}>
+        <Group justify="flex-end" gap="sm">
+          <Button variant="subtle" onClick={onClose} disabled={!!isSaving}>
+            Cancel
+          </Button>
+          <Button
+            leftSection={<IconDeviceFloppy size={16} />}
+            onClick={() => void onSave(draft as RuleValue)}
+            disabled={!schemaForRender}
+            loading={!!isSaving}
           >
-            Preview
-          </LoadingButton>
-
-          <DropdownMenu
-            align="end"
-            position="top"
-            className="join-item btn btn-outline m-0 p-0"
-            trigger={<IconSettings />}
-            isItemList={false}
-          >
-            <GradingPreviewSettings value={previewParams} onChange={setPreviewParams} className="dropdown-content w-100" />
-          </DropdownMenu>
-        </div>
-
-        <LoadingButton
-          type="button"
-          variant="primary"
-          onClick={() => onSave(draft as RuleValue)}
-          disabled={!schemaForRender}
-          isLoading={!!isSaving}
-          leftIcon={<IconSave />}
-        >
-          Save
-        </LoadingButton>
-      </div>
+            Save
+          </Button>
+        </Group>
+      </Box>
     </Modal>
   );
 };

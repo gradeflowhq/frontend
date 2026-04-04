@@ -1,10 +1,13 @@
+import { Skeleton, Stack } from '@mantine/core';
 import React, { useMemo, useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+
 import { useSubmissions, useSourceData } from '@features/submissions';
-import { StepIndicator } from './submissions/StepIndicator';
-import { UploadStep } from './submissions/UploadStep';
+
 import { ConfigureStep } from './submissions/ConfigureStep';
 import { ListStep } from './submissions/ListStep';
+import { StepIndicator } from './submissions/StepIndicator';
+import { UploadStep } from './submissions/UploadStep';
 
 import type { Step } from './submissions/StepIndicator';
 import type { RawSubmission } from '@api/models';
@@ -34,18 +37,14 @@ const SubmissionsTabPage: React.FC = () => {
 
   if (step === null) {
     return (
-      <ul className="steps steps-horizontal w-full mb-6">
-        {['Upload Data', 'Configure Columns', 'Preview'].map((label) => (
-          <li key={label} className="step">
-            <div className="skeleton h-4 w-24 rounded" />
-          </li>
-        ))}
-      </ul>
+      <Stack gap="sm">
+        <Skeleton height={40} mb="md" />
+      </Stack>
     );
   }
 
   return (
-    <section className="space-y-4">
+    <Stack gap="md">
       <StepIndicator
         current={step}
         hasSource={hasSource}
@@ -80,9 +79,8 @@ const SubmissionsTabPage: React.FC = () => {
           onDeleted={() => setStep(sourceData ? 'configure' : 'upload')}
         />
       )}
-    </section>
+    </Stack>
   );
 };
 
 export default SubmissionsTabPage;
-

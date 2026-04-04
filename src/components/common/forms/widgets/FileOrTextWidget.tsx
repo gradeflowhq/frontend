@@ -1,4 +1,8 @@
+import { Group, Text } from '@mantine/core';
+import { Dropzone } from '@mantine/dropzone';
+import { IconFile, IconUpload, IconX } from '@tabler/icons-react';
 import React from 'react';
+
 import type { WidgetProps } from '@rjsf/utils';
 
 type Options = {
@@ -16,35 +20,53 @@ const FileOrTextWidget: React.FC<WidgetProps> = ({
   options,
 }) => {
   const { readAs = 'text', accept, onFileSelected } = (options || {}) as Options;
-  const [fileName, setFileName] = React.useState<string>(typeof value === 'string' ? value : '');
+  const [fileName, setFileName] = React.useState<string>(typeof value === 'string' && value.length < 200 ? value : '');
+  const [loading, setLoading] = React.useState(false);
+
+  const acceptMimes = accept ? accept.split(',').map((s) => s.trim()) : undefined;
+
+  const handleFileChange = async (file: File | null) => {
+    setFileName(file?.name ?? '');
+    if (!file) {
+      if (readAs === 'binary') onFileSelected?.(null);
+      onChange(undefined);
+      return;
+    }
+    setLoading(true);
+    try {
+      if (readAs === 'binary') {
+        onFileSelected?.(file);
+        onChange(file.name);
+      } else {
+        const text = await file.text();
+        onChange(text);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="form-control">
-      <input
-        id={id}
-        type="file"
-        className="file-input file-input-bordered w-full"
-        accept={accept}
-        disabled={disabled || readonly}
-        onChange={async (e) => {
-          const f = e.target.files?.[0] ?? null;
-          setFileName(f?.name ?? '');
-          if (!f) {
-            if (readAs === 'binary') onFileSelected?.(null);
-            onChange(undefined);
-            return;
-          }
-          if (readAs === 'binary') {
-            onFileSelected?.(f);
-            onChange(f.name); // keep user-friendly value in formData
-          } else {
-            const text = await f.text();
-            onChange(text); // upload expects a string body
-          }
-        }}
-      />
-      {fileName && <div className="text-xs mt-1 font-mono">{fileName}</div>}
-    </div>
+    <Dropzone
+      id={id}
+      onDrop={(files) => void handleFileChange(files[0] ?? null)}
+      accept={acceptMimes}
+      maxFiles={1}
+      loading={loading}
+      disabled={disabled || readonly}
+      p="sm"
+    >
+      <Group justify="center" gap="xs" mih={64} style={{ pointerEvents: 'none' }}>
+        <Dropzone.Accept><IconUpload size={18} color="var(--mantine-color-blue-6)" /></Dropzone.Accept>
+        <Dropzone.Reject><IconX size={18} color="var(--mantine-color-red-6)" /></Dropzone.Reject>
+        <Dropzone.Idle><IconFile size={18} color="var(--mantine-color-dimmed)" /></Dropzone.Idle>
+        <div>
+          <Text size="sm" inline>
+            {fileName ? fileName : 'Drop file here or click to select'}
+          </Text>
+        </div>
+      </Group>
+    </Dropzone>
   );
 };
 

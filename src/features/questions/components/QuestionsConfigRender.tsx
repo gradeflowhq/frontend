@@ -1,4 +1,6 @@
+import { Text, List, Stack, Accordion } from '@mantine/core';
 import React from 'react';
+
 import { prettifyKey } from '@features/rules/helpers';
 
 interface JsonObject {
@@ -10,14 +12,16 @@ type JsonValue = string | number | boolean | null | JsonObject | JsonValue[];
 const HIDE_KEYS = new Set<string>(['type']);
 
 const LabeledBlock: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
-  <div className="mb-2">
-    <div className="text-xs opacity-70 mb-1">{label}</div>
+  <Stack gap={2} mb="xs">
+    <Text size="sm" c="dimmed">{label}</Text>
     <div>{children}</div>
-  </div>
+  </Stack>
 );
 
 const PrimitiveView: React.FC<{ value: string | number | boolean | null }> = ({ value }) => (
-  <span className="font-mono text-xs break-words">{value === null ? '—' : String(value)}</span>
+  <Text ff="monospace" size="xs" style={{ wordBreak: 'break-word' }} span>
+    {value === null ? '\u2014' : String(value)}
+  </Text>
 );
 
 const ArrayView: React.FC<{
@@ -25,42 +29,43 @@ const ArrayView: React.FC<{
   renderNode: (v: JsonValue, path: string) => React.ReactNode;
   path: string;
 }> = ({ value, renderNode, path }) => {
-  if (value.length === 0) return <span className="font-mono text-xs opacity-70">[]</span>;
+  if (value.length === 0) return <Text ff="monospace" size="xs" c="dimmed">[]</Text>;
   return (
-    <ul className={`list bg-base-100 rounded-box border border-base-300 mb-2`}>
+    <List withPadding mb="xs">
       {value.map((item, idx) => (
-        <li className='list-row' key={`${path}[${idx}]`}>
-          <div className="font-mono text-xs opacity-50">{idx+1}</div>
+        <List.Item key={`${path}[${idx}]`}>
+          <Text ff="monospace" size="xs" c="dimmed" span>{idx + 1}. </Text>
           {renderNode(item, `${path}[${idx}]`)}
-        </li>
+        </List.Item>
       ))}
-    </ul>
+    </List>
   );
 };
 
-// Standard collapsible (boxed) for inner "config"
 const CollapsibleConfigBox: React.FC<{
   obj: JsonObject;
   path: string;
   renderNode: (v: JsonValue, p: string) => React.ReactNode;
   title?: string;
-  defaultOpen?: boolean;
-}> = ({ obj, path, renderNode, title = 'Configuration', defaultOpen = false }) => {
+}> = ({ obj, path, renderNode, title = 'Configuration' }) => {
   const keys = Object.keys(obj ?? {}).filter((k) => !HIDE_KEYS.has(k));
-  if (keys.length === 0) return <span className="opacity-60 text-xs">{'{}'}</span>;
+  if (keys.length === 0) return <Text size="xs" c="dimmed">{'{}'}</Text>;
 
   return (
-    <div className="collapse collapse-arrow border border-base-300 bg-base-100 rounded-box">
-      <input type="checkbox" defaultChecked={defaultOpen} />
-      <div className="collapse-title text-xs font-medium">{title}</div>
-      <div className="collapse-content">
-        {keys.map((k) => (
-          <LabeledBlock key={`${path}.${k}`} label={prettifyKey(k)}>
-            {renderNode(obj[k], `${path}.${k}`)}
-          </LabeledBlock>
-        ))}
-      </div>
-    </div>
+    <Accordion variant="contained">
+      <Accordion.Item value="config">
+        <Accordion.Control>
+          <Text size="xs" fw={500}>{title}</Text>
+        </Accordion.Control>
+        <Accordion.Panel>
+          {keys.map((k) => (
+            <LabeledBlock key={`${path}.${k}`} label={prettifyKey(k)}>
+              {renderNode(obj[k], `${path}.${k}`)}
+            </LabeledBlock>
+          ))}
+        </Accordion.Panel>
+      </Accordion.Item>
+    </Accordion>
   );
 };
 
@@ -81,14 +86,11 @@ const renderNode = (value: JsonValue, path: string): React.ReactNode => {
           path={path}
           renderNode={(v, p) => renderNode(v, p)}
           title="Config"
-          defaultOpen={false}
         />
       );
     }
-
     const keys = Object.keys(obj ?? {}).filter((k) => !HIDE_KEYS.has(k));
-    if (keys.length === 0) return <span className="opacity-60 text-xs">{'{}'}</span>;
-
+    if (keys.length === 0) return <Text size="xs" c="dimmed">{'{}'}</Text>;
     return (
       <>
         {keys.map((k) => (
@@ -100,9 +102,9 @@ const renderNode = (value: JsonValue, path: string): React.ReactNode => {
     );
   }
   try {
-    return <span className="font-mono text-xs break-words">{JSON.stringify(value)}</span>;
+    return <Text ff="monospace" size="xs" style={{ wordBreak: 'break-word' }} span>{JSON.stringify(value)}</Text>;
   } catch {
-    return <span className="font-mono text-xs break-words">{String(value)}</span>;
+    return <Text ff="monospace" size="xs" style={{ wordBreak: 'break-word' }} span>{String(value)}</Text>;
   }
 };
 
@@ -116,11 +118,10 @@ const QuestionsConfigRender: React.FC<{ value: JsonValue }> = ({ value }) => {
 
   const keys = Object.keys(value ?? {}).filter((k) => !HIDE_KEYS.has(k));
   if (keys.length === 0) {
-    return <span className="opacity-60 text-xs">{'{}'}</span>;
+    return <Text size="xs" c="dimmed">{'{}'}</Text>;
   }
 
   const obj = value as JsonObject;
-
   return (
     <>
       {keys.map((k) => (
@@ -133,5 +134,4 @@ const QuestionsConfigRender: React.FC<{ value: JsonValue }> = ({ value }) => {
 };
 
 export type { JsonValue };
-
 export default QuestionsConfigRender;

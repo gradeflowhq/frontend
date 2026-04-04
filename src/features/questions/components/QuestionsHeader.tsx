@@ -1,7 +1,6 @@
+import { Group, Title, TextInput, Menu, Button } from '@mantine/core';
+import { IconBolt, IconChevronDown, IconSearch, IconTrash, IconUpload } from '@tabler/icons-react';
 import React from 'react';
-import { Button } from '@components/ui/Button';
-import { DropdownMenu } from '@components/ui/DropdownMenu';
-import { IconChevronDown, IconInfer, IconUpload, IconTrash, IconSearch } from '@components/ui/Icon';
 
 type QuestionsHeaderProps = {
   onInfer: () => void;
@@ -27,81 +26,53 @@ const QuestionsHeader: React.FC<QuestionsHeaderProps> = ({
   onSearchChange,
 }) => {
   return (
-    <div className="mb-2 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-      <h2 className="card-title">Questions</h2>
-      <div className="flex gap-2 items-center">
+    <Group justify="space-between" mb="sm" wrap="wrap">
+      <Title order={4}>Questions</Title>
+      <Group gap="sm">
         {onSearchChange && (
-          <label className="input input-bordered flex items-center gap-2">
-            <IconSearch className="h-4 w-4 opacity-60" />
-            <input
-              type="search"
-              className="w-full grow bg-transparent focus:outline-none"
-              placeholder="Search questions"
-              value={searchQuery ?? ''}
-              onChange={(e) => onSearchChange(e.target.value)}
-            />
-          </label>
+          <TextInput
+            leftSection={<IconSearch size={16} />}
+            placeholder="Search questions"
+            value={searchQuery ?? ''}
+            onChange={(e) => onSearchChange(e.target.value)}
+          />
         )}
-        <DropdownMenu
-          trigger={<>Manage<IconChevronDown /></>}
-          align="end"
-        >
-          {showInfer && (
-            <li>
-              <Button
-                type="button"
-                variant="ghost"
-                className="justify-start w-full"
-                onClick={onInfer}
-                leftIcon={<IconInfer />}
-                title="Infer question set from submissions"
-              >
+        <Menu position="bottom-end">
+          <Menu.Target>
+            <Button variant="subtle" rightSection={<IconChevronDown size={16} />}>
+              Manage
+            </Button>
+          </Menu.Target>
+          <Menu.Dropdown>
+            {showInfer && (
+              <Menu.Item leftSection={<IconBolt size={16} />} onClick={onInfer} title="Infer question set from submissions">
                 Infer from Submissions
-              </Button>
-            </li>
-          )}
-          <li>
-            <Button
-              type="button"
-              variant="ghost"
-              className="justify-start w-full"
-              onClick={onUpload}
-              leftIcon={<IconUpload />}
-              title="Upload Question Set"
-            >
+              </Menu.Item>
+            )}
+            <Menu.Item leftSection={<IconUpload size={16} />} onClick={onUpload} title="Upload Question Set">
               Upload
-            </Button>
-          </li>
-          <li>
-            <Button
-              type="button"
-              variant="ghost"
-              className="justify-start w-full"
-              onClick={onImport}
-              leftIcon={<IconUpload />}
-              title="Import Question Set"
-            >
+            </Menu.Item>
+            <Menu.Item leftSection={<IconUpload size={16} />} onClick={onImport} title="Import Question Set">
               Import
-            </Button>
-          </li>
-          {showDelete && (
-            <li>
-              <Button
-                type="button"
-                variant="error"
-                className="justify-start w-full"
-                onClick={onDelete}
-                leftIcon={<IconTrash />}
-                disabled={disableDelete}
-                title="Delete Question Set"
-              >
-                Delete
-              </Button>
-            </li>
-          )}
-        </DropdownMenu>
-      </div>
-    </div>
+            </Menu.Item>
+            {showDelete && (
+              <>
+                <Menu.Divider />
+                <Menu.Item
+                  color="red"
+                  leftSection={<IconTrash size={16} />}
+                  onClick={onDelete}
+                  disabled={disableDelete}
+                  title="Delete Question Set"
+                >
+                  Delete
+                </Menu.Item>
+              </>
+            )}
+          </Menu.Dropdown>
+        </Menu>
+      </Group>
+    </Group>
   );
 };
 

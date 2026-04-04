@@ -1,6 +1,7 @@
+import { Theme as MantineTheme } from '@rjsf/mantine';
 import React from 'react';
+
 import type { FieldTemplateProps } from '@rjsf/utils';
-import { Theme as DaisyUITheme } from '@rjsf/daisyui';
 
 type GlobalHideContext = {
   hideKeys?: Set<string>;
@@ -14,7 +15,7 @@ const getFieldKey = (props: FieldTemplateProps): string | null => {
 };
 
 const DefaultFieldTemplate =
-  DaisyUITheme.templates?.FieldTemplate as React.ComponentType<FieldTemplateProps> | undefined;
+  MantineTheme.templates?.FieldTemplate as React.ComponentType<FieldTemplateProps> | undefined;
 
 const HiddenAwareFieldTemplate: React.FC<FieldTemplateProps> = (props) => {
   // Local per-node hide flag

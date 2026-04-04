@@ -1,5 +1,7 @@
 import React from 'react';
+
 import RuleRender from './RuleRender';
+
 import type { RuleValue } from '../types';
 
 type RuleItemProps = {

@@ -1,6 +1,9 @@
+import { TextInput } from '@mantine/core';
 import React from 'react';
-import type { WidgetProps } from '@rjsf/utils';
+
 import CodeEditorWidget from './CodeEditorWidget';
+
+import type { WidgetProps } from '@rjsf/utils';
 
 type EditorOptions = {
   editor?: boolean;
@@ -29,6 +32,8 @@ const SwitchableTextWidget: React.FC<WidgetProps> = (props) => {
     onChange,
     onBlur,
     onFocus,
+    label,
+    hideLabel,
     options,
     schema,
   } = props;
@@ -51,20 +56,17 @@ const SwitchableTextWidget: React.FC<WidgetProps> = (props) => {
     const display = typeof raw === 'string' ? raw : String(raw);
 
     return (
-      <div className="form-control">
-        <input
-          id={id}
-          type="text"
-          className="input input-bordered w-full"
-          value={display}
-          onChange={(e) => onChange(e.target.value)}
-          onBlur={(e) => onBlur?.(id, e.target.value)}
-          onFocus={(e) => onFocus?.(id, e.target.value)}
-          placeholder={opts.placeholder ?? placeholder}
-          disabled={disabled}
-          readOnly={readonly}
-        />
-      </div>
+      <TextInput
+        id={id}
+        label={hideLabel ? undefined : label}
+        value={display}
+        onChange={(e) => onChange(e.currentTarget.value)}
+        onBlur={(e) => onBlur?.(id, e.currentTarget.value)}
+        onFocus={(e) => onFocus?.(id, e.currentTarget.value)}
+        placeholder={opts.placeholder ?? placeholder}
+        disabled={disabled}
+        readOnly={readonly}
+      />
     );
   }
 

@@ -1,7 +1,6 @@
-import React from 'react';
-import { IconChevronDown, IconLogOut, IconSettings } from '../ui/Icon';
+import { Group, Button, Menu, Anchor, Avatar, Text } from '@mantine/core';
+import { IconChevronDown, IconSettings, IconLogout } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
-import { DropdownMenu } from '../ui/DropdownMenu';
 
 type NavbarProps = {
   username: string;
@@ -9,42 +8,38 @@ type NavbarProps = {
   onOpenSettings?: () => void;
 };
 
-const Navbar: React.FC<NavbarProps> = ({ username, onLogout, onOpenSettings }) => {
-  return (
-    <div className="navbar bg-base-100 border-b border-base-300">
-      <div className="flex-1">
-        <Link to="/assessments" className="btn btn-ghost normal-case text-xl">
-          GradeFlow
-        </Link>
-      </div>
-      <div className="flex-none">
-        <DropdownMenu
-          align="end"
-          trigger={
-            <>
-              {username}
-              <IconChevronDown />
-            </>
+const Navbar: React.FC<NavbarProps> = ({ username, onLogout, onOpenSettings }) => (
+  <Group h="100%" px="md" justify="space-between">
+    <Anchor component={Link} to="/assessments" underline="never">
+      <Text fw={800} size="xl" c="blue">GradeFlow</Text>
+    </Anchor>
+    <Menu position="bottom-end" withArrow>
+      <Menu.Target>
+        <Button
+          variant="subtle"
+          leftSection={
+            <Avatar size="sm" radius="xl" color="blue">
+              {username.charAt(0).toUpperCase()}
+            </Avatar>
           }
+          rightSection={<IconChevronDown size={14} />}
+          px="xs"
         >
-          {onOpenSettings && (
-            <li>
-              <button className="justify-start" onClick={onOpenSettings}>
-                <IconSettings />
-                Settings
-              </button>
-            </li>
-          )}
-          <li>
-            <button className="justify-start" onClick={onLogout}>
-              <IconLogOut />
-              Logout
-            </button>
-          </li>
-        </DropdownMenu>
-      </div>
-    </div>
-  );
-};
+          {username}
+        </Button>
+      </Menu.Target>
+      <Menu.Dropdown>
+        {onOpenSettings && (
+          <Menu.Item leftSection={<IconSettings size={16} />} onClick={onOpenSettings}>
+            Settings
+          </Menu.Item>
+        )}
+        <Menu.Item leftSection={<IconLogout size={16} />} color="red" onClick={onLogout}>
+          Logout
+        </Menu.Item>
+      </Menu.Dropdown>
+    </Menu>
+  </Group>
+);
 
 export default Navbar;

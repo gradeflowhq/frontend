@@ -1,10 +1,9 @@
+import { Alert, Modal, Text, Group, Button, Skeleton, Stack } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
 import React from 'react';
 import { useParams } from 'react-router-dom';
 
-import ConfirmDialog from '@components/common/ConfirmDialog';
-import ErrorAlert from '@components/common/ErrorAlert';
-import TableSkeleton from '@components/common/TableSkeleton';
-import { useToast } from '@components/common/ToastProvider';
+
 import { QuestionsHeader, QuestionsTable } from '@features/questions/components';
 import QuestionSetImportModal from '@features/questions/components/QuestionSetImportModal';
 import QuestionSetUploadModal from '@features/questions/components/QuestionSetUploadModal';
@@ -17,6 +16,7 @@ import {
   useDeleteQuestionSet,
 } from '@features/questions/hooks';
 import { useSubmissions } from '@features/submissions/hooks';
+import { getErrorMessages } from '@utils/error';
 
 import type { QuestionSetInput } from '@api/models';
 
@@ -29,7 +29,6 @@ const QuestionsTabPage: React.FC = () => {
   const [openQsUpload, setOpenQsUpload] = React.useState(false);
   const [openQsImport, setOpenQsImport] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState('');
-  const toast = useToast();
 
   // Raw submissions (to decide whether to show the Infer button)
   const { data: subsRes } = useSubmissions(safeAssessmentId);
@@ -78,9 +77,13 @@ const QuestionsTabPage: React.FC = () => {
   );
 
   return (
-    <section className="space-y-6">
-      {errorQS && !qsMissing && <ErrorAlert error={qsError} />}
-      {errorParsed && !missingSubmissions && <ErrorAlert error={parsedError} />}
+    <Stack gap="md">
+      {errorQS && !qsMissing && (
+        <Alert color="red">{getErrorMessages(qsError).join(' ')}</Alert>
+      )}
+      {errorParsed && !missingSubmissions && (
+        <Alert color="red">{getErrorMessages(parsedError).join(' ')}</Alert>
+      )}
 
       <QuestionsHeader
         onInfer={() => setConfirmInfer(true)}
@@ -95,15 +98,18 @@ const QuestionsTabPage: React.FC = () => {
       />
 
       {loadingQS ? (
-        <TableSkeleton cols={5} rows={5} />
+        <Stack gap="xs">
+          <Skeleton height={40} />
+          <Skeleton height={200} />
+        </Stack>
       ) : (
         <QuestionsTable
           questionMap={questionMap}
           examplesByQuestion={examplesByQuestion}
           onUpdateQuestionSet={async (next: QuestionSetInput) => {
             await updateMutation.mutateAsync(next, {
-              onSuccess: () => toast.success('Question set saved'),
-              onError: () => toast.error('Save failed'),
+              onSuccess: () => notifications.show({ color: 'green', message: 'Question set saved' }),
+              onError: () => notifications.show({ color: 'red', message: 'Save failed' }),
             });
           }}
           updating={updateMutation.isPending}
@@ -115,45 +121,62 @@ const QuestionsTabPage: React.FC = () => {
         />
       )}
 
-      <ConfirmDialog
-        open={confirmInfer}
+      <Modal
+        opened={confirmInfer}
+        onClose={() => setConfirmInfer(false)}
         title="Replace Questions"
-        message="This will replace the existing questions by inferring from current submissions. Proceed?"
-        confirmLoading={inferMutation.isPending}
-        confirmLoadingLabel="Inferring..."
-        confirmText="Proceed"
-        onConfirm={() =>
-          inferMutation.mutate(undefined, {
-            onSuccess: () => {
-              setConfirmInfer(false);
-              toast.success('Questions inferred from submissions');
-            },
-            onError: () => toast.error('Inference failed'),
-          })
-        }
-        onCancel={() => setConfirmInfer(false)}
-      />
-      {inferMutation.isError && <ErrorAlert error={inferMutation.error} />}
+      >
+        <Text mb="md">This will replace the existing questions by inferring from current submissions. Proceed?</Text>
+        <Group justify="flex-end">
+          <Button variant="default" onClick={() => setConfirmInfer(false)}>Cancel</Button>
+          <Button
+            loading={inferMutation.isPending}
+            onClick={() =>
+              inferMutation.mutate(undefined, {
+                onSuccess: () => {
+                  setConfirmInfer(false);
+                  notifications.show({ color: 'green', message: 'Questions inferred from submissions' });
+                },
+                onError: () => notifications.show({ color: 'red', message: 'Inference failed' }),
+              })
+            }
+          >
+            Proceed
+          </Button>
+        </Group>
+        {inferMutation.isError && (
+          <Alert color="red" mt="sm">{getErrorMessages(inferMutation.error).join(' ')}</Alert>
+        )}
+      </Modal>
 
-      <ConfirmDialog
-        open={confirmDeleteQs}
+      <Modal
+        opened={confirmDeleteQs}
+        onClose={() => setConfirmDeleteQs(false)}
         title="Delete Question Set"
-        message="This will delete the stored question set and any parsed examples. Continue?"
-        confirmText="Delete"
-        confirmLoading={deleteMutation.isPending}
-        confirmLoadingLabel="Deleting..."
-        onConfirm={() =>
-          deleteMutation.mutate(undefined, {
-            onSuccess: () => {
-              setConfirmDeleteQs(false);
-              toast.success('Question set deleted');
-            },
-            onError: () => toast.error('Delete failed'),
-          })
-        }
-        onCancel={() => setConfirmDeleteQs(false)}
-      />
-      {deleteMutation.isError && <ErrorAlert error={deleteMutation.error} />}
+      >
+        <Text mb="md">This will delete the stored question set and any parsed examples. Continue?</Text>
+        <Group justify="flex-end">
+          <Button variant="default" onClick={() => setConfirmDeleteQs(false)}>Cancel</Button>
+          <Button
+            color="red"
+            loading={deleteMutation.isPending}
+            onClick={() =>
+              deleteMutation.mutate(undefined, {
+                onSuccess: () => {
+                  setConfirmDeleteQs(false);
+                  notifications.show({ color: 'green', message: 'Question set deleted' });
+                },
+                onError: () => notifications.show({ color: 'red', message: 'Delete failed' }),
+              })
+            }
+          >
+            Delete
+          </Button>
+        </Group>
+        {deleteMutation.isError && (
+          <Alert color="red" mt="sm">{getErrorMessages(deleteMutation.error).join(' ')}</Alert>
+        )}
+      </Modal>
 
       {openQsUpload && <QuestionSetUploadModal
         open={openQsUpload}
@@ -165,7 +188,7 @@ const QuestionsTabPage: React.FC = () => {
         assessmentId={safeAssessmentId}
         onClose={() => setOpenQsImport(false)}
       />}
-    </section>
+    </Stack>
   );
 };
 

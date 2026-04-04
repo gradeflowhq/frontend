@@ -1,59 +1,42 @@
+import { Menu, Button } from '@mantine/core';
+import { IconChevronDown, IconDownload } from '@tabler/icons-react';
 import React from 'react';
-import { DropdownMenu } from '@components/ui/DropdownMenu';
-import { Button } from '@components/ui/Button';
-import { IconChevronDown, IconDownload } from '@components/ui/Icon';
 
 export type ResultsDownloadDropdownProps = {
   formats: string[];
   canDownload?: boolean;
   onSelect: (format: string) => void;
-  className?: string;
   label?: string;
-  align?: 'start' | 'end';
 };
 
 const ResultsDownloadDropdown: React.FC<ResultsDownloadDropdownProps> = ({
   formats,
   canDownload = true,
   onSelect,
-  className,
   label = 'Download',
-  align = 'end',
 }) => {
   return (
-    <DropdownMenu
-      align={align}
-      className={className}
-      trigger={
-        <>
-          <IconDownload />
+    <Menu position="bottom-end">
+      <Menu.Target>
+        <Button
+          leftSection={<IconDownload size={16} />}
+          rightSection={<IconChevronDown size={16} />}
+          disabled={!canDownload}
+        >
           {label}
-          <IconChevronDown />
-        </>
-      }
-    >
-      <>
+        </Button>
+      </Menu.Target>
+      <Menu.Dropdown>
         {formats.map((fmt) => (
-          <li key={fmt}>
-            <Button
-              variant="ghost"
-              className="justify-start"
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => canDownload && onSelect(fmt)}
-              disabled={!canDownload}
-              title={`Download as ${fmt}`}
-            >
-              {fmt}
-            </Button>
-          </li>
+          <Menu.Item key={fmt} onClick={() => canDownload && onSelect(fmt)}>
+            {fmt}
+          </Menu.Item>
         ))}
         {formats.length === 0 && (
-          <li>
-            <span className="opacity-70 px-2 py-1">No formats available</span>
-          </li>
+          <Menu.Item disabled>No formats available</Menu.Item>
         )}
-      </>
-    </DropdownMenu>
+      </Menu.Dropdown>
+    </Menu>
   );
 };
 

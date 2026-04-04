@@ -1,9 +1,10 @@
+import { Modal, Alert } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
+import { IconAlertCircle } from '@tabler/icons-react';
 import { useMutation, type UseMutationOptions } from '@tanstack/react-query';
 import React, { useMemo, useState } from 'react';
 
-import ErrorAlert from '@components/common/ErrorAlert';
-import Modal from '@components/common/Modal';
-import { useToast } from '@components/common/ToastProvider';
+import { getErrorMessages } from '@utils/error';
 
 import HiddenAwareFieldTemplate from './HiddenAwareFieldTemplate';
 import { SchemaForm, type SchemaFormProps } from './SchemaForm';
@@ -46,13 +47,14 @@ const SchemaRequestModalInner = <TForm, TData = unknown>({
   submitLoadingLabel,
   validate,
 }: Omit<SchemaRequestModalProps<TForm, TData>, 'open'>) => {
-  const toast = useToast();
-
   const [formData, setFormData] = useState<TForm | undefined>(() => initialValues?.());
 
   const uiSchema = useMemo(() => buildUiSchema?.(formData), [buildUiSchema, formData]);
 
-  const mergedTemplates = useMemo(() => ({ FieldTemplate: HiddenAwareFieldTemplate, ...(templates || {}) }), [templates]);
+  const mergedTemplates = useMemo(
+    () => ({ FieldTemplate: HiddenAwareFieldTemplate, ...(templates || {}) }),
+    [templates]
+  );
 
   const mutation = useMutation<TData, unknown, TForm>({
     mutationKey,
@@ -61,23 +63,20 @@ const SchemaRequestModalInner = <TForm, TData = unknown>({
       return await mutationFn(payload);
     },
     onSuccess: async (data) => {
-      if (successMessage) toast.success(successMessage);
+      if (successMessage) notifications.show({ color: 'green', message: successMessage });
       await onSuccess?.(data);
       onClose();
     },
     onError: (err) => {
-      if (errorMessage) toast.error(errorMessage);
+      if (errorMessage) notifications.show({ color: 'red', message: errorMessage });
       onError?.(err);
     },
   });
 
   return (
-    <Modal open onClose={onClose}>
-      <h3 className="font-bold text-lg">{title}</h3>
+    <Modal opened onClose={onClose} title={title}>
       {!schema ? (
-        <div className="alert alert-warning mt-2">
-          <span>Schema not available.</span>
-        </div>
+        <Alert color="yellow" mt="sm">Schema not available.</Alert>
       ) : (
         <SchemaForm<TForm>
           schema={schema}
@@ -98,7 +97,11 @@ const SchemaRequestModalInner = <TForm, TData = unknown>({
         />
       )}
 
-      {mutation.isError && <ErrorAlert error={mutation.error} className="mt-3" />}
+      {mutation.isError && (
+        <Alert color="red" icon={<IconAlertCircle size={16} />} mt="md">
+          {getErrorMessages(mutation.error).join(' ')}
+        </Alert>
+      )}
     </Modal>
   );
 };

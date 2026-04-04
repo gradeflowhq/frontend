@@ -1,11 +1,13 @@
-import React from 'react';
-import LoadingButton from '../../ui/LoadingButton';
+import { Button } from '@mantine/core';
 import { withTheme } from '@rjsf/core';
-import type { FormProps } from '@rjsf/core';
-import { Theme as DaisyUITheme } from '@rjsf/daisyui';
+import { Theme as MantineTheme } from '@rjsf/mantine';
 import validatorAjv8 from '@rjsf/validator-ajv8';
+import React from 'react';
 
-const DaisyUIForm = withTheme(DaisyUITheme);
+import type { FormProps } from '@rjsf/core';
+
+
+const MantineForm = withTheme(MantineTheme);
 
 export type SchemaFormProps<T = unknown> = {
   schema: FormProps<T>['schema'];
@@ -48,12 +50,12 @@ export const SchemaForm = <T = unknown>({
 }: SchemaFormProps<T>) => {
   const mergedWidgets = React.useMemo(() => {
     return {
-      ...(DaisyUITheme.widgets || {}),
+      ...(MantineTheme.widgets || {}),
       ...(widgets || {}),
     };
   }, [widgets]);
   return (
-    <DaisyUIForm
+    <MantineForm
       schema={schema}
       uiSchema={uiSchema}
       formData={formData}
@@ -70,19 +72,15 @@ export const SchemaForm = <T = unknown>({
       {...formProps}
     >
       {showSubmit && (
-        <div className="mt-4">
-          <LoadingButton
-            type="submit"
-            variant="primary"
-            className="w-full"
-            isLoading={isSubmitting}
-            idleLabel={submitIdleLabel}
-            loadingLabel={submitLoadingLabel}
-          >
-            {submitIdleLabel}
-          </LoadingButton>
-        </div>
+        <Button
+          type="submit"
+          fullWidth
+          mt="md"
+          loading={isSubmitting}
+        >
+          {isSubmitting ? (submitLoadingLabel ?? submitIdleLabel) : submitIdleLabel}
+        </Button>
       )}
-    </DaisyUIForm>
+    </MantineForm>
   );
 };

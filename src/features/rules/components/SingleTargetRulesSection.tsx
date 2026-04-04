@@ -1,18 +1,17 @@
+import { Button, Modal, Menu, Alert, Card, Group, Text, Badge, Stack } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
+import { IconCircleCheck, IconPlus } from '@tabler/icons-react';
 import React, { useMemo, useState } from 'react';
-import { IconCheckCircle, IconPlus } from '@components/ui/Icon';
-import { Button } from '@components/ui/Button';
-import { DropdownMenu } from '@components/ui/DropdownMenu';
-import ErrorAlert from '@components/common/ErrorAlert';
-import ConfirmDialog from '@components/common/ConfirmDialog';
-import { useToast } from '@components/common/ToastProvider';
 
-import RuleItem from './RuleItem';
+import { getErrorMessages } from '@utils/error';
+
 import RuleDialog from './RuleDialog';
-
-import { useRuleDefinitions, useValidateAndReplaceRubric, useCompatibleRuleKeys, useFindSchemaKeyByType, useReplaceRubric } from '../hooks';
+import RuleItem from './RuleItem';
 import { friendlyRuleLabel } from '../helpers';
-import type { QuestionSetOutputQuestionMap, RubricOutput } from '@api/models';
+import { useRuleDefinitions, useValidateAndReplaceRubric, useCompatibleRuleKeys, useFindSchemaKeyByType, useReplaceRubric } from '../hooks';
+
 import type { RuleValue } from '../types';
+import type { QuestionSetOutputQuestionMap, RubricOutput } from '@api/models';
 
 type Props = {
   rubric: RubricOutput | null;
@@ -33,34 +32,27 @@ const SingleTargetRulesSection: React.FC<Props> = ({
   coveredQuestionIds,
   searchQuery,
 }) => {
-  // Hooks must be called unconditionally
   const defs = useRuleDefinitions();
   const validateAndReplace = useValidateAndReplaceRubric(assessmentId);
   const replace = useReplaceRubric(assessmentId);
   const findKeyByType = useFindSchemaKeyByType(defs);
-  const toast = useToast();
-  // All single-target rule schema keys (question_id present)
   const singleTargetRuleKeys = useCompatibleRuleKeys(defs, undefined, true);
 
-  // Local UI state
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedRuleKey, setSelectedRuleKey] = useState<string | null>(null);
   const [editingForQid, setEditingForQid] = useState<string | null>(null);
   const [editingRule, setEditingRule] = useState<RuleValue | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ qid: string; rule: RuleValue } | null>(null);
 
-  // Reset helpers
   const resetRuleDialog = () => {
     setDialogOpen(false);
     setEditingRule(null);
     setEditingForQid(null);
     setSelectedRuleKey(null);
   };
-  const resetDeleteConfirm = () => setDeleteTarget(null);
 
-  const allRules: RuleValue[] = (rubric?.rules ?? []) as RuleValue[];
+  const allRules = useMemo<RuleValue[]>(() => (rubric?.rules ?? []) as RuleValue[], [rubric]);
 
-  // Group rules by question_id
   const byQuestion = useMemo(() => {
     const map: Record<string, RuleValue[]> = {};
     for (const r of allRules) {
@@ -76,24 +68,20 @@ const SingleTargetRulesSection: React.FC<Props> = ({
   const matchesRule = (rule: RuleValue, q: string) => {
     const label = friendlyRuleLabel(rule).toLowerCase();
     if (label.includes(q)) return true;
-    const body = JSON.stringify(rule ?? {}).toLowerCase();
-    return body.includes(q);
+    return JSON.stringify(rule ?? {}).toLowerCase().includes(q);
   };
 
   const filteredQuestionIds = useMemo(() => {
     const q = (searchQuery ?? '').trim().toLowerCase();
     if (!q) return questionIds;
-
     return questionIds.filter((qid) => {
       const type = (questionTypesById[qid] ?? '').toLowerCase();
       if (qid.toLowerCase().includes(q)) return true;
       if (type.includes(q)) return true;
-      const rules = byQuestion[qid] ?? [];
-      return rules.some((r) => matchesRule(r, q));
+      return (byQuestion[qid] ?? []).some((r) => matchesRule(r, q));
     });
   }, [questionIds, questionTypesById, byQuestion, searchQuery]);
 
-  // Filter schema keys compatible with a question's type
   const compatibleKeysFor = (questionType: string) =>
     singleTargetRuleKeys.filter((key) => {
       const props = defs[key]?.properties as Record<string, unknown> | undefined;
@@ -132,104 +120,85 @@ const SingleTargetRulesSection: React.FC<Props> = ({
     await validateAndReplace.mutateAsync(nextRules, {
       onSuccess: () => {
         resetRuleDialog();
-        toast.success('Rule saved');
+        notifications.show({ color: 'green', message: 'Rule saved' });
       },
-      onError: () => toast.error('Save failed'),
+      onError: () => notifications.show({ color: 'red', message: 'Save failed' }),
     });
   };
 
   return (
-    <section className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Single Target Rules</h3>
-      </div>
+    <section>
+      <Group justify="space-between" mb="sm">
+        <Text fw={600} size="lg">Single Target Rules</Text>
+      </Group>
 
       {questionIds.length === 0 && (
-        <div className="alert alert-info mt-3">
-          <span>No questions found. Infer or set a question set first.</span>
-        </div>
+        <Alert color="blue" mt="sm">No questions found. Infer or set a question set first.</Alert>
       )}
 
-      <div className="mt-3 space-y-3">
+      <Stack gap="sm" mt="sm">
         {filteredQuestionIds.length === 0 && (
-          <div className="alert alert-ghost">
-            <span>No questions match your search.</span>
-          </div>
+          <Alert color="gray">No questions match your search.</Alert>
         )}
 
         {filteredQuestionIds.map((qid) => {
           const qType = questionTypesById[qid] ?? 'TEXT';
           const rules = byQuestion[qid] ?? [];
           const options = compatibleKeysFor(qType);
-
           const isCovered = coveredQuestionIds.has(qid);
           const canAddRule = !isCovered;
 
           return (
-            <div key={qid} className="card bg-base-100 border border-base-300 shadow-xs">
-              <div className="card-body">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="font-mono text-sm">
-                      <span className="font-semibold">{qid}</span>
-                    </div>
-                    <span className="badge badge-ghost">{qType}</span>
-                  </div>
-
-                  {canAddRule ? (
-                    <DropdownMenu trigger={<><IconPlus />Add Rule</>} align="end">
+            <Card key={qid} withBorder shadow="xs">
+              <Group justify="space-between" mb="sm">
+                <Group gap="xs">
+                  <Text ff="monospace" size="sm" fw={600}>{qid}</Text>
+                  <Badge variant="light" color="gray">{qType}</Badge>
+                </Group>
+                {canAddRule ? (
+                  <Menu position="bottom-end">
+                    <Menu.Target>
+                      <Button size="xs" leftSection={<IconPlus size={14} />}>Add Rule</Button>
+                    </Menu.Target>
+                    <Menu.Dropdown>
                       {options.map((key) => (
-                        <li key={key}>
-                          <Button
-                            variant="ghost"
-                            className="justify-start"
-                            onClick={() => handleAddDropdownSelect(qid, key)}
-                          >
-                            {friendlyRuleLabel(key)}
-                          </Button>
-                        </li>
+                        <Menu.Item key={key} onClick={() => handleAddDropdownSelect(qid, key)}>
+                          {friendlyRuleLabel(key)}
+                        </Menu.Item>
                       ))}
                       {options.length === 0 && (
-                        <li>
-                          <span className="opacity-70 px-2 py-1">No compatible rules</span>
-                        </li>
+                        <Menu.Item disabled>No compatible rules</Menu.Item>
                       )}
-                    </DropdownMenu>
-                  ) : (
-                    <IconCheckCircle />
-                  )}
-                </div>
-
-                {rules.length === 0 ? (
-                  <div className="mt-3">
-                    {isCovered ? (
-                        <div className="border border-base-300 bg-base-100 rounded-md p-3 shadow-xs">
-                            <span>Covered by multi-target rule.</span>
-                        </div>
-                    ) : (
-                        <div className="alert alert-ghost">
-                            <span>No rule for this question yet.</span>
-                        </div>
-                    )}
-                  </div>
+                    </Menu.Dropdown>
+                  </Menu>
                 ) : (
-                  <div className="mt-3 space-y-3">
-                    {rules.map((r, idx) => (
-                      <RuleItem
-                        key={idx}
-                        rule={r}
-                        onEdit={(rule) => handleEdit(qid, rule)}
-                        onDelete={(rule) => setDeleteTarget({ qid, rule })}
-                        contextQuestionId={qid}
-                      />
-                    ))}
-                  </div>
+                  <IconCircleCheck color="var(--mantine-color-green-6)" />
                 )}
-              </div>
-            </div>
+              </Group>
+
+              {rules.length === 0 ? (
+                isCovered ? (
+                  <Alert color="gray" variant="light">Covered by multi-target rule.</Alert>
+                ) : (
+                  <Alert color="gray" variant="light">No rule for this question yet.</Alert>
+                )
+              ) : (
+                <Stack gap="sm" mt="xs">
+                  {rules.map((r, idx) => (
+                    <RuleItem
+                      key={idx}
+                      rule={r}
+                      onEdit={(rule) => handleEdit(qid, rule)}
+                      onDelete={(rule) => setDeleteTarget({ qid, rule })}
+                      contextQuestionId={qid}
+                    />
+                  ))}
+                </Stack>
+              )}
+            </Card>
           );
         })}
-      </div>
+      </Stack>
 
       <RuleDialog
         open={dialogOpen}
@@ -245,28 +214,40 @@ const SingleTargetRulesSection: React.FC<Props> = ({
         assessmentId={assessmentId}
       />
 
-      <ConfirmDialog
-        open={!!deleteTarget}
+      <Modal
+        opened={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
         title="Delete Rule"
-        message="Are you sure you want to delete this rule?"
-        confirmLoading={replace.isPending}
-        confirmLoadingLabel="Deleting..."
-        confirmText="Delete"
-        onConfirm={async () => {
-          if (!deleteTarget) return;
-          const nextRules = allRules.filter((r) => r !== deleteTarget.rule);
-          await replace.mutateAsync(nextRules, {
-            onSuccess: () => {
-              resetDeleteConfirm();
-              toast.success('Rule deleted');
-            },
-            onError: () => toast.error('Delete failed'),
-          });
-        }}
-        onCancel={resetDeleteConfirm}
-      />
+        size="sm"
+      >
+        <Text mb="md">Are you sure you want to delete this rule?</Text>
+        <Group justify="flex-end" gap="sm">
+          <Button variant="subtle" onClick={() => setDeleteTarget(null)} disabled={replace.isPending}>
+            Cancel
+          </Button>
+          <Button
+            color="red"
+            loading={replace.isPending}
+            onClick={() => {
+              if (!deleteTarget) return;
+              const nextRules = allRules.filter((r) => r !== deleteTarget.rule);
+              void replace.mutateAsync(nextRules, {
+                onSuccess: () => {
+                  setDeleteTarget(null);
+                  notifications.show({ color: 'green', message: 'Rule deleted' });
+                },
+                onError: () => notifications.show({ color: 'red', message: 'Delete failed' }),
+              });
+            }}
+          >
+            Delete
+          </Button>
+        </Group>
+      </Modal>
 
-      {replace.isError && <ErrorAlert error={replace.error} className="mt-3" />}
+      {replace.isError && (
+        <Alert color="red" mt="sm">{getErrorMessages(replace.error).join(' ')}</Alert>
+      )}
     </section>
   );
 };

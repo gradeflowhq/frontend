@@ -1,10 +1,9 @@
+import { Alert, Button, Group, Skeleton, Stack, Tabs, Title } from '@mantine/core';
+import { IconActivity, IconChartBar, IconChevronLeft, IconLayout } from '@tabler/icons-react';
 import React, { useMemo, useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
-import ErrorAlert from '@components/common/ErrorAlert';
-import TableSkeleton from '@components/common/TableSkeleton';
-import { Button } from '@components/ui/Button';
-import { IconChevronLeft, IconLayout, IconChart, IconActivity } from '@components/ui/Icon';
+
 import { useAssessment } from '@features/assessments/hooks';
 import { AssessmentPassphraseProvider } from '@features/encryption/AssessmentPassphraseProvider';
 import { useAssessmentPassphrase } from '@features/encryption/passphraseContext';
@@ -13,6 +12,7 @@ import { useGrading, useGradingJob, useJobStatus } from '@features/grading/hooks
 import { useQuestionSet } from '@features/questions/hooks';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { isEncrypted } from '@utils/crypto';
+import { getErrorMessages } from '@utils/error';
 import { natsort } from '@utils/sort';
 
 import type { AdjustableSubmission, QuestionSetOutputQuestionMap } from '@api/models';
@@ -23,7 +23,7 @@ const ResultsShellInner: React.FC<{ assessmentId: string }> = ({ assessmentId })
   const enabled = true;
 
   const { notifyEncryptedDetected } = useAssessmentPassphrase();
-  const [activeTab, setActiveTab] = useState<'overview' | 'stats' | 'analysis'>('overview');
+  const [activeTab, setActiveTab] = useState<string>('overview');
 
   const { data: assessmentRes, isLoading: loadingAssessment, isError: errorAssessment, error: assessmentError } =
     useAssessment(safeId, enabled);
@@ -45,14 +45,12 @@ const ResultsShellInner: React.FC<{ assessmentId: string }> = ({ assessmentId })
   );
   const questionIds = useMemo(() => Object.keys(questionMap).sort(natsort), [questionMap]);
 
-  // Detect encrypted IDs to open passphrase guard when needed
   useEffect(() => {
     if (items.some((it) => isEncrypted(it.student_id))) {
       notifyEncryptedDetected();
     }
   }, [items, notifyEncryptedDetected]);
 
-  // Job-aware grading state (show in-progress notice but keep showing existing results)
   const { data: gradingJob } = useGradingJob(safeId, enabled);
   const jobId = gradingJob?.job_id ?? null;
   const { data: jobStatusRes } = useJobStatus(jobId, !!jobId);
@@ -63,90 +61,94 @@ const ResultsShellInner: React.FC<{ assessmentId: string }> = ({ assessmentId })
   useDocumentTitle(`Results - ${assessmentRes?.name ?? 'Assessment'} - GradeFlow`);
 
   return (
-    <section className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+    <Stack gap="md">
+      <Group align="center" justify="space-between">
+        <Group align="center" gap="sm">
           <Button
             variant="outline"
             onClick={() => { void navigate(`/assessments/${safeId}/rules`); }}
-            leftIcon={<IconChevronLeft />}
+            leftSection={<IconChevronLeft size={16} />}
+            size="sm"
           >
             {assessmentRes?.name ?? 'Assessment'}
           </Button>
-          <h2 className="text-xl font-semibold">Grading Results</h2>
-        </div>
-      </div>
+          <Title order={4}>Grading Results</Title>
+        </Group>
+      </Group>
 
-      {errorAssessment && <ErrorAlert error={assessmentError} />}
-      {isError && <ErrorAlert error={error} />}
+      {errorAssessment && (
+        <Alert color="red">{getErrorMessages(assessmentError).join(' ')}</Alert>
+      )}
+      {isError && (
+        <Alert color="red">{getErrorMessages(error).join(' ')}</Alert>
+      )}
 
       {loadingPage ? (
-        <TableSkeleton cols={5} rows={6} withHeader className="mt-2" />
+        <Stack gap="xs">
+          <Skeleton height={40} />
+          <Skeleton height={300} />
+        </Stack>
       ) : (
         <>
           {gradingInProgress && (
-            <div className="alert alert-info">
-              <span>Grading is in progress. Existing results are shown below and will update when the job completes.</span>
-            </div>
+            <Alert color="blue">
+              Grading is in progress. Existing results are shown below and will update when the job completes.
+            </Alert>
           )}
 
           {!isError && !hasItems && !gradingInProgress && (
-            <div className="alert alert-info">
-              <span>No graded submissions found. Run grading first.</span>
-            </div>
+            <Alert color="blue">
+              No graded submissions found. Run grading first.
+            </Alert>
           )}
 
-          <div className="tabs tabs-lift">
-            <button
-              className={`tab ${activeTab === 'overview' ? 'tab-active' : ''} flex items-center gap-2`}
-              onClick={() => setActiveTab('overview')}
-            >
-              <IconLayout className="h-4 w-4" />
-              <span>Overview</span>
-            </button>
-            <button
-              className={`tab ${activeTab === 'stats' ? 'tab-active' : ''} flex items-center gap-2`}
-              onClick={() => setActiveTab('stats')}
-            >
-              <IconChart className="h-4 w-4" />
-              <span>Stats</span>
-            </button>
-            <button
-              className={`tab ${activeTab === 'analysis' ? 'tab-active' : ''} flex items-center gap-2`}
-              onClick={() => setActiveTab('analysis')}
-            >
-              <IconActivity className="h-4 w-4" />
-              <span>Question Analysis</span>
-            </button>
-          </div>
+          <Tabs value={activeTab} onChange={(v) => setActiveTab(v ?? 'overview')}>
+            <Tabs.List>
+              <Tabs.Tab value="overview" leftSection={<IconLayout size={14} />}>
+                Overview
+              </Tabs.Tab>
+              <Tabs.Tab value="stats" leftSection={<IconChartBar size={14} />}>
+                Stats
+              </Tabs.Tab>
+              <Tabs.Tab value="analysis" leftSection={<IconActivity size={14} />}>
+                Question Analysis
+              </Tabs.Tab>
+            </Tabs.List>
 
-          {!isError && hasItems && activeTab === 'overview' && (
-            <ResultsOverview
-              gradingInProgress={gradingInProgress}
-              items={items}
-              questionIds={questionIds}
-              onView={(studentId) => { void navigate(`/results/${safeId}/${encodeURIComponent(studentId)}`); }}
-              assessmentId={safeId}
-            />
-          )}
+            <Tabs.Panel value="overview" pt="md">
+              {!isError && hasItems && (
+                <ResultsOverview
+                  gradingInProgress={gradingInProgress}
+                  items={items}
+                  questionIds={questionIds}
+                  onView={(studentId) => { void navigate(`/results/${safeId}/${encodeURIComponent(studentId)}`); }}
+                  assessmentId={safeId}
+                />
+              )}
+            </Tabs.Panel>
 
-          {!isError && hasItems && activeTab === 'stats' && (
-            <ResultsStats items={items} />
-          )}
+            <Tabs.Panel value="stats" pt="md">
+              {!isError && hasItems && (
+                <ResultsStats items={items} />
+              )}
+            </Tabs.Panel>
 
-          {!isError && hasItems && activeTab === 'analysis' && (
-            <QuestionAnalysis items={items} questionIds={questionIds} />
-          )}
+            <Tabs.Panel value="analysis" pt="md">
+              {!isError && hasItems && (
+                <QuestionAnalysis items={items} questionIds={questionIds} />
+              )}
+            </Tabs.Panel>
+          </Tabs>
         </>
       )}
-    </section>
+    </Stack>
   );
 };
 
 const ResultsShellPage: React.FC = () => {
   const { assessmentId } = useParams<{ assessmentId: string }>();
   if (!assessmentId) {
-    return <div className="alert alert-error"><span>Assessment ID is missing.</span></div>;
+    return <Alert color="red">Assessment ID is missing.</Alert>;
   }
   return (
     <AssessmentPassphraseProvider assessmentId={assessmentId}>

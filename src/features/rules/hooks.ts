@@ -1,8 +1,10 @@
-import { useMemo } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMemo } from 'react';
+
 import { api } from '@api';
 import { QK } from '@api/queryKeys';
 import rulesSchema from '@schemas/rules.json';
+
 import type { RubricOutput } from './types';
 import type { RuleValue, QuestionType } from './types';
 import type { JSONSchema7 } from 'json-schema';

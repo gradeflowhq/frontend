@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+
 import type { TokenPairResponse } from '@api/models';
 
 type AuthState = {

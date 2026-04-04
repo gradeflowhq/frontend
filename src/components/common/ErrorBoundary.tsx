@@ -1,5 +1,7 @@
+import { Alert } from '@mantine/core';
 import React, { type ErrorInfo } from 'react';
-import ErrorAlert from './ErrorAlert';
+
+import { getErrorMessages } from '@utils/error';
 
 type Props = { children: React.ReactNode };
 
@@ -14,15 +16,13 @@ class ErrorBoundary extends React.Component<Props, State> {
     return { hasError: true, error };
   }
   componentDidCatch(error: Error, info: ErrorInfo) {
-    // You can log to a service here
     console.error('ErrorBoundary caught:', error, info);
   }
   render() {
     if (this.state.hasError) {
+      const messages = getErrorMessages(this.state.error ?? new Error('Something went wrong'));
       return (
-        <div className="my-4">
-          <ErrorAlert error={this.state.error ?? new Error('Something went wrong')} />
-        </div>
+        <Alert color="red" my="md">{messages.join(' ')}</Alert>
       );
     }
     return this.props.children;

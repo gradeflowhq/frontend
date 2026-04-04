@@ -1,3 +1,4 @@
+import { Card, Group, Stack, Text, Badge, Loader } from '@mantine/core';
 import React from 'react';
 
 export type InfoRowProps = {
@@ -8,23 +9,20 @@ export type InfoRowProps = {
 };
 
 export const InfoRow: React.FC<InfoRowProps> = ({ title, description, action, children }) => (
-  <div className="card bg-base-100 shadow-sm">
-    <div className="card-body gap-3">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h3 className="font-semibold">{title}</h3>
-          {description && <p className="text-sm text-base-content/70">{description}</p>}
-        </div>
+  <Card withBorder shadow="sm">
+    <Stack gap="sm">
+      <Group align="flex-start" justify="space-between">
+        <Stack gap={2}>
+          <Text fw={600}>{title}</Text>
+          {description && <Text size="sm" c="dimmed">{description}</Text>}
+        </Stack>
         {action}
-      </div>
+      </Group>
       {children}
-    </div>
-  </div>
+    </Stack>
+  </Card>
 );
 
 export const LoadingBadge: React.FC<{ label: string }> = ({ label }) => (
-  <span className="badge badge-ghost gap-2">
-    <span className="loading loading-spinner loading-xs" />
-    {label}
-  </span>
+  <Badge variant="light" leftSection={<Loader size="xs" />}>{label}</Badge>
 );

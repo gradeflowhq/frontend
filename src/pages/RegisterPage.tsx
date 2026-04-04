@@ -1,15 +1,17 @@
+import { Alert, Card, Title, Anchor, Text } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
+import { useMutation } from '@tanstack/react-query';
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { useMutation } from '@tanstack/react-query';
+
 import { api } from '@api';
 import { SchemaForm } from '@components/common/forms/SchemaForm';
-import PageCard from '@components/common/PageCard';
-import ErrorAlert from '@components/common/ErrorAlert';
-import { useAuthStore } from '@state/authStore';
-import requestsSchema from '@schemas/requests.json';
-import type { SignupRequest, TokenPairResponse } from '@api/models';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
-import { useToast } from '@components/common/ToastProvider';
+import requestsSchema from '@schemas/requests.json';
+import { useAuthStore } from '@state/authStore';
+import { getErrorMessages } from '@utils/error';
+
+import type { SignupRequest, TokenPairResponse } from '@api/models';
 import type { JSONSchema7 } from 'json-schema';
 
 const getSignupSchema = (): JSONSchema7 => {
@@ -21,7 +23,6 @@ const getSignupSchema = (): JSONSchema7 => {
 const RegisterPage: React.FC = () => {
   useDocumentTitle('Register - GradeFlow');
   const setTokens = useAuthStore((s) => s.setTokens);
-  const toast = useToast();
   const schema = useMemo(() => getSignupSchema(), []);
 
   const uiSchema = useMemo(
@@ -42,46 +43,34 @@ const RegisterPage: React.FC = () => {
     },
     onSuccess: (tokenPair) => {
       setTokens(tokenPair);
-      // ProtectedRoute will redirect to /assessments
-      toast.success('Signup successful');
-    },
-    onError: (err) => {
-      toast.error(err, 'Signup failed');
+      notifications.show({ color: 'green', message: 'Signup successful' });
     },
   });
 
   return (
-    <PageCard
-      title="Register"
-      footer={
-        <div className="text-sm text-center">
-          <span className="mr-1">Already have an account?</span>
-          <Link to="/login" className="link link-primary">
-            Login
-          </Link>
-        </div>
-      }
-    >
-      <SchemaForm<SignupRequest>
-        schema={schema}
-        uiSchema={uiSchema}
-        isSubmitting={isPending}
-        onSubmit={async ({ formData }) => {
-          if (!formData) return;
-          await mutateAsync(formData);
-        }}
-        formProps={{ noHtml5Validate: true }}
-      />
+    <Card withBorder shadow="sm" w={400} p="xl">
+        <Title order={2} mb="lg" ta="center">Register</Title>
 
-      <div className="mt-4">
-        {isPending && (
-          <div className="alert alert-info">
-            <span>Creating your account...</span>
-          </div>
+        <SchemaForm<SignupRequest>
+          schema={schema}
+          uiSchema={uiSchema}
+          isSubmitting={isPending}
+          onSubmit={({ formData }) => {
+            if (!formData) return;
+            void mutateAsync(formData);
+          }}
+          formProps={{ noHtml5Validate: true }}
+        />
+
+        {isError && (
+          <Alert color="red" mt="sm">{getErrorMessages(error).join(' ')}</Alert>
         )}
-        {isError && <ErrorAlert error={error} />}
-      </div>
-    </PageCard>
+
+        <Text size="sm" ta="center" mt="md">
+          Already have an account?{' '}
+          <Anchor component={Link} to="/login">Login</Anchor>
+        </Text>
+    </Card>
   );
 };
 

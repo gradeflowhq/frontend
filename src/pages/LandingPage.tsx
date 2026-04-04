@@ -1,15 +1,10 @@
+import { AppShell, Avatar, Button, Card, Text, Title, SimpleGrid, Group, Box, Center } from '@mantine/core';
+import { IconAdjustments, IconChartBar, IconCode, IconGitBranch, IconStack2 } from '@tabler/icons-react';
 import React from 'react';
+import { SiCanvas } from 'react-icons/si';
 import { Link } from 'react-router-dom';
 
 import PublicNavbar from '@components/common/PublicNavbar';
-import {
-  IconRules,
-  IconCode,
-  IconLayers,
-  IconCanvas,
-  IconChart,
-  IconBranch,
-} from '@components/ui/Icon';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 
 type FeatureItem = {
@@ -20,163 +15,141 @@ type FeatureItem = {
 
 const features: FeatureItem[] = [
   {
-    icon: <IconRules className="w-6 h-6" />,
+    icon: <IconAdjustments size={24} />,
     title: 'Rich grading rules',
-    description:
-      '15+ built-in rule types — text/number equality, regex, keywords, numeric ranges, similarity, length, multiple choice, and more. Handle any question format.',
+    description: '15+ built-in rule types — text/number equality, regex, keywords, numeric ranges, similarity, length, multiple choice, and more. Handle any question format.',
   },
   {
-    icon: <IconBranch className="w-6 h-6" />,
+    icon: <IconGitBranch size={24} />,
     title: 'Assumption and conditional rules',
-    description:
-      'Assumption sets pick the interpretation that earns the highest score across multiple questions. Conditional rules branch scoring based on earlier answers.',
+    description: 'Assumption sets pick the interpretation that earns the highest score across multiple questions. Conditional rules branch scoring based on earlier answers.',
   },
   {
-    icon: <IconCode className="w-6 h-6" />,
+    icon: <IconCode size={24} />,
     title: 'Programmable rules',
-    description:
-      'Write custom Python grading logic for anything the built-in rules cannot express. You can also grade codes by defining test cases using programming rule.',
+    description: 'Write custom Python grading logic for anything the built-in rules cannot express. You can also grade codes by defining test cases using programming rule.',
   },
   {
-    icon: <IconLayers className="w-6 h-6" />,
+    icon: <IconStack2 size={24} />,
     title: 'Composable rules',
-    description:
-      'Combine rules with ALL / ANY / PARTIAL aggregation, nest composite rules, and add bonus rules — all without writing a single line of code.',
+    description: 'Combine rules with ALL / ANY / PARTIAL aggregation, nest composite rules, and add bonus rules — all without writing a single line of code.',
   },
   {
-    icon: <IconChart className="w-6 h-6" />,
+    icon: <IconChartBar size={24} />,
     title: 'Transparent, auditable results',
-    description:
-      'See exactly which rules fired for every submission. Per-student and per-question breakdowns let you verify and manually adjust any grade.',
+    description: 'See exactly which rules fired for every submission. Per-student and per-question breakdowns let you verify and manually adjust any grade.',
   },
   {
-    icon: <IconCanvas className="w-5 h-5" />,
+    icon: <SiCanvas size={20} />,
     title: 'Canvas LMS integration',
-    description:
-      'Publish final grades directly to Canvas. Choose per-assignment settings, enable rounding, attach comments, and push with a single click.',
+    description: 'Publish final grades directly to Canvas. Choose per-assignment settings, enable rounding, attach comments, and push with a single click.',
   },
 ];
 
+const howItWorksSteps = [
+  { n: '1', label: 'Create an assessment', description: 'Set up the assessment and invite collaborators' },
+  { n: '2', label: 'Upload submissions', description: 'Import student answers via CSV or bulk upload' },
+  { n: '3', label: 'Define grading rules', description: 'Configure your rubric — questions, rules, and scoring' },
+  { n: '4', label: 'Review & export', description: 'Download results or push grades directly to Canvas' },
+];
+
 const LandingPage: React.FC = () => {
-  useDocumentTitle('GradeFlow — Automated Assessment Grading');
+  useDocumentTitle('GradeFlow \u2014 Automated Assessment Grading');
 
   return (
-    <div className="min-h-screen bg-base-100 flex flex-col">
-      <PublicNavbar />
+    <AppShell header={{ height: 60 }} withBorder>
+      <AppShell.Header>
+        <PublicNavbar />
+      </AppShell.Header>
 
-      <main className="flex-1">
+      <AppShell.Main>
         {/* Hero */}
-        <section className="py-20 px-4 text-center bg-base-200">
-          <div className="max-w-3xl mx-auto">
-            <h1 className="text-5xl font-extrabold tracking-tight mb-6">
-              Automate grading{' '}
-              <span className="text-primary">without losing control</span>
-            </h1>
-            <p className="text-lg text-base-content/70 mb-10 max-w-5xl mx-auto">
-              GradeFlow grades digital submissions using composable rules — exact match, fuzzy
-              text, keyword detection, running student code, custom logic, and more.
-              For answers that require human judgment, GradeFlow lets you review and adjust results before publishing.
-            </p>
-            <div className="flex flex-wrap justify-center gap-4">
-              <Link to="/register" className="btn btn-primary btn-lg">
-                Create an account
-              </Link>
-              <Link to="/login" className="btn btn-outline btn-lg">
-                Log in
-              </Link>
+        <Box bg="gray.0" py={80} px="md">
+          <Center>
+            <div style={{ maxWidth: 720, textAlign: 'center' }}>
+              <Title order={1} mb="lg" style={{ letterSpacing: '-0.5px' }}>
+                Automate grading{' '}
+                <Text span c="blue" inherit>without losing control</Text>
+              </Title>
+              <Text c="dimmed" size="lg" mb={40} maw={600} mx="auto">
+                GradeFlow grades digital submissions using composable rules — exact match, fuzzy text, keyword
+                detection, running student code, custom logic, and more. For answers that require human judgment,
+                GradeFlow lets you review and adjust results before publishing.
+              </Text>
+              <Group justify="center" gap="md">
+                <Button size="lg" component={Link} to="/register">
+                  Create an account
+                </Button>
+                <Button size="lg" variant="outline" component={Link} to="/login">
+                  Log in
+                </Button>
+              </Group>
             </div>
-          </div>
-        </section>
+          </Center>
+        </Box>
 
         {/* Features */}
-        <section className="py-16 px-4">
-          <div className="max-w-5xl mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-12">
-              Built for the nuances of real assessments
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {features.map((feature) => (
-                <div key={feature.title} className="card bg-base-200 shadow-sm">
-                  <div className="card-body gap-3">
-                    <div className="text-primary">{feature.icon}</div>
-                    <h3 className="card-title text-base">{feature.title}</h3>
-                    <p className="text-base-content/70 text-sm">{feature.description}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+        <Box py={64} px="md">
+          <Center mb={48}>
+            <Title order={2}>Built for the nuances of real assessments</Title>
+          </Center>
+          <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg" maw={980} mx="auto">
+            {features.map((feature) => (
+              <Card key={feature.title} withBorder shadow="sm" p="lg">
+                <Text c="blue" mb="sm">{feature.icon}</Text>
+                <Title order={5} mb="xs">{feature.title}</Title>
+                <Text c="dimmed" size="sm">{feature.description}</Text>
+              </Card>
+            ))}
+          </SimpleGrid>
+        </Box>
 
         {/* How it works */}
-        <section className="py-16 px-4 bg-base-200">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-12">How it works</h2>
-            <ul className="steps steps-vertical lg:steps-horizontal w-full">
-              <li className="step step-primary">
-                <div className="text-left lg:text-center m-2 lg:mt-0 lg:pt-4">
-                  <p className="font-semibold">Create an assessment</p>
-                  <p className="text-sm text-base-content/60">
-                    Set up the assessment and invite collaborators
-                  </p>
-                </div>
-              </li>
-              <li className="step step-primary">
-                <div className="text-left lg:text-center m-2 lg:mt-0 lg:pt-4">
-                  <p className="font-semibold">Upload submissions</p>
-                  <p className="text-sm text-base-content/60">
-                    Import student answers via CSV or bulk upload
-                  </p>
-                </div>
-              </li>
-              <li className="step step-primary">
-                <div className="text-left lg:text-center m-2 lg:mt-0 lg:pt-4">
-                  <p className="font-semibold">Define grading rules</p>
-                  <p className="text-sm text-base-content/60">
-                    Configure your rubric — questions, rules, and scoring
-                  </p>
-                </div>
-              </li>
-              <li className="step step-primary">
-                <div className="text-left lg:text-center m-2 lg:mt-0 lg:pt-4">
-                  <p className="font-semibold">Review &amp; export</p>
-                  <p className="text-sm text-base-content/60">
-                    Download results or push grades directly to Canvas
-                  </p>
-                </div>
-              </li>
-            </ul>
-          </div>
-        </section>
+        <Box bg="gray.0" py={64} px="md">
+          <Center mb={48}>
+            <Title order={2}>How it works</Title>
+          </Center>
+          <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} spacing="xl" maw={900} mx="auto">
+            {howItWorksSteps.map((step) => (
+              <Box key={step.label} ta="center">
+                <Avatar color="blue" radius="xl" size="lg" mx="auto" mb="md" fw={700}>
+                  {step.n}
+                </Avatar>
+                <Text fw={600} mb={4}>{step.label}</Text>
+                <Text size="sm" c="dimmed">{step.description}</Text>
+              </Box>
+            ))}
+          </SimpleGrid>
+        </Box>
 
         {/* CTA */}
-        <section className="py-20 px-4 text-center">
-          <div className="max-w-xl mx-auto">
-            <h2 className="text-3xl font-bold mb-4">Ready to get started?</h2>
-            <p className="text-base-content/70 mb-8">
-              Create an account and run your first automated grading in minutes.
-            </p>
-            <div className="flex flex-wrap justify-center gap-4">
-              <Link to="/register" className="btn btn-primary btn-lg">
-                Create an account
-              </Link>
-              <Link to="/login" className="btn btn-outline btn-lg">
-                Log in
-              </Link>
+        <Box py={80} px="md">
+          <Center>
+            <div style={{ maxWidth: 480, textAlign: 'center' }}>
+              <Title order={2} mb="sm">Ready to get started?</Title>
+              <Text c="dimmed" mb="xl">Create an account and run your first automated grading in minutes.</Text>
+              <Group justify="center" gap="md">
+                <Button size="lg" component={Link} to="/register">
+                  Create an account
+                </Button>
+                <Button size="lg" variant="outline" component={Link} to="/login">
+                  Log in
+                </Button>
+              </Group>
             </div>
-          </div>
-        </section>
-      </main>
+          </Center>
+        </Box>
 
-      {/* Footer */}
-      <footer className="footer footer-center py-6 bg-base-200 text-base-content/60 text-sm">
-        <aside>
-          <p>© {new Date().getFullYear()} GradeFlow. Built by educators for educators.</p>
-        </aside>
-      </footer>
-    </div>
+        <Box component="footer" bg="gray.0" py="md">
+          <Center>
+            <Text size="sm" c="dimmed">
+              &copy; {new Date().getFullYear()} GradeFlow. Built by educators for educators.
+            </Text>
+          </Center>
+        </Box>
+      </AppShell.Main>
+    </AppShell>
   );
 };
 
 export default LandingPage;
-

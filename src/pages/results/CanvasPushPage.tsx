@@ -1,11 +1,11 @@
+
+import { Alert, Button, Group, Stack, Title } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
+import { IconChevronLeft } from '@tabler/icons-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import ErrorAlert from '@components/common/ErrorAlert';
 import UserSettingsDialog from '@components/common/UserSettingsDialog';
-import { Button } from '@components/ui/Button';
-import { IconChevronLeft } from '@components/ui/Icon';
-import LoadingButton from '@components/ui/LoadingButton';
 import { useAssessment } from '@features/assessments/hooks';
 import { pickValue } from '@features/canvas/helpers';
 import { useCanvasData, useCourseData } from '@features/canvas/hooks/useCanvasData';
@@ -18,7 +18,7 @@ import { useAssessmentPassphrase } from '@features/encryption/passphraseContext'
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { useCanvasPushStore } from '@state/canvasSettingsStore';
 import { useUserSettingsStore } from '@state/userSettingsStore';
-import { useToast } from '@components/common/ToastProvider';
+import { getErrorMessages } from '@utils/error';
 
 import AssignmentSection from '../../features/canvas/components/AssignmentSection';
 import CanvasPushProgressBanner from '../../features/canvas/components/CanvasPushProgressBanner';
@@ -32,21 +32,18 @@ type CanvasPushHeaderProps = {
 };
 
 const CanvasPushHeader: React.FC<CanvasPushHeaderProps> = ({ assignmentName, onBack }) => (
-  <div className="flex items-center gap-3">
-    <Button variant="outline" onClick={onBack} leftIcon={<IconChevronLeft />}>
+  <Group align="center" gap="sm">
+    <Button variant="outline" size="sm" onClick={onBack} leftSection={<IconChevronLeft size={16} />}>
       {assignmentName} Results
     </Button>
-    <div>
-      <h2 className="text-xl font-semibold">Push to Canvas</h2>
-    </div>
-  </div>
+    <Title order={4}>Push to Canvas</Title>
+  </Group>
 );
 
 const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) => {
   const navigate = useNavigate();
   const { passphrase, notifyEncryptedDetected } = useAssessmentPassphrase();
   const { data: assessmentRes } = useAssessment(assessmentId, true);
-  const toast = useToast();
 
   useDocumentTitle(`Push to Canvas - ${assessmentRes?.name ?? 'Assessment'} - GradeFlow`);
 
@@ -63,19 +60,15 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
     progressUrl,
     setConfig,
   } = useCanvasPushStore(assessmentId);
-  
+
   const [includeComments, setIncludeComments] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [previewTab, setPreviewTab] = useState<PreviewTab>('mapped');
 
-  // Load CSV grades
   const csvGrades = useCsvGrades(assessmentId, roundingBase ?? 0, passphrase ?? '', notifyEncryptedDetected);
-
-  // Load Canvas data
   const canvasData = useCanvasData(canvasBaseUrl, canvasToken);
   const courseData = useCourseData(courseId, canvasBaseUrl, canvasToken);
 
-  // Compute numeric points
   const csvTotalMax = useMemo(() => {
     const first = csvGrades.rows.find(row => Number.isFinite(row.roundedTotalMaxPoints ?? row.totalMaxPoints));
     const raw = first?.totalMaxPoints ?? 0;
@@ -90,7 +83,6 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
     return gradeMode === 'percent' ? 100 : 0;
   }, [pointsPossible, csvTotalMax, gradeMode]);
 
-  // Prepare rows for preview and pushing
   const { preparedRows, mappedRows, unmappedRows } = usePreparedRows(
     csvGrades.rows,
     csvGrades.decryptedIds,
@@ -99,10 +91,8 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
     includeComments
   );
 
-  // Push logic
   const { pushState, push, setPushState } = useCanvasPush();
 
-  // Poll Canvas progress if we have a progress URL
   const progressQuery = useCanvasProgress(
     canvasBaseUrl,
     canvasToken,
@@ -110,7 +100,6 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
     !!progressUrl
   );
 
-  // Store progress URL when push succeeds
   useEffect(() => {
     if (pushState.status === 'success' && pushState.progressUrl && pushState.progressUrl !== progressUrl) {
       setConfig({ progressUrl: pushState.progressUrl });
@@ -119,24 +108,22 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
 
   useEffect(() => {
     if (pushState.status === 'error') {
-      toast.error(pushState.message, 'Canvas push failed');
+      notifications.show({ color: 'red', message: pushState.message || 'Canvas push failed' });
     } else if (pushState.status === 'success' && !progressUrl) {
-      toast.success(pushState.message);
+      notifications.show({ color: 'green', message: pushState.message || 'Push complete' });
     }
-  }, [pushState, progressUrl, toast]);
+  }, [pushState, progressUrl]);
 
   const handleClearProgress = () => {
     setConfig({ progressUrl: undefined });
   };
 
-  // Filter assignments by group
   const filteredAssignments = useMemo(() => {
     if (!assignmentGroupId) return [];
     const groupId = Number(assignmentGroupId);
     return courseData.assignments.filter(a => Number(a.assignment_group_id) === groupId);
   }, [courseData.assignments, assignmentGroupId]);
 
-  // Clear assignment ID if the selected assignment no longer exists
   useEffect(() => {
     if (assignmentId && assignmentGroupId && filteredAssignments.length > 0) {
       const assignmentExists = filteredAssignments.some(a => a.id.toString() === assignmentId);
@@ -146,14 +133,12 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
     }
   }, [assignmentId, assignmentGroupId, filteredAssignments, assessmentRes?.name, setConfig]);
 
-  // Sync assignment name from assessment
   useEffect(() => {
     if (!assignmentName && assessmentRes?.name) {
       setConfig({ assignmentName: assessmentRes.name });
     }
   }, [assignmentName, assessmentRes?.name, setConfig]);
 
-  // Sync points possible based on grade mode
   useEffect(() => {
     const nextPoints = gradeMode === 'percent' ? 100 : csvTotalMax;
     if (Number.isFinite(nextPoints) && nextPoints > 0 && nextPoints !== pointsPossible) {
@@ -187,7 +172,7 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
 
   const handlePush = () => {
     const name = (assignmentName || assessmentRes?.name || 'GradeFlow Assignment').trim();
-    
+
     if (canvasData.missingConfig) {
       setPushState({ status: 'error', message: 'Configure Canvas base URL and token first.' });
       setShowSettings(true);
@@ -213,18 +198,17 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
   };
 
   const isLoadingData = csvGrades.isLoading;
-  const hasActiveJob = progressQuery.data && 
+  const hasActiveJob = progressQuery.data &&
     (progressQuery.data.workflow_state === 'queued' || progressQuery.data.workflow_state === 'running');
-  const disablePush = canvasData.missingConfig || !courseId || !csvGrades.rows.length || hasActiveJob;
+  const disablePush = canvasData.missingConfig || !courseId || !csvGrades.rows.length || !!hasActiveJob;
 
   return (
-    <section className="space-y-4">
+    <Stack gap="md">
       <CanvasPushHeader
         assignmentName={assessmentRes?.name || 'Assessment'}
         onBack={() => void navigate(`/results/${assessmentId}`)}
       />
 
-      {/* Show progress banner if there's an active push job */}
       {(pushState.status === 'pushing' || (progressUrl && progressQuery.data)) && (
         <CanvasPushProgressBanner
           progress={progressQuery.data}
@@ -234,12 +218,14 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
       )}
 
       {canvasData.missingConfig && (
-        <div className="alert alert-warning flex items-center gap-3">
-          <span>Set your Canvas base URL and token first.</span>
-          <Button className="ml-auto" size="sm" variant="outline" onClick={() => setShowSettings(true)}>
-            Open Settings
-          </Button>
-        </div>
+        <Alert color="yellow">
+          <Group justify="space-between" align="center" wrap="nowrap">
+            <span>Set your Canvas base URL and token first.</span>
+            <Button size="xs" variant="outline" onClick={() => setShowSettings(true)}>
+              Open Settings
+            </Button>
+          </Group>
+        </Alert>
       )}
 
       <CourseSelector
@@ -280,7 +266,7 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
       )}
 
       {!isLoadingData && csvGrades.isError && (
-        <ErrorAlert error={csvGrades.error as Error} />
+        <Alert color="red">{getErrorMessages(csvGrades.error as Error).join(' ')}</Alert>
       )}
 
       {courseId && (
@@ -295,34 +281,31 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
       )}
 
       {pushState.status === 'error' && (
-        <ErrorAlert error={new Error(pushState.message)} />
+        <Alert color="red">{pushState.message || 'Push failed'}</Alert>
       )}
       {pushState.status === 'success' && !progressUrl && (
-        <div className="alert alert-success">
-          <span>{pushState.message}</span>
-        </div>
+        <Alert color="green">{pushState.message}</Alert>
       )}
 
-      <div className="flex items-center gap-2 justify-end">
-        <LoadingButton
-          variant="primary"
+      <Group justify="flex-end">
+        <Button
           onClick={handlePush}
-          isLoading={pushState.status === 'pushing' || !!hasActiveJob}
-          idleLabel="Push to Canvas"
-          loadingLabel="Pushing..."
+          loading={pushState.status === 'pushing' || !!hasActiveJob}
           disabled={disablePush}
-        />
-      </div>
+        >
+          Push to Canvas
+        </Button>
+      </Group>
 
       <UserSettingsDialog open={showSettings} onClose={() => setShowSettings(false)} />
-    </section>
+    </Stack>
   );
 };
 
 const CanvasPushPage: React.FC = () => {
   const { assessmentId } = useParams<{ assessmentId: string }>();
   if (!assessmentId) {
-    return <div className="alert alert-error"><span>Assessment ID is missing.</span></div>;
+    return <Alert color="red">Assessment ID is missing.</Alert>;
   }
   return (
     <AssessmentPassphraseProvider assessmentId={assessmentId}>

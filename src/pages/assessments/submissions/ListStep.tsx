@@ -1,13 +1,13 @@
+import { Alert, Button, Group, Modal, Text, TextInput } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
+import { IconSearch } from '@tabler/icons-react';
 import React, { useMemo, useState } from 'react';
-import ErrorAlert from '@components/common/ErrorAlert';
-import ConfirmDialog from '@components/common/ConfirmDialog';
-import { Button } from '@components/ui/Button';
-import { IconSearch } from '@components/ui/Icon';
+
 import { useAssessmentPassphrase } from '@features/encryption/passphraseContext';
 import { useDecryptedIds } from '@features/encryption/useDecryptedIds';
 import { useDeleteSubmissions } from '@features/submissions';
 import { SubmissionsTable } from '@features/submissions/components';
-import { useToast } from '@components/common/ToastProvider';
+import { getErrorMessages } from '@utils/error';
 
 import type { RawSubmission } from '@api/models';
 
@@ -23,7 +23,6 @@ export const ListStep: React.FC<{
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const toast = useToast();
   const { passphrase, notifyEncryptedDetected } = useAssessmentPassphrase();
   const deleteMutation = useDeleteSubmissions(assessmentId);
 
@@ -42,28 +41,28 @@ export const ListStep: React.FC<{
 
   return (
     <>
-      <div className="flex flex-wrap gap-2 items-center justify-between">
-        <label className="input input-bordered flex items-center gap-2 sm:w-72">
-          <IconSearch className="h-4 w-4 shrink-0 opacity-50" />
-          <input
-            type="search"
-            className="grow bg-transparent focus:outline-none"
-            placeholder="Search by Student ID"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </label>
+      <Group justify="space-between" wrap="wrap" mb="sm">
+        <TextInput
+          leftSection={<IconSearch size={16} />}
+          placeholder="Search by Student ID"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          w={{ base: '100%', sm: 280 }}
+        />
         {hasSubmissions && (
           <Button
-            type="button" variant="error" size="sm"
+            type="button"
+            color="red"
+            size="sm"
+            variant="outline"
             onClick={() => setConfirmDelete(true)}
           >
             Delete all
           </Button>
         )}
-      </div>
+      </Group>
 
-      {isError && <ErrorAlert error={error} />}
+      {isError && <Alert color="red" mb="sm">{getErrorMessages(error).join(' ')}</Alert>}
       {!isError && (
         <SubmissionsTable
           items={filteredItems}
@@ -72,26 +71,35 @@ export const ListStep: React.FC<{
         />
       )}
 
-      <ConfirmDialog
-        open={confirmDelete}
+      <Modal
+        opened={confirmDelete}
+        onClose={() => setConfirmDelete(false)}
         title="Delete All Submissions"
-        message="Are you sure you want to delete all submissions for this assessment?"
-        confirmLoading={deleteMutation.isPending}
-        confirmLoadingLabel="Deleting..."
-        confirmText="Delete"
-        onConfirm={() => {
-          deleteMutation.mutate(undefined, {
-            onSuccess: () => {
-              setConfirmDelete(false);
-              toast.success('Submissions deleted');
-              onDeleted();
-            },
-            onError: () => toast.error('Delete failed'),
-          });
-        }}
-        onCancel={() => setConfirmDelete(false)}
-      />
-      {deleteMutation.isError && <ErrorAlert error={deleteMutation.error} className="mt-2" />}
+      >
+        <Text mb="md">Are you sure you want to delete all submissions for this assessment?</Text>
+        <Group justify="flex-end">
+          <Button variant="default" onClick={() => setConfirmDelete(false)}>Cancel</Button>
+          <Button
+            color="red"
+            loading={deleteMutation.isPending}
+            onClick={() => {
+              deleteMutation.mutate(undefined, {
+                onSuccess: () => {
+                  setConfirmDelete(false);
+                  notifications.show({ color: 'green', message: 'Submissions deleted' });
+                  onDeleted();
+                },
+                onError: () => notifications.show({ color: 'red', message: 'Delete failed' }),
+              });
+            }}
+          >
+            Delete
+          </Button>
+        </Group>
+        {deleteMutation.isError && (
+          <Alert color="red" mt="sm">{getErrorMessages(deleteMutation.error).join(' ')}</Alert>
+        )}
+      </Modal>
     </>
   );
 };

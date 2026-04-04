@@ -1,20 +1,21 @@
+import { AppShell, Alert, Container } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
+import { useQuery } from '@tanstack/react-query';
 import React, { useCallback, useState } from 'react';
 import { Outlet } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+
 import { api } from '@api';
-import Navbar from '@components/common/NavBar';
-import ErrorAlert from '@components/common/ErrorAlert';
 import ErrorBoundary from '@components/common/ErrorBoundary';
+import Navbar from '@components/common/NavBar';
 import UserSettingsDialog from '@components/common/UserSettingsDialog';
 import { useAuthStore } from '@state/authStore';
-import { useToast } from '@components/common/ToastProvider';
+import { getErrorMessages } from '@utils/error';
 
 import type { MeResponse } from '@api/models';
 
 const ProtectedLayout: React.FC = () => {
   const [showSettings, setShowSettings] = useState(false);
   const clearTokens = useAuthStore((s) => s.clearTokens);
-  const toast = useToast();
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['auth', 'me'],
@@ -22,43 +23,46 @@ const ProtectedLayout: React.FC = () => {
       const res = await api.meAuthMeGet();
       return res.data as MeResponse;
     },
-    staleTime: 5 * 60 * 1000, // cache briefly
+    staleTime: 5 * 60 * 1000,
   });
 
-  const onLogout = useCallback(async () => {
-    try {
-      await api.logoutAuthLogoutPost();
-      toast.success('Logged out');
-    } catch {
-      // ignore backend errors; proceed to clear client-side
-      toast.error('Logout failed');
-    } finally {
-      clearTokens();
-      // Optional: you can navigate to /login here; guards will handle it automatically
-      // navigate('/login');
-    }
-  }, [clearTokens, toast]);
+  const onLogout = useCallback(() => {
+    void (async () => {
+      try {
+        await api.logoutAuthLogoutPost();
+        notifications.show({ color: 'green', message: 'Logged out' });
+      } catch {
+        notifications.show({ color: 'red', message: 'Logout failed' });
+      } finally {
+        clearTokens();
+      }
+    })();
+  }, [clearTokens]);
 
   const username = data?.name ?? data?.email ?? 'Account';
 
   return (
-    <div className="min-h-screen bg-base-200">
-      <Navbar username={username} onLogout={onLogout} onOpenSettings={() => setShowSettings(true)} />
-      <main className="max-w-6xl mx-auto px-4 py-6">
-        {isLoading && (
-          <div className="alert alert-info">
-            <span>Loading your account...</span>
-          </div>
-        )}
-        {isError && <ErrorAlert error={error} />}
-        {!isLoading && !isError && (
-          <ErrorBoundary>
-            <Outlet />
-          </ErrorBoundary>
-        )}
-      </main>
+    <AppShell header={{ height: 60 }} withBorder>
+      <AppShell.Header>
+        <Navbar username={username} onLogout={onLogout} onOpenSettings={() => setShowSettings(true)} />
+      </AppShell.Header>
+      <AppShell.Main>
+        <Container size="xl" px="md" py="lg">
+          {isLoading && (
+            <Alert color="blue" mb="md">Loading your account...</Alert>
+          )}
+          {isError && (
+            <Alert color="red" mb="md">{getErrorMessages(error).join(' ')}</Alert>
+          )}
+          {!isLoading && !isError && (
+            <ErrorBoundary>
+              <Outlet />
+            </ErrorBoundary>
+          )}
+        </Container>
+      </AppShell.Main>
       <UserSettingsDialog open={showSettings} onClose={() => setShowSettings(false)} />
-    </div>
+    </AppShell>
   );
 };
 

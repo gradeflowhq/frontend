@@ -1,7 +1,6 @@
+import { ActionIcon, Menu } from '@mantine/core';
+import { IconFileText, IconLock, IconSettings, IconUsers } from '@tabler/icons-react';
 import React from 'react';
-import { IconSettings, IconUsers, IconAssessment, IconLock } from '@components/ui/Icon';
-import { DropdownMenu } from '@components/ui/DropdownMenu';
-import { Button } from '@components/ui/Button';
 
 type SettingsDropdownProps = {
   onEditAssessment: () => void;
@@ -17,39 +16,32 @@ const SettingsDropdown: React.FC<SettingsDropdownProps> = ({
   showForgetPassphrase,
 }) => {
   return (
-    <DropdownMenu
-      trigger={
-        <>
-          <span className="sr-only">Settings</span>
-          <IconSettings />
-        </>
-      }
-      align="end"
-    >
-      <li>
-        <Button variant="ghost" className="justify-start" onClick={onEditAssessment} leftIcon={<IconAssessment />}>
+    <Menu position="bottom-end">
+      <Menu.Target>
+        <ActionIcon variant="outline" size="lg" aria-label="Settings">
+          <IconSettings size={16} />
+        </ActionIcon>
+      </Menu.Target>
+      <Menu.Dropdown>
+        <Menu.Item leftSection={<IconFileText size={14} />} onClick={onEditAssessment}>
           Assessment
-        </Button>
-      </li>
-      <li>
-        <Button variant="ghost" className="justify-start" onClick={onOpenMembers} leftIcon={<IconUsers />}>
+        </Menu.Item>
+        <Menu.Item leftSection={<IconUsers size={14} />} onClick={onOpenMembers}>
           Members
-        </Button>
-      </li>
-      {showForgetPassphrase && onForgetPassphrase && (
-        <li>
-          <Button
-            variant="ghost"
-            className="justify-start"
-            onClick={onForgetPassphrase}
-            leftIcon={<IconLock />}
-            title="Forget locally stored passphrase"
-          >
-            Forget Passphrase
-          </Button>
-        </li>
-      )}
-    </DropdownMenu>
+        </Menu.Item>
+        {showForgetPassphrase && onForgetPassphrase && (
+          <>
+            <Menu.Divider />
+            <Menu.Item
+              leftSection={<IconLock size={14} />}
+              onClick={onForgetPassphrase}
+            >
+              Forget Passphrase
+            </Menu.Item>
+          </>
+        )}
+      </Menu.Dropdown>
+    </Menu>
   );
 };
 

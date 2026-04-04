@@ -1,8 +1,10 @@
-import React from 'react';
-import type { WidgetProps } from '@rjsf/utils';
-import CodeMirror from '@uiw/react-codemirror';
 import { python } from '@codemirror/lang-python';
 import { oneDark } from '@codemirror/theme-one-dark';
+import { Text } from '@mantine/core';
+import CodeMirror from '@uiw/react-codemirror';
+import React from 'react';
+
+import type { WidgetProps } from '@rjsf/utils';
 
 type EditorOptions = {
   language?: 'python' | 'text';
@@ -20,6 +22,8 @@ const CodeEditorWidget: React.FC<WidgetProps> = ({
   onChange,
   onBlur,
   onFocus,
+  label,
+  hideLabel,
   options,
 }) => {
   const opts = (options || {}) as EditorOptions;
@@ -28,8 +32,11 @@ const CodeEditorWidget: React.FC<WidgetProps> = ({
   const isPython = (opts.language ?? 'python') === 'python';
 
   return (
-    <div className="form-control">
-      <div className="rounded-md border border-base-300 overflow-hidden">
+    <div>
+      {!hideLabel && label && (
+        <Text size="sm" fw={500} mb={4}>{label}</Text>
+      )}
+      <div style={{ borderRadius: 'var(--mantine-radius-sm)', border: '1px solid var(--mantine-color-default-border)', overflow: 'hidden' }}>
         <CodeMirror
           id={id}
           value={typeof value === 'string' ? value : ''}

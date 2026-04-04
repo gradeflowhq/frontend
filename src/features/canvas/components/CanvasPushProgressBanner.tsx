@@ -1,69 +1,40 @@
+import { Alert, Group, Button, Loader } from '@mantine/core';
 import React from 'react';
 
 import type { CanvasProgress } from '@api/canvasClient';
 
-type CanvasPushProgressBannerProps = {
-  progress?: CanvasProgress;
-  isPushing?: boolean;
-  onClear?: () => void;
-};
+type Props = { progress?: CanvasProgress; isPushing?: boolean; onClear?: () => void };
 
-const CanvasPushProgressBanner: React.FC<CanvasPushProgressBannerProps> = ({ progress, isPushing, onClear }) => {
-  // Show initial pushing state before progress data arrives
+const CanvasPushProgressBanner: React.FC<Props> = ({ progress, isPushing, onClear }) => {
   if (isPushing && !progress) {
     return (
-      <div className="alert alert-info">
-        <span className="loading loading-spinner loading-sm"></span>
-        <span>Submitting grades...</span>
-      </div>
+      <Alert color="blue" icon={<Loader size="sm" />}>Submitting grades...</Alert>
     );
   }
-
   if (!progress) return null;
 
   const { workflow_state, message } = progress;
 
-  // Completed state
-  if (workflow_state === 'completed') {
-    return (
-      <div className="alert alert-success">
-        <span>Canvas push completed successfully!</span>
-        {onClear && (
-          <button className="btn btn-sm btn-ghost ml-auto" onClick={onClear}>
-            Dismiss
-          </button>
+  const config: Record<string, { color: string; loading: boolean; text: string }> = {
+    completed: { color: 'green', loading: false, text: 'Canvas push completed successfully!' },
+    failed: { color: 'red', loading: false, text: `Canvas push failed${message ? `: ${message}` : '.'}` },
+    queued: { color: 'blue', loading: true, text: 'Queueing grades update...' },
+    running: { color: 'blue', loading: true, text: 'Updating grades...' },
+  };
+
+  const cfg = config[workflow_state];
+  if (!cfg) return null;
+
+  return (
+    <Alert color={cfg.color} icon={cfg.loading ? <Loader size="sm" /> : undefined}>
+      <Group justify="space-between">
+        <span>{cfg.text}</span>
+        {onClear && !cfg.loading && (
+          <Button size="xs" variant="subtle" onClick={onClear}>Dismiss</Button>
         )}
-      </div>
-    );
-  }
-
-  // Failed state
-  if (workflow_state === 'failed') {
-    return (
-      <div className="alert alert-error">
-        <span>Canvas push failed{message ? `: ${message}` : '.'}</span>
-        {onClear && (
-          <button className="btn btn-sm btn-ghost ml-auto" onClick={onClear}>
-            Dismiss
-          </button>
-        )}
-      </div>
-    );
-  }
-
-  // Queued or Running state
-  if (workflow_state === 'queued' || workflow_state === 'running') {
-    const statusText = workflow_state === 'queued' ? 'Queueing grades update...' : 'Updating grades...';
-    
-    return (
-      <div className="alert alert-info">
-        <span className="loading loading-spinner loading-sm"></span>
-        <span>{statusText}</span>
-      </div>
-    );
-  }
-
-  return null;
+      </Group>
+    </Alert>
+  );
 };
 
 export default CanvasPushProgressBanner;

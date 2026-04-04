@@ -1,27 +1,27 @@
-import React, { useState, useCallback, useMemo } from 'react';
 import {
-  getCoreRowModel,
-  getPaginationRowModel,
-  useReactTable,
-  type ColumnDef,
-} from '@tanstack/react-table';
-import TableShell from '@components/common/TableShell';
-import { usePaginationState } from '@hooks/usePaginationState';
-import Papa from 'papaparse';
-import ErrorAlert from '@components/common/ErrorAlert';
-import LoadingButton from '@components/ui/LoadingButton';
-import { IconChevronRight } from '@components/ui/Icon';
-import { buildPassphraseKey, readPassphrase, writePassphrase } from '@utils/passphrase';
-import { arraysEqual } from '@features/submissions/utils/questionColumnInference';
-import { buildSourceCsv } from '@features/submissions/helpers';
-import { useToast } from '@components/common/ToastProvider';
+  Alert, Button, Card, Checkbox, Group, NumberInput, PasswordInput,
+  Select, SimpleGrid, Stack, Text, Divider,
+} from '@mantine/core';
+import { Dropzone } from '@mantine/dropzone';
+import { notifications } from '@mantine/notifications';
+import { IconChevronRight, IconUpload, IconFile, IconX } from '@tabler/icons-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { DataTable } from 'mantine-datatable';
+import Papa from 'papaparse';
+import React, { useState, useCallback, useMemo } from 'react';
+
 import { api } from '@api';
 import { QK } from '@api/queryKeys';
+import { buildSourceCsv } from '@features/submissions/helpers';
+import { arraysEqual } from '@features/submissions/utils/questionColumnInference';
+import { getErrorMessages } from '@utils/error';
+import { buildPassphraseKey, readPassphrase, writePassphrase } from '@utils/passphrase';
 
 import type { CsvPreview, PassphraseContext } from '@features/submissions/types';
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), hi);
+
+const PAGE_SIZE = 10;
 
 // ---------------------------------------------------------------------------
 // Row range controls
@@ -33,71 +33,76 @@ const RowRangeControls: React.FC<{
   dataEndRow: number | '';
   onChange: (next: { headerRow?: number; dataStartRow?: number; dataEndRow?: number | '' }) => void;
 }> = ({ totalRows, headerRow, dataStartRow, dataEndRow, onChange }) => (
-  <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-    <div className="form-control">
-      <label className="label"><span className="label-text">Header row (1-based)</span></label>
-      <input
-        type="number" min={1} max={totalRows} className="input input-bordered w-full"
-        value={headerRow} onChange={(e) => onChange({ headerRow: Number(e.target.value) || 1 })}
-      />
-      <div className="text-xs opacity-70 mt-1">Row containing column headers.</div>
-    </div>
-    <div className="form-control">
-      <label className="label"><span className="label-text">Body start row (1-based)</span></label>
-      <input
-        type="number" min={1} max={totalRows} className="input input-bordered w-full"
-        value={dataStartRow} onChange={(e) => onChange({ dataStartRow: Number(e.target.value) || 1 })}
-      />
-      <div className="text-xs opacity-70 mt-1">First data row (typically header+1).</div>
-    </div>
-    <div className="form-control">
-      <label className="label"><span className="label-text">Body end row (optional)</span></label>
-      <input
-        type="number" min={1} max={totalRows} className="input input-bordered w-full"
-        value={dataEndRow === '' ? '' : dataEndRow}
-        onChange={(e) => { const v = e.target.value; onChange({ dataEndRow: v === '' ? '' : Number(v) }); }}
-        placeholder={`Blank = last row (${totalRows})`}
-      />
-      <div className="text-xs opacity-70 mt-1">Last row to include. Blank = all.</div>
-    </div>
-  </div>
+  <SimpleGrid cols={{ base: 1, md: 3 }} mt="md">
+    <NumberInput
+      label="Header row (1-based)"
+      description="Row containing column headers."
+      min={1} max={totalRows}
+      value={headerRow}
+      onChange={(v) => onChange({ headerRow: typeof v === 'number' ? v : 1 })}
+    />
+    <NumberInput
+      label="Body start row (1-based)"
+      description="First data row (typically header+1)."
+      min={1} max={totalRows}
+      value={dataStartRow}
+      onChange={(v) => onChange({ dataStartRow: typeof v === 'number' ? v : 1 })}
+    />
+    <NumberInput
+      label="Body end row (optional)"
+      description="Last row to include. Blank = all."
+      min={1} max={totalRows}
+      placeholder={`Blank = last row (${totalRows})`}
+      value={dataEndRow === '' ? '' : dataEndRow}
+      onChange={(v) => onChange({ dataEndRow: v === '' ? '' : (typeof v === 'number' ? v : '') })}
+    />
+  </SimpleGrid>
 );
 
 // ---------------------------------------------------------------------------
-// CSV preview table (paginated, matches list tab style)
+// CSV preview table (paginated)
 // ---------------------------------------------------------------------------
 type CsvRow = Record<string, string>;
 
 const CsvPreviewTable: React.FC<{ headers: string[]; rows: string[][] }> = ({ headers, rows }) => {
-  const data = useMemo<CsvRow[]>(
+  const [page, setPage] = useState(1);
+
+  const allData = useMemo<CsvRow[]>(
     () => rows.map((r) => Object.fromEntries(r.map((v, i) => [`col${i}`, v]))),
     [rows],
   );
 
-  const columns = useMemo<ColumnDef<CsvRow>[]>(
+  const pagedData = useMemo(
+    () => allData.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [allData, page],
+  );
+
+  const columns = useMemo(
     () =>
       headers.map((h, i) => ({
-        id: `col${i}`,
-        header: h,
-        accessorKey: `col${i}`,
-        cell: ({ getValue }) => <span className="font-mono text-xs">{getValue() as string}</span>,
+        accessor: `col${i}` as keyof CsvRow,
+        title: h,
+        render: (row: CsvRow) => (
+          <Text ff="monospace" size="xs">{row[`col${i}`]}</Text>
+        ),
       })),
     [headers],
   );
 
-  const { pagination, setPagination } = usePaginationState({ pageIndex: 0, pageSize: 10 });
-
-  const table = useReactTable({
-    data,
-    columns,
-    state: { pagination },
-    onPaginationChange: setPagination,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getRowId: (_, i) => String(i),
-  });
-
-  return <TableShell table={table} totalItems={data.length} className="mt-4" />;
+  return (
+    <DataTable
+      mt="md"
+      records={pagedData}
+      columns={columns}
+      totalRecords={allData.length}
+      recordsPerPage={PAGE_SIZE}
+      page={page}
+      onPageChange={setPage}
+      withTableBorder
+      borderRadius="sm"
+      striped
+    />
+  );
 };
 
 // ---------------------------------------------------------------------------
@@ -120,7 +125,6 @@ export const UploadStep: React.FC<{
   const [passphrase, setPassphrase] = useState(() => readPassphrase(storageKey) ?? '');
   const [storePassphrase, setStorePassphrase] = useState(() => !!readPassphrase(storageKey));
 
-  const toast = useToast();
   const qc = useQueryClient();
 
   const recomputePreview = useCallback(
@@ -190,7 +194,7 @@ export const UploadStep: React.FC<{
       await qc.invalidateQueries({ queryKey: QK.submissions.source(assessmentId) });
       onNext();
     },
-    onError: () => toast.error('Upload failed'),
+    onError: () => notifications.show({ color: 'red', message: 'Upload failed' }),
   });
 
   const canNext = !!preview && !!studentIdColumn && (!encryptIds || !!passphrase);
@@ -206,27 +210,35 @@ export const UploadStep: React.FC<{
   };
 
   return (
-    <div className="space-y-4">
+    <Stack gap="md">
       {hasExistingSource && (
-        <div className="alert alert-info flex flex-wrap items-center justify-between gap-2">
-          <span className="text-sm">Data from a previous upload is still available.</span>
-          <button
-            type="button"
-            className="btn btn-sm btn-outline"
-            onClick={onNext}
-          >
-            Continue to Configure &rarr;
-          </button>
-        </div>
+        <Alert color="blue">
+          <Group justify="space-between" align="center" wrap="nowrap">
+            <Text size="sm">Data from a previous upload is still available.</Text>
+            <Button type="button" size="xs" variant="outline" onClick={onNext}>
+              Continue to Configure &rarr;
+            </Button>
+          </Group>
+        </Alert>
       )}
 
-      <div className="form-control">
-        <label className="label"><span className="label-text">Select CSV file</span></label>
-        <input
-          type="file" accept=".csv,text/csv" className="file-input file-input-bordered w-full"
-          onChange={(e) => onSelectFile(e.target.files?.[0] ?? null)}
-        />
-      </div>
+      <Dropzone
+        onDrop={(files) => onSelectFile(files[0] ?? null)}
+        onReject={() => onSelectFile(null)}
+        accept={['text/csv', 'application/vnd.ms-excel', '.csv']}
+        maxFiles={1}
+        maxSize={50 * 1024 * 1024}
+      >
+        <Group justify="center" gap="xl" style={{ pointerEvents: 'none', minHeight: 80 }}>
+          <Dropzone.Accept><IconUpload size={40} color="var(--mantine-color-blue-6)" stroke={1.5} /></Dropzone.Accept>
+          <Dropzone.Reject><IconX size={40} color="var(--mantine-color-red-6)" stroke={1.5} /></Dropzone.Reject>
+          <Dropzone.Idle><IconFile size={40} color="var(--mantine-color-dimmed)" stroke={1.5} /></Dropzone.Idle>
+          <div>
+            <Text size="lg" fw={500}>Drop CSV file here or click to select</Text>
+            <Text size="sm" c="dimmed">.csv files up to 50 MB</Text>
+          </div>
+        </Group>
+      </Dropzone>
 
       {rawGrid && rawGrid.length > 0 && (
         <RowRangeControls
@@ -248,67 +260,63 @@ export const UploadStep: React.FC<{
         <>
           <CsvPreviewTable headers={preview.headers} rows={preview.rows} />
 
-          <div className="form-control mt-4 md:w-80">
-            <label className="label"><span className="label-text">Student ID column</span></label>
-            <select
-              className="select select-bordered w-full"
-              value={studentIdColumn}
-              onChange={(e) => setStudentIdColumn(e.target.value)}
-            >
-              <option value="" disabled>Select column</option>
-              {preview.headers.map((h) => <option key={h} value={h}>{h}</option>)}
-            </select>
-          </div>
+          <SimpleGrid cols={{ base: 1, md: 2 }} mt="sm">
+            <Select
+              label="Student ID column"
+              placeholder="Select column"
+              value={studentIdColumn || null}
+              onChange={(v) => setStudentIdColumn(v ?? '')}
+              data={preview.headers.map((h) => ({ value: h, label: h }))}
+            />
+          </SimpleGrid>
 
-          <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
-            <div className="form-control">
-              <label className="label cursor-pointer justify-start gap-3">
-                <input
-                  type="checkbox" className="checkbox" checked={encryptIds}
-                  onChange={(e) => setEncryptIds(e.target.checked)}
+          <Card withBorder mt="sm" p="md">
+            <Text fw={600} mb="sm">Student ID Encryption</Text>
+            <Divider mb="sm" />
+            <Checkbox
+              checked={encryptIds}
+              onChange={(e) => setEncryptIds(e.currentTarget.checked)}
+              label="Encrypt student IDs before upload (client-side only)"
+              mb="sm"
+            />
+            <SimpleGrid cols={{ base: 1, md: 2 }} style={{ opacity: encryptIds ? 1 : 0.4 }}>
+              <PasswordInput
+                label="Passphrase"
+                placeholder="Enter passphrase"
+                value={passphrase}
+                onChange={(e) => setPassphrase(e.currentTarget.value)}
+                disabled={!encryptIds}
+              />
+              <Stack gap="xs" justify="flex-end">
+                <Checkbox
+                  checked={storePassphrase}
+                  onChange={(e) => setStorePassphrase(e.currentTarget.checked)}
+                  disabled={!encryptIds}
+                  label="Store passphrase locally (browser)"
                 />
-                <span className="label-text">Encrypt student IDs (client-side)</span>
-              </label>
-              <div className="text-xs opacity-70 mt-1">IDs are encrypted before upload.</div>
-            </div>
-            <div className="form-control md:col-span-2">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div className="md:col-span-2">
-                  <label className="label"><span className="label-text">Passphrase</span></label>
-                  <input
-                    type="password" className="input input-bordered w-full"
-                    value={passphrase} onChange={(e) => setPassphrase(e.target.value)}
-                    placeholder="Passphrase for encryption" disabled={!encryptIds}
-                  />
-                </div>
-                <div className="form-control">
-                  <label className="label cursor-pointer justify-start gap-3">
-                    <input
-                      type="checkbox" className="checkbox" checked={storePassphrase}
-                      onChange={(e) => setStorePassphrase(e.target.checked)} disabled={!encryptIds}
-                    />
-                    <span className="label-text">Store locally</span>
-                  </label>
-                </div>
-              </div>
-              <div className="text-xs opacity-70 mt-1">Stored in browser local storage. Avoid on shared devices.</div>
-            </div>
-          </div>
+                <Text size="xs" c="dimmed">Stored in localStorage. Avoid on shared devices.</Text>
+              </Stack>
+            </SimpleGrid>
+          </Card>
         </>
       )}
 
-      {uploadMutation.isError && <ErrorAlert error={uploadMutation.error} className="mt-4" />}
+      {uploadMutation.isError && (
+        <Alert color="red" mt="sm">{getErrorMessages(uploadMutation.error).join(' ')}</Alert>
+      )}
 
-      <div className="flex justify-end mt-6">
-        <LoadingButton
-          type="button" variant="primary" onClick={handleNext}
-          disabled={!canNext} isLoading={uploadMutation.isPending}
-          leftIcon={<IconChevronRight />}
+      <Group justify="flex-end" mt="md">
+        <Button
+          type="button"
+          onClick={handleNext}
+          disabled={!canNext}
+          loading={uploadMutation.isPending}
+          leftSection={<IconChevronRight size={16} />}
           title={!canNext ? 'Select a file and choose a Student ID column' : undefined}
         >
           Next
-        </LoadingButton>
-      </div>
-    </div>
+        </Button>
+      </Group>
+    </Stack>
   );
 };

@@ -1,16 +1,16 @@
+
+import { Alert, Button, Center, Group, Modal, Paper, SimpleGrid, Skeleton, Stack, Text, Title } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
+import { IconAdjustments } from '@tabler/icons-react';
 import React from 'react';
 import { useParams } from 'react-router-dom';
 
-import ConfirmDialog from '@components/common/ConfirmDialog';
-import EmptyState from '@components/common/EmptyState';
-import ErrorAlert from '@components/common/ErrorAlert';
-import { useToast } from '@components/common/ToastProvider';
-import { IconRules } from '@components/ui/Icon';
 import { useQuestionSet } from '@features/questions/hooks';
 import { useRubric, useRubricCoverage, useDeleteRubric } from '@features/rubric/hooks';
 import { MultiTargetRulesSection, RulesHeader, SingleTargetRulesSection } from '@features/rules/components';
 import RubricImportModal from '@features/rules/components/RubricImportModal';
 import RubricUploadModal from '@features/rules/components/RubricUploadModal';
+import { getErrorMessages } from '@utils/error';
 
 import type { RubricOutput, QuestionSetOutputQuestionMap } from '@api/models';
 
@@ -20,7 +20,6 @@ const RulesTabPage: React.FC = () => {
   const enabled = Boolean(assessmentId);
   const safeId = assessmentId ?? '';
 
-  // Question set (needed for compatibility, labels, constraints)
   const {
     data: qsRes,
     isLoading: loadingQS,
@@ -33,7 +32,6 @@ const RulesTabPage: React.FC = () => {
     return err?.response?.status === 404;
   }, [qsError]);
 
-  // Rubric & coverage
   const {
     data: rubricRes,
     isLoading: loadingRubric,
@@ -48,7 +46,6 @@ const RulesTabPage: React.FC = () => {
     error: coverageError,
   } = useRubricCoverage(safeId);
 
-  // Derive view data safely
   const questionMap: QuestionSetOutputQuestionMap = React.useMemo(() => {
     return qsNotFound ? {} : (qsRes?.question_set?.question_map ?? {});
   }, [qsNotFound, qsRes]);
@@ -80,40 +77,41 @@ const RulesTabPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = React.useState('');
 
   const deleteRubric = useDeleteRubric(safeId);
-  const toast = useToast();
 
   const hasRules = (rubric?.rules?.length ?? 0) > 0;
 
   const renderSkeleton = () => (
-    <div className="space-y-4">
-      <div className="stats shadow bg-base-100 w-full animate-pulse">
+    <Stack gap="md">
+      <SimpleGrid cols={{ base: 1, sm: 3 }}>
         {[...Array(3)].map((_, i) => (
-          <div key={i} className="stat">
-            <div className="stat-title skeleton h-4 w-24 mb-1" />
-            <div className="stat-value skeleton h-6 w-20" />
-          </div>
+          <Paper key={i} withBorder p="md">
+            <Skeleton height={12} width={96} mb={8} />
+            <Skeleton height={24} width={80} />
+          </Paper>
         ))}
-      </div>
-      <div className="rounded-box border border-base-300 bg-base-100 p-4 shadow-sm space-y-3 animate-pulse">
-        {[...Array(4)].map((_, i) => (
-          <div key={i} className="grid grid-cols-4 gap-3">
-            <div className="skeleton h-4 w-full" />
-            <div className="skeleton h-4 w-full" />
-            <div className="skeleton h-4 w-full" />
-            <div className="skeleton h-4 w-full" />
-          </div>
-        ))}
-      </div>
-    </div>
+      </SimpleGrid>
+      <Paper withBorder p="md">
+        <Stack gap="sm">
+          {[...Array(4)].map((_, i) => (
+            <SimpleGrid key={i} cols={4}>
+              <Skeleton height={12} />
+              <Skeleton height={12} />
+              <Skeleton height={12} />
+              <Skeleton height={12} />
+            </SimpleGrid>
+          ))}
+        </Stack>
+      </Paper>
+    </Stack>
   );
 
   if (!enabled) {
-    return <div className="alert alert-error"><span>Assessment ID is missing.</span></div>;
+    return <Alert color="red">Assessment ID is missing.</Alert>;
   }
 
   if (!loadingQS && (qsNotFound || !hasQuestions)) {
     return (
-      <section className="space-y-6">
+      <Stack gap="md">
         <RulesHeader
           onUpload={() => setOpenRubricUpload(true)}
           onImport={() => setOpenRubricImport(true)}
@@ -125,17 +123,19 @@ const RulesTabPage: React.FC = () => {
           disabled
         />
 
-        <EmptyState
-          title="Rules are locked"
-          description="Set up questions first to configure rules."
-          icon={<IconRules />}
-        />
-      </section>
+        <Center py="xl">
+          <Stack align="center" gap="sm">
+            <IconAdjustments size={32} color="var(--mantine-color-dimmed)" />
+            <Title order={5}>Rules are locked</Title>
+            <Text c="dimmed" size="sm">Set up questions first to configure rules.</Text>
+          </Stack>
+        </Center>
+      </Stack>
     );
   }
 
   return (
-    <section className="space-y-6">
+    <Stack gap="md">
       <RulesHeader
         onUpload={() => setOpenRubricUpload(true)}
         onImport={() => setOpenRubricImport(true)}
@@ -146,31 +146,34 @@ const RulesTabPage: React.FC = () => {
         onSearchChange={(v) => setSearchQuery(v)}
       />
 
-      {/* Stats */}
       {!loadingCoverage && !errorCoverage && cov && (
-        <div className="stats shadow bg-base-100 w-full">
-          <div className="stat">
-            <div className="stat-title">Total Questions</div>
-            <div className="stat-value">{cov.total ?? 0}</div>
-          </div>
-          <div className="stat">
-            <div className="stat-title">Covered</div>
-            <div className="stat-value">{cov.covered ?? 0}</div>
-          </div>
-          <div className="stat">
-            <div className="stat-title">Coverage</div>
-            <div className="stat-value">{((cov.percentage ?? 0) * 100).toFixed(1)}%</div>
-          </div>
-        </div>
+        <SimpleGrid cols={{ base: 1, sm: 3 }}>
+          <Paper withBorder p="md">
+            <Text size="xs" c="dimmed" mb={4}>Total Questions</Text>
+            <Text fw={700} size="xl">{cov.total ?? 0}</Text>
+          </Paper>
+          <Paper withBorder p="md">
+            <Text size="xs" c="dimmed" mb={4}>Covered</Text>
+            <Text fw={700} size="xl">{cov.covered ?? 0}</Text>
+          </Paper>
+          <Paper withBorder p="md">
+            <Text size="xs" c="dimmed" mb={4}>Coverage</Text>
+            <Text fw={700} size="xl">{((cov.percentage ?? 0) * 100).toFixed(1)}%</Text>
+          </Paper>
+        </SimpleGrid>
       )}
 
-      {/* Loading/Error states */}
       {(loadingQS || loadingRubric || loadingCoverage) && renderSkeleton()}
-      {errorQS && !qsNotFound && <ErrorAlert error={qsError} />}
-      {errorRubric && <ErrorAlert error={rubricError} />}
-      {errorCoverage && <ErrorAlert error={coverageError} />}
+      {errorQS && !qsNotFound && (
+        <Alert color="red">{getErrorMessages(qsError).join(' ')}</Alert>
+      )}
+      {errorRubric && (
+        <Alert color="red">{getErrorMessages(rubricError).join(' ')}</Alert>
+      )}
+      {errorCoverage && (
+        <Alert color="red">{getErrorMessages(coverageError).join(' ')}</Alert>
+      )}
 
-      {/* Sections */}
       {!loadingQS && !errorQS && !loadingRubric && !errorRubric && (
         <>
           <SingleTargetRulesSection
@@ -203,26 +206,35 @@ const RulesTabPage: React.FC = () => {
         onClose={() => setOpenRubricImport(false)}
       />}
 
-      <ConfirmDialog
-        open={confirmDeleteRubric}
+      <Modal
+        opened={confirmDeleteRubric}
+        onClose={() => setConfirmDeleteRubric(false)}
         title="Delete Rules"
-        message="This will remove all rules in the rubric. Continue?"
-        confirmText="Delete"
-        confirmLoading={deleteRubric.isPending}
-        confirmLoadingLabel="Deleting..."
-        onConfirm={() =>
-          deleteRubric.mutate(undefined, {
-            onSuccess: () => {
-              setConfirmDeleteRubric(false);
-              toast.success('Rules deleted');
-            },
-            onError: () => toast.error('Delete failed'),
-          })
-        }
-        onCancel={() => setConfirmDeleteRubric(false)}
-      />
-      {deleteRubric.isError && <ErrorAlert error={deleteRubric.error} />}
-    </section>
+      >
+        <Text mb="md">This will remove all rules in the rubric. Continue?</Text>
+        <Group justify="flex-end">
+          <Button variant="default" onClick={() => setConfirmDeleteRubric(false)}>Cancel</Button>
+          <Button
+            color="red"
+            loading={deleteRubric.isPending}
+            onClick={() =>
+              deleteRubric.mutate(undefined, {
+                onSuccess: () => {
+                  setConfirmDeleteRubric(false);
+                  notifications.show({ color: 'green', message: 'Rules deleted' });
+                },
+                onError: () => notifications.show({ color: 'red', message: 'Delete failed' }),
+              })
+            }
+          >
+            Delete
+          </Button>
+        </Group>
+        {deleteRubric.isError && (
+          <Alert color="red" mt="sm">{getErrorMessages(deleteRubric.error).join(' ')}</Alert>
+        )}
+      </Modal>
+    </Stack>
   );
 };
 

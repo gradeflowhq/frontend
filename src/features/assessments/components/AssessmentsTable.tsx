@@ -1,16 +1,10 @@
-import React, { useMemo } from 'react';
-import { Button } from '@components/ui/Button';
-import { IconEdit, IconTrash, IconInbox } from '@components/ui/Icon';
-import {
-  createColumnHelper,
-  getCoreRowModel,
-  getPaginationRowModel,
-  useReactTable,
-} from '@tanstack/react-table';
-import TableShell from '@components/common/TableShell';
-import EmptyState from '@components/common/EmptyState';
+import { Anchor, Button, Group, Text } from '@mantine/core';
+import { IconPencil, IconTrash } from '@tabler/icons-react';
+import { DataTable } from 'mantine-datatable';
+import React, { useState } from 'react';
+
 import { formatAbsolute, formatSmart } from '@utils/datetime';
-import { usePaginationState } from '@hooks/usePaginationState';
+
 import type { AssessmentResponse } from '@api/models';
 
 type AssessmentsTableProps = {
@@ -30,110 +24,70 @@ const AssessmentsTable: React.FC<AssessmentsTableProps> = ({
   initialPageSize = 10,
   isLoading = false,
 }) => {
-  const columnHelper = createColumnHelper<AssessmentResponse>();
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = initialPageSize;
+  const records = items.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  const columns = useMemo(
-    () => [
-      columnHelper.accessor('name', {
-        header: 'Name',
-        cell: ({ row, getValue }) => (
-          <Button
-            variant="link"
-            className="p-0 no-underline font-medium"
-            onClick={() => onOpen(row.original)}
-            title="Open assessment"
-          >
-            {getValue()}
-          </Button>
-        ),
-      }),
-      columnHelper.accessor('description', {
-        header: 'Description',
-        cell: (info) => info.getValue() ?? <span className="opacity-60">—</span>,
-      }),
-      columnHelper.accessor('created_at', {
-        header: 'Created',
-        cell: (info) => {
-          const value = formatSmart(info.getValue(), { returnBoth: false });
-          const display = typeof value === 'string' ? value : value.primary;
-          return (
-            <time className="font-mono text-xs" title={formatAbsolute(info.getValue(), { includeTime: true })}>
-              {display}
-            </time>
-          );
-        },
-      }),
-      columnHelper.accessor('updated_at', {
-        header: 'Updated',
-        cell: (info) => {
-          const value = formatSmart(info.getValue(), { returnBoth: false });
-          const display = typeof value === 'string' ? value : value.primary;
-          return (
-            <time className="font-mono text-xs" title={formatAbsolute(info.getValue(), { includeTime: true })}>
-              {display}
-            </time>
-          );
-        },
-      }),
-      columnHelper.display({
-        id: 'actions',
-        header: 'Actions',
-        cell: ({ row }) => {
-          const item = row.original;
-          return (
-            <div className="flex flex-wrap gap-2">
-              <Button size="sm" onClick={() => onEdit(item)} title="Edit" leftIcon={<IconEdit />}>
-                Edit
-              </Button>
-              <Button
-                size="sm"
-                variant="error"
-                onClick={() => onDelete(item)}
-                title="Delete"
-                leftIcon={<IconTrash />}
-              >
-                Delete
-              </Button>
-            </div>
-          );
-        },
-      }),
-    ],
-    [columnHelper, onOpen, onEdit, onDelete]
-  );
-
-  const { pagination, setPagination } = usePaginationState({
-    pageIndex: 0,
-    pageSize: initialPageSize,
-  });
-
-  const table = useReactTable({
-    data: items,
-    columns,
-    state: { pagination },
-    onPaginationChange: setPagination,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getRowId: (row) => row.id,
-  });
-
-  if (!isLoading && items.length === 0) {
-    return (
-      <EmptyState
-        icon={<IconInbox />}
-        title="No assessments"
-        description="Create your first assessment using the “New Assessment” button above."
-      />
-    );
-  }
-
-  // TableShell already renders header/body/pagination consistently
   return (
-    <TableShell
-      table={table}
-      totalItems={items.length}
-      pinnedColumns={['Actions']}
-      isLoading={isLoading}
+    <DataTable
+      columns={[
+        {
+          accessor: 'name',
+          title: 'Name',
+          render: (row) => (
+            <Anchor component="button" onClick={() => onOpen(row)}>{row.name}</Anchor>
+          ),
+        },
+        {
+          accessor: 'description',
+          title: 'Description',
+          render: (row) => row.description ?? <Text c="dimmed" span>—</Text>,
+        },
+        {
+          accessor: 'created_at',
+          title: 'Created',
+          render: (row) => {
+            const val = formatSmart(row.created_at, { returnBoth: false });
+            const display = typeof val === 'string' ? val : val.primary;
+            return (
+              <Text ff="monospace" size="xs" title={formatAbsolute(row.created_at, { includeTime: true })}>
+                {display}
+              </Text>
+            );
+          },
+        },
+        {
+          accessor: 'updated_at',
+          title: 'Updated',
+          render: (row) => {
+            const val = formatSmart(row.updated_at, { returnBoth: false });
+            const display = typeof val === 'string' ? val : val.primary;
+            return (
+              <Text ff="monospace" size="xs" title={formatAbsolute(row.updated_at, { includeTime: true })}>
+                {display}
+              </Text>
+            );
+          },
+        },
+        {
+          accessor: 'actions',
+          title: 'Actions',
+          render: (row) => (
+            <Group gap="xs">
+              <Button size="xs" leftSection={<IconPencil size={12} />} onClick={() => onEdit(row)}>Edit</Button>
+              <Button size="xs" color="red" leftSection={<IconTrash size={12} />} onClick={() => onDelete(row)}>Delete</Button>
+            </Group>
+          ),
+        },
+      ]}
+      records={records}
+      totalRecords={items.length}
+      recordsPerPage={PAGE_SIZE}
+      page={page}
+      onPageChange={setPage}
+      fetching={isLoading}
+      striped
+      highlightOnHover
     />
   );
 };

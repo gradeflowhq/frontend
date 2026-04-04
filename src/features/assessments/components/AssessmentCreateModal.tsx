@@ -1,10 +1,10 @@
+import { Modal, Alert, Button, Group } from '@mantine/core';
 import React from 'react';
-import Modal from '@components/common/Modal';
+
 import { SchemaForm } from '@components/common/forms/SchemaForm';
-import ErrorAlert from '@components/common/ErrorAlert';
-import LoadingButton from '@components/ui/LoadingButton';
-import { Button } from '@components/ui/Button';
 import requestsSchema from '@schemas/requests.json';
+import { getErrorMessages } from '@utils/error';
+
 import type { AssessmentCreateRequest } from '@api/models';
 import type { JSONSchema7 } from 'json-schema';
 
@@ -36,35 +36,26 @@ const AssessmentCreateModal: React.FC<Props> = ({ open, isSubmitting, error, onC
   const formId = 'assessment-create-form';
 
   return (
-    <Modal open={open} onClose={onClose}>
-      <h3 className="font-bold text-lg">Create Assessment</h3>
-
+    <Modal opened={open} onClose={onClose} title="Create Assessment" size="md">
       <SchemaForm<AssessmentCreateRequest>
         schema={schema}
         uiSchema={uiSchema}
         showSubmit={false}
-        onSubmit={async ({ formData }) => {
+        onSubmit={({ formData }) => {
           if (!formData) return;
-          await onSubmit(formData);
+          void onSubmit(formData);
         }}
         formProps={{ noHtml5Validate: true, id: formId }}
       />
 
-      {!!error && <ErrorAlert error={error} className="mt-2" />}
+      {!!error && (
+        <Alert color="red" mt="md">{getErrorMessages(error).join(' ')}</Alert>
+      )}
 
-      <div className="modal-action">
-        <Button type="button" variant='ghost' onClick={onClose} disabled={isSubmitting}>
-          Cancel
-        </Button>
-        <LoadingButton
-          type="submit"
-          form={formId}
-          variant="primary"
-          isLoading={isSubmitting}
-          loadingLabel="Creating..."
-          idleLabel="Create"
-        />
-      </div>
+      <Group justify="flex-end" mt="md">
+        <Button variant="subtle" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
+        <Button type="submit" form={formId} loading={isSubmitting}>Create</Button>
+      </Group>
     </Modal>
   );
 };

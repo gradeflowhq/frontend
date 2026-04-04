@@ -1,19 +1,34 @@
+import { BarChart } from '@mantine/charts';
+import { SimpleGrid, Card, Group, Text, Badge, Progress, Divider } from '@mantine/core';
 import React, { useMemo } from 'react';
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-} from 'recharts';
-import type { AdjustableSubmission, AdjustableQuestionResult } from '../types';
+
 import { computeStats } from '../helpers';
+
+import type { AdjustableSubmission, AdjustableQuestionResult } from '../types';
+
 
 type Props = {
   items: AdjustableSubmission[];
   questionIds: string[];
 };
+
+const StatRow = ({ label, right }: { label: string; right: React.ReactNode }) => (
+  <Group justify="space-between" py={4}>
+    <Text size="sm" c="gray">{label}</Text>
+    <div>{right}</div>
+  </Group>
+);
+
+const ProgressRow = ({ label, pct, hint }: { label: string; pct: number; hint?: string }) => (
+  <div style={{ paddingBlock: '4px' }}>
+    <Group justify="space-between" mb={2}>
+      <Text size="sm" c="gray">{label}</Text>
+      <Text size="xs" ff="monospace">{pct.toFixed(1)}%</Text>
+    </Group>
+    <Progress value={Math.max(0, Math.min(100, Math.round(pct)))} size="sm" />
+    {hint && <Text size="xs" c="dimmed" mt={2}>{hint}</Text>}
+  </div>
+);
 
 const QuestionAnalysis: React.FC<Props> = ({ items, questionIds }) => {
   const totalStudents = items.length;
@@ -50,11 +65,9 @@ const QuestionAnalysis: React.FC<Props> = ({ items, questionIds }) => {
       const adjustmentCount = adjustments.length;
       const adjustmentAvg = adjustmentCount > 0 ? adjustments.reduce((s, v) => s + v, 0) / adjustmentCount : 0;
 
-      // Histogram: choose bins so none are empty (chunk unique values)
       const uniqueValues = Array.from(new Set(awarded)).sort((a, b) => a - b);
       const maxBins = 12;
       const binCount = Math.max(1, Math.min(maxBins, uniqueValues.length));
-
       const chunkSize = Math.max(1, Math.ceil(uniqueValues.length / binCount));
       const formatEdge = (value: number) => {
         if (!isFinite(value)) return '0';
@@ -75,104 +88,54 @@ const QuestionAnalysis: React.FC<Props> = ({ items, questionIds }) => {
       });
 
       return {
-        qid,
-        attempts,
-        missing,
-        missingRatePct,
-        stats,
-        maxPointsObserved,
-        difficultyPct,
-        adjustmentCount,
-        adjustmentAvg,
-        histogramData,
+        qid, attempts, missing, missingRatePct, stats, maxPointsObserved,
+        difficultyPct, adjustmentCount, adjustmentAvg, histogramData,
       };
     });
   }, [items, questionIds, totalStudents]);
 
-  const Line: React.FC<{ label: string; right?: React.ReactNode; children?: React.ReactNode }> = ({ label, right, children }) => (
-    <div className="flex items-center justify-between py-1">
-      <div className="text-sm opacity-70">{label}</div>
-      <div className="text-sm">{right ?? children}</div>
-    </div>
-  );
-
-  const BarLine: React.FC<{ label: string; pct: number; hint?: string }> = ({ label, pct, hint }) => (
-    <div className="py-1">
-      <div className="flex items-center justify-between">
-        <div className="text-sm opacity-70">{label}</div>
-        <div className="text-xs font-mono">{pct.toFixed(1)}%</div>
-      </div>
-      <progress className="progress progress-primary w-full" value={Math.max(0, Math.min(100, Math.round(pct)))} max={100} />
-      {hint && <div className="text-xs opacity-60 mt-1">{hint}</div>}
-    </div>
-  );
-
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {perQuestion.map((q) => (
-          <div key={q.qid} className="card bg-base-100 border border-base-300 shadow-xs">
-            <div className="card-body space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="card-title">
-                  <span className="font-mono text-xs">{q.qid}</span>
-                </h3>
-                <span className="badge badge-ghost">Max Points: {q.maxPointsObserved}</span>
-              </div>
+    <SimpleGrid cols={{ base: 1, md: 3 }} spacing="md">
+      {perQuestion.map((q) => (
+        <Card key={q.qid} withBorder shadow="xs" p="md">
+          <Group justify="space-between" mb="xs">
+            <Text ff="monospace" size="sm" fw={600}>{q.qid}</Text>
+            <Badge variant="light" color="blue" size="sm">{q.maxPointsObserved} pts</Badge>
+          </Group>
 
-              <div className="divide-y divide-base-300">
-                <Line label="Attempts" right={<><span className="font-semibold">{q.attempts}</span><span className="opacity-60 ml-1">/ {totalStudents}</span></>} />
-                <BarLine label="Missing rate" pct={q.missingRatePct} hint={`${q.attempts} attempts, ${Math.max(0, totalStudents - q.attempts)} missing`} />
-                <BarLine label="Difficulty (Passed %)" pct={q.difficultyPct} />
-                <Line label="Mean"><span className="font-mono">{q.stats.mean.toFixed(2)}</span></Line>
-                <div className="flex items-center gap-2 pb-1">
-                  <progress
-                    className="progress progress-primary w-full"
-                    value={Math.max(0, Math.min(100, q.maxPointsObserved > 0 ? (q.stats.mean / q.maxPointsObserved) * 100 : 0))}
-                    max={100}
-                  />
-                  <span className="font-mono text-xs">
-                    {q.maxPointsObserved > 0 ? ((q.stats.mean / q.maxPointsObserved) * 100).toFixed(1) : '0.0'}%
-                  </span>
-                </div>
-                <Line label="Median"><span className="font-mono">{q.stats.q2.toFixed(2)}</span></Line>
-                <Line label="Std dev"><span className="font-mono">{q.stats.stdev.toFixed(2)}</span></Line>
-                <Line label="Range">
-                  <span className="font-mono">
-                    {q.stats.min.toFixed(2)} – {q.stats.max.toFixed(2)}
-                  </span>
-                  <span className="font-mono text-xs opacity-70 ml-2">
-                    {q.maxPointsObserved > 0 ? ((q.stats.min / q.maxPointsObserved) * 100).toFixed(1) : '0.0'}% – {q.maxPointsObserved > 0 ? ((q.stats.max / q.maxPointsObserved) * 100).toFixed(1) : '0.0'}%
-                  </span>
-                </Line>
-                <Line label="Adjustments"><span className="font-mono">{q.adjustmentCount}</span></Line>
-                <Line label="Avg Δ points"><span className="font-mono">{q.adjustmentAvg.toFixed(2)}</span></Line>
-              </div>
+          <Divider mb="xs" />
 
-              <div className="pt-2">
-                <div className="text-sm mb-1 opacity-70">Distribution</div>
-                {q.maxPointsObserved <= 0 || q.histogramData.every(d => d.count === 0) ? (
-                  <div className="opacity-60 text-xs">No data</div>
-                ) : (
-                  <div style={{ width: '100%', height: 180 }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={q.histogramData} margin={{ top: 10, right: 10, bottom: 0, left: 0 }}>
-                        <XAxis dataKey="binLabel" tick={{ fontSize: 11 }} />
-                        <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-                        <Tooltip
-                          formatter={(value: number | string, name: string) => [value, name === 'count' ? 'Count' : name]}
-                        />
-                        <Bar dataKey="count" fill="#3b82f6" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
+          <StatRow label="Attempts" right={<><Text span size="sm" fw={600}>{q.attempts}</Text><Text span c="dimmed" size="sm" ml={4}>/ {totalStudents}</Text></>} />
+          <ProgressRow label="Missing rate" pct={q.missingRatePct} hint={`${q.attempts} attempts, ${Math.max(0, totalStudents - q.attempts)} missing`} />
+          <ProgressRow label="Difficulty (Passed %)" pct={q.difficultyPct} />
+
+          <Divider my="xs" />
+
+          <StatRow label="Mean" right={<Text ff="monospace" size="sm">{q.stats.mean.toFixed(2)} ({q.maxPointsObserved > 0 ? ((q.stats.mean / q.maxPointsObserved) * 100).toFixed(1) : '0.0'}%)</Text>} />
+          <StatRow label="Median" right={<Text ff="monospace" size="sm">{q.stats.q2.toFixed(2)}</Text>} />
+          <StatRow label="Std dev" right={<Text ff="monospace" size="sm">{q.stats.stdev.toFixed(2)}</Text>} />
+          <StatRow label="Range" right={<Text ff="monospace" size="sm">{q.stats.min.toFixed(2)} – {q.stats.max.toFixed(2)}</Text>} />
+          <StatRow label="Adjustments" right={<Text ff="monospace" size="sm">{q.adjustmentCount}</Text>} />
+
+          <Divider my="xs" />
+
+          <Text size="xs" c="dimmed" mb={4} fw={500}>Distribution</Text>
+          {q.maxPointsObserved <= 0 || q.histogramData.every((d: {count: number}) => d.count === 0) ? (
+            <Text size="xs" c="dimmed">No data</Text>
+          ) : (
+            <BarChart
+              h={160}
+              data={q.histogramData}
+              dataKey="binLabel"
+              series={[{ name: 'count', color: 'blue.6', label: 'Count' }]}
+              tickLine="xy"
+              xAxisProps={{ tick: { fontSize: 10 } }}
+              yAxisProps={{ tick: { fontSize: 10 }, allowDecimals: false }}
+            />
+          )}
+        </Card>
+      ))}
+    </SimpleGrid>
   );
 };
 

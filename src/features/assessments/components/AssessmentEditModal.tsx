@@ -1,10 +1,10 @@
+import { Modal, Alert, Button, Group } from '@mantine/core';
 import React from 'react';
-import Modal from '@components/common/Modal';
+
 import { SchemaForm } from '@components/common/forms/SchemaForm';
-import ErrorAlert from '@components/common/ErrorAlert';
-import LoadingButton from '@components/ui/LoadingButton';
-import { Button } from '@components/ui/Button';
 import requestsSchema from '@schemas/requests.json';
+import { getErrorMessages } from '@utils/error';
+
 import type { AssessmentUpdateRequest, AssessmentResponse } from '@api/models';
 import type { JSONSchema7 } from 'json-schema';
 
@@ -35,39 +35,29 @@ const AssessmentEditModal: React.FC<Props> = ({ openItem, isSubmitting, error, o
   const formId = 'assessment-edit-form';
 
   return (
-    <Modal open={!!openItem} onClose={onClose}>
-      <h3 className="font-bold text-lg">Edit Assessment</h3>
-
+    <Modal opened={!!openItem} onClose={onClose} title="Edit Assessment" size="md">
       {openItem && (
         <SchemaForm<AssessmentUpdateRequest>
           schema={schema}
           uiSchema={uiSchema}
           formData={{ name: openItem.name, description: openItem.description }}
           showSubmit={false}
-          onSubmit={async ({ formData }) => {
+          onSubmit={({ formData }) => {
             if (!formData) return;
-            await onSubmit(openItem.id, formData);
+            void onSubmit(openItem.id, formData);
           }}
           formProps={{ noHtml5Validate: true, id: formId }}
         />
       )}
 
-      {!!error && <ErrorAlert error={error} className="mt-2" />}
+      {!!error && (
+        <Alert color="red" mt="md">{getErrorMessages(error).join(' ')}</Alert>
+      )}
 
-      <div className="modal-action">
-        <Button type="button" variant='ghost' onClick={onClose} disabled={isSubmitting}>
-          Cancel
-        </Button>
-        <LoadingButton
-          type="submit"
-          form={formId}
-          variant="primary"
-          isLoading={isSubmitting}
-          loadingLabel="Saving..."
-          idleLabel="Save"
-          disabled={!openItem}
-        />
-      </div>
+      <Group justify="flex-end" mt="md">
+        <Button variant="subtle" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
+        <Button type="submit" form={formId} loading={isSubmitting} disabled={!openItem}>Save</Button>
+      </Group>
     </Modal>
   );
 };

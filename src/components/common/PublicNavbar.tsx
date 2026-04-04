@@ -1,24 +1,15 @@
-import React from 'react';
+import { Group, Button, Anchor, Text } from '@mantine/core';
 import { Link } from 'react-router-dom';
 
-const PublicNavbar: React.FC = () => {
-  return (
-    <div className="navbar bg-base-100 border-b border-base-300">
-      <div className="flex-1">
-        <Link to="/" className="btn btn-ghost normal-case text-xl">
-          GradeFlow
-        </Link>
-      </div>
-      <div className="flex-none gap-2 mr-5">
-        <Link to="/login" className="btn btn-outline btn-sm mr-2">
-          Log in
-        </Link>
-        <Link to="/register" className="btn btn-primary btn-sm">
-          Register
-        </Link>
-      </div>
-    </div>
-  );
-};
-
+const PublicNavbar: React.FC = () => (
+  <Group h="100%" px="md" justify="space-between">
+    <Anchor component={Link} to="/" underline="never">
+      <Text fw={800} size="xl" c="blue">GradeFlow</Text>
+    </Anchor>
+    <Group gap="sm">
+      <Button component={Link} to="/login" variant="default" size="sm">Log in</Button>
+      <Button component={Link} to="/register" size="sm">Register</Button>
+    </Group>
+  </Group>
+);
 export default PublicNavbar;

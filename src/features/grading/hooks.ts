@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
 import { api } from '@api';
 import { QK } from '@api/queryKeys';
+
 import type {
   GradingResponse,
   GradeAdjustmentRequest,
@@ -94,7 +96,7 @@ export const usePreviewGrading = (assessmentId: string) =>
       if (job?.job_id) {
         // Simple polling loop (2s interval, max ~60s)
         const deadline = Date.now() + 60_000;
-        // eslint-disable-next-line no-constant-condition
+         
         while (true) {
           const statusRes = await api.getStatusJobsJobIdGet(job.job_id);
           const status = statusRes.data.status;

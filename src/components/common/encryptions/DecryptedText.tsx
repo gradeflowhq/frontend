@@ -1,7 +1,9 @@
+import { Skeleton, Tooltip, Text } from '@mantine/core';
+import { IconLock } from '@tabler/icons-react';
 import React, { useEffect, useMemo, useState } from 'react';
-import clsx from 'clsx';
+
 import { decryptString, isEncrypted } from '@utils/crypto';
-import { IconLock } from '@components/ui/Icon';
+
 
 // Global cache to avoid flicker and repeated decrypts across re-renders/components
 // Keyed by `${cipher}::${passphrase}`
@@ -19,9 +21,6 @@ type DecryptedTextProps = {
   title?: string;
   showSkeletonWhileDecrypting?: boolean; // render a skeleton while decrypting async
 };
-
-const sizeClass = (s: 'xs' | 'sm' | 'md' = 'md') =>
-  s === 'xs' ? 'text-xs' : s === 'sm' ? 'text-sm' : '';
 
 const DecryptedText: React.FC<DecryptedTextProps> = ({
   value,
@@ -111,23 +110,29 @@ const DecryptedText: React.FC<DecryptedTextProps> = ({
     // Important: include only value/passphrase/maskedText/encrypted/cacheKey
   }, [value, passphrase, maskedText, encrypted, cacheKey]);
 
-  const classes = clsx(className, mono && 'font-mono', sizeClass(size));
-
   return (
-    <span className={classes} title={title}>
+    <Text
+      component="span"
+      ff={mono ? 'monospace' : undefined}
+      size={size}
+      className={className}
+      title={title}
+    >
       {isDecrypting && showSkeletonWhileDecrypting ? (
-        <span className="skeleton inline-block h-4 w-20 align-middle" aria-label="Decrypting" />
+        <Skeleton display="inline-block" height={16} width={80} />
       ) : (
         <>
           {display}
           {encrypted && showLockIcon && (
-            <span className="inline-flex items-center tooltip ml-1" data-tip="Stored encrypted on server">
-              <IconLock />
-            </span>
+            <Tooltip label="Stored encrypted on server">
+              <span style={{ display: 'inline-flex', alignItems: 'center', marginLeft: 4 }}>
+                <IconLock size={12} />
+              </span>
+            </Tooltip>
           )}
         </>
       )}
-    </span>
+    </Text>
   );
 };
 

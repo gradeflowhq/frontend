@@ -1,14 +1,15 @@
+import {
+  Alert, Button, Checkbox, Group, Select, Skeleton, Stack, Table, Text,
+} from '@mantine/core';
+import { notifications } from '@mantine/notifications';
+import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 import React, { useMemo, useState, useEffect } from 'react';
-import ErrorAlert from '@components/common/ErrorAlert';
-import LoadingButton from '@components/ui/LoadingButton';
-import { Button } from '@components/ui/Button';
-import TableSkeleton from '@components/common/TableSkeleton';
-import { IconChevronLeft, IconChevronRight } from '@components/ui/Icon';
+
+import { useInferAndParseQuestionSet, useQuestionSet } from '@features/questions/hooks';
 import {
   useSourceData, useImportConfig, useSaveImportConfig, useImportSubmissions,
 } from '@features/submissions';
-import { useInferAndParseQuestionSet, useQuestionSet } from '@features/questions/hooks';
-import { useToast } from '@components/common/ToastProvider';
+import { getErrorMessages } from '@utils/error';
 
 import type { SubmissionsImportConfig } from '@api/models';
 
@@ -55,7 +56,6 @@ export const ConfigureStep: React.FC<{
     setInitialized(true);
   }, [initialized, sourceFetching, sourceData, existingConfig, configError, allDataCols, sidCol]);
 
-  const toast = useToast();
   const saveConfig = useSaveImportConfig(assessmentId);
   const importMutation = useImportSubmissions(assessmentId);
   const inferAndParse = useInferAndParseQuestionSet(assessmentId);
@@ -110,108 +110,123 @@ export const ConfigureStep: React.FC<{
               Object.keys(qsRes.question_set.question_map ?? {}).length > 0;
             if (!hasQS) {
               inferAndParse.mutate(undefined, {
-                onError: () => toast.error('Could not auto-infer question set'),
+                onError: () => notifications.show({ color: 'red', message: 'Could not auto-infer question set' }),
               });
             }
             onSuccess();
           },
-          onError: () => toast.error('Import failed'),
+          onError: () => notifications.show({ color: 'red', message: 'Import failed' }),
         });
       },
-      onError: () => toast.error('Failed to save configuration'),
+      onError: () => notifications.show({ color: 'red', message: 'Failed to save configuration' }),
     });
   };
 
   if (sourceLoading || sourceFetching) {
-    return <TableSkeleton cols={4} rows={6} />;
+    return (
+      <Stack gap="sm">
+        <Skeleton height={40} />
+        <Skeleton height={200} />
+      </Stack>
+    );
   }
 
   if (sourceError || !sourceData) {
     return (
-      <ErrorAlert
-        error={new Error('Source data not found. Please upload a file first.')}
-      />
+      <Alert color="red">Source data not found. Please upload a file first.</Alert>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <p className="text-sm opacity-70">
-        Choose which columns to import as answer data and optionally map pre-grade point columns.
-        This configuration is saved and can be changed later without re-uploading.
-      </p>
+    <Stack gap="md">
+      <Group justify="space-between" align="center">
+        <Text size="sm" c="dimmed">
+          Choose which columns to import as answer data and optionally map pre-grade point columns.
+          This configuration is saved and can be changed later without re-uploading.
+        </Text>
+        <Group gap="xs" style={{ flexShrink: 0 }}>
+          <Button size="xs" variant="default" onClick={() => setSelectedCols(allDataCols)}>Select all</Button>
+          <Button size="xs" variant="default" onClick={() => setSelectedCols([])}>Deselect all</Button>
+        </Group>
+      </Group>
 
-      <div className="overflow-hidden rounded-box border border-base-300 bg-base-100 shadow-xs">
-        <div className="overflow-x-auto">
-          <table className="table table-sm table-zebra w-full">
-            <thead className="sticky top-0 bg-base-100">
-              <tr>
-                <th>Include</th>
-                <th>Column</th>
-                <th>Sample values</th>
-                <th>Pre-grade points from</th>
-              </tr>
-            </thead>
-            <tbody>
-              {allDataCols.map((col) => {
-                const colIdx = sourceData.headers.indexOf(col);
-                const samples = sourceData.rows.slice(0, 3).map((r) => r[colIdx] ?? '').filter(Boolean);
-                const isSelected = selectedCols.includes(col);
-                const pointChoices = getPointChoices(col);
-                return (
-                  <tr key={col} className="hover">
-                    <td>
-                      <input
-                        type="checkbox" className="checkbox checkbox-sm"
-                        checked={isSelected}
-                        onChange={() => toggleCol(col)}
+      <Table.ScrollContainer minWidth={480}>
+        <Table withTableBorder withColumnBorders verticalSpacing="xs">
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Include</Table.Th>
+              <Table.Th>Column</Table.Th>
+              <Table.Th>Sample values</Table.Th>
+              <Table.Th>Pre-grade points from</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {allDataCols.map((col) => {
+              const colIdx = sourceData.headers.indexOf(col);
+              const samples = sourceData.rows.slice(0, 3).map((r) => r[colIdx] ?? '').filter(Boolean);
+              const isSelected = selectedCols.includes(col);
+              const pointChoices = getPointChoices(col);
+              return (
+                <Table.Tr key={col}>
+                  <Table.Td>
+                    <Checkbox
+                      size="sm"
+                      checked={isSelected}
+                      onChange={() => toggleCol(col)}
+                    />
+                  </Table.Td>
+                  <Table.Td>
+                    <Text ff="monospace" size="sm">{col}</Text>
+                  </Table.Td>
+                  <Table.Td>
+                    <Text ff="monospace" size="xs" c="dimmed">{samples.join(' · ')}</Text>
+                  </Table.Td>
+                  <Table.Td>
+                    {isSelected ? (
+                      <Select
+                        size="xs"
+                        w={224}
+                        placeholder="(none)"
+                        clearable
+                        value={pointColumns[col] ?? null}
+                        onChange={(v) => setPointCol(col, v ?? '')}
+                        data={pointChoices.map((pc) => ({ value: pc, label: pc }))}
                       />
-                    </td>
-                    <td><span className="font-mono text-sm">{col}</span></td>
-                    <td><span className="font-mono text-xs opacity-70">{samples.join(' · ')}</span></td>
-                    <td>
-                      {isSelected ? (
-                        <select
-                          className="select select-bordered select-xs w-full max-w-[14rem]"
-                          value={pointColumns[col] ?? ''}
-                          onChange={(e) => setPointCol(col, e.target.value)}
-                        >
-                          <option value="">(none)</option>
-                          {pointChoices.map((pc) => (
-                            <option key={pc} value={pc}>{pc}</option>
-                          ))}
-                        </select>
-                      ) : (
-                        <span className="text-xs opacity-40">—</span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                    ) : (
+                      <Text size="xs" c="dimmed">—</Text>
+                    )}
+                  </Table.Td>
+                </Table.Tr>
+              );
+            })}
+          </Table.Tbody>
+        </Table>
+      </Table.ScrollContainer>
 
       {(saveConfig.isError || importMutation.isError) && (
-        <ErrorAlert error={saveConfig.error ?? importMutation.error} />
+        <Alert color="red">{getErrorMessages(saveConfig.error ?? importMutation.error).join(' ')}</Alert>
       )}
 
-      <div className="flex justify-between mt-6">
+      <Group justify="space-between" mt="md">
         <Button
-          type="button" variant="ghost" onClick={onBack}
-          disabled={isPending} leftIcon={<IconChevronLeft />}
+          type="button"
+          variant="default"
+          onClick={onBack}
+          disabled={isPending}
+          leftSection={<IconChevronLeft size={16} />}
         >
           Back
         </Button>
-        <LoadingButton
-          type="button" variant="primary" onClick={handleNext}
-          disabled={selectedCols.length === 0} isLoading={isPending}
-          leftIcon={<IconChevronRight />}
+        <Button
+          type="button"
+          onClick={handleNext}
+          disabled={selectedCols.length === 0}
+          loading={isPending}
+          leftSection={<IconChevronRight size={16} />}
         >
           Next
-        </LoadingButton>
-      </div>
-    </div>
+        </Button>
+      </Group>
+    </Stack>
   );
 };

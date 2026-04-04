@@ -1,7 +1,8 @@
 import Papa from 'papaparse';
 
-import type { CanvasUserSummary } from '@api/canvasClient';
 import { parseNumber } from '@utils/format';
+
+import type { CanvasUserSummary } from '@api/canvasClient';
 
 export type CsvGradeRow = {
   studentId: string;

@@ -1,6 +1,8 @@
 import axios, { type AxiosRequestHeaders, type InternalAxiosRequestConfig } from 'axios';
-import { api } from './index';
+
 import { useAuthStore } from '@state/authStore';
+
+import { api } from './index';
 
 axios.defaults.baseURL =
   window.__CONFIG__?.API_URL ??
@@ -66,7 +68,7 @@ axios.interceptors.response.use(
           const tokenPair = res.data;
           useAuthStore.getState().setTokens(tokenPair);
           processQueue(tokenPair.access_token ?? null);
-        } catch (e) {
+        } catch {
           useAuthStore.getState().clearTokens();
           processQueue(null);
           reject(error);

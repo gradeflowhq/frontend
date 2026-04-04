@@ -1,16 +1,13 @@
+import { Alert, ActionIcon, Button, Group, Modal, Skeleton, Stack, Text } from '@mantine/core';
+import { Menu } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
+import { IconAdjustments, IconInbox, IconListCheck, IconLock, IconPencil, IconQuestionMark, IconSettings, IconUsers } from '@tabler/icons-react';
 import { useQueryClient } from '@tanstack/react-query';
 import React from 'react';
 import { NavLink, Outlet, useParams, useNavigate } from 'react-router-dom';
 
 import { QK } from '@api/queryKeys';
-import ConfirmDialog from '@components/common/ConfirmDialog';
-import ErrorAlert from '@components/common/ErrorAlert';
 import PageHeader from '@components/common/PageHeader';
-import { useToast } from '@components/common/ToastProvider';
-import { Button } from '@components/ui/Button';
-import { DropdownMenu } from '@components/ui/DropdownMenu';
-import { IconGrade, IconSubmissions, IconQuestions, IconRules, IconSettings, IconEdit, IconUsers, IconLock } from '@components/ui/Icon';
-import LoadingButton from '@components/ui/LoadingButton';
 import { MembersDialog } from '@features/assessments/components';
 import AssessmentEditModal from '@features/assessments/components/AssessmentEditModal';
 import { useAssessment, useUpdateAssessment } from '@features/assessments/hooks';
@@ -19,33 +16,47 @@ import { useAssessmentPassphrase } from '@features/encryption/passphraseContext'
 import { useGrading, useRunGrading, useGradingJob, useJobStatus } from '@features/grading/hooks';
 import { useRubric, useRubricCoverage } from '@features/rubric/hooks';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
+import { getErrorMessages } from '@utils/error';
 import { buildPassphraseKey, clearPassphrase } from '@utils/passphrase';
 
 import type { AssessmentResponse, AssessmentUpdateRequest } from '@api/models';
 
 const TabsNav: React.FC<{ basePath: string }> = ({ basePath }) => {
-  const tabClass = ({ isActive }: { isActive: boolean }) => `tab tab-sm sm:tab-md ${isActive ? 'tab-active' : ''}`;
   return (
-    <div className="tabs tabs-lift mb-4 flex-wrap gap-2">
-      <NavLink className={tabClass} to={`${basePath}/submissions`}>
-        <span className="flex items-center gap-2">
-          <IconSubmissions />
-          <span>Submissions</span>
-        </span>
-      </NavLink>
-      <NavLink className={tabClass} to={`${basePath}/questions`}>
-        <span className="flex items-center gap-2">
-          <IconQuestions />
-          <span>Questions</span>
-        </span>
-      </NavLink>
-      <NavLink className={tabClass} to={`${basePath}/rules`}>
-        <span className="flex items-center gap-2">
-          <IconRules />
-          <span>Rules</span>
-        </span>
-      </NavLink>
-    </div>
+    <nav
+      style={{
+        display: 'flex',
+        gap: 4,
+        borderBottom: '1px solid var(--mantine-color-default-border)',
+        marginBottom: 16,
+        flexWrap: 'wrap',
+      }}
+    >
+      {[
+        { to: `${basePath}/submissions`, icon: <IconInbox size={16} />, label: 'Submissions' },
+        { to: `${basePath}/questions`, icon: <IconQuestionMark size={16} />, label: 'Questions' },
+        { to: `${basePath}/rules`, icon: <IconAdjustments size={16} />, label: 'Rules' },
+      ].map(({ to, icon, label }) => (
+        <NavLink
+          key={to}
+          to={to}
+          style={({ isActive }: { isActive: boolean }) => ({
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            padding: '8px 16px',
+            borderBottom: isActive ? '2px solid var(--mantine-color-blue-6)' : '2px solid transparent',
+            color: isActive ? 'var(--mantine-color-blue-6)' : 'inherit',
+            textDecoration: 'none',
+            fontWeight: isActive ? 600 : 400,
+            fontSize: 14,
+          })}
+        >
+          {icon}
+          {label}
+        </NavLink>
+      ))}
+    </nav>
   );
 };
 
@@ -73,81 +84,86 @@ const HeaderActions: React.FC<{
 
   const canForget = !!passphrase;
 
-  const handleForgetPassphrase = () => setConfirmForget(true);
-
-  const confirmForgetHandler = () => {
-    clearPassphrase(buildPassphraseKey(assessmentId));
-    clear();
-    setConfirmForget(false);
-  };
-
   return (
     <>
-      <div className="flex flex-wrap gap-2 items-center justify-end">
-        <div className="join">
+      <Group gap="xs" justify="flex-end" wrap="wrap">
+        <Group gap={0}>
           {rulesCount > 0 && (
-            <LoadingButton
+            <Button
               type="button"
               variant="outline"
-              className="btn-primary join-item"
               onClick={onRunGrading}
-              isLoading={isGradingPending}
+              loading={isGradingPending}
               disabled={isGradingPending}
-              leftIcon={<IconGrade />}
+              leftSection={<IconListCheck size={16} />}
+              style={{ borderRadius: '4px 0 0 4px' }}
             >
               Run
-            </LoadingButton>
+            </Button>
           )}
           {hasGrading && (
             <Button
               type="button"
               variant="outline"
-              className="join-item"
               onClick={onOpenResults}
               title="View grading results"
+              style={{ borderRadius: rulesCount > 0 ? '0 4px 4px 0' : undefined, borderLeft: rulesCount > 0 ? 'none' : undefined }}
             >
               Results
             </Button>
           )}
-        </div>
+        </Group>
 
-        <DropdownMenu
-          align="end"
-          trigger={
-            <IconSettings />
-          }
-        >
-          <li>
-            <button onClick={onOpenEdit}>
-              <IconEdit />
+        <Menu position="bottom-end">
+          <Menu.Target>
+            <ActionIcon variant="outline" size="lg" aria-label="Settings">
+              <IconSettings size={16} />
+            </ActionIcon>
+          </Menu.Target>
+          <Menu.Dropdown>
+            <Menu.Item leftSection={<IconPencil size={14} />} onClick={onOpenEdit}>
               Assessment
-            </button>
-          </li>
-          <li>
-            <button onClick={onOpenMembers}>
-              <IconUsers />
+            </Menu.Item>
+            <Menu.Item leftSection={<IconUsers size={14} />} onClick={onOpenMembers}>
               Members
-            </button>
-          </li>
-          {canForget && (
-            <li>
-              <button className="text-error" onClick={handleForgetPassphrase}>
-                <IconLock />
-                Forget passphrase
-              </button>
-            </li>
-          )}
-        </DropdownMenu>
-      </div>
+            </Menu.Item>
+            {canForget && (
+              <>
+                <Menu.Divider />
+                <Menu.Item
+                  color="red"
+                  leftSection={<IconLock size={14} />}
+                  onClick={() => setConfirmForget(true)}
+                >
+                  Forget passphrase
+                </Menu.Item>
+              </>
+            )}
+          </Menu.Dropdown>
+        </Menu>
+      </Group>
 
-      <ConfirmDialog
-        open={confirmForget}
+      <Modal
+        opened={confirmForget}
+        onClose={() => setConfirmForget(false)}
         title="Forget Passphrase"
-        message="This will remove your locally stored passphrase and require re-entry to decrypt encrypted IDs. Proceed?"
-        confirmText="Forget"
-        onConfirm={confirmForgetHandler}
-        onCancel={() => setConfirmForget(false)}
-      />
+      >
+        <Text mb="md">
+          This will remove your locally stored passphrase and require re-entry to decrypt encrypted IDs. Proceed?
+        </Text>
+        <Group justify="flex-end">
+          <Button variant="default" onClick={() => setConfirmForget(false)}>Cancel</Button>
+          <Button
+            onClick={() => {
+              clearPassphrase(buildPassphraseKey(assessmentId));
+              clear();
+              setConfirmForget(false);
+            }}
+          >
+            Forget
+          </Button>
+        </Group>
+      </Modal>
     </>
   );
 };
@@ -155,7 +171,6 @@ const HeaderActions: React.FC<{
 const AssessmentShellPage: React.FC = () => {
   const { assessmentId } = useParams<{ assessmentId: string }>();
   const navigate = useNavigate();
-  const toast = useToast();
 
   const [showEdit, setShowEdit] = React.useState(false);
   const [showMembers, setShowMembers] = React.useState(false);
@@ -171,7 +186,6 @@ const AssessmentShellPage: React.FC = () => {
   const { data: rubricRes } = useRubric(assessmentId!);
   const { data: coverageRes } = useRubricCoverage(assessmentId!);
 
-  // Job-aware grading state
   const { data: gradingJob } = useGradingJob(assessmentId!, !!assessmentId);
   const jobId = gradingJob?.job_id ?? null;
   const { data: jobStatusRes } = useJobStatus(jobId, !!jobId);
@@ -196,45 +210,41 @@ const AssessmentShellPage: React.FC = () => {
   const [confirmCoverage, setConfirmCoverage] = React.useState(false);
   const [confirmOverride, setConfirmOverride] = React.useState(false);
 
-  // Track a run we just started, so we only auto-navigate when this user action triggers completion.
   const [awaitingNavigation, setAwaitingNavigation] = React.useState(false);
   const [runError, setRunError] = React.useState<unknown | null>(null);
+
+  const qc = useQueryClient();
 
   const startRunAndAwait = () => {
     setRunError(null);
     runGradingMutation.mutate(undefined, {
       onSuccess: () => {
-        // We started a job; wait for jobStatus to report 'completed' or 'failed'
         setAwaitingNavigation(true);
-        toast.info('Grading job started');
+        notifications.show({ color: 'blue', message: 'Grading job started' });
       },
       onError: (e) => {
         setRunError(e);
         setAwaitingNavigation(false);
-        toast.error('Failed to start grading');
+        notifications.show({ color: 'red', message: 'Failed to start grading' });
       },
     });
   };
 
-  const qc = useQueryClient();
-
-  // Auto-navigate to Results only when the job completes successfully after user-triggered run
   React.useEffect(() => {
     if (!awaitingNavigation) return;
     if (jobStatus === 'completed') {
       setAwaitingNavigation(false);
-      toast.success('Grading completed');
+      notifications.show({ color: 'green', message: 'Grading completed' });
       void (async () => {
         await qc.invalidateQueries({ queryKey: QK.grading.item(assessmentId!) });
         await navigate(`/results/${assessmentId}`);
       })();
     } else if (jobStatus === 'failed') {
-      // Show errors; do not navigate
       setRunError(new Error('Grading job failed'));
       setAwaitingNavigation(false);
-      toast.error('Grading job failed');
+      notifications.show({ color: 'red', message: 'Grading job failed' });
     }
-  }, [awaitingNavigation, jobStatus, navigate, assessmentId, qc, toast]);
+  }, [awaitingNavigation, jobStatus, navigate, assessmentId, qc]);
 
   const handleGradeClick = () => {
     if ((coveragePct ?? 0) < 1) {
@@ -285,14 +295,17 @@ const AssessmentShellPage: React.FC = () => {
         />
 
         {isLoadingAssessment && (
-          <div className="animate-pulse">
-            <div className="h-10 bg-base-200 rounded mb-2" />
-          </div>
+          <Stack gap="xs" mb="md">
+            <Skeleton height={40} />
+          </Stack>
         )}
-        {isErrorAssessment && <ErrorAlert error={assessmentError} />}
+        {isErrorAssessment && (
+          <Alert color="red" mb="md">{getErrorMessages(assessmentError).join(' ')}</Alert>
+        )}
 
-        {/* Show job failure or run errors */}
-        {!!runError && <ErrorAlert error={runError} className="mb-2" />}
+        {!!runError && (
+          <Alert color="red" mb="md">{getErrorMessages(runError).join(' ')}</Alert>
+        )}
 
         {!isLoadingAssessment && !isErrorAssessment && (
           <>
@@ -302,28 +315,40 @@ const AssessmentShellPage: React.FC = () => {
         )}
       </AssessmentPassphraseProvider>
 
-      <ConfirmDialog
-        open={confirmCoverage}
+      <Modal
+        opened={confirmCoverage}
+        onClose={() => setConfirmCoverage(false)}
         title="Incomplete Coverage"
-        message={
-          uncoveredIds.length
-            ? `The following questions are not covered by any rules:\n${uncoveredIds.join(', ')}\nProceed with grading anyway?`
-            : 'Rubric coverage is below 100%. Proceed with grading anyway?'
-        }
-        confirmText="Proceed"
-        onConfirm={proceedAfterCoverage}
-        onCancel={() => setConfirmCoverage(false)}
-      />
-      <ConfirmDialog
-        open={confirmOverride}
+      >
+        <Text mb="md">
+          {uncoveredIds.length
+            ? `The following questions are not covered by any rules: ${uncoveredIds.join(', ')}. Proceed with grading anyway?`
+            : 'Rubric coverage is below 100%. Proceed with grading anyway?'}
+        </Text>
+        <Group justify="flex-end">
+          <Button variant="default" onClick={() => setConfirmCoverage(false)}>Cancel</Button>
+          <Button onClick={proceedAfterCoverage}>Proceed</Button>
+        </Group>
+      </Modal>
+
+      <Modal
+        opened={confirmOverride}
+        onClose={() => setConfirmOverride(false)}
         title="Override Existing Grading"
-        message="Submissions have already been graded. Continuing will override all results and adjustments. Proceed?"
-        confirmLoading={runGradingMutation.isPending}
-        confirmLoadingLabel="Grading…"
-        confirmText="Proceed"
-        onConfirm={proceedAfterOverride}
-        onCancel={() => setConfirmOverride(false)}
-      />
+      >
+        <Text mb="md">
+          Submissions have already been graded. Continuing will override all results and adjustments. Proceed?
+        </Text>
+        <Group justify="flex-end">
+          <Button variant="default" onClick={() => setConfirmOverride(false)}>Cancel</Button>
+          <Button
+            loading={runGradingMutation.isPending}
+            onClick={proceedAfterOverride}
+          >
+            Proceed
+          </Button>
+        </Group>
+      </Modal>
 
       <AssessmentEditModal
         openItem={showEdit ? (assessmentRes as AssessmentResponse) : null}
@@ -334,9 +359,9 @@ const AssessmentShellPage: React.FC = () => {
           await updateAssessmentMutation.mutateAsync({ id, payload: formData }, {
             onSuccess: () => {
               setShowEdit(false);
-              toast.success('Assessment updated');
+              notifications.show({ color: 'green', message: 'Assessment updated' });
             },
-            onError: (err) => toast.error(err, 'Update failed'),
+            onError: () => notifications.show({ color: 'red', message: 'Update failed' }),
           });
         }}
       />
