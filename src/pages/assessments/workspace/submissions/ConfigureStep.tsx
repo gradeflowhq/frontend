@@ -6,7 +6,7 @@ import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 import { DataTable } from 'mantine-datatable';
 import React, { useMemo, useState, useEffect } from 'react';
 
-import { useInferAndParseQuestionSet, useQuestionSet } from '@features/questions/hooks';
+import { useInferAndParseQuestionSet, useQuestionSet } from '@features/questions/api';
 import {
   useSourceData, useImportConfig, useSaveImportConfig, useImportSubmissions,
 } from '@features/submissions';

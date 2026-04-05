@@ -1,7 +1,7 @@
 import { Modal, Alert, Button, Group } from '@mantine/core';
 import React from 'react';
 
-import { SchemaForm } from '@components/common/forms/SchemaForm';
+import { SchemaForm } from '@components/forms/SchemaForm';
 import requestsSchema from '@schemas/requests.json';
 import { getErrorMessage } from '@utils/error';
 

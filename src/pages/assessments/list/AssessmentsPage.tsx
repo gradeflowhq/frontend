@@ -30,19 +30,19 @@ import { useNavigate } from 'react-router-dom';
 import EmptyState from '@components/common/EmptyState';
 import PageShell from '@components/common/PageShell';
 import {
-  AssessmentCreateModal,
-  AssessmentEditModal,
-} from '@features/assessments/components';
-import {
   useAssessmentsList,
   useCreateAssessment,
   useUpdateAssessment,
   useDeleteAssessment,
-} from '@features/assessments/hooks';
-import { useGrading } from '@features/grading/hooks';
-import { useQuestionSet } from '@features/questions/hooks';
-import { useRubricCoverage } from '@features/rubric/hooks';
-import { useSubmissions } from '@features/submissions/hooks';
+} from '@features/assessments/api';
+import {
+  AssessmentCreateModal,
+  AssessmentEditModal,
+} from '@features/assessments/components';
+import { useGrading } from '@features/grading/api';
+import { useQuestionSet } from '@features/questions/api';
+import { useRubricCoverage } from '@features/rubric/api';
+import { useSubmissions } from '@features/submissions/api';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { formatSmartLabel } from '@utils/datetime';
 import { getErrorMessage } from '@utils/error';

@@ -5,10 +5,10 @@ import React, { useMemo, useState } from 'react';
 
 import { getErrorMessage } from '@utils/error';
 
+import RuleCard from './RuleCard';
 import RuleDialog from './RuleDialog';
-import RuleItem from './RuleItem';
-import { friendlyRuleLabel } from '../helpers';
-import { useRuleDefinitions, useValidateAndReplaceRubric, useCompatibleRuleKeys, useFindSchemaKeyByType, useReplaceRubric } from '../hooks';
+import { useRuleDefinitions, useValidateAndReplaceRubric, useCompatibleRuleKeys, useFindSchemaKeyByType, useReplaceRubric } from '../api';
+import { friendlyRuleLabel } from '../schema';
 
 import type { RuleValue } from '../types';
 import type { QuestionSetOutputQuestionMap, RubricOutput } from '@api/models';
@@ -196,7 +196,7 @@ const SingleTargetRulesSection: React.FC<Props> = ({
               ) : (
                 <Stack gap="sm" mt="xs">
                   {rules.map((r, idx) => (
-                    <RuleItem
+                    <RuleCard
                       key={idx}
                       rule={r}
                       onEdit={(rule) => handleEdit(qid, rule)}

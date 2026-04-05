@@ -5,8 +5,8 @@ import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 
 import { api } from '@api';
-import HiddenAwareFieldTemplate from '@components/common/forms/HiddenAwareFieldTemplate';
-import { SchemaForm } from '@components/common/forms/SchemaForm';
+import HiddenAwareFieldTemplate from '@components/forms/HiddenAwareFieldTemplate';
+import { SchemaForm } from '@components/forms/SchemaForm';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import othersSchema from '@schemas/others.json';
 import { useAuthStore } from '@state/authStore';

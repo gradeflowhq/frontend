@@ -5,11 +5,11 @@ import { IconAdjustments } from '@tabler/icons-react';
 import React from 'react';
 import { useParams } from 'react-router-dom';
 
-import { useAssessmentContext } from '@app/AssessmentContext';
+import { useAssessmentContext } from '@app/contexts/AssessmentContext';
 import PageShell from '@components/common/PageShell';
-import { useQuestionSet } from '@features/questions/hooks';
-import { useRubric, useRubricCoverage, useDeleteRubric } from '@features/rubric/hooks';
-import { MultiTargetRulesSection, RulesHeader, SingleTargetRulesSection } from '@features/rules/components';
+import { useQuestionSet } from '@features/questions/api';
+import { useRubric, useRubricCoverage, useDeleteRubric } from '@features/rubric/api';
+import { MultiTargetRulesSection, RulesToolbar, SingleTargetRulesSection } from '@features/rules/components';
 import RubricImportModal from '@features/rules/components/RubricImportModal';
 import RubricUploadModal from '@features/rules/components/RubricUploadModal';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
@@ -18,7 +18,7 @@ import { getErrorMessage } from '@utils/error';
 import type { RubricOutput, QuestionSetOutputQuestionMap } from '@api/models';
 import type { RuleValue } from '@features/rules/types';
 
-const RulesTabPage: React.FC = () => {
+const RulesPage: React.FC = () => {
   const { assessmentId } = useParams<{ assessmentId: string }>();
   const { assessment } = useAssessmentContext();
   
@@ -138,7 +138,7 @@ const RulesTabPage: React.FC = () => {
       <PageShell
         title="Rules"
         actions={
-          <RulesHeader
+          <RulesToolbar
             onUpload={() => setOpenRubricUpload(true)}
             onImport={() => setOpenRubricImport(true)}
             onDelete={() => setConfirmDeleteRubric(true)}
@@ -172,7 +172,7 @@ const RulesTabPage: React.FC = () => {
         </Group>
       }
       actions={
-        <RulesHeader
+        <RulesToolbar
           onUpload={() => setOpenRubricUpload(true)}
           onImport={() => setOpenRubricImport(true)}
           onDelete={() => setConfirmDeleteRubric(true)}
@@ -273,4 +273,4 @@ const RulesTabPage: React.FC = () => {
   );
 };
 
-export default RulesTabPage;
+export default RulesPage;

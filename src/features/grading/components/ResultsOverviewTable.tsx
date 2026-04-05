@@ -3,7 +3,7 @@ import { IconEye } from '@tabler/icons-react';
 import { DataTable } from 'mantine-datatable';
 import React, { useMemo, useState } from 'react';
 
-import DecryptedText from '@components/common/encryptions/DecryptedText';
+import DecryptedText from '@components/encryption/DecryptedText';
 import { useAssessmentPassphrase } from '@features/encryption/passphraseContext';
 import { useDecryptedIds } from '@features/encryption/useDecryptedIds';
 
@@ -20,7 +20,7 @@ type Props = {
 
 type RowT = AdjustableSubmission;
 
-const ResultsOverview: React.FC<Props> = ({
+const ResultsOverviewTable: React.FC<Props> = ({
   items,
   questionIds,
   onView,
@@ -144,4 +144,4 @@ const ResultsOverview: React.FC<Props> = ({
   );
 };
 
-export default ResultsOverview;
+export default ResultsOverviewTable;

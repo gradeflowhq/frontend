@@ -5,16 +5,16 @@ import React, { useMemo, useState } from 'react';
 
 import { getErrorMessage } from '@utils/error';
 
+import RuleCard from './RuleCard';
 import RuleDialog from './RuleDialog';
-import RuleItem from './RuleItem';
-import { friendlyRuleLabel } from '../helpers';
 import {
   useRuleDefinitions,
   useValidateAndReplaceRubric,
   useCompatibleRuleKeys,
   useFindSchemaKeyByType,
   useReplaceRubric,
-} from '../hooks';
+} from '../api';
+import { friendlyRuleLabel } from '../schema';
 
 import type { RuleValue } from '../types';
 import type { QuestionSetOutputQuestionMap, RubricOutput } from '@api/models';
@@ -133,7 +133,7 @@ const MultiTargetRulesSection: React.FC<Props> = ({ rubric, assessmentId, questi
                 outline: r === highlightedRule ? '1px solid var(--mantine-color-yellow-4)' : undefined,
               }}
             >
-              <RuleItem
+              <RuleCard
                 rule={r}
                 onEdit={handleEditRule}
                 onDelete={(rule) => setDeleteTarget(allRules.indexOf(rule))}

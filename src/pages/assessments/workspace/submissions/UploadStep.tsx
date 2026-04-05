@@ -13,7 +13,7 @@ import React, { useState, useCallback, useMemo } from 'react';
 import { api } from '@api';
 import { QK } from '@api/queryKeys';
 import { buildSourceCsv } from '@features/submissions/helpers';
-import { arraysEqual } from '@features/submissions/utils/questionColumnInference';
+import { arraysEqual } from '@features/submissions/inference/questionColumnInference';
 import { getErrorMessage } from '@utils/error';
 import { buildPassphraseKey, readPassphrase, writePassphrase } from '@utils/passphrase';
 

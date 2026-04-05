@@ -3,7 +3,7 @@ import React, { useCallback, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 
 import ErrorBoundary from '@components/common/ErrorBoundary';
-import UserSettingsDialog from '@components/common/UserSettingsDialog';
+import UserSettingsDialog from '@components/dialogs/UserSettingsDialog';
 
 import { SidebarNav } from './SidebarNav';
 

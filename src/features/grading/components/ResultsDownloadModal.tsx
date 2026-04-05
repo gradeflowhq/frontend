@@ -5,8 +5,8 @@ import { useMutation } from '@tanstack/react-query';
 import React, { useMemo, useState } from 'react';
 
 import { api } from '@api';
-import HiddenAwareFieldTemplate from '@components/common/forms/HiddenAwareFieldTemplate';
-import { SchemaForm } from '@components/common/forms/SchemaForm';
+import HiddenAwareFieldTemplate from '@components/forms/HiddenAwareFieldTemplate';
+import { SchemaForm } from '@components/forms/SchemaForm';
 import { useAssessmentPassphrase } from '@features/encryption/passphraseContext';
 import { tryDecodeExportCsv } from '@features/submissions/helpers';
 import { saveBlob } from '@lib/files';

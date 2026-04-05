@@ -3,8 +3,8 @@ import React, { useMemo } from 'react';
 
 import { api } from '@api';
 import { QK } from '@api/queryKeys';
-import SchemaRequestModal from '@components/common/forms/SchemaRequestModal';
-import FileOrTextWidget from '@components/common/forms/widgets/FileOrTextWidget';
+import SchemaRequestModal from '@components/forms/SchemaRequestModal';
+import FileOrTextWidget from '@components/forms/widgets/FileOrTextWidget';
 import { fileAcceptForConfig, type HasFormatField } from '@lib/uploads';
 import requestsSchema from '@schemas/requests.json';
 

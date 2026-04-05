@@ -3,22 +3,22 @@ import { notifications } from '@mantine/notifications';
 import React from 'react';
 import { useParams } from 'react-router-dom';
 
-import { useAssessmentContext } from '@app/AssessmentContext';
+import { useAssessmentContext } from '@app/contexts/AssessmentContext';
 import AnswerText from '@components/common/AnswerText';
-import { SchemaForm } from '@components/common/forms/SchemaForm';
 import PageShell from '@components/common/PageShell';
-import { QuestionsHeader, QuestionsTable } from '@features/questions/components';
-import QuestionSetImportModal from '@features/questions/components/QuestionSetImportModal';
-import QuestionSetUploadModal from '@features/questions/components/QuestionSetUploadModal';
-import { buildExamplesFromParsed } from '@features/questions/helpers';
+import { SchemaForm } from '@components/forms/SchemaForm';
 import {
   useQuestionSet,
   useParsedSubmissions,
   useUpdateQuestionSet,
   useInferAndParseQuestionSet,
   useDeleteQuestionSet,
-} from '@features/questions/hooks';
-import { useSubmissions } from '@features/submissions/hooks';
+} from '@features/questions/api';
+import { QuestionsHeader, QuestionsTable } from '@features/questions/components';
+import QuestionSetImportModal from '@features/questions/components/QuestionSetImportModal';
+import QuestionSetUploadModal from '@features/questions/components/QuestionSetUploadModal';
+import { buildExamplesFromParsed } from '@features/questions/helpers';
+import { useSubmissions } from '@features/submissions/api';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import questionsSchema from '@schemas/questions.json';
 import { getErrorMessage } from '@utils/error';
@@ -41,7 +41,7 @@ const selectRootSchema = (type: string | undefined) => {
   }
 };
 
-const QuestionsTabPage: React.FC = () => {
+const QuestionsPage: React.FC = () => {
   const { assessmentId } = useParams<{ assessmentId: string }>();
   const { assessment } = useAssessmentContext();
 
@@ -326,5 +326,5 @@ const QuestionsTabPage: React.FC = () => {
   );
 };
 
-export default QuestionsTabPage;
+export default QuestionsPage;
 

@@ -1,8 +1,8 @@
 import React from 'react';
 import { Outlet, useParams } from 'react-router-dom';
 
-import { AssessmentContext } from '@app/AssessmentContext';
-import { useAssessment } from '@features/assessments/hooks';
+import { AssessmentContext } from '@app/contexts/AssessmentContext';
+import { useAssessment } from '@features/assessments/api';
 import { AssessmentPassphraseProvider } from '@features/encryption/AssessmentPassphraseProvider';
 
 const AssessmentShellInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) => {

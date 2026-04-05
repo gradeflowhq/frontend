@@ -5,7 +5,7 @@ import type { CanvasProgress } from '@api/canvasClient';
 
 type Props = { progress?: CanvasProgress; isPushing?: boolean; onClear?: () => void };
 
-const CanvasPushProgressBanner: React.FC<Props> = ({ progress, isPushing, onClear }) => {
+const PushProgressBanner: React.FC<Props> = ({ progress, isPushing, onClear }) => {
   if (isPushing && !progress) {
     return (
       <Alert color="blue" icon={<Loader size="sm" />}>Submitting grades...</Alert>
@@ -37,4 +37,4 @@ const CanvasPushProgressBanner: React.FC<Props> = ({ progress, isPushing, onClea
   );
 };
 
-export default CanvasPushProgressBanner;
+export default PushProgressBanner;

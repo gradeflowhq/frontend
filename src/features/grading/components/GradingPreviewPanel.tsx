@@ -3,7 +3,7 @@ import { IconAlertCircle, IconCircleCheck } from '@tabler/icons-react';
 import React, { useMemo } from 'react';
 
 import AnswerText from '@components/common/AnswerText';
-import DecryptedText from '@components/common/encryptions/DecryptedText';
+import DecryptedText from '@components/encryption/DecryptedText';
 import { useAssessmentPassphrase } from '@features/encryption/passphraseContext';
 import { getErrorMessage } from '@utils/error';
 import { natsort } from '@utils/sort';

@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
-import EncryptedDataGuard from '@components/common/encryptions/EncryptedDataGuard';
+import EncryptedDataGuard from '@components/encryption/EncryptedDataGuard';
 import { startCryptoSession } from '@utils/crypto';
 import { buildPassphraseKey, readPassphrase, normalizePresent, writePassphrase } from '@utils/passphrase';
 

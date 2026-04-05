@@ -16,15 +16,15 @@ import { IconTrash } from '@tabler/icons-react';
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
-import { useAssessmentContext } from '@app/AssessmentContext';
+import { useAssessmentContext } from '@app/contexts/AssessmentContext';
 import PageShell from '@components/common/PageShell';
-import { useUpdateAssessment, useDeleteAssessment } from '@features/assessments/hooks';
+import { useUpdateAssessment, useDeleteAssessment } from '@features/assessments/api';
 import { useAssessmentPassphrase } from '@features/encryption/passphraseContext';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { getErrorMessage } from '@utils/error';
 import { buildPassphraseKey, clearPassphrase } from '@utils/passphrase';
 
-const AssessmentSettingsPage: React.FC = () => {
+const SettingsPage: React.FC = () => {
   const { assessmentId = '' } = useParams<{ assessmentId: string }>();
   const { assessment } = useAssessmentContext();
   const navigate = useNavigate();
@@ -200,4 +200,4 @@ const AssessmentSettingsPage: React.FC = () => {
   );
 };
 
-export default AssessmentSettingsPage;
+export default SettingsPage;

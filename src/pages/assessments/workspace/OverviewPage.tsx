@@ -27,13 +27,13 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { QK } from '@api/queryKeys';
-import { useAssessmentContext } from '@app/AssessmentContext';
+import { useAssessmentContext } from '@app/contexts/AssessmentContext';
 import PageShell from '@components/common/PageShell';
+import { useGrading, useGradingJob, useJobStatus, useRunGrading } from '@features/grading/api';
 import { computeStats, buildTotals } from '@features/grading/helpers';
-import { useGrading, useGradingJob, useJobStatus, useRunGrading } from '@features/grading/hooks';
-import { useQuestionSet } from '@features/questions/hooks';
-import { useRubricCoverage } from '@features/rubric/hooks';
-import { useSubmissions } from '@features/submissions/hooks';
+import { useQuestionSet } from '@features/questions/api';
+import { useRubricCoverage } from '@features/rubric/api';
+import { useSubmissions } from '@features/submissions/api';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { getErrorMessage } from '@utils/error';
 
@@ -70,7 +70,7 @@ const StepIcon: React.FC<{ status: StepStatus }> = ({ status }) => {
   );
 };
 
-const AssessmentOverviewPage: React.FC = () => {
+const OverviewPage: React.FC = () => {
   const { assessmentId = '' } = useParams<{ assessmentId: string }>();
   const { assessment } = useAssessmentContext();
   const navigate = useNavigate();
@@ -358,4 +358,4 @@ const AssessmentOverviewPage: React.FC = () => {
   );
 };
 
-export default AssessmentOverviewPage;
+export default OverviewPage;

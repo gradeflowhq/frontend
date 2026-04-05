@@ -1,7 +1,7 @@
 import { Text, List, Stack, Accordion } from '@mantine/core';
 import React from 'react';
 
-import { prettifyKey } from '@features/rules/helpers';
+import { prettifyKey } from '@features/rules/schema';
 
 interface JsonObject {
   [key: string]: JsonValue;

@@ -33,8 +33,8 @@ import React, { useCallback } from 'react';
 import { Link, useMatch, useNavigate, useLocation } from 'react-router-dom';
 
 import { api } from '@api';
-import { useAssessment } from '@features/assessments/hooks';
-import { useGradingJob, useJobStatus } from '@features/grading/hooks';
+import { useAssessment } from '@features/assessments/api';
+import { useGradingJob, useJobStatus } from '@features/grading/api';
 import { useAuthStore } from '@state/authStore';
 
 import type { MeResponse } from '@api/models';

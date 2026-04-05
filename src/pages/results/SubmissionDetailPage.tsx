@@ -12,8 +12,8 @@ import AnswerText from '@components/common/AnswerText';
 import PageShell from '@components/common/PageShell';
 import { useAssessmentPassphrase } from '@features/encryption/passphraseContext';
 import { useDecryptedIds } from '@features/encryption/useDecryptedIds';
-import { useGrading, useAdjustGrading } from '@features/grading/hooks';
-import { friendlyRuleLabel } from '@features/rules/helpers';
+import { useGrading, useAdjustGrading } from '@features/grading/api';
+import { friendlyRuleLabel } from '@features/rules/schema';
 import { isEncrypted } from '@utils/crypto';
 import { getErrorMessage } from '@utils/error';
 import { natsort } from '@utils/sort';
@@ -27,7 +27,7 @@ import type {
 type ResultWithQid = AdjustableQuestionResult & { question_id: string };
 type EditState = Record<string, { points?: number; feedback?: string }>;
 
-const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStudentId: string }> = ({ assessmentId, encodedStudentId }) => {
+const SubmissionDetailInner: React.FC<{ assessmentId: string; encodedStudentId: string }> = ({ assessmentId, encodedStudentId }) => {
   const navigate = useNavigate();
 
   const safeId = assessmentId;
@@ -506,13 +506,13 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
   );
 };
 
-const GradedSubmissionDetailPage: React.FC = () => {
+const SubmissionDetailPage: React.FC = () => {
   const { assessmentId, studentId } = useParams<{ assessmentId: string; studentId: string }>();
   if (!assessmentId || !studentId) {
     return <Alert color="red">Assessment ID or Student ID is missing.</Alert>;
   }
   // AssessmentPassphraseProvider is provided by AssessmentShell in the route tree
-  return <GradedSubmissionDetailInner assessmentId={assessmentId} encodedStudentId={studentId} />;
+  return <SubmissionDetailInner assessmentId={assessmentId} encodedStudentId={studentId} />;
 };
 
-export default GradedSubmissionDetailPage;
+export default SubmissionDetailPage;

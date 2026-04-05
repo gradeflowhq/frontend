@@ -2,7 +2,7 @@ import { Group, TextInput, Menu, Button } from '@mantine/core';
 import { IconChevronDown, IconSearch, IconTrash, IconUpload } from '@tabler/icons-react';
 import React from 'react';
 
-type RulesHeaderProps = {
+type RulesToolbarProps = {
   onUpload?: () => void;
   onImport?: () => void;
   onDelete?: () => void;
@@ -13,7 +13,7 @@ type RulesHeaderProps = {
   disabled?: boolean;
 };
 
-const RulesHeader: React.FC<RulesHeaderProps> = ({
+const RulesToolbar: React.FC<RulesToolbarProps> = ({
   onUpload,
   onImport,
   onDelete,
@@ -62,4 +62,4 @@ const RulesHeader: React.FC<RulesHeaderProps> = ({
   );
 };
 
-export default RulesHeader;
+export default RulesToolbar;

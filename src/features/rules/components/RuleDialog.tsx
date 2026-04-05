@@ -2,20 +2,20 @@ import { Modal, Button, Alert, Group, Title, Text, Badge, Tabs, Box } from '@man
 import { IconDeviceFloppy } from '@tabler/icons-react';
 import React from 'react';
 
-import HiddenAwareFieldTemplate from '@components/common/forms/HiddenAwareFieldTemplate';
-import { SchemaForm } from '@components/common/forms/SchemaForm';
-import SwitchableTextWidget from '@components/common/forms/widgets/SwitchableTextWidget';
+import HiddenAwareFieldTemplate from '@components/forms/HiddenAwareFieldTemplate';
+import { SchemaForm } from '@components/forms/SchemaForm';
+import SwitchableTextWidget from '@components/forms/widgets/SwitchableTextWidget';
+import { usePreviewGrading } from '@features/grading/api';
 import GradingPreviewPanel from '@features/grading/components/GradingPreviewPanel';
 import GradingPreviewSettings from '@features/grading/components/GradingPreviewSettings';
-import { usePreviewGrading } from '@features/grading/hooks';
 import { getErrorMessage } from '@utils/error';
 
+import { useRuleDefinitions, useCompatibleRuleKeys, useFindSchemaKeyByType } from '../api';
 import { HIDE_KEYS_SINGLE, HIDE_KEYS_MULTI } from '../constants';
-import { friendlyRuleLabel, augmentRulesSchemaWithQuestionIdEnums, injectEnumsFromConstraintsForQuestion, stripEngineKeysFromRulesSchema } from '../helpers';
-import { useRuleDefinitions, useCompatibleRuleKeys, useFindSchemaKeyByType } from '../hooks';
+import { friendlyRuleLabel, augmentRulesSchemaWithQuestionIdEnums, injectEnumsFromConstraintsForQuestion, stripEngineKeysFromRulesSchema } from '../schema';
 
 
-import type { RuleDefinitions } from '../hooks';
+import type { RuleDefinitions } from '../api';
 import type { QuestionType, RuleValue } from '../types';
 import type { QuestionSetOutputQuestionMap } from '@api/models';
 import type { GradingPreviewParams } from '@features/grading/components/GradingPreviewSettings';

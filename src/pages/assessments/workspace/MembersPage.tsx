@@ -4,21 +4,21 @@ import { IconPlus } from '@tabler/icons-react';
 import React, { useCallback, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { useAssessmentContext } from '@app/AssessmentContext';
+import { useAssessmentContext } from '@app/contexts/AssessmentContext';
 import PageShell from '@components/common/PageShell';
-import MembersTable from '@features/assessments/components/MembersTable';
 import {
   useMembers,
   useAddMember,
   useSetMemberRole,
   useRemoveMember,
-} from '@features/assessments/hooks';
+} from '@features/assessments/api';
+import MembersTable from '@features/assessments/components/MembersTable';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { getErrorMessage } from '@utils/error';
 
 import type { UserResponse, UserResponseRole } from '@api/models';
 
-const AssessmentMembersPage: React.FC = () => {
+const MembersPage: React.FC = () => {
   const { assessmentId = '' } = useParams<{ assessmentId: string }>();
   const { assessment } = useAssessmentContext();
 
@@ -132,4 +132,4 @@ const AssessmentMembersPage: React.FC = () => {
   );
 };
 
-export default AssessmentMembersPage;
+export default MembersPage;

@@ -1,19 +1,19 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
-import AssessmentMembersPage from '@pages/assessments/AssessmentMembersPage';
-import AssessmentOverviewPage from '@pages/assessments/AssessmentOverviewPage';
-import AssessmentSettingsPage from '@pages/assessments/AssessmentSettingsPage';
-import AssessmentsPage from '@pages/assessments/AssessmentsPage';
-import QuestionsTabPage from '@pages/assessments/QuestionsTabPage';
-import RulesTabPage from '@pages/assessments/RulesTabPage';
-import SubmissionsTabPage from '@pages/assessments/SubmissionsTabPage';
-import LandingPage from '@pages/LandingPage';
-import LoginPage from '@pages/LoginPage';
-import RegisterPage from '@pages/RegisterPage';
+import AssessmentsPage from '@pages/assessments/list/AssessmentsPage';
+import MembersPage from '@pages/assessments/workspace/MembersPage';
+import OverviewPage from '@pages/assessments/workspace/OverviewPage';
+import QuestionsPage from '@pages/assessments/workspace/QuestionsPage';
+import RulesPage from '@pages/assessments/workspace/RulesPage';
+import SettingsPage from '@pages/assessments/workspace/SettingsPage';
+import SubmissionsPage from '@pages/assessments/workspace/SubmissionsPage';
+import LoginPage from '@pages/auth/LoginPage';
+import RegisterPage from '@pages/auth/RegisterPage';
+import LandingPage from '@pages/landing/LandingPage';
 import CanvasPushPage from '@pages/results/CanvasPushPage';
-import GradedSubmissionDetailPage from '@pages/results/GradedSubmissionDetailPage';
-import ResultsShellPage from '@pages/results/ResultsShellPage';
+import ResultsPage from '@pages/results/ResultsPage';
+import SubmissionDetailPage from '@pages/results/SubmissionDetailPage';
 
 import AppLayout from '../layouts/AppLayout';
 import PublicLayout from '../layouts/PublicLayout';
@@ -45,15 +45,15 @@ const App: React.FC = () => {
             {/* Assessment workspace — all sub-routes share AssessmentShell */}
             <Route path="/assessments/:assessmentId" element={<AssessmentShell />}>
               <Route index element={<Navigate to="overview" replace />} />
-              <Route path="overview" element={<AssessmentOverviewPage />} />
-              <Route path="submissions" element={<SubmissionsTabPage />} />
-              <Route path="questions" element={<QuestionsTabPage />} />
-              <Route path="rules" element={<RulesTabPage />} />
-              <Route path="results" element={<ResultsShellPage />} />
-              <Route path="results/:studentId" element={<GradedSubmissionDetailPage />} />
+              <Route path="overview" element={<OverviewPage />} />
+              <Route path="submissions" element={<SubmissionsPage />} />
+              <Route path="questions" element={<QuestionsPage />} />
+              <Route path="rules" element={<RulesPage />} />
+              <Route path="results" element={<ResultsPage />} />
+              <Route path="results/:studentId" element={<SubmissionDetailPage />} />
               <Route path="publish" element={<CanvasPushPage />} />
-              <Route path="members" element={<AssessmentMembersPage />} />
-              <Route path="settings" element={<AssessmentSettingsPage />} />
+              <Route path="members" element={<MembersPage />} />
+              <Route path="settings" element={<SettingsPage />} />
             </Route>
           </Route>
         </Route>

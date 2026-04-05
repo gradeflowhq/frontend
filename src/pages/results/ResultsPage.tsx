@@ -5,14 +5,14 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 import { QK } from '@api/queryKeys';
-import { useAssessmentContext } from '@app/AssessmentContext';
+import { useAssessmentContext } from '@app/contexts/AssessmentContext';
 import EmptyState from '@components/common/EmptyState';
 import PageShell from '@components/common/PageShell';
 import { useAssessmentPassphrase } from '@features/encryption/passphraseContext';
-import { ResultsOverview, ResultsStats, QuestionAnalysis } from '@features/grading/components';
+import { useGrading, useGradingJob, useJobStatus } from '@features/grading/api';
+import { ResultsOverviewTable, ResultsStatsPanel, QuestionAnalysisGrid } from '@features/grading/components';
 import ResultsDownloadModal from '@features/grading/components/ResultsDownloadModal';
-import { useGrading, useGradingJob, useJobStatus } from '@features/grading/hooks';
-import { useQuestionSet } from '@features/questions/hooks';
+import { useQuestionSet } from '@features/questions/api';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { isEncrypted } from '@utils/crypto';
 import { getErrorMessage } from '@utils/error';
@@ -139,7 +139,7 @@ const ResultsPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) 
 
           <Tabs.Panel value="overview" pt="md">
             {!isError && hasItems && (
-              <ResultsOverview
+              <ResultsOverviewTable
                 items={items}
                 questionIds={questionIds}
                 onView={(studentId) => {
@@ -151,11 +151,11 @@ const ResultsPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) 
           </Tabs.Panel>
 
           <Tabs.Panel value="stats" pt="md">
-            {!isError && hasItems && <ResultsStats items={items} />}
+            {!isError && hasItems && <ResultsStatsPanel items={items} />}
           </Tabs.Panel>
 
           <Tabs.Panel value="analysis" pt="md">
-            {!isError && hasItems && <QuestionAnalysis items={items} questionIds={questionIds} />}
+            {!isError && hasItems && <QuestionAnalysisGrid items={items} questionIds={questionIds} />}
           </Tabs.Panel>
         </Tabs>
       )}
@@ -173,7 +173,7 @@ const ResultsPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) 
 };
 
 // The outer shell now just uses the AssessmentPassphraseProvider from AssessmentShell
-const ResultsShellPage: React.FC = () => {
+const ResultsPage: React.FC = () => {
   const { assessmentId } = useParams<{ assessmentId: string }>();
   if (!assessmentId) {
     return <Alert color="red">Assessment ID is missing.</Alert>;
@@ -181,4 +181,4 @@ const ResultsShellPage: React.FC = () => {
   return <ResultsPageInner assessmentId={assessmentId} />;
 };
 
-export default ResultsShellPage;
+export default ResultsPage;

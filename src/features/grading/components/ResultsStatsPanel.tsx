@@ -29,7 +29,7 @@ const BIN_OPTIONS = [
   { label: '10 pts', value: '10' },
 ];
 
-const ResultsStats: React.FC<Props> = ({ items }) => {
+const ResultsStatsPanel: React.FC<Props> = ({ items }) => {
   const [binWidth, setBinWidth] = useState<number | 'auto'>('auto');
 
   const totals = useMemo(() => buildTotals(items), [items]);
@@ -116,4 +116,4 @@ const ResultsStats: React.FC<Props> = ({ items }) => {
   );
 };
 
-export default ResultsStats;
+export default ResultsStatsPanel;

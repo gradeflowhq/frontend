@@ -6,24 +6,24 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import PageShell from '@components/common/PageShell';
-import UserSettingsDialog from '@components/common/UserSettingsDialog';
-import { useAssessment } from '@features/assessments/hooks';
+import UserSettingsDialog from '@components/dialogs/UserSettingsDialog';
+import { useAssessment } from '@features/assessments/api';
+import { useCanvasData, useCourseData } from '@features/canvas/api/useCanvasData';
+import { useCanvasProgress } from '@features/canvas/api/useCanvasProgress';
+import { useCanvasPush } from '@features/canvas/api/useCanvasPush';
+import { useCsvGrades } from '@features/canvas/api/useCsvGrades';
+import { usePreparedRows } from '@features/canvas/api/usePreparedRows';
 import { pickValue } from '@features/canvas/helpers';
-import { useCanvasData, useCourseData } from '@features/canvas/hooks/useCanvasData';
-import { useCanvasProgress } from '@features/canvas/hooks/useCanvasProgress';
-import { useCanvasPush } from '@features/canvas/hooks/useCanvasPush';
-import { useCsvGrades } from '@features/canvas/hooks/useCsvGrades';
-import { usePreparedRows } from '@features/canvas/hooks/usePreparedRows';
 import { useAssessmentPassphrase } from '@features/encryption/passphraseContext';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
-import { useCanvasPushStore } from '@state/canvasSettingsStore';
-import { useUserSettingsStore } from '@state/userSettingsStore';
+import { useCanvasPushStore } from '@state/canvasStore';
+import { useUserSettingsStore } from '@state/userStore';
 import { getErrorMessage } from '@utils/error';
 
 import AssignmentSection from '../../features/canvas/components/AssignmentSection';
-import CanvasPushProgressBanner from '../../features/canvas/components/CanvasPushProgressBanner';
 import CourseSelector from '../../features/canvas/components/CourseSelector';
 import PreviewSection from '../../features/canvas/components/PreviewSection';
+import PushProgressBanner from '../../features/canvas/components/PushProgressBanner';
 import { type PreviewTab } from '../../features/canvas/types';
 
 const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) => {
@@ -204,7 +204,7 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
       <Stack gap="md" pb={72}>
 
         {(pushState.status === 'pushing' || (progressUrl && progressQuery.data)) && (
-          <CanvasPushProgressBanner
+          <PushProgressBanner
             progress={progressQuery.data}
             isPushing={pushState.status === 'pushing'}
             onClear={handleClearProgress}

@@ -3,7 +3,7 @@ import { DataTable } from 'mantine-datatable';
 import React, { useMemo, useState } from 'react';
 
 import AnswerText from '@components/common/AnswerText';
-import DecryptedText from '@components/common/encryptions/DecryptedText';
+import DecryptedText from '@components/encryption/DecryptedText';
 import { useAssessmentPassphrase } from '@features/encryption/passphraseContext';
 import { extractQuestionKeys } from '@features/submissions/helpers';
 

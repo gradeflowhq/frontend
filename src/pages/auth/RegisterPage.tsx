@@ -5,7 +5,7 @@ import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 
 import { api } from '@api';
-import { SchemaForm } from '@components/common/forms/SchemaForm';
+import { SchemaForm } from '@components/forms/SchemaForm';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import requestsSchema from '@schemas/requests.json';
 import { useAuthStore } from '@state/authStore';

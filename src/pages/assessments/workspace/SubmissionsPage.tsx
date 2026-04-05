@@ -4,7 +4,7 @@ import { IconAdjustments, IconChevronDown, IconSearch, IconTrash, IconUpload } f
 import React, { useMemo, useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { useAssessmentContext } from '@app/AssessmentContext';
+import { useAssessmentContext } from '@app/contexts/AssessmentContext';
 import PageShell from '@components/common/PageShell';
 import { useDeleteSubmissions, useSubmissions, useSourceData } from '@features/submissions';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
@@ -18,7 +18,7 @@ import { UploadStep } from './submissions/UploadStep';
 import type { Step } from './submissions/StepIndicator';
 import type { RawSubmission } from '@api/models';
 
-const SubmissionsTabPage: React.FC = () => {
+const SubmissionsPage: React.FC = () => {
   const { assessmentId = '' } = useParams<{ assessmentId: string }>();
   const [step, setStep] = useState<Step | null>(null);
   const { assessment } = useAssessmentContext();
@@ -194,4 +194,4 @@ const SubmissionsTabPage: React.FC = () => {
   );
 };
 
-export default SubmissionsTabPage;
+export default SubmissionsPage;

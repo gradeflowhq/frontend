@@ -6,8 +6,8 @@ import CodeMirror from '@uiw/react-codemirror';
 import React from 'react';
 
 import { HIDE_KEYS_SINGLE } from '../constants';
-import { getRuleDefinitions, isRuleObject } from '../helpers';
-import { prettifyKey } from '../helpers';
+import { getRuleDefinitions, isRuleObject } from '../schema';
+import { prettifyKey } from '../schema';
 
 import type { RuleValue } from '../types';
 import type { JSONSchema7 } from 'json-schema';
@@ -249,7 +249,7 @@ const renderNode = (
   }
 };
 
-const RuleRender: React.FC<{
+const RuleRenderer: React.FC<{
   value: RuleValue | unknown;
   path?: string;
   contextQuestionId?: string | null;
@@ -268,4 +268,4 @@ const RuleRender: React.FC<{
   return <>{renderNode(value, path, defs, rootOptions)}</>;
 };
 
-export default RuleRender;
+export default RuleRenderer;

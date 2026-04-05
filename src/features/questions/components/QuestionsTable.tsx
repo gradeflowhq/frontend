@@ -6,7 +6,7 @@ import { DataTable } from 'mantine-datatable';
 import React, { useMemo, useState } from 'react';
 
 import AnswerText from '@components/common/AnswerText';
-import { SchemaForm } from '@components/common/forms/SchemaForm';
+import { SchemaForm } from '@components/forms/SchemaForm';
 import { getQuestionIdsSorted } from '@features/questions/helpers';
 import questionsSchema from '@schemas/questions.json';
 import { getErrorMessage } from '@utils/error';

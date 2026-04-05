@@ -6,7 +6,7 @@ import { IconAlertCircle, IconCircleCheck } from '@tabler/icons-react';
 import React, { useState } from 'react';
 
 import { createCanvasClient, parseCanvasBaseUrl } from '@api/canvasClient';
-import { useUserSettingsStore } from '@state/userSettingsStore';
+import { useUserSettingsStore } from '@state/userStore';
 
 import type { AxiosError } from 'axios';
 

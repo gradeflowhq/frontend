@@ -30,7 +30,7 @@ const ProgressRow = ({ label, pct, hint }: { label: string; pct: number; hint?: 
   </div>
 );
 
-const QuestionAnalysis: React.FC<Props> = ({ items, questionIds }) => {
+const QuestionAnalysisGrid: React.FC<Props> = ({ items, questionIds }) => {
   const totalStudents = items.length;
 
   const perQuestion = useMemo(() => {
@@ -139,4 +139,4 @@ const QuestionAnalysis: React.FC<Props> = ({ items, questionIds }) => {
   );
 };
 
-export default QuestionAnalysis;
+export default QuestionAnalysisGrid;

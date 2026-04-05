@@ -1,19 +1,19 @@
 import React from 'react';
 
-import RuleRender from './RuleRender';
+import RuleRenderer from './RuleRenderer';
 
 import type { RuleValue } from '../types';
 
-type RuleItemProps = {
+type RuleCardProps = {
   rule: RuleValue;
   onEdit?: (rule: RuleValue) => void;
   onDelete?: (rule: RuleValue) => void;
   contextQuestionId?: string | null;
 };
 
-const RuleItem: React.FC<RuleItemProps> = ({ rule, onEdit, onDelete, contextQuestionId }) => {
+const RuleCard: React.FC<RuleCardProps> = ({ rule, onEdit, onDelete, contextQuestionId }) => {
   return (
-    <RuleRender
+    <RuleRenderer
       value={rule}
       contextQuestionId={contextQuestionId}
       onEdit={onEdit}
@@ -22,4 +22,4 @@ const RuleItem: React.FC<RuleItemProps> = ({ rule, onEdit, onDelete, contextQues
   );
 };
 
-export default RuleItem;
+export default RuleCard;
