@@ -3,11 +3,10 @@ import { notifications } from '@mantine/notifications';
 import { IconCheck, IconSettings } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import React, { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 
 import { createCanvasClient, parseCanvasBaseUrl } from '@api/canvasClient';
 import PageShell from '@components/common/PageShell';
-import UserSettingsDialog from '@components/dialogs/UserSettingsDialog';
 import { useAssessment } from '@features/assessments/api';
 import { useCanvasData, useCourseData } from '@features/canvas/api/useCanvasData';
 import { useCanvasProgress } from '@features/canvas/api/useCanvasProgress';
@@ -33,6 +32,9 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
 
   useDocumentTitle(`Push to Canvas - ${assessmentRes?.name ?? 'Assessment'} - GradeFlow`);
 
+  const navigate = useNavigate();
+  const goToSettings = () => void navigate('/settings?tab=integrations');
+
   const { canvasBaseUrl, canvasToken } = useUserSettingsStore();
   const {
     courseId,
@@ -48,7 +50,6 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
   } = useCanvasPushStore(assessmentId);
 
   const [includeComments, setIncludeComments] = useState(true);
-  const [showSettings, setShowSettings] = useState(false);
   const [previewTab, setPreviewTab] = useState<PreviewTab>('mapped');
   const [openSteps, setOpenSteps] = useState<string[]>(() => ['connection']);
 
@@ -116,10 +117,11 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
   useEffect(() => {
     if (pushState.status === 'error') {
       notifications.show({ color: 'red', message: pushState.message || 'Canvas push failed' });
-    } else if (pushState.status === 'success' && !progressUrl) {
+    } else if (pushState.status === 'success' && !pushState.progressUrl) {
+      // Canvas returned no progress URL — push completed synchronously
       notifications.show({ color: 'green', message: pushState.message || 'Push complete' });
     }
-  }, [pushState, progressUrl]);
+  }, [pushState]);
 
   const handleClearProgress = () => {
     setConfig({ progressUrl: undefined });
@@ -182,7 +184,7 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
 
     if (canvasData.missingConfig) {
       setPushState({ status: 'error', message: 'Configure Canvas base URL and token first.' });
-      setShowSettings(true);
+      goToSettings();
       return;
     }
 
@@ -281,7 +283,7 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
                     size="xs"
                     leftSection={<IconSettings size={14} />}
                     variant="default"
-                    onClick={() => setShowSettings(true)}
+                    onClick={goToSettings}
                   >
                     Open Settings
                   </Button>
@@ -289,7 +291,7 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
               ) : canvasData.isError ? (
                 <Group align="center" gap="sm">
                   <Text size="sm" c="red">Connection error — check your Canvas URL and token.</Text>
-                  <Button size="xs" variant="default" onClick={() => setShowSettings(true)}>Update Settings</Button>
+                  <Button size="xs" variant="default" onClick={goToSettings}>Update Settings</Button>
                   <Button size="xs" variant="default" onClick={() => void canvasData.refetch()}>Retry</Button>
                 </Group>
               ) : (
@@ -297,7 +299,7 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
                   <Text size="sm" c="dimmed">
                     Connected{canvasUserLabel ? ` as ${canvasUserLabel}` : ''}.
                   </Text>
-                  <Button size="xs" variant="subtle" onClick={() => setShowSettings(true)}>Change</Button>
+                  <Button size="xs" variant="subtle" onClick={goToSettings}>Change</Button>
                 </Group>
               )}
             </Accordion.Panel>
@@ -455,8 +457,6 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
           </Button>
         </Group>
       </Box>
-
-      <UserSettingsDialog open={showSettings} onClose={() => setShowSettings(false)} />
     </PageShell>
   );
 };

@@ -619,10 +619,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
-          "CHOICE",
           "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "MULTI_VALUED",
+          "CHOICE"
         ]
       },
       "constraints": {
@@ -1120,10 +1120,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
-          "CHOICE",
           "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "MULTI_VALUED",
+          "CHOICE"
         ]
       },
       "constraints": {
@@ -1470,10 +1470,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
-          "CHOICE",
           "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "MULTI_VALUED",
+          "CHOICE"
         ]
       },
       "constraints": {
@@ -1752,10 +1752,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
-          "CHOICE",
           "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "MULTI_VALUED",
+          "CHOICE"
         ]
       },
       "constraints": {
@@ -1864,10 +1864,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
-          "CHOICE",
           "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "MULTI_VALUED",
+          "CHOICE"
         ]
       },
       "constraints": {
@@ -2046,10 +2046,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
-          "CHOICE",
           "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "MULTI_VALUED",
+          "CHOICE"
         ]
       },
       "constraints": {
@@ -2437,10 +2437,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
-          "CHOICE",
           "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "MULTI_VALUED",
+          "CHOICE"
         ]
       },
       "constraints": {
@@ -2484,10 +2484,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
-          "CHOICE",
           "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "MULTI_VALUED",
+          "CHOICE"
         ]
       },
       "constraints": {
@@ -2638,10 +2638,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
-          "CHOICE",
           "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "MULTI_VALUED",
+          "CHOICE"
         ]
       },
       "constraints": {

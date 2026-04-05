@@ -3,7 +3,6 @@ import React, { useCallback, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 
 import ErrorBoundary from '@components/common/ErrorBoundary';
-import UserSettingsDialog from '@components/dialogs/UserSettingsDialog';
 
 import { SidebarNav } from './SidebarNav';
 
@@ -14,13 +13,11 @@ const AppLayoutInner: React.FC<{
   mobileOpened: boolean;
   onToggle: () => void;
   onMobileToggle: () => void;
-  onOpenSettings: () => void;
 }> = ({
   expanded,
   mobileOpened,
   onToggle,
   onMobileToggle,
-  onOpenSettings,
 }) => {
   return (
     <AppShell
@@ -35,7 +32,6 @@ const AppLayoutInner: React.FC<{
       <SidebarNav
         expanded={expanded}
         onToggle={onToggle}
-        onOpenSettings={onOpenSettings}
       />
 
       <AppShell.Main>
@@ -72,8 +68,6 @@ const AppLayout: React.FC = () => {
       return true;
     }
   });
-  const [showSettings, setShowSettings] = useState(false);
-
   const handleToggle = useCallback(() => {
     const next = !expanded;
     setExpanded(next);
@@ -85,16 +79,12 @@ const AppLayout: React.FC = () => {
   }, [expanded]);
 
   return (
-    <>
-      <AppLayoutInner
-        expanded={expanded}
-        mobileOpened={mobileOpened}
-        onToggle={handleToggle}
-        onMobileToggle={() => setMobileOpened((o) => !o)}
-        onOpenSettings={() => setShowSettings(true)}
-      />
-      <UserSettingsDialog open={showSettings} onClose={() => setShowSettings(false)} />
-    </>
+    <AppLayoutInner
+      expanded={expanded}
+      mobileOpened={mobileOpened}
+      onToggle={handleToggle}
+      onMobileToggle={() => setMobileOpened((o) => !o)}
+    />
   );
 };
 

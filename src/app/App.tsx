@@ -14,6 +14,7 @@ import LandingPage from '@pages/landing/LandingPage';
 import CanvasPushPage from '@pages/results/CanvasPushPage';
 import ResultsPage from '@pages/results/ResultsPage';
 import SubmissionDetailPage from '@pages/results/SubmissionDetailPage';
+import UserSettingsPage from '@pages/settings/UserSettingsPage';
 
 import AppLayout from '../layouts/AppLayout';
 import PublicLayout from '../layouts/PublicLayout';
@@ -39,6 +40,9 @@ const App: React.FC = () => {
         {/* Protected area with sidebar layout */}
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
+            {/* User settings */}
+            <Route path="/settings" element={<UserSettingsPage />} />
+
             {/* Assessment list */}
             <Route path="/assessments" element={<AssessmentsPage />} />
 

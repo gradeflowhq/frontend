@@ -42,7 +42,6 @@ import type { MeResponse } from '@api/models';
 interface SidebarNavProps {
   expanded: boolean;
   onToggle: () => void;
-  onOpenSettings: () => void;
 }
 
 const SIDEBAR_ICON_SIZE = 18;
@@ -107,10 +106,7 @@ const SectionLabel: React.FC<{ label: string; expanded: boolean }> = ({ label, e
   );
 };
 
-const AccountSection: React.FC<{ expanded: boolean; onOpenSettings: () => void }> = ({
-  expanded,
-  onOpenSettings,
-}) => {
+const AccountSection: React.FC<{ expanded: boolean }> = ({ expanded }) => {
   const clearTokens = useAuthStore((s) => s.clearTokens);
   const navigate = useNavigate();
 
@@ -145,55 +141,68 @@ const AccountSection: React.FC<{ expanded: boolean; onOpenSettings: () => void }
 
   if (!expanded) {
     return (
-      <Menu position="right-end" withArrow>
+      <Box pt={8} style={{ borderTop: '1px solid var(--mantine-color-default-border)' }}>
+        <Menu position="right-end" withArrow>
+          <Menu.Target>
+            <Tooltip label={username} position="right" withArrow>
+              <UnstyledButton
+                p={8}
+                style={{
+                  borderRadius: 6,
+                  display: 'flex',
+                  justifyContent: 'center',
+                  width: '100%',
+                  border: '1px solid var(--mantine-color-default-border)',
+                  backgroundColor: 'var(--mantine-color-body)',
+                }}
+              >
+                {avatarEl}
+              </UnstyledButton>
+            </Tooltip>
+          </Menu.Target>
+          <Menu.Dropdown>
+            <Menu.Item leftSection={<IconLogout size={16} />} color="red" onClick={handleLogout}>
+              Logout
+            </Menu.Item>
+          </Menu.Dropdown>
+        </Menu>
+      </Box>
+    );
+  }
+
+  return (
+    <Box pt={8} style={{ borderTop: '1px solid var(--mantine-color-default-border)' }}>
+      <Menu position="top" withArrow>
         <Menu.Target>
-          <Tooltip label={username} position="right" withArrow>
-            <UnstyledButton p={8} style={{ borderRadius: 6, display: 'flex', justifyContent: 'center' }}>
+          <UnstyledButton
+            px="sm"
+            py={8}
+            style={{
+              borderRadius: 6,
+              width: '100%',
+              border: '1px solid var(--mantine-color-default-border)',
+              backgroundColor: 'var(--mantine-color-body)',
+            }}
+            styles={{ root: { '&:hover': { backgroundColor: 'var(--mantine-color-gray-0)' } } }}
+          >
+            <Group gap="sm" wrap="nowrap">
               {avatarEl}
-            </UnstyledButton>
-          </Tooltip>
+              <Box style={{ flex: 1, minWidth: 0 }}>
+                <Text size="sm" fw={500} truncate>
+                  {username}
+                </Text>
+              </Box>
+              <IconChevronDown size={14} />
+            </Group>
+          </UnstyledButton>
         </Menu.Target>
         <Menu.Dropdown>
-          <Menu.Item leftSection={<IconSettings size={16} />} onClick={onOpenSettings}>
-            Settings
-          </Menu.Item>
           <Menu.Item leftSection={<IconLogout size={16} />} color="red" onClick={handleLogout}>
             Logout
           </Menu.Item>
         </Menu.Dropdown>
       </Menu>
-    );
-  }
-
-  return (
-    <Menu position="top" withArrow>
-      <Menu.Target>
-        <UnstyledButton
-          px="sm"
-          py={8}
-          style={{ borderRadius: 6, width: '100%' }}
-          styles={{ root: { '&:hover': { backgroundColor: 'var(--mantine-color-default-hover)' } } }}
-        >
-          <Group gap="sm" wrap="nowrap">
-            {avatarEl}
-            <Box style={{ flex: 1, minWidth: 0 }}>
-              <Text size="sm" fw={500} truncate>
-                {username}
-              </Text>
-            </Box>
-            <IconChevronDown size={14} />
-          </Group>
-        </UnstyledButton>
-      </Menu.Target>
-      <Menu.Dropdown>
-        <Menu.Item leftSection={<IconSettings size={16} />} onClick={onOpenSettings}>
-          Settings
-        </Menu.Item>
-        <Menu.Item leftSection={<IconLogout size={16} />} color="red" onClick={handleLogout}>
-          Logout
-        </Menu.Item>
-      </Menu.Dropdown>
-    </Menu>
+    </Box>
   );
 };
 
@@ -265,13 +274,22 @@ const TopLevelSidebarItems: React.FC<{ expanded: boolean }> = ({ expanded }) => 
   </Stack>
 );
 
-const SidebarNav: React.FC<SidebarNavProps> = ({
-  expanded,
-  onToggle,
-  onOpenSettings,
-}) => {
+const SidebarNav: React.FC<SidebarNavProps> = ({ expanded, onToggle }) => {
   const matchAssessment = useMatch('/assessments/:assessmentId/*');
+  const matchAssessmentList = useMatch('/assessments');
   const assessmentId = matchAssessment?.params.assessmentId;
+
+  const [lastAssessmentId, setLastAssessmentId] = React.useState<string | undefined>(undefined);
+
+  React.useEffect(() => {
+    if (assessmentId) setLastAssessmentId(assessmentId);
+  }, [assessmentId]);
+
+  React.useEffect(() => {
+    if (matchAssessmentList) setLastAssessmentId(undefined);
+  }, [matchAssessmentList]);
+
+  const effectiveAssessmentId = assessmentId ?? lastAssessmentId;
 
   return (
     <AppShell.Navbar
@@ -308,15 +326,24 @@ const SidebarNav: React.FC<SidebarNavProps> = ({
             </Group>
           </Box>
 
-          {assessmentId ? (
-            <AssessmentSidebarItems assessmentId={assessmentId} expanded={expanded} />
+          {effectiveAssessmentId ? (
+            <AssessmentSidebarItems assessmentId={effectiveAssessmentId} expanded={expanded} />
           ) : (
             <TopLevelSidebarItems expanded={expanded} />
           )}
         </Box>
 
-        {/* Bottom: Account */}
-        <AccountSection expanded={expanded} onOpenSettings={onOpenSettings} />
+        {/* Bottom: Settings + Account */}
+        <Stack gap={2}>
+          <SectionLabel label="General" expanded={expanded} />
+          <SidebarNavItem
+            icon={<IconSettings size={SIDEBAR_ICON_SIZE} />}
+            label="Settings"
+            to="/settings"
+            expanded={expanded}
+          />
+          <AccountSection expanded={expanded} />
+        </Stack>
       </Stack>
     </AppShell.Navbar>
   );

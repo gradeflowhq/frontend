@@ -83,119 +83,120 @@ const SettingsPage: React.FC = () => {
 
   return (
     <PageShell title="Assessment Settings">
-
-      {/* General */}
-      <Box mb="xl">
-        <Text fw={600} mb="sm">General</Text>
-        <Stack gap="sm">
-          <TextInput
-            label="Name"
-            value={name}
-            onChange={(e) => setName(e.currentTarget.value)}
-            required
-          />
-          <Textarea
-            label="Description"
-            value={description}
-            onChange={(e) => setDescription(e.currentTarget.value)}
-            autosize
-            minRows={2}
-          />
-          {updateMutation.isError && (
-            <Alert color="red">{getErrorMessage(updateMutation.error)}</Alert>
-          )}
-          <Group justify="flex-end">
-            <Button onClick={handleSave} loading={updateMutation.isPending} disabled={!name.trim()}>
-              Save changes
-            </Button>
-          </Group>
-        </Stack>
-      </Box>
-
-      <Divider mb="xl" />
-
-      {/* Encryption */}
-      <Box mb="xl">
-        <Text fw={600} mb="sm">Encryption</Text>
-        {hasStoredPassphrase ? (
+      <Stack gap={0} maw={520}>
+        {/* General */}
+        <Box mb="xl">
+          <Text fw={600} mb="sm">General</Text>
           <Stack gap="sm">
-            <Text size="sm" c="dimmed">Student ID passphrase is stored in this browser.</Text>
-            <Box>
-              <Button variant="outline" color="orange" onClick={handleForgetPassphrase}>
-                Forget stored passphrase
-              </Button>
-            </Box>
-          </Stack>
-        ) : (
-          <Stack gap="sm">
-            <Text size="sm" c="dimmed">No passphrase stored for this assessment.</Text>
-            <Group align="flex-end" gap="sm">
-              <PasswordInput
-                label="Store passphrase"
-                placeholder="Enter passphrase to store in browser"
-                value={newPassphrase}
-                onChange={(e) => setNewPassphrase(e.currentTarget.value)}
-                w={320}
-              />
-              <Button
-                onClick={handleStorePassphrase}
-                disabled={!newPassphrase.trim()}
-              >
-                Store
+            <TextInput
+              label="Name"
+              value={name}
+              onChange={(e) => setName(e.currentTarget.value)}
+              required
+            />
+            <Textarea
+              label="Description"
+              value={description}
+              onChange={(e) => setDescription(e.currentTarget.value)}
+              autosize
+              minRows={2}
+            />
+            {updateMutation.isError && (
+              <Alert color="red">{getErrorMessage(updateMutation.error)}</Alert>
+            )}
+            <Group justify="flex-end">
+              <Button onClick={handleSave} loading={updateMutation.isPending} disabled={!name.trim()}>
+                Save changes
               </Button>
             </Group>
           </Stack>
-        )}
-      </Box>
+        </Box>
 
-      <Divider mb="xl" />
+        <Divider mb="xl" />
 
-      {/* Danger Zone */}
-      <Box>
-        <Text fw={600} c="red" mb="sm">Danger Zone</Text>
-        <Button
-          color="red"
-          leftSection={<IconTrash size={16} />}
-          onClick={() => setShowDeleteModal(true)}
-        >
-          Delete this assessment
-        </Button>
-        <Text size="xs" c="dimmed" mt="xs">
-          Permanently deletes the assessment, all submissions, rules, and results.
-        </Text>
-      </Box>
+        {/* Encryption */}
+        <Box mb="xl">
+          <Text fw={600} mb="sm">Encryption</Text>
+          {hasStoredPassphrase ? (
+            <Stack gap="sm">
+              <Text size="sm" c="dimmed">Student ID passphrase is stored in this browser.</Text>
+              <Box>
+                <Button variant="outline" color="orange" onClick={handleForgetPassphrase}>
+                  Forget stored passphrase
+                </Button>
+              </Box>
+            </Stack>
+          ) : (
+            <Stack gap="sm">
+              <Text size="sm" c="dimmed">No passphrase stored for this assessment.</Text>
+              <Group align="flex-end" gap="sm">
+                <PasswordInput
+                  label="Store passphrase"
+                  placeholder="Enter passphrase to store in browser"
+                  value={newPassphrase}
+                  onChange={(e) => setNewPassphrase(e.currentTarget.value)}
+                  w={320}
+                />
+                <Button
+                  onClick={handleStorePassphrase}
+                  disabled={!newPassphrase.trim()}
+                >
+                  Store
+                </Button>
+              </Group>
+            </Stack>
+          )}
+        </Box>
 
-      <Modal
-        opened={showDeleteModal}
-        onClose={() => { setShowDeleteModal(false); setDeleteConfirmName(''); }}
-        title="Delete Assessment"
-      >
-        <Text mb="md">
-          This action cannot be undone. Type <strong>{assessment?.name}</strong> to confirm.
-        </Text>
-        <TextInput
-          placeholder={assessment?.name ?? ''}
-          value={deleteConfirmName}
-          onChange={(e) => setDeleteConfirmName(e.currentTarget.value)}
-          mb="md"
-        />
-        {deleteMutation.isError && (
-          <Alert color="red" mb="md">{getErrorMessage(deleteMutation.error)}</Alert>
-        )}
-        <Group justify="flex-end">
-          <Button variant="default" onClick={() => { setShowDeleteModal(false); setDeleteConfirmName(''); }}>
-            Cancel
-          </Button>
+        <Divider mb="xl" />
+
+        {/* Danger Zone */}
+        <Box>
+          <Text fw={600} c="red" mb="sm">Danger Zone</Text>
           <Button
             color="red"
-            loading={deleteMutation.isPending}
-            disabled={deleteConfirmName !== assessment?.name}
-            onClick={handleDelete}
+            leftSection={<IconTrash size={16} />}
+            onClick={() => setShowDeleteModal(true)}
           >
-            Delete
+            Delete this assessment
           </Button>
-        </Group>
-      </Modal>
+          <Text size="xs" c="dimmed" mt="xs">
+            Permanently deletes the assessment, all submissions, rules, and results.
+          </Text>
+        </Box>
+
+        <Modal
+          opened={showDeleteModal}
+          onClose={() => { setShowDeleteModal(false); setDeleteConfirmName(''); }}
+          title="Delete Assessment"
+        >
+          <Text mb="md">
+            This action cannot be undone. Type <strong>{assessment?.name}</strong> to confirm.
+          </Text>
+          <TextInput
+            placeholder={assessment?.name ?? ''}
+            value={deleteConfirmName}
+            onChange={(e) => setDeleteConfirmName(e.currentTarget.value)}
+            mb="md"
+          />
+          {deleteMutation.isError && (
+            <Alert color="red" mb="md">{getErrorMessage(deleteMutation.error)}</Alert>
+          )}
+          <Group justify="flex-end">
+            <Button variant="default" onClick={() => { setShowDeleteModal(false); setDeleteConfirmName(''); }}>
+              Cancel
+            </Button>
+            <Button
+              color="red"
+              loading={deleteMutation.isPending}
+              disabled={deleteConfirmName !== assessment?.name}
+              onClick={handleDelete}
+            >
+              Delete
+            </Button>
+          </Group>
+        </Modal>
+      </Stack>
     </PageShell>
   );
 };

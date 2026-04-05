@@ -7,6 +7,7 @@ export type CanvasUser = {
   name?: string;
   short_name?: string;
   sortable_name?: string;
+  login_id?: string;
 };
 
 export type CanvasGradeInput = {

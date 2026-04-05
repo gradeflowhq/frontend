@@ -685,10 +685,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
-          "CHOICE",
           "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "MULTI_VALUED",
+          "CHOICE"
         ]
       },
       "constraints": {
@@ -1186,10 +1186,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
-          "CHOICE",
           "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "MULTI_VALUED",
+          "CHOICE"
         ]
       },
       "constraints": {
@@ -1536,10 +1536,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
-          "CHOICE",
           "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "MULTI_VALUED",
+          "CHOICE"
         ]
       },
       "constraints": {
@@ -1818,10 +1818,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
-          "CHOICE",
           "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "MULTI_VALUED",
+          "CHOICE"
         ]
       },
       "constraints": {
@@ -1930,10 +1930,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
-          "CHOICE",
           "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "MULTI_VALUED",
+          "CHOICE"
         ]
       },
       "constraints": {
@@ -2112,10 +2112,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
-          "CHOICE",
           "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "MULTI_VALUED",
+          "CHOICE"
         ]
       },
       "constraints": {
@@ -2503,10 +2503,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
-          "CHOICE",
           "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "MULTI_VALUED",
+          "CHOICE"
         ]
       },
       "constraints": {
@@ -2550,10 +2550,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
-          "CHOICE",
           "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "MULTI_VALUED",
+          "CHOICE"
         ]
       },
       "constraints": {
@@ -2704,10 +2704,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
-          "CHOICE",
           "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "MULTI_VALUED",
+          "CHOICE"
         ]
       },
       "constraints": {
@@ -2863,6 +2863,44 @@
       "student_id_column"
     ],
     "title": "UploadSourceDataRequest"
+  },
+  "UpdateMeRequest": {
+    "properties": {
+      "name": {
+        "title": "Name",
+        "type": [
+          "string",
+          "null"
+        ],
+        "maxLength": 255
+      },
+      "email": {
+        "title": "Email",
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "email"
+      },
+      "current_password": {
+        "title": "Current Password",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "new_password": {
+        "title": "New Password",
+        "type": [
+          "string",
+          "null"
+        ],
+        "maxLength": 128,
+        "minLength": 12
+      }
+    },
+    "type": "object",
+    "title": "UpdateMeRequest"
   },
   "SignupRequest": {
     "properties": {
