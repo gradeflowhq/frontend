@@ -1,5 +1,5 @@
-import { Button, Group, Stack, Progress, Badge, Text } from '@mantine/core';
-import { IconEye } from '@tabler/icons-react';
+import { Badge, Card, Group, Progress, Select, Stack, Text, Tooltip } from '@mantine/core';
+import { IconAdjustments } from '@tabler/icons-react';
 import { DataTable } from 'mantine-datatable';
 import React, { useMemo, useState } from 'react';
 
@@ -8,7 +8,7 @@ import { useAssessmentPassphrase } from '@features/encryption/passphraseContext'
 import { useDecryptedIds } from '@features/encryption/useDecryptedIds';
 
 import type { AdjustableSubmission } from '../types';
-import type { DataTableColumn } from 'mantine-datatable';
+import type { DataTableSortStatus } from 'mantine-datatable';
 
 type Props = {
   items: AdjustableSubmission[];
@@ -18,7 +18,37 @@ type Props = {
   searchQuery?: string;
 };
 
-type RowT = AdjustableSubmission;
+type RowT = AdjustableSubmission & {
+  _totalPoints: number;
+  _totalMax: number;
+  _pct: number;
+  _hasAdjustment: boolean;
+};
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+const rowColour = (pct: number): string => {
+  if (pct < 40)  return 'var(--mantine-color-red-0)';
+  if (pct < 60)  return 'var(--mantine-color-orange-0)';
+  if (pct >= 80) return 'var(--mantine-color-green-0)';
+  return 'transparent';
+};
+
+const pctBarColour = (pct: number): string => {
+  if (pct < 40)  return 'red';
+  if (pct < 60)  return 'orange';
+  if (pct >= 80) return 'green';
+  return 'blue';
+};
+
+const MiniBar: React.FC<{ value: number; max: number }> = ({ value, max }) => {
+  const pct = max > 0 ? (value / max) * 100 : 0;
+  return <Progress value={pct} size={3} mt={3} color={pctBarColour(pct)} style={{ minWidth: 40 }} />;
+};
+
+const PAGE_SIZE_OPTIONS = ['10', '20', '50', '100'];
+
+// ── Component ────────────────────────────────────────────────────────────────
 
 const ResultsOverviewTable: React.FC<Props> = ({
   items,
@@ -28,119 +58,283 @@ const ResultsOverviewTable: React.FC<Props> = ({
   searchQuery = '',
 }) => {
   const { passphrase, notifyEncryptedDetected } = useAssessmentPassphrase();
-  const [page, setPage] = useState(1);
-  const PAGE_SIZE = initialPageSize;
+  const [page, setPage]             = useState(1);
+  const [pageSize, setPageSize]     = useState(initialPageSize);
+  const [sortStatus, setSortStatus] = useState<DataTableSortStatus<RowT>>({
+    columnAccessor: '_totalPoints',
+    direction: 'desc',
+  });
+  const [scoreRange, setScoreRange] = useState<[number, number]>([0, 100]);
 
   const studentIds = useMemo(() => items.map((it) => it.student_id ?? ''), [items]);
   const { decryptedIds, isDecrypting } = useDecryptedIds(studentIds, passphrase, notifyEncryptedDetected);
 
-  const filteredItems = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    if (!q) return items;
-    return items.filter((it) => {
-      const original = it.student_id ?? '';
-      const plain = decryptedIds[original] ?? original;
-      return plain.toLowerCase().includes(q);
+  // ── Enrich ──
+  const enriched = useMemo<RowT[]>(() => {
+    return items.map((it) => {
+      const resultValues  = Object.values(it.result_map ?? {});
+      const totalPoints   = resultValues.reduce((s, r) => s + ((r.adjusted_points ?? r.points) ?? 0), 0);
+      const totalMax      = resultValues.reduce((s, r) => s + (r.max_points ?? 0), 0);
+      const pct           = totalMax > 0 ? (totalPoints / totalMax) * 100 : 0;
+      const hasAdjustment = resultValues.some(
+        (r) => r.adjusted_points !== null && r.adjusted_points !== undefined,
+      );
+      return { ...it, _totalPoints: totalPoints, _totalMax: totalMax, _pct: pct, _hasAdjustment: hasAdjustment };
     });
-  }, [items, decryptedIds, searchQuery]);
+  }, [items]);
 
-  // Reset to page 1 when search changes
-  React.useEffect(() => { setPage(1); }, [searchQuery]);
-
-  const columns = useMemo(() => {
-    const cols: DataTableColumn<RowT>[] = [];
-
-    cols.push({
-      accessor: 'student_id',
-      title: 'Student ID',
-      render: (row) => (
-        <DecryptedText
-          value={row.student_id}
-          passphrase={passphrase}
-          mono
-          size="sm"
-          showSkeletonWhileDecrypting={isDecrypting}
-        />
-      ),
-    });
-
+  // ── Per-question means ──
+  const qMean = useMemo(() => {
+    const out: Record<string, { mean: number; max: number }> = {};
     for (const qid of questionIds) {
-      cols.push({
-        accessor: `q:${qid}` as keyof RowT,
-        title: qid,
-        render: (row) => {
-          const r = row.result_map?.[qid];
-          if (!r) return <Text span>—</Text>;
-          const adjustedExists = r.adjusted_points !== undefined && r.adjusted_points !== null;
-          const pointsDisplay = adjustedExists ? (r.adjusted_points as number) : r.points;
-          const maxPoints = r.max_points ?? 0;
-
-          return (
-            <div style={adjustedExists ? { backgroundColor: 'var(--mantine-color-yellow-0)', margin: '-4px', padding: '4px', borderRadius: 4 } : undefined}>
-              {!r.graded ? (
-                <Badge color="yellow">Ungraded</Badge>
-              ) : (
-                <Stack gap={2}>
-                  <Text ff="monospace" size="sm">{pointsDisplay.toFixed(2)}/{maxPoints}</Text>
-                  {adjustedExists && (
-                    <Text ff="monospace" size="xs" c="dimmed">Original: {r.points.toFixed(2)} / {maxPoints}</Text>
-                  )}
-                </Stack>
-              )}
-            </div>
-          );
-        },
-      });
+      const vals = enriched
+        .map((r) => {
+          const res = r.result_map?.[qid];
+          return res ? ((res.adjusted_points ?? res.points) ?? 0) : null;
+        })
+        .filter((v): v is number => v !== null);
+      const max = Math.max(0, ...enriched.map((r) => r.result_map?.[qid]?.max_points ?? 0));
+      out[qid] = {
+        mean: vals.length ? vals.reduce((s, v) => s + v, 0) / vals.length : 0,
+        max,
+      };
     }
+    return out;
+  }, [enriched, questionIds]);
 
-    cols.push({
-      accessor: 'total',
-      title: 'Total',
-      render: (row) => {
-        const resultValues = Object.values(row.result_map ?? {});
-        const totalPoints = resultValues.reduce((sum, r) => sum + ((r.adjusted_points ?? r.points) ?? 0), 0);
-        const totalMax = resultValues.reduce((sum, r) => sum + (r.max_points ?? 0), 0);
-        const pct = totalMax > 0 ? Math.round((totalPoints / totalMax) * 100) : 0;
-        return (
-          <Stack gap={4}>
-            <Text ff="monospace" size="sm">{totalPoints.toFixed(2)}/{totalMax}</Text>
-            <Group gap="xs">
-              <Progress value={pct} size="sm" style={{ flex: 1, minWidth: 80 }} />
-              <Text ff="monospace" size="xs">{pct.toFixed(2)}%</Text>
+  // ── Total mean / max ──
+  const totalMean = useMemo(() => {
+    if (enriched.length === 0) return { mean: 0, max: 0 };
+    const mean = enriched.reduce((s, r) => s + r._totalPoints, 0) / enriched.length;
+    const max  = enriched[0]._totalMax;
+    return { mean, max };
+  }, [enriched]);
+
+  // ── Filter ──
+  const filtered = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return enriched.filter((it) => {
+      if (q) {
+        const plain = decryptedIds[it.student_id ?? ''] ?? it.student_id ?? '';
+        if (!plain.toLowerCase().includes(q)) return false;
+      }
+      if (it._pct < scoreRange[0] || it._pct > scoreRange[1]) return false;
+      return true;
+    });
+  }, [enriched, decryptedIds, searchQuery, scoreRange]);
+
+  // ── Sort ──
+  const sortedRows = useMemo(() => {
+    const key = sortStatus.columnAccessor as string;
+    const dir = sortStatus.direction === 'asc' ? 1 : -1;
+    return [...filtered].sort((a, b) => {
+      if (key.startsWith('q:')) {
+        const qid = key.slice(2);
+        const av = a.result_map?.[qid];
+        const bv = b.result_map?.[qid];
+        const ap = av ? ((av.adjusted_points ?? av.points) ?? 0) : -Infinity;
+        const bp = bv ? ((bv.adjusted_points ?? bv.points) ?? 0) : -Infinity;
+        return (ap - bp) * dir;
+      }
+      const av = a[key as keyof RowT];
+      const bv = b[key as keyof RowT];
+      if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * dir;
+      return String(av ?? '').localeCompare(String(bv ?? '')) * dir;
+    });
+  }, [filtered, sortStatus]);
+
+  React.useEffect(() => { setPage(1); }, [searchQuery, scoreRange, sortStatus]);
+
+  // ── Columns ──
+  const columns = useMemo(() => {
+    return [
+      // Student ID
+      {
+        accessor: 'student_id' as keyof RowT,
+        title: 'Student ID',
+        sortable: true,
+        render: (row: RowT) => (
+          <Group gap={4} wrap="nowrap">
+            <Text
+              ff="monospace"
+              size="sm"
+              fw={600}
+              style={{ cursor: 'pointer', textDecoration: 'underline', textDecorationStyle: 'dotted' }}
+              onClick={() => onView(row.student_id)}
+            >
+              <DecryptedText
+                value={row.student_id}
+                passphrase={passphrase}
+                mono
+                size="sm"
+                showSkeletonWhileDecrypting={isDecrypting}
+                showLockIcon
+              />
+            </Text>
+            {row._hasAdjustment && (
+              <Tooltip label="Has manual adjustments" withArrow position="right">
+                <IconAdjustments size={13} color="var(--mantine-color-yellow-7)" style={{ flexShrink: 0 }} />
+              </Tooltip>
+            )}
+          </Group>
+        ),
+      },
+
+      // Per-question columns
+      ...questionIds.map((qid) => {
+        const { mean, max: qMax } = qMean[qid] ?? { mean: 0, max: 0 };
+
+        return {
+          accessor: `q:${qid}` as keyof RowT,
+          sortable: true,          
+          title: (
+            <Stack gap={0}>
+              <Text size="xs" fw={700}>{qid}</Text>
+              <Text size="xs" c="dimmed">{mean.toFixed(1)}/{qMax}</Text>
+            </Stack>
+          ) as unknown as string,
+          render: (row: RowT) => {
+            const r = row.result_map?.[qid];
+            if (!r) return <Text size="xs">—</Text>;
+
+            const adjusted = r.adjusted_points !== null && r.adjusted_points !== undefined;
+            const points   = adjusted ? (r.adjusted_points as number) : r.points;
+            const maxPts   = r.max_points ?? 0;
+
+            if (!r.graded) {
+              return <Badge color="yellow" size="xs" variant="light">Ungraded</Badge>;
+            }
+
+            return (
+              <div style={adjusted ? {
+                background: 'var(--mantine-color-yellow-0)',
+                margin: '-4px', padding: '4px', borderRadius: 4,
+              } : undefined}>
+                <Text ff="monospace" size="xs" fw={600}>
+                  {points.toFixed(1)}
+                  <Text span fw={400}>/{maxPts}</Text>
+                </Text>
+                <MiniBar value={points} max={maxPts} />
+                {adjusted && (
+                  <Text ff="monospace" size="xs" mt={1}>
+                    was {r.points.toFixed(1)}
+                  </Text>
+                )}
+              </div>
+            );
+          },
+        };
+      }),
+
+      // Total
+      {
+        accessor: '_totalPoints' as keyof RowT,
+        title: (
+          <Stack gap={0}>
+            <Text size="xs" fw={700}>Total</Text>
+            <Text size="xs" c="dimmed">{totalMean.mean.toFixed(1)}/{totalMean.max}</Text>
+          </Stack>
+        ) as unknown as string,
+        sortable: true,
+        render: (row: RowT) => (
+          <Stack gap={3} style={{ minWidth: 100 }}>
+            <Group gap={6} align="baseline">
+              <Text ff="monospace" size="sm" fw={700}>
+                {row._totalPoints.toFixed(1)}
+              </Text>
+              <Text ff="monospace" size="xs">
+                / {row._totalMax}
+              </Text>
+            </Group>
+            <Group gap={6} align="center" wrap="nowrap">
+              <Progress
+                value={row._pct}
+                size="sm"
+                color={pctBarColour(row._pct)}
+                style={{ flex: 1 }}
+              />
+              <Text ff="monospace" size="xs" fw={600}>
+                {row._pct.toFixed(1)}%
+              </Text>
             </Group>
           </Stack>
-        );
+        ),
       },
-    });
+    ];
+  }, [passphrase, questionIds, onView, isDecrypting, qMean, totalMean]);
 
-    cols.push({
-      accessor: 'actions',
-      title: 'Actions',
-      render: (row) => (
-        <Button size="sm" variant="subtle" leftSection={<IconEye size={14} />} onClick={() => onView(row.student_id)}>
-          View
-        </Button>
-      ),
-    });
-
-    return cols;
-  }, [passphrase, questionIds, onView, isDecrypting]);
-
-  const records = filteredItems.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const records = sortedRows.slice((page - 1) * pageSize, page * pageSize);
+  const isFiltered = scoreRange[0] > 0 || scoreRange[1] < 100;
 
   return (
-    <DataTable
-      columns={columns}
-      records={records}
-      totalRecords={filteredItems.length}
-      recordsPerPage={PAGE_SIZE}
-      page={page}
-      onPageChange={setPage}
-      striped
-      highlightOnHover
-      pinFirstColumn
-      pinLastColumn
-    />
+    <Stack gap="md">
+
+      {/* ── Filter + per-page card ── */}
+      <Card withBorder p="sm">
+        <Group justify="space-between" align="center">
+          <Group gap="md" align="center">
+            <Text size="xs" fw={600}>Score filter</Text>
+            <Group gap="xs" align="center">
+              <Text size="xs">Min</Text>
+              <Select
+                size="xs"
+                w={80}
+                value={String(scoreRange[0])}
+                onChange={(v) => setScoreRange([Number(v ?? '0'), scoreRange[1]])}
+                data={['0','5','10','15','20','25','30','35','40','45','50','55','60','65','70','75','80','85','90','95','100']}
+              />
+              <Text size="xs">%</Text>
+            </Group>
+            <Group gap="xs" align="center">
+              <Text size="xs">Max</Text>
+              <Select
+                size="xs"
+                w={80}
+                value={String(scoreRange[1])}
+                onChange={(v) => setScoreRange([scoreRange[0], Number(v ?? '100')])}
+                data={['0','5','10','15','20','25','30','35','40','45','50','55','60','65','70','75','80','85','90','95','100']}
+              />
+              <Text size="xs">%</Text>
+            </Group>
+            {isFiltered && (
+              <Text
+                size="xs"
+                style={{ cursor: 'pointer', textDecoration: 'underline' }}
+                onClick={() => setScoreRange([0, 100])}
+              >
+                Reset
+              </Text>
+            )}
+          </Group>
+          <Group gap="xs" align="center">
+            <Text size="xs" fw={600}>Per page</Text>
+            <Select
+              size="xs"
+              w={88}
+              data={PAGE_SIZE_OPTIONS}
+              value={String(pageSize)}
+              onChange={(v) => { setPageSize(Number(v ?? '10')); setPage(1); }}
+            />
+          </Group>
+        </Group>
+      </Card>
+
+      {/* ── Table ── */}
+      <DataTable
+        columns={columns}
+        records={records}
+        totalRecords={filtered.length}
+        recordsPerPage={pageSize}
+        page={page}
+        onPageChange={setPage}
+        sortStatus={sortStatus}
+        onSortStatusChange={(s) => setSortStatus(s as DataTableSortStatus<RowT>)}
+        rowStyle={(row) => ({ background: rowColour(row._pct) })}
+        highlightOnHover
+        pinFirstColumn
+        pinLastColumn
+      />
+    </Stack>
   );
 };
 
