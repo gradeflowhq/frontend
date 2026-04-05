@@ -1,5 +1,5 @@
 import { Modal, Button, Alert, Group, Title, Text, Badge, Tabs, Box } from '@mantine/core';
-import { IconDeviceFloppy, IconPlayerPlay } from '@tabler/icons-react';
+import { IconDeviceFloppy } from '@tabler/icons-react';
 import React from 'react';
 
 import HiddenAwareFieldTemplate from '@components/common/forms/HiddenAwareFieldTemplate';
@@ -8,13 +8,10 @@ import SwitchableTextWidget from '@components/common/forms/widgets/SwitchableTex
 import GradingPreviewPanel from '@features/grading/components/GradingPreviewPanel';
 import GradingPreviewSettings from '@features/grading/components/GradingPreviewSettings';
 import { usePreviewGrading } from '@features/grading/hooks';
-import { getErrorMessages } from '@utils/error';
+import { getErrorMessage } from '@utils/error';
 
 import { HIDE_KEYS_SINGLE, HIDE_KEYS_MULTI } from '../constants';
-import { friendlyRuleLabel } from '../helpers';
-import { augmentRulesSchemaWithQuestionIdEnums } from '../helpers/augmentations';
-import { injectEnumsFromConstraintsForQuestion } from '../helpers/constraints';
-import { stripEngineKeysFromRulesSchema } from '../helpers/engine';
+import { friendlyRuleLabel, augmentRulesSchemaWithQuestionIdEnums, injectEnumsFromConstraintsForQuestion, stripEngineKeysFromRulesSchema } from '../helpers';
 import { useRuleDefinitions, useCompatibleRuleKeys, useFindSchemaKeyByType } from '../hooks';
 
 
@@ -105,8 +102,7 @@ const RuleDialog: React.FC<RuleDialogProps> = ({
   React.useEffect(() => {
     if (!baseSchema) return;
     setDraft(materializeDraftFromSchema(baseSchema, questionId, initialRule ?? undefined));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [baseSchema, questionId]);
+  }, [baseSchema, questionId, initialRule]);
 
   const hiddenKeys = React.useMemo(() => (questionId ? [...HIDE_KEYS_SINGLE] : [...HIDE_KEYS_MULTI]), [questionId]);
 
@@ -207,28 +203,24 @@ const RuleDialog: React.FC<RuleDialogProps> = ({
               <Alert color="yellow" mt="sm">Rule schema not found.</Alert>
             )}
             {!!error && (
-              <Alert color="red" mt="sm">{getErrorMessages(error).join(' ')}</Alert>
+              <Alert color="red" mt="sm">{getErrorMessage(error)}</Alert>
             )}
           </Tabs.Panel>
 
           <Tabs.Panel value="preview">
-            <GradingPreviewSettings value={previewParams} onChange={setPreviewParams} />
-            <Group justify="flex-end" mt="sm">
-              <Button
-                leftSection={<IconPlayerPlay size={16} />}
-                onClick={() => void runPreview()}
-                loading={previewMutation.isPending}
-              >
-                Run Preview
-              </Button>
-            </Group>
+            <GradingPreviewSettings
+              value={previewParams}
+              onChange={setPreviewParams}
+              onRun={() => void runPreview()}
+              runLoading={previewMutation.isPending}
+            />
             {(previewMutation.isPending || previewMutation.isError || (previewMutation.data?.submissions?.length ?? 0) > 0) && (
               <Box mt="md">
                 <GradingPreviewPanel
                   items={previewMutation.data?.submissions ?? []}
                   loading={previewMutation.isPending}
                   error={previewMutation.isError ? previewMutation.error : undefined}
-                  maxHeightVh={200}
+                  maxHeightVh={40}
                 />
               </Box>
             )}

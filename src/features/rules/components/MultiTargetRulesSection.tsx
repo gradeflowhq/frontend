@@ -1,9 +1,9 @@
-import { Button, Modal, Menu, Alert, Group, Text, Stack } from '@mantine/core';
+import { Box, Button, Modal, Menu, Alert, Group, Stack, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconPlus } from '@tabler/icons-react';
 import React, { useMemo, useState } from 'react';
 
-import { getErrorMessages } from '@utils/error';
+import { getErrorMessage } from '@utils/error';
 
 import RuleDialog from './RuleDialog';
 import RuleItem from './RuleItem';
@@ -24,9 +24,10 @@ type Props = {
   assessmentId: string;
   questionMap: QuestionSetOutputQuestionMap;
   searchQuery?: string;
+  highlightedRule?: RuleValue | null;
 };
 
-const MultiTargetRulesSection: React.FC<Props> = ({ rubric, assessmentId, questionMap, searchQuery }) => {
+const MultiTargetRulesSection: React.FC<Props> = ({ rubric, assessmentId, questionMap, searchQuery, highlightedRule }) => {
   const defs = useRuleDefinitions();
   const validateAndReplace = useValidateAndReplaceRubric(assessmentId);
   const replace = useReplaceRubric(assessmentId);
@@ -41,11 +42,13 @@ const MultiTargetRulesSection: React.FC<Props> = ({ rubric, assessmentId, questi
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedRuleKey, setSelectedRuleKey] = useState<string | null>(null);
   const [editingRule, setEditingRule] = useState<RuleValue | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<RuleValue | null>(null);
+  const [editingRuleIndex, setEditingRuleIndex] = useState<number | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
 
   const resetRuleDialog = () => {
     setDialogOpen(false);
     setEditingRule(null);
+    setEditingRuleIndex(null);
     setSelectedRuleKey(null);
   };
 
@@ -73,6 +76,7 @@ const MultiTargetRulesSection: React.FC<Props> = ({ rubric, assessmentId, questi
 
   const handleEditRule = (rule: RuleValue) => {
     setEditingRule(rule);
+    setEditingRuleIndex(allRules.indexOf(rule));
     const type = String((rule as RuleValue | null)?.type ?? '');
     const key = findKeyByType(type, false);
     setSelectedRuleKey(key);
@@ -81,8 +85,8 @@ const MultiTargetRulesSection: React.FC<Props> = ({ rubric, assessmentId, questi
 
   const onSaveRuleDialog = async (ruleObj: RuleValue) => {
     let nextRules = [...allRules];
-    if (editingRule) {
-      nextRules = nextRules.map((r) => (r === editingRule ? ruleObj : r));
+    if (editingRuleIndex !== null) {
+      nextRules = nextRules.map((r, i) => (i === editingRuleIndex ? ruleObj : r));
     } else {
       nextRules.push(ruleObj);
     }
@@ -96,12 +100,11 @@ const MultiTargetRulesSection: React.FC<Props> = ({ rubric, assessmentId, questi
   };
 
   return (
-    <section style={{ marginTop: 24 }}>
-      <Group justify="space-between" mb="sm">
-        <Text fw={600} size="lg">Multi Target Rules</Text>
+    <section>
+      <Group justify="flex-end" mb="sm">
         <Menu position="bottom-end">
           <Menu.Target>
-            <Button size="xs" leftSection={<IconPlus size={14} />}>Add Rule</Button>
+            <Button size="xs" leftSection={<IconPlus size={14} />}>Add Global Rule</Button>
           </Menu.Target>
           <Menu.Dropdown>
             {multiRuleKeys.map((key) => (
@@ -117,16 +120,25 @@ const MultiTargetRulesSection: React.FC<Props> = ({ rubric, assessmentId, questi
       </Group>
 
       {filteredMultiRules.length === 0 ? (
-        <Alert color="gray">No multi-target rules match your search.</Alert>
+        <Alert color="gray">No global rules configured.</Alert>
       ) : (
         <Stack gap="sm" mt="xs">
           {filteredMultiRules.map((r, idx) => (
-            <RuleItem
+            <Box
               key={idx}
-              rule={r}
-              onEdit={handleEditRule}
-              onDelete={setDeleteTarget}
-            />
+              style={{
+                borderRadius: 8,
+                transition: 'background 500ms',
+                background: r === highlightedRule ? 'var(--mantine-color-yellow-0)' : undefined,
+                outline: r === highlightedRule ? '1px solid var(--mantine-color-yellow-4)' : undefined,
+              }}
+            >
+              <RuleItem
+                rule={r}
+                onEdit={handleEditRule}
+                onDelete={(rule) => setDeleteTarget(allRules.indexOf(rule))}
+              />
+            </Box>
           ))}
         </Stack>
       )}
@@ -144,7 +156,7 @@ const MultiTargetRulesSection: React.FC<Props> = ({ rubric, assessmentId, questi
       />
 
       <Modal
-        opened={!!deleteTarget}
+        opened={deleteTarget !== null}
         onClose={() => setDeleteTarget(null)}
         title="Delete Rule"
         size="sm"
@@ -158,8 +170,8 @@ const MultiTargetRulesSection: React.FC<Props> = ({ rubric, assessmentId, questi
             color="red"
             loading={replace.isPending}
             onClick={() => {
-              if (!deleteTarget) return;
-              const nextRules = allRules.filter((r) => r !== deleteTarget);
+              if (deleteTarget === null) return;
+              const nextRules = allRules.filter((_, i) => i !== deleteTarget);
               void replace.mutateAsync(nextRules, {
                 onSuccess: () => {
                   setDeleteTarget(null);
@@ -175,7 +187,7 @@ const MultiTargetRulesSection: React.FC<Props> = ({ rubric, assessmentId, questi
       </Modal>
 
       {replace.isError && (
-        <Alert color="red" mt="sm">{getErrorMessages(replace.error).join(' ')}</Alert>
+        <Alert color="red" mt="sm">{getErrorMessage(replace.error)}</Alert>
       )}
     </section>
   );

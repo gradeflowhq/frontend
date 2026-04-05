@@ -1,32 +1,34 @@
-import { Modal, TextInput, Select, Button, Group, Alert, Text } from '@mantine/core';
+import { Alert, Badge, Button, Group, Modal, Select, Text, TextInput, Title } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconPlus } from '@tabler/icons-react';
-import React, { useState, useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
+import { useParams } from 'react-router-dom';
 
-import { getErrorMessages } from '@utils/error';
-
-import MembersTable from './MembersTable';
+import { useAssessmentContext } from '@app/AssessmentContext';
+import PageShell from '@components/common/PageShell';
+import MembersTable from '@features/assessments/components/MembersTable';
 import {
   useMembers,
   useAddMember,
   useSetMemberRole,
   useRemoveMember,
-} from '../hooks';
+} from '@features/assessments/hooks';
+import { useDocumentTitle } from '@hooks/useDocumentTitle';
+import { getErrorMessage } from '@utils/error';
 
 import type { UserResponse, UserResponseRole } from '@api/models';
 
-type Props = {
-  open: boolean;
-  assessmentId: string;
-  onClose: () => void;
-};
+const AssessmentMembersPage: React.FC = () => {
+  const { assessmentId = '' } = useParams<{ assessmentId: string }>();
+  const { assessment } = useAssessmentContext();
 
-const MembersDialog: React.FC<Props> = ({ open, assessmentId, onClose }) => {
+  useDocumentTitle(`Members - ${assessment?.name ?? 'Assessment'} - GradeFlow`);
+
   const [userEmail, setUserEmail] = useState('');
   const [role, setRole] = useState<UserResponseRole>('viewer');
   const [removeTarget, setRemoveTarget] = useState<string | null>(null);
 
-  const { data, isLoading, isError, error } = useMembers(assessmentId, open);
+  const { data, isLoading, isError, error } = useMembers(assessmentId, !!assessmentId);
   const addMember = useAddMember(assessmentId);
   const setMemberRole = useSetMemberRole(assessmentId);
   const removeMember = useRemoveMember(assessmentId);
@@ -40,13 +42,17 @@ const MembersDialog: React.FC<Props> = ({ open, assessmentId, onClose }) => {
         onError: () => notifications.show({ color: 'red', message: 'Update failed' }),
       });
     },
-    [setMemberRole]
+    [setMemberRole],
   );
 
-  if (!open) return null;
-
   return (
-    <Modal opened={open} onClose={onClose} title="Members" size="xl">
+    <PageShell title={
+      <Group gap="sm" align="center">
+        <Title order={3}>Members</Title>
+        {!isLoading && <Badge variant="light" size="sm">{items.length}</Badge>}
+      </Group>
+    }>
+      {/* Add member form */}
       <Group align="flex-end" mb="md">
         <TextInput
           label="User email"
@@ -61,12 +67,12 @@ const MembersDialog: React.FC<Props> = ({ open, assessmentId, onClose }) => {
           data={['owner', 'editor', 'viewer']}
           value={role}
           onChange={(v) => setRole((v ?? 'viewer') as UserResponseRole)}
-          w={192}
+          w={160}
         />
         <Button
           leftSection={<IconPlus size={16} />}
           loading={addMember.isPending}
-          disabled={!userEmail}
+          disabled={!userEmail.trim()}
           onClick={() =>
             addMember.mutate({ user_email: userEmail, role }, {
               onSuccess: () => {
@@ -81,18 +87,10 @@ const MembersDialog: React.FC<Props> = ({ open, assessmentId, onClose }) => {
         </Button>
       </Group>
 
-      {isError && (
-        <Alert color="red" mb="md">{getErrorMessages(error).join(' ')}</Alert>
-      )}
-      {addMember.isError && (
-        <Alert color="red" mb="md">{getErrorMessages(addMember.error).join(' ')}</Alert>
-      )}
-      {setMemberRole.isError && (
-        <Alert color="red" mb="md">{getErrorMessages(setMemberRole.error).join(' ')}</Alert>
-      )}
-      {removeMember.isError && (
-        <Alert color="red" mb="md">{getErrorMessages(removeMember.error).join(' ')}</Alert>
-      )}
+      {isError && <Alert color="red" mb="md">{getErrorMessage(error)}</Alert>}
+      {addMember.isError && <Alert color="red" mb="md">{getErrorMessage(addMember.error)}</Alert>}
+      {setMemberRole.isError && <Alert color="red" mb="md">{getErrorMessage(setMemberRole.error)}</Alert>}
+      {removeMember.isError && <Alert color="red" mb="md">{getErrorMessage(removeMember.error)}</Alert>}
 
       {!isError && (
         <MembersTable
@@ -103,17 +101,6 @@ const MembersDialog: React.FC<Props> = ({ open, assessmentId, onClose }) => {
         />
       )}
 
-      <Group justify="flex-end" mt="md">
-        <Button
-          variant="subtle"
-          onClick={onClose}
-          disabled={addMember.isPending || setMemberRole.isPending || removeMember.isPending}
-        >
-          Close
-        </Button>
-      </Group>
-
-      {/* Confirm remove member */}
       <Modal
         opened={!!removeTarget}
         onClose={() => setRemoveTarget(null)}
@@ -141,8 +128,8 @@ const MembersDialog: React.FC<Props> = ({ open, assessmentId, onClose }) => {
           </Button>
         </Group>
       </Modal>
-    </Modal>
+    </PageShell>
   );
 };
 
-export default MembersDialog;
+export default AssessmentMembersPage;

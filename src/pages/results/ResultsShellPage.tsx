@@ -1,47 +1,44 @@
-import { Alert, Button, Group, Skeleton, Stack, Tabs, Title } from '@mantine/core';
-import { IconActivity, IconChartBar, IconChevronLeft, IconLayout } from '@tabler/icons-react';
+import { Alert, Button, Menu, Skeleton, Stack, Tabs, TextInput } from '@mantine/core';
+import { IconActivity, IconArrowRight, IconChartBar, IconChevronDown, IconDownload, IconLayout, IconLoader, IconSearch } from '@tabler/icons-react';
+import { useQueryClient } from '@tanstack/react-query';
 import React, { useMemo, useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
-
-import { useAssessment } from '@features/assessments/hooks';
-import { AssessmentPassphraseProvider } from '@features/encryption/AssessmentPassphraseProvider';
+import { QK } from '@api/queryKeys';
+import { useAssessmentContext } from '@app/AssessmentContext';
+import EmptyState from '@components/common/EmptyState';
+import PageShell from '@components/common/PageShell';
 import { useAssessmentPassphrase } from '@features/encryption/passphraseContext';
 import { ResultsOverview, ResultsStats, QuestionAnalysis } from '@features/grading/components';
+import ResultsDownloadModal from '@features/grading/components/ResultsDownloadModal';
 import { useGrading, useGradingJob, useJobStatus } from '@features/grading/hooks';
 import { useQuestionSet } from '@features/questions/hooks';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { isEncrypted } from '@utils/crypto';
-import { getErrorMessages } from '@utils/error';
+import { getErrorMessage } from '@utils/error';
 import { natsort } from '@utils/sort';
 
 import type { AdjustableSubmission, QuestionSetOutputQuestionMap } from '@api/models';
 
-const ResultsShellInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) => {
+const ResultsPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) => {
   const navigate = useNavigate();
-  const safeId = assessmentId;
-  const enabled = true;
+  const qc = useQueryClient();
+  const { assessment } = useAssessmentContext();
 
   const { notifyEncryptedDetected } = useAssessmentPassphrase();
   const [activeTab, setActiveTab] = useState<string>('overview');
+  const [downloadFormat, setDownloadFormat] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const { data: assessmentRes, isLoading: loadingAssessment, isError: errorAssessment, error: assessmentError } =
-    useAssessment(safeId, enabled);
+  const { data: gradingData, isLoading, isError, error } = useGrading(assessmentId, true);
+  const { data: qsRes } = useQuestionSet(assessmentId, true);
 
-  const { data: gradingData, isLoading, isError, error } =
-    useGrading(safeId, enabled);
-
-  const { data: qsRes } =
-    useQuestionSet(safeId, enabled);
-
-  const items: AdjustableSubmission[] = useMemo(
-    () => gradingData?.submissions ?? [],
-    [gradingData]
-  );
+  const items: AdjustableSubmission[] = useMemo(() => gradingData?.submissions ?? [], [gradingData]);
   const hasItems = items.length > 0;
+
   const questionMap: QuestionSetOutputQuestionMap = useMemo(
     () => qsRes?.question_set?.question_map ?? {},
-    [qsRes]
+    [qsRes],
   );
   const questionIds = useMemo(() => Object.keys(questionMap).sort(natsort), [questionMap]);
 
@@ -51,110 +48,137 @@ const ResultsShellInner: React.FC<{ assessmentId: string }> = ({ assessmentId })
     }
   }, [items, notifyEncryptedDetected]);
 
-  const { data: gradingJob } = useGradingJob(safeId, enabled);
+  const { data: gradingJob } = useGradingJob(assessmentId, true);
   const jobId = gradingJob?.job_id ?? null;
   const { data: jobStatusRes } = useJobStatus(jobId, !!jobId);
   const jobStatus = jobStatusRes?.status;
   const gradingInProgress = jobStatus === 'queued' || jobStatus === 'running';
-  const loadingPage = loadingAssessment || isLoading;
 
-  useDocumentTitle(`Results - ${assessmentRes?.name ?? 'Assessment'} - GradeFlow`);
+  // Auto-refresh when job completes
+  useEffect(() => {
+    if (jobStatus === 'completed') {
+      void qc.invalidateQueries({ queryKey: QK.grading.item(assessmentId) });
+    }
+  }, [jobStatus, assessmentId, qc]);
+
+  useDocumentTitle(`Results - ${assessment?.name ?? 'Assessment'} - GradeFlow`);
 
   return (
-    <Stack gap="md">
-      <Group align="center" justify="space-between">
-        <Group align="center" gap="sm">
-          <Button
-            variant="outline"
-            onClick={() => { void navigate(`/assessments/${safeId}/rules`); }}
-            leftSection={<IconChevronLeft size={16} />}
+    <PageShell
+      title="Results"
+      actions={
+        <>
+          <TextInput
+            leftSection={<IconSearch size={14} />}
+            placeholder="Search by Student ID"
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.currentTarget.value);
+              if (e.currentTarget.value) setActiveTab('overview');
+            }}
             size="sm"
-          >
-            {assessmentRes?.name ?? 'Assessment'}
-          </Button>
-          <Title order={4}>Grading Results</Title>
-        </Group>
-      </Group>
+            w={200}
+          />
+          <Menu position="bottom-end" withArrow>
+            <Menu.Target>
+              <Button
+                variant="outline"
+                size="sm"
+                leftSection={<IconDownload size={14} />}
+                rightSection={<IconChevronDown size={12} />}
+              >
+                Download
+              </Button>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Item onClick={() => setDownloadFormat('csv')}>CSV</Menu.Item>
+              <Menu.Item onClick={() => setDownloadFormat('json')}>JSON</Menu.Item>
+              <Menu.Item onClick={() => setDownloadFormat('yaml')}>YAML</Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
+        </>
+      }
+    >
 
-      {errorAssessment && (
-        <Alert color="red">{getErrorMessages(assessmentError).join(' ')}</Alert>
-      )}
-      {isError && (
-        <Alert color="red">{getErrorMessages(error).join(' ')}</Alert>
+      {isError && <Alert color="red" mb="md">{getErrorMessage(error)}</Alert>}
+
+      {/* Grading in progress banner */}
+      {gradingInProgress && (
+        <Alert icon={<IconLoader size={16} />} color="blue" mb="md">
+          Grading in progress... Showing previous results. This page will update automatically.
+        </Alert>
       )}
 
-      {loadingPage ? (
+      {isLoading ? (
         <Stack gap="xs">
           <Skeleton height={40} />
           <Skeleton height={300} />
         </Stack>
+      ) : !isError && !hasItems && !gradingInProgress ? (
+        <EmptyState
+          icon={<IconChartBar size={48} opacity={0.3} />}
+          title="No grading results yet"
+          description="Run grading from the Overview page to see results here."
+          action={
+            <Button
+              variant="light"
+              rightSection={<IconArrowRight size={14} />}
+              onClick={() => void navigate(`/assessments/${assessmentId}/overview`)}
+            >
+              Go to Overview
+            </Button>
+          }
+        />
       ) : (
-        <>
-          {gradingInProgress && (
-            <Alert color="blue">
-              Grading is in progress. Existing results are shown below and will update when the job completes.
-            </Alert>
-          )}
+        <Tabs value={activeTab} onChange={(v) => setActiveTab(v ?? 'overview')}>
+          <Tabs.List>
+            <Tabs.Tab value="overview" leftSection={<IconLayout size={14} />}>Overview</Tabs.Tab>
+            <Tabs.Tab value="stats" leftSection={<IconChartBar size={14} />}>Stats</Tabs.Tab>
+            <Tabs.Tab value="analysis" leftSection={<IconActivity size={14} />}>Question Analysis</Tabs.Tab>
+          </Tabs.List>
 
-          {!isError && !hasItems && !gradingInProgress && (
-            <Alert color="blue">
-              No graded submissions found. Run grading first.
-            </Alert>
-          )}
+          <Tabs.Panel value="overview" pt="md">
+            {!isError && hasItems && (
+              <ResultsOverview
+                items={items}
+                questionIds={questionIds}
+                onView={(studentId) => {
+                  void navigate(`/assessments/${assessmentId}/results/${encodeURIComponent(studentId)}`);
+                }}
+                searchQuery={searchQuery}
+              />
+            )}
+          </Tabs.Panel>
 
-          <Tabs value={activeTab} onChange={(v) => setActiveTab(v ?? 'overview')}>
-            <Tabs.List>
-              <Tabs.Tab value="overview" leftSection={<IconLayout size={14} />}>
-                Overview
-              </Tabs.Tab>
-              <Tabs.Tab value="stats" leftSection={<IconChartBar size={14} />}>
-                Stats
-              </Tabs.Tab>
-              <Tabs.Tab value="analysis" leftSection={<IconActivity size={14} />}>
-                Question Analysis
-              </Tabs.Tab>
-            </Tabs.List>
+          <Tabs.Panel value="stats" pt="md">
+            {!isError && hasItems && <ResultsStats items={items} />}
+          </Tabs.Panel>
 
-            <Tabs.Panel value="overview" pt="md">
-              {!isError && hasItems && (
-                <ResultsOverview
-                  gradingInProgress={gradingInProgress}
-                  items={items}
-                  questionIds={questionIds}
-                  onView={(studentId) => { void navigate(`/results/${safeId}/${encodeURIComponent(studentId)}`); }}
-                  assessmentId={safeId}
-                />
-              )}
-            </Tabs.Panel>
-
-            <Tabs.Panel value="stats" pt="md">
-              {!isError && hasItems && (
-                <ResultsStats items={items} />
-              )}
-            </Tabs.Panel>
-
-            <Tabs.Panel value="analysis" pt="md">
-              {!isError && hasItems && (
-                <QuestionAnalysis items={items} questionIds={questionIds} />
-              )}
-            </Tabs.Panel>
-          </Tabs>
-        </>
+          <Tabs.Panel value="analysis" pt="md">
+            {!isError && hasItems && <QuestionAnalysis items={items} questionIds={questionIds} />}
+          </Tabs.Panel>
+        </Tabs>
       )}
-    </Stack>
+
+      {downloadFormat && (
+        <ResultsDownloadModal
+          open={!!downloadFormat}
+          assessmentId={assessmentId}
+          selectedFormat={downloadFormat}
+          onClose={() => setDownloadFormat(null)}
+        />
+      )}
+    </PageShell>
   );
 };
 
+// The outer shell now just uses the AssessmentPassphraseProvider from AssessmentShell
 const ResultsShellPage: React.FC = () => {
   const { assessmentId } = useParams<{ assessmentId: string }>();
   if (!assessmentId) {
     return <Alert color="red">Assessment ID is missing.</Alert>;
   }
-  return (
-    <AssessmentPassphraseProvider assessmentId={assessmentId}>
-      <ResultsShellInner assessmentId={assessmentId} />
-    </AssessmentPassphraseProvider>
-  );
+  return <ResultsPageInner assessmentId={assessmentId} />;
 };
 
 export default ResultsShellPage;

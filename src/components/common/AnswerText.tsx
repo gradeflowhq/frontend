@@ -1,4 +1,4 @@
-import { List, Text, Box, Paper, Badge } from '@mantine/core';
+import { List, Text, Box, Badge } from '@mantine/core';
 import React from 'react';
 
 type AnswerTextProps = {

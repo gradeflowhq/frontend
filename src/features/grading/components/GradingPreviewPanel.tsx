@@ -1,11 +1,11 @@
-import { Title, Alert, Skeleton, Paper, ScrollArea, Text } from '@mantine/core';
+import { Alert, Skeleton, Paper, ScrollArea, Text } from '@mantine/core';
 import { IconAlertCircle, IconCircleCheck } from '@tabler/icons-react';
 import React, { useMemo } from 'react';
 
 import AnswerText from '@components/common/AnswerText';
 import DecryptedText from '@components/common/encryptions/DecryptedText';
 import { useAssessmentPassphrase } from '@features/encryption/passphraseContext';
-import { getErrorMessages } from '@utils/error';
+import { getErrorMessage } from '@utils/error';
 import { natsort } from '@utils/sort';
 
 import type { AdjustableSubmission, AdjustableQuestionResult } from '@features/grading/types';
@@ -38,7 +38,6 @@ const GradingPreviewPanel: React.FC<Props> = ({ items, loading, error, maxHeight
   if (loading) {
     return (
       <div>
-        <Title order={4} mb="sm">Preview</Title>
         <Skeleton height={200} />
       </div>
     );
@@ -46,8 +45,7 @@ const GradingPreviewPanel: React.FC<Props> = ({ items, loading, error, maxHeight
   if (error) {
     return (
       <div>
-        <Title order={4} mb="xs">Preview</Title>
-        <Alert color="red" title="Error">{getErrorMessages(error).join(' ')}</Alert>
+        <Alert color="red" title="Error">{getErrorMessage(error)}</Alert>
       </div>
     );
   }
@@ -55,19 +53,18 @@ const GradingPreviewPanel: React.FC<Props> = ({ items, loading, error, maxHeight
 
   return (
     <div>
-      <Title order={4} mb="sm">Preview</Title>
       <Paper withBorder shadow="xs">
-        <ScrollArea style={{ maxHeight: `${maxHeightVh}vh` }}>
+        <ScrollArea h={`${maxHeightVh}vh`}>
           <table style={{ width: '100%', minWidth: 720, borderCollapse: 'collapse', fontSize: 14 }}>
-            <thead style={{ position: 'sticky', top: 0 }}>
+            <thead style={{ position: 'sticky', top: 0, background: 'var(--mantine-color-body)' }}>
               <tr>
                 <th style={{ padding: '6px 8px', textAlign: 'left' }}>Student ID</th>
                 {allQids.map((qid) => (
                   <React.Fragment key={qid}>
-                    <td style={{ padding: '6px 8px' }}>Answer ({qid})</td>
-                    <td style={{ padding: '6px 8px' }}>Passed</td>
-                    <td style={{ padding: '6px 8px' }}>Points</td>
-                    <td style={{ padding: '6px 8px' }}>Feedback</td>
+                    <th style={{ padding: '6px 8px', fontWeight: 500 }}>Answer ({qid})</th>
+                    <th style={{ padding: '6px 8px', fontWeight: 500 }}>Passed</th>
+                    <th style={{ padding: '6px 8px', fontWeight: 500 }}>Points</th>
+                    <th style={{ padding: '6px 8px', fontWeight: 500 }}>Feedback</th>
                   </React.Fragment>
                 ))}
               </tr>

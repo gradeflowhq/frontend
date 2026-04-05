@@ -1,7 +1,9 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
-import AssessmentShellPage from '@pages/assessments/AssessmentShellPage';
+import AssessmentMembersPage from '@pages/assessments/AssessmentMembersPage';
+import AssessmentOverviewPage from '@pages/assessments/AssessmentOverviewPage';
+import AssessmentSettingsPage from '@pages/assessments/AssessmentSettingsPage';
 import AssessmentsPage from '@pages/assessments/AssessmentsPage';
 import QuestionsTabPage from '@pages/assessments/QuestionsTabPage';
 import RulesTabPage from '@pages/assessments/RulesTabPage';
@@ -13,10 +15,11 @@ import CanvasPushPage from '@pages/results/CanvasPushPage';
 import GradedSubmissionDetailPage from '@pages/results/GradedSubmissionDetailPage';
 import ResultsShellPage from '@pages/results/ResultsShellPage';
 
+import AppLayout from '../layouts/AppLayout';
+import PublicLayout from '../layouts/PublicLayout';
+import AssessmentShell from './routes/AssessmentShell';
 import ProtectedRoute from './routes/ProtectedRoute';
 import PublicOnlyRoute from './routes/PublicOnlyRoute';
-import ProtectedLayout from '../layouts/ProtectedLayout';
-import PublicLayout from '../layouts/PublicLayout';
 
 const App: React.FC = () => {
   return (
@@ -33,22 +36,25 @@ const App: React.FC = () => {
           </Route>
         </Route>
 
-        {/* Protected area with layout */}
+        {/* Protected area with sidebar layout */}
         <Route element={<ProtectedRoute />}>
-          <Route element={<ProtectedLayout />}>
+          <Route element={<AppLayout />}>
+            {/* Assessment list */}
             <Route path="/assessments" element={<AssessmentsPage />} />
 
-            {/* Assessment shell with nested tab routes */}
-            <Route path="/assessments/:assessmentId" element={<AssessmentShellPage />}>
-              <Route index element={<Navigate to="submissions" replace />} />
+            {/* Assessment workspace — all sub-routes share AssessmentShell */}
+            <Route path="/assessments/:assessmentId" element={<AssessmentShell />}>
+              <Route index element={<Navigate to="overview" replace />} />
+              <Route path="overview" element={<AssessmentOverviewPage />} />
               <Route path="submissions" element={<SubmissionsTabPage />} />
               <Route path="questions" element={<QuestionsTabPage />} />
               <Route path="rules" element={<RulesTabPage />} />
+              <Route path="results" element={<ResultsShellPage />} />
+              <Route path="results/:studentId" element={<GradedSubmissionDetailPage />} />
+              <Route path="publish" element={<CanvasPushPage />} />
+              <Route path="members" element={<AssessmentMembersPage />} />
+              <Route path="settings" element={<AssessmentSettingsPage />} />
             </Route>
-
-            <Route path="/results/:assessmentId" element={<ResultsShellPage />} />
-            <Route path="/results/:assessmentId/:studentId" element={<GradedSubmissionDetailPage />} />
-            <Route path="/results/:assessmentId/canvas" element={<CanvasPushPage />} />
           </Route>
         </Route>
 

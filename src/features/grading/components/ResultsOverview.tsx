@@ -1,46 +1,33 @@
-import { Button, Group, TextInput, Stack, Progress, Badge, Text } from '@mantine/core';
-import { IconEye, IconSearch } from '@tabler/icons-react';
-import { useQuery } from '@tanstack/react-query';
+import { Button, Group, Stack, Progress, Badge, Text } from '@mantine/core';
+import { IconEye } from '@tabler/icons-react';
 import { DataTable } from 'mantine-datatable';
 import React, { useMemo, useState } from 'react';
-import { SiCanvas } from 'react-icons/si';
-import { useNavigate } from 'react-router-dom';
 
-import { api } from '@api';
 import DecryptedText from '@components/common/encryptions/DecryptedText';
 import { useAssessmentPassphrase } from '@features/encryption/passphraseContext';
 import { useDecryptedIds } from '@features/encryption/useDecryptedIds';
-
-import ResultsDownloadDropdown from './ResultsDownloadDropdown';
-import ResultsDownloadModal from './ResultsDownloadModal';
 
 import type { AdjustableSubmission } from '../types';
 import type { DataTableColumn } from 'mantine-datatable';
 
 type Props = {
-  assessmentId: string;
-  gradingInProgress: boolean;
   items: AdjustableSubmission[];
   questionIds: string[];
   onView: (studentId: string) => void;
   initialPageSize?: number;
+  searchQuery?: string;
 };
 
 type RowT = AdjustableSubmission;
 
 const ResultsOverview: React.FC<Props> = ({
-  assessmentId,
-  gradingInProgress,
   items,
   questionIds,
   onView,
   initialPageSize = 10,
+  searchQuery = '',
 }) => {
   const { passphrase, notifyEncryptedDetected } = useAssessmentPassphrase();
-  const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [openDownload, setOpenDownload] = useState(false);
-  const [selectedFormat, setSelectedFormat] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const PAGE_SIZE = initialPageSize;
 
@@ -57,25 +44,8 @@ const ResultsOverview: React.FC<Props> = ({
     });
   }, [items, decryptedIds, searchQuery]);
 
-  const { data: serializerRegistry } = useQuery({
-    queryKey: ['registry', 'gradedSubmissionsSerializers'],
-    queryFn: async () => (await api.submissionsSerializersRegistrySerializersSubmissionsGet()).data as string[],
-    staleTime: 5 * 60 * 1000,
-    enabled: true,
-  });
-
-  const formats = useMemo<string[]>(() => {
-    if (Array.isArray(serializerRegistry) && serializerRegistry.length > 0) return serializerRegistry;
-    return ['CSV'];
-  }, [serializerRegistry]);
-
-  const hasItems = (items?.length ?? 0) > 0;
-  const canDownload = hasItems || gradingInProgress;
-
-  const openFormatModal = (fmt: string) => {
-    setSelectedFormat(fmt);
-    setOpenDownload(true);
-  };
+  // Reset to page 1 when search changes
+  React.useEffect(() => { setPage(1); }, [searchQuery]);
 
   const columns = useMemo(() => {
     const cols: DataTableColumn<RowT>[] = [];
@@ -147,7 +117,7 @@ const ResultsOverview: React.FC<Props> = ({
       accessor: 'actions',
       title: 'Actions',
       render: (row) => (
-        <Button size="sm" leftSection={<IconEye size={14} />} onClick={() => onView(row.student_id)}>
+        <Button size="sm" variant="subtle" leftSection={<IconEye size={14} />} onClick={() => onView(row.student_id)}>
           View
         </Button>
       ),
@@ -159,54 +129,18 @@ const ResultsOverview: React.FC<Props> = ({
   const records = filteredItems.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
-    <Stack gap="sm">
-      <Group justify="space-between">
-        <TextInput
-          leftSection={<IconSearch size={16} />}
-          placeholder="Search by Student ID"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.currentTarget.value)}
-        />
-        <Group gap="sm">
-          <Button
-            variant="subtle"
-            leftSection={<SiCanvas />}
-            onClick={() => void navigate(`/results/${assessmentId}/canvas`)}
-            disabled={!hasItems && !gradingInProgress}
-          >
-            Push to Canvas
-          </Button>
-          <ResultsDownloadDropdown
-            formats={formats}
-            canDownload={canDownload}
-            onSelect={openFormatModal}
-          />
-        </Group>
-      </Group>
-
-      <DataTable
-        columns={columns}
-        records={records}
-        totalRecords={filteredItems.length}
-        recordsPerPage={PAGE_SIZE}
-        page={page}
-        onPageChange={setPage}
-        striped
-        highlightOnHover
-        pinFirstColumn
-        pinLastColumn
-      />
-
-      <ResultsDownloadModal
-        open={openDownload}
-        assessmentId={assessmentId}
-        onClose={() => {
-          setOpenDownload(false);
-          setSelectedFormat(null);
-        }}
-        selectedFormat={selectedFormat ?? undefined}
-      />
-    </Stack>
+    <DataTable
+      columns={columns}
+      records={records}
+      totalRecords={filteredItems.length}
+      recordsPerPage={PAGE_SIZE}
+      page={page}
+      onPageChange={setPage}
+      striped
+      highlightOnHover
+      pinFirstColumn
+      pinLastColumn
+    />
   );
 };
 

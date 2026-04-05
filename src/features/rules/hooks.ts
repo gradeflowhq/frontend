@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { api } from '@api';
 import { QK } from '@api/queryKeys';
@@ -120,7 +120,7 @@ export const useCompatibleRuleKeys = (
  * Useful when editing an existing rule object.
  */
 export const useFindSchemaKeyByType = (defs: RuleDefinitions) => {
-  return (type: string, requireQuestionId?: boolean): string | null => {
+  return useCallback((type: string, requireQuestionId?: boolean): string | null => {
     for (const k of Object.keys(defs)) {
       const props = extractProperties(defs[k]);
       const typeObj = props.type as { const?: unknown; default?: unknown } | undefined;
@@ -129,5 +129,5 @@ export const useFindSchemaKeyByType = (defs: RuleDefinitions) => {
       if (typeConst === type && (requireQuestionId === undefined || requireQuestionId === hasQid)) return k;
     }
     return null;
-  };
+  }, [defs]);
 };

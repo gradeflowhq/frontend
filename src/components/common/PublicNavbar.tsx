@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 const PublicNavbar: React.FC = () => (
   <Group h="100%" px="md" justify="space-between">
     <Anchor component={Link} to="/" underline="never">
-      <Text fw={800} size="xl" c="blue">GradeFlow</Text>
+      <Text fw={800} size="xl" c="black">GradeFlow</Text>
     </Anchor>
     <Group gap="sm">
       <Button component={Link} to="/login" variant="default" size="sm">Log in</Button>

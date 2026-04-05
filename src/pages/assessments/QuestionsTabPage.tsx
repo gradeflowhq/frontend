@@ -1,9 +1,12 @@
-import { Alert, Modal, Text, Group, Button, Skeleton, Stack } from '@mantine/core';
+import { Alert, Box, Button, Drawer, Group, Modal, Select, Skeleton, Stack, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import React from 'react';
 import { useParams } from 'react-router-dom';
 
-
+import { useAssessmentContext } from '@app/AssessmentContext';
+import AnswerText from '@components/common/AnswerText';
+import { SchemaForm } from '@components/common/forms/SchemaForm';
+import PageShell from '@components/common/PageShell';
 import { QuestionsHeader, QuestionsTable } from '@features/questions/components';
 import QuestionSetImportModal from '@features/questions/components/QuestionSetImportModal';
 import QuestionSetUploadModal from '@features/questions/components/QuestionSetUploadModal';
@@ -16,12 +19,34 @@ import {
   useDeleteQuestionSet,
 } from '@features/questions/hooks';
 import { useSubmissions } from '@features/submissions/hooks';
-import { getErrorMessages } from '@utils/error';
+import { useDocumentTitle } from '@hooks/useDocumentTitle';
+import questionsSchema from '@schemas/questions.json';
+import { getErrorMessage } from '@utils/error';
 
-import type { QuestionSetInput } from '@api/models';
+import type { QuestionSetInput, ChoiceQuestion, MultiValuedQuestion, TextQuestion, NumericQuestion } from '@api/models';
+import type { JSONSchema7Definition } from 'json-schema';
+
+type QuestionDef = ChoiceQuestion | MultiValuedQuestion | TextQuestion | NumericQuestion;
+
+const QUESTION_TYPES = ['TEXT', 'NUMERIC', 'CHOICE', 'MULTI_VALUED'] as const;
+
+const selectRootSchema = (type: string | undefined) => {
+  const dict = questionsSchema as Record<string, unknown>;
+  switch (type) {
+    case 'CHOICE': return dict.ChoiceQuestion ?? null;
+    case 'MULTI_VALUED': return dict.MultiValuedQuestion ?? null;
+    case 'NUMERIC': return dict.NumericQuestion ?? null;
+    case 'TEXT':
+    default: return dict.TextQuestion ?? null;
+  }
+};
 
 const QuestionsTabPage: React.FC = () => {
   const { assessmentId } = useParams<{ assessmentId: string }>();
+  const { assessment } = useAssessmentContext();
+
+  useDocumentTitle(`Questions - ${assessment?.name ?? 'Assessment'} - GradeFlow`);
+
   const safeAssessmentId = assessmentId ?? '';
   const enabled = Boolean(assessmentId);
   const [confirmInfer, setConfirmInfer] = React.useState(false);
@@ -29,6 +54,10 @@ const QuestionsTabPage: React.FC = () => {
   const [openQsUpload, setOpenQsUpload] = React.useState(false);
   const [openQsImport, setOpenQsImport] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState('');
+
+  // Drawer state
+  const [editingQid, setEditingQid] = React.useState<string | null>(null);
+  const [editingDraft, setEditingDraft] = React.useState<Partial<QuestionDef> | null>(null);
 
   // Raw submissions (to decide whether to show the Infer button)
   const { data: subsRes } = useSubmissions(safeAssessmentId);
@@ -76,26 +105,61 @@ const QuestionsTabPage: React.FC = () => {
     [parsedRes]
   );
 
-  return (
-    <Stack gap="md">
-      {errorQS && !qsMissing && (
-        <Alert color="red">{getErrorMessages(qsError).join(' ')}</Alert>
-      )}
-      {errorParsed && !missingSubmissions && (
-        <Alert color="red">{getErrorMessages(parsedError).join(' ')}</Alert>
-      )}
+  const openEditDrawer = (qid: string) => {
+    setEditingQid(qid);
+    setEditingDraft({ ...(questionMap[qid] as QuestionDef) });
+  };
 
-      <QuestionsHeader
-        onInfer={() => setConfirmInfer(true)}
-        showInfer={hasSubmissions}
-        onUpload={() => setOpenQsUpload(true)}
-        onImport={() => setOpenQsImport(true)}
-        onDelete={() => setConfirmDeleteQs(true)}
-        showDelete={hasQuestionSet}
-        disableDelete={deleteMutation.isPending}
-        searchQuery={searchQuery}
-        onSearchChange={(v) => setSearchQuery(v)}
-      />
+  const closeEditDrawer = () => {
+    setEditingQid(null);
+    setEditingDraft(null);
+  };
+
+  const saveEditDrawer = async () => {
+    if (!editingQid || !editingDraft) return;
+    const next: QuestionSetInput = {
+      question_map: {
+        ...questionMap,
+        [editingQid]: { ...(questionMap[editingQid] as QuestionDef), ...(editingDraft as QuestionDef) },
+      } as QuestionSetInput['question_map'],
+    };
+    await updateMutation.mutateAsync(next, {
+      onSuccess: () => {
+        notifications.show({ color: 'green', message: 'Question saved' });
+        closeEditDrawer();
+      },
+      onError: () => notifications.show({ color: 'red', message: 'Save failed' }),
+    });
+  };
+
+  const drawerType = (editingDraft?.type as string) ?? 'TEXT';
+  const drawerRootSchema = selectRootSchema(drawerType);
+  const drawerExamples = editingQid ? (examplesByQuestion[editingQid] ?? []) : [];
+
+  return (
+    <PageShell
+      title="Questions"
+      actions={
+        <QuestionsHeader
+          onInfer={() => setConfirmInfer(true)}
+          showInfer={hasSubmissions}
+          onUpload={() => setOpenQsUpload(true)}
+          onImport={() => setOpenQsImport(true)}
+          onDelete={() => setConfirmDeleteQs(true)}
+          showDelete={hasQuestionSet}
+          disableDelete={deleteMutation.isPending}
+          searchQuery={searchQuery}
+          onSearchChange={(v) => setSearchQuery(v)}
+        />
+      }
+    >
+      <Stack gap="md">
+        {errorQS && !qsMissing && (
+          <Alert color="red">{getErrorMessage(qsError)}</Alert>
+        )}
+        {errorParsed && !missingSubmissions && (
+          <Alert color="red">{getErrorMessage(parsedError)}</Alert>
+        )}
 
       {loadingQS ? (
         <Stack gap="xs">
@@ -112,6 +176,7 @@ const QuestionsTabPage: React.FC = () => {
               onError: () => notifications.show({ color: 'red', message: 'Save failed' }),
             });
           }}
+          onEdit={openEditDrawer}
           updating={updateMutation.isPending}
           updateError={updateMutation.isError ? updateMutation.error : null}
           searchQuery={searchQuery}
@@ -120,6 +185,74 @@ const QuestionsTabPage: React.FC = () => {
           examplesError={missingSubmissions ? 'No submissions available to derive example answers yet.' : undefined}
         />
       )}
+
+      {/* Question Edit Drawer */}
+      <Drawer
+        opened={!!editingQid}
+        onClose={closeEditDrawer}
+        position="right"
+        size="lg"
+        title={editingQid ? `Edit Question: ${editingQid}` : 'Edit Question'}
+        styles={{
+          content: { display: 'flex', flexDirection: 'column', overflow: 'hidden' },
+          body: { flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', paddingBottom: 0 },
+        }}
+      >
+        <Stack gap="md" style={{ flex: 1, overflowY: 'auto', paddingBottom: 16 }}>
+          <Select
+            label="Type"
+            data={QUESTION_TYPES as unknown as string[]}
+            value={drawerType}
+            onChange={(v) =>
+              setEditingDraft((prev) => ({ ...(prev ?? {}), type: (v ?? 'TEXT') as QuestionDef['type'] }))
+            }
+          />
+
+          {drawerRootSchema && (
+            <Box>
+              <SchemaForm<QuestionDef>
+                schema={{ ...drawerRootSchema as object, definitions: questionsSchema as Record<string, JSONSchema7Definition> }}
+                uiSchema={{
+                  'ui:title': '',
+                  'ui:options': { label: true },
+                  'ui:submitButtonOptions': { norender: true },
+                  type: { 'ui:widget': 'hidden', 'ui:title': '', 'ui:options': { label: false } },
+                }}
+                formData={editingDraft as QuestionDef}
+                onChange={({ formData }) => {
+                  setEditingDraft((prev) => ({ ...(formData ?? {}), type: prev?.type ?? drawerType } as Partial<QuestionDef>));
+                }}
+                onSubmit={() => {}}
+                formProps={{ noHtml5Validate: true }}
+                showSubmit={false}
+              />
+            </Box>
+          )}
+
+          {drawerExamples.length > 0 && (
+            <Box>
+              <Text size="sm" fw={500} mb={4}>Example answers (read-only)</Text>
+              <Stack gap={2}>
+                {drawerExamples.slice(0, 10).map((ex, i) => (
+                  <Text key={i} ff="monospace" size="xs" c="dimmed">
+                    <AnswerText value={String(ex ?? '')} maxLength={80} />
+                  </Text>
+                ))}
+              </Stack>
+            </Box>
+          )}
+        </Stack>
+
+        <Box
+          py="md"
+          style={{ borderTop: '1px solid var(--mantine-color-default-border)', flexShrink: 0 }}
+        >
+          <Group justify="flex-end" gap="sm">
+            <Button variant="default" onClick={closeEditDrawer}>Cancel</Button>
+            <Button loading={updateMutation.isPending} onClick={() => void saveEditDrawer()}>Save</Button>
+          </Group>
+        </Box>
+      </Drawer>
 
       <Modal
         opened={confirmInfer}
@@ -145,7 +278,7 @@ const QuestionsTabPage: React.FC = () => {
           </Button>
         </Group>
         {inferMutation.isError && (
-          <Alert color="red" mt="sm">{getErrorMessages(inferMutation.error).join(' ')}</Alert>
+          <Alert color="red" mt="sm">{getErrorMessage(inferMutation.error)}</Alert>
         )}
       </Modal>
 
@@ -174,7 +307,7 @@ const QuestionsTabPage: React.FC = () => {
           </Button>
         </Group>
         {deleteMutation.isError && (
-          <Alert color="red" mt="sm">{getErrorMessages(deleteMutation.error).join(' ')}</Alert>
+          <Alert color="red" mt="sm">{getErrorMessage(deleteMutation.error)}</Alert>
         )}
       </Modal>
 
@@ -189,7 +322,9 @@ const QuestionsTabPage: React.FC = () => {
         onClose={() => setOpenQsImport(false)}
       />}
     </Stack>
+    </PageShell>
   );
 };
 
 export default QuestionsTabPage;
+

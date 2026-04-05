@@ -48,3 +48,9 @@ export const getErrorMessages = (error: unknown): string[] => {
   // Fallback
   return ['An unexpected error occurred'];
 };
+
+/**
+ * Convenience function that returns a single error string (messages joined with a newline).
+ */
+export const getErrorMessage = (error: unknown): string =>
+  getErrorMessages(error).join('\n');

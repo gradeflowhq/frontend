@@ -109,3 +109,12 @@ export const formatSmart = (
 
   return returnBoth ? { primary, secondary } : primary;
 };
+
+/**
+ * Like formatSmart but always returns a plain string (the primary value).
+ * Convenience wrapper to avoid manual typeof checks at callsites.
+ */
+export const formatSmartLabel = (v: DateInput, options?: Omit<SmartFormatOptions, 'returnBoth'>): string => {
+  const result = formatSmart(v, { ...options, returnBoth: false });
+  return typeof result === 'string' ? result : result.primary;
+};

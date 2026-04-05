@@ -1,12 +1,35 @@
-import { Button, Group, TextInput, Modal, Text, Alert } from '@mantine/core';
+import {
+  ActionIcon,
+  Alert,
+  Box,
+  Button,
+  Card,
+  Group,
+  Menu,
+  Modal,
+  Progress,
+  SimpleGrid,
+  Skeleton,
+  Text,
+  TextInput,
+} from '@mantine/core';
+import { useDebouncedValue } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
-import { IconPlus, IconSearch } from '@tabler/icons-react';
+import {
+  IconDots,
+  IconGridDots,
+  IconPencil,
+  IconPlus,
+  IconSearch,
+  IconTrash,
+  IconUsers,
+} from '@tabler/icons-react';
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import PageHeader from '@components/common/PageHeader';
+import EmptyState from '@components/common/EmptyState';
+import PageShell from '@components/common/PageShell';
 import {
-  AssessmentsTable,
   AssessmentCreateModal,
   AssessmentEditModal,
 } from '@features/assessments/components';
@@ -16,11 +39,112 @@ import {
   useUpdateAssessment,
   useDeleteAssessment,
 } from '@features/assessments/hooks';
+import { useGrading } from '@features/grading/hooks';
+import { useQuestionSet } from '@features/questions/hooks';
+import { useRubricCoverage } from '@features/rubric/hooks';
+import { useSubmissions } from '@features/submissions/hooks';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
-import { getErrorMessages } from '@utils/error';
+import { formatSmartLabel } from '@utils/datetime';
+import { getErrorMessage } from '@utils/error';
+import { pluralize } from '@utils/format';
 import { compareDateDesc } from '@utils/sort';
 
 import type { AssessmentResponse, AssessmentCreateRequest, AssessmentUpdateRequest } from '@api/models';
+
+// A single card that fetches its own coverage + grading data
+const AssessmentCard: React.FC<{
+  item: AssessmentResponse;
+  onOpen: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+  onMembers: () => void;
+}> = ({ item, onOpen, onEdit, onDelete, onMembers }) => {
+  const { data: coverageRes } = useRubricCoverage(item.id);
+  const { data: gradingData } = useGrading(item.id);
+  const { data: submissionsData } = useSubmissions(item.id);
+  const { data: questionSetData } = useQuestionSet(item.id);
+
+  const cov = coverageRes?.coverage;
+  const covTotal = cov?.total ?? 0;
+  const covCovered = cov?.covered ?? 0;
+  const covPct = cov?.percentage ?? 0;
+  const hasRules = covTotal > 0;
+
+  const gradedCount = gradingData?.submissions?.length ?? 0;
+  const submissionsCount = submissionsData?.raw_submissions?.length ?? null;
+  const questionsCount = questionSetData
+    ? Object.keys(questionSetData.question_set.question_map).length
+    : null;
+
+  const updatedLabel = formatSmartLabel(item.updated_at);
+
+  return (
+    <Card withBorder padding="md" radius="md" shadow="xs" style={{ display: 'flex', flexDirection: 'column' }}>
+      <Group justify="space-between" align="flex-start" mb="xs">
+        <Box style={{ flex: 1, minWidth: 0 }}>
+          <Text fw={600} size="sm" truncate>{item.name}</Text>
+          {item.description && (
+            <Text size="xs" c="dimmed" mt={2} lineClamp={2}>{item.description}</Text>
+          )}
+          <Text size="xs" c="dimmed" mt={2}>Updated {updatedLabel}</Text>
+        </Box>
+        <Menu position="bottom-end" withArrow>
+          <Menu.Target>
+            <ActionIcon variant="subtle" size="sm" aria-label="More options">
+              <IconDots size={14} />
+            </ActionIcon>
+          </Menu.Target>
+          <Menu.Dropdown>
+            <Menu.Item leftSection={<IconPencil size={14} />} onClick={onEdit}>Edit</Menu.Item>
+            <Menu.Item leftSection={<IconUsers size={14} />} onClick={onMembers}>Manage Members</Menu.Item>
+            <Menu.Divider />
+            <Menu.Item leftSection={<IconTrash size={14} />} color="red" onClick={onDelete}>Delete</Menu.Item>
+          </Menu.Dropdown>
+        </Menu>
+      </Group>
+
+      {hasRules ? (
+        <Box mb="sm">
+          <Group justify="space-between" mb={4}>
+            <Text size="xs" c="dimmed">{covCovered}/{covTotal} rules covered</Text>
+            <Text size="xs" c="dimmed">{Math.round(covPct * 100)}%</Text>
+          </Group>
+          <Progress value={covPct * 100} size="sm" radius="sm" />
+        </Box>
+      ) : (
+        <Text size="xs" c="dimmed" mb="sm">No rules configured</Text>
+      )}
+
+      <Group gap="md" mb="md">
+        <Text size="xs" c="dimmed">
+          {submissionsCount === null
+            ? '—'
+            : submissionsCount === 0
+              ? 'No submissions'
+              : pluralize(submissionsCount, 'submission')}
+        </Text>
+        <Text size="xs" c="dimmed">·</Text>
+        <Text size="xs" c="dimmed">
+          {questionsCount === null
+            ? '—'
+            : questionsCount === 0
+              ? 'No questions'
+              : pluralize(questionsCount, 'question')}
+        </Text>
+        {gradedCount > 0 && (
+          <>
+            <Text size="xs" c="dimmed">·</Text>
+            <Text size="xs" c="dimmed">{pluralize(gradedCount, 'graded', 'graded')}</Text>
+          </>
+        )}
+      </Group>
+
+      <Button size="xs" variant="light" onClick={onOpen} fullWidth mt="auto">
+        Open
+      </Button>
+    </Card>
+  );
+};
 
 const AssessmentsPage: React.FC = () => {
   useDocumentTitle('Assessments - GradeFlow');
@@ -31,6 +155,9 @@ const AssessmentsPage: React.FC = () => {
   const [editItem, setEditItem] = useState<AssessmentResponse | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AssessmentResponse | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch] = useDebouncedValue(searchQuery, 200);
+
+  
 
   const { data, isLoading, isError, error } = useAssessmentsList();
   const createMutation = useCreateAssessment();
@@ -43,45 +170,75 @@ const AssessmentsPage: React.FC = () => {
   }, [data]);
 
   const filteredItems = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
+    const q = debouncedSearch.trim().toLowerCase();
     if (!q) return sortedItems;
-
     return sortedItems.filter((item) => {
       const haystacks = [item.name, item.description].filter(Boolean).map((v) => v!.toLowerCase());
       return haystacks.some((text) => text.includes(q));
     });
-  }, [sortedItems, searchQuery]);
+  }, [sortedItems, debouncedSearch]);
+
+  const openAssessment = (item: AssessmentResponse) => {
+    void navigate(`/assessments/${item.id}/overview`);
+  };
 
   return (
-    <section>
-      <PageHeader
-        title="Assessments"
-        actions={
-          <Group gap="sm" wrap="nowrap">
-            <TextInput
-              leftSection={<IconSearch size={16} />}
-              placeholder="Search assessments"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <Button variant="default" onClick={() => setShowCreate(true)} leftSection={<IconPlus size={16} />}>
-              Add
-            </Button>
-          </Group>
-        }
-      />
-      {isError && <Alert color="red" mb="md">{getErrorMessages(error).join(' ')}</Alert>}
+    <PageShell
+      title="My Assessments"
+      actions={
+        <Group gap="xs" align="center">
+          <TextInput
+            leftSection={<IconSearch size={14} />}
+            placeholder="Search assessments..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            size="sm"
+            w={200}
+          />
+          <Button leftSection={<IconPlus size={16} />} onClick={() => setShowCreate(true)}>
+            New Assessment
+          </Button>
+        </Group>
+      }
+    >
 
-      {!isError && (
-        <AssessmentsTable
-          items={filteredItems}
-          isLoading={isLoading}
-          onOpen={(item) => {
-            void navigate(`/assessments/${item.id}`);
-          }}
-          onEdit={(item) => setEditItem(item)}
-          onDelete={(item) => setDeleteTarget(item)}
+      {isError && <Alert color="red" mb="md">{getErrorMessage(error)}</Alert>}
+
+      {isLoading ? (
+        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Card key={i} withBorder padding="md" radius="md">
+              <Skeleton height={16} mb="sm" />
+              <Skeleton height={12} mb="sm" width="60%" />
+              <Skeleton height={8} mb="sm" />
+              <Skeleton height={28} mt="md" />
+            </Card>
+          ))}
+        </SimpleGrid>
+      ) : !isError && filteredItems.length === 0 ? (
+        <EmptyState
+          icon={<IconGridDots size={48} opacity={0.3} />}
+          title="No assessments yet"
+          description="Create your first assessment to get started."
+          action={
+            <Button leftSection={<IconPlus size={16} />} onClick={() => setShowCreate(true)}>
+              New Assessment
+            </Button>
+          }
         />
+      ) : (
+        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
+          {filteredItems.map((item) => (
+            <AssessmentCard
+              key={item.id}
+              item={item}
+              onOpen={() => openAssessment(item)}
+              onEdit={() => setEditItem(item)}
+              onDelete={() => setDeleteTarget(item)}
+              onMembers={() => void navigate(`/assessments/${item.id}/members`)}
+            />
+          ))}
+        </SimpleGrid>
       )}
 
       <AssessmentCreateModal
@@ -90,13 +247,10 @@ const AssessmentsPage: React.FC = () => {
         error={createMutation.isError ? createMutation.error : null}
         onClose={() => setShowCreate(false)}
         onSubmit={async (formData: AssessmentCreateRequest) => {
-          await createMutation.mutateAsync(formData, {
-            onSuccess: () => {
-              setShowCreate(false);
-              notifications.show({ color: 'green', message: 'Assessment created' });
-            },
-            onError: () => notifications.show({ color: 'red', message: 'Create failed' }),
-          });
+          const created = await createMutation.mutateAsync(formData);
+          setShowCreate(false);
+          notifications.show({ color: 'green', message: 'Assessment created' });
+          void navigate(`/assessments/${created.id}/overview`);
         }}
       />
 
@@ -142,10 +296,10 @@ const AssessmentsPage: React.FC = () => {
           </Button>
         </Group>
         {deleteMutation.isError && (
-          <Alert color="red" mt="sm">{getErrorMessages(deleteMutation.error).join(' ')}</Alert>
+          <Alert color="red" mt="sm">{getErrorMessage(deleteMutation.error)}</Alert>
         )}
       </Modal>
-    </section>
+    </PageShell>
   );
 };
 

@@ -9,7 +9,7 @@ import { SchemaForm } from '@components/common/forms/SchemaForm';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import requestsSchema from '@schemas/requests.json';
 import { useAuthStore } from '@state/authStore';
-import { getErrorMessages } from '@utils/error';
+import { getErrorMessage } from '@utils/error';
 
 import type { SignupRequest, TokenPairResponse } from '@api/models';
 import type { JSONSchema7 } from 'json-schema';
@@ -63,7 +63,7 @@ const RegisterPage: React.FC = () => {
         />
 
         {isError && (
-          <Alert color="red" mt="sm">{getErrorMessages(error).join(' ')}</Alert>
+          <Alert color="red" mt="sm">{getErrorMessage(error)}</Alert>
         )}
 
         <Text size="sm" ta="center" mt="md">

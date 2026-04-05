@@ -14,7 +14,7 @@ import { api } from '@api';
 import { QK } from '@api/queryKeys';
 import { buildSourceCsv } from '@features/submissions/helpers';
 import { arraysEqual } from '@features/submissions/utils/questionColumnInference';
-import { getErrorMessages } from '@utils/error';
+import { getErrorMessage } from '@utils/error';
 import { buildPassphraseKey, readPassphrase, writePassphrase } from '@utils/passphrase';
 
 import type { CsvPreview, PassphraseContext } from '@features/submissions/types';
@@ -302,7 +302,7 @@ export const UploadStep: React.FC<{
       )}
 
       {uploadMutation.isError && (
-        <Alert color="red" mt="sm">{getErrorMessages(uploadMutation.error).join(' ')}</Alert>
+        <Alert color="red" mt="sm">{getErrorMessage(uploadMutation.error)}</Alert>
       )}
 
       <Group justify="flex-end" mt="md">

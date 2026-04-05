@@ -27,6 +27,7 @@ export default defineConfig({
       '@pages': path.resolve(__dirname, 'src/pages'),
       '@schemas': path.resolve(__dirname, 'src/schemas'),
       '@lib': path.resolve(__dirname, 'src/lib'),
+      '@app': path.resolve(__dirname, 'src/app'),
     },
   },
 })

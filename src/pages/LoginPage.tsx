@@ -10,7 +10,7 @@ import { SchemaForm } from '@components/common/forms/SchemaForm';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import othersSchema from '@schemas/others.json';
 import { useAuthStore } from '@state/authStore';
-import { getErrorMessages } from '@utils/error';
+import { getErrorMessage } from '@utils/error';
 
 import type { BodyIssueTokenAuthTokenPost, TokenPairResponse } from '@api/models';
 import type { JSONSchema7 } from 'json-schema';
@@ -78,7 +78,7 @@ const LoginPage: React.FC = () => {
           <Alert color="blue" mt="sm">Signing you in...</Alert>
         )}
         {isError && (
-          <Alert color="red" mt="sm">{getErrorMessages(error).join(' ')}</Alert>
+          <Alert color="red" mt="sm">{getErrorMessage(error)}</Alert>
         )}
 
         <Text size="sm" ta="center" mt="md">

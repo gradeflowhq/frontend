@@ -26,6 +26,10 @@ const MembersTable: React.FC<MembersTableProps> = ({
   const [page, setPage] = useState(1);
   const PAGE_SIZE = initialPageSize;
 
+  React.useEffect(() => {
+    setPage(1);
+  }, [items]);
+
   const beginEdit = (user: UserResponse) => {
     setEditingUserId(user.id);
     setPendingRole(user.role);

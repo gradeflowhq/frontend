@@ -11,7 +11,7 @@ import { useAssessmentPassphrase } from '@features/encryption/passphraseContext'
 import { tryDecodeExportCsv } from '@features/submissions/helpers';
 import { saveBlob } from '@lib/files';
 import requestsSchema from '@schemas/requests.json';
-import { getErrorMessages } from '@utils/error';
+import { getErrorMessage } from '@utils/error';
 
 import type { GradingDownloadRequest, GradingDownloadResponse } from '@api/models';
 import type { JSONSchema7, JSONSchema7Definition } from 'json-schema';
@@ -193,7 +193,7 @@ const ResultsDownloadModalInner: React.FC<Props> = ({ open, assessmentId, onClos
 
       {downloadMutation.isError && (
         <Alert color="red" icon={<IconAlertCircle size={16} />} mt="md">
-          {getErrorMessages(downloadMutation.error).join(' ')}
+          {getErrorMessage(downloadMutation.error)}
         </Alert>
       )}
     </Modal>

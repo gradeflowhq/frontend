@@ -3,7 +3,7 @@ import React from 'react';
 
 import { SchemaForm } from '@components/common/forms/SchemaForm';
 import requestsSchema from '@schemas/requests.json';
-import { getErrorMessages } from '@utils/error';
+import { getErrorMessage } from '@utils/error';
 
 import type { AssessmentUpdateRequest, AssessmentResponse } from '@api/models';
 import type { JSONSchema7 } from 'json-schema';
@@ -51,7 +51,7 @@ const AssessmentEditModal: React.FC<Props> = ({ openItem, isSubmitting, error, o
       )}
 
       {!!error && (
-        <Alert color="red" mt="md">{getErrorMessages(error).join(' ')}</Alert>
+        <Alert color="red" mt="md">{getErrorMessage(error)}</Alert>
       )}
 
       <Group justify="flex-end" mt="md">

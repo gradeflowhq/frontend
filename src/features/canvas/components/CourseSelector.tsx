@@ -23,16 +23,15 @@ const CourseSelector: React.FC<CourseSelectorProps> = ({
   onRefresh,
 }) => (
   <InfoRow
-    title="Course"
-    action={
+    bottomAction={
       <Button
-        size="sm"
-        variant="subtle"
+        size="xs"
+        variant="default"
         loading={loadingCourses}
         disabled={missingCanvasConfig}
         onClick={() => void onRefresh()}
       >
-        Refresh
+        Refresh courses
       </Button>
     }
   >

@@ -1,20 +1,21 @@
 import {
   Accordion, ActionIcon, Alert, Badge, Button, Checkbox, Divider, Group,
-  Modal, NumberInput, Paper, Popover, Progress, Select, SimpleGrid, Stack, Table, Text, Textarea,
+  Modal, NumberInput, Paper, Popover, Progress, Select, SimpleGrid, Stack, Text, Textarea,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconAlertCircle, IconChevronLeft, IconChevronRight, IconCircleCheck, IconDeviceFloppy, IconFilter, IconPencil, IconTrash } from '@tabler/icons-react';
+import { DataTable } from 'mantine-datatable';
 import React, { useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 import AnswerText from '@components/common/AnswerText';
-import { AssessmentPassphraseProvider } from '@features/encryption/AssessmentPassphraseProvider';
+import PageShell from '@components/common/PageShell';
 import { useAssessmentPassphrase } from '@features/encryption/passphraseContext';
 import { useDecryptedIds } from '@features/encryption/useDecryptedIds';
 import { useGrading, useAdjustGrading } from '@features/grading/hooks';
 import { friendlyRuleLabel } from '@features/rules/helpers';
 import { isEncrypted } from '@utils/crypto';
-import { getErrorMessages } from '@utils/error';
+import { getErrorMessage } from '@utils/error';
 import { natsort } from '@utils/sort';
 
 
@@ -44,10 +45,10 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
   const studentIds = useMemo(() => submissions.map((s) => s.student_id).sort(natsort), [submissions]);
   const { decryptedIds, isDecrypting: isDecryptingIds } = useDecryptedIds(studentIds, passphrase, notifyEncryptedDetected);
 
-  const index = submissions.findIndex((s) => s.student_id === encodedStudentId);
-  const current = index >= 0 ? submissions[index] : null;
-  const prevId = index > 0 ? submissions[index - 1].student_id : null;
-  const nextId = index >= 0 && index < submissions.length - 1 ? submissions[index + 1].student_id : null;
+  const sortedIndex = studentIds.indexOf(encodedStudentId);
+  const current = submissions.find((s) => s.student_id === encodedStudentId) ?? null;
+  const prevId = sortedIndex > 0 ? studentIds[sortedIndex - 1] : null;
+  const nextId = sortedIndex >= 0 && sortedIndex < studentIds.length - 1 ? studentIds[sortedIndex + 1] : null;
 
   const sortedResults = useMemo(() => {
     if (!current?.result_map) return [] as ResultWithQid[];
@@ -126,10 +127,10 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
   };
 
   const gotoPrev = () => {
-    if (prevId) void navigate(`/results/${safeId}/${encodeURIComponent(prevId)}`);
+    if (prevId) void navigate(`/assessments/${safeId}/results/${encodeURIComponent(prevId)}`);
   };
   const gotoNext = () => {
-    if (nextId) void navigate(`/results/${safeId}/${encodeURIComponent(nextId)}`);
+    if (nextId) void navigate(`/assessments/${safeId}/results/${encodeURIComponent(nextId)}`);
   };
 
   React.useEffect(() => {
@@ -138,7 +139,7 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
   }, [encodedStudentId]);
 
   if (isLoading) return <Alert color="blue">Loading submission...</Alert>;
-  if (isError) return <Alert color="red">{getErrorMessages(error).join(' ')}</Alert>;
+  if (isError) return <Alert color="red">{getErrorMessage(error)}</Alert>;
   if (!current) return <Alert color="yellow">Submission not found.</Alert>;
 
   const originalTotalPoints = sortedResults.reduce((sum, r) => sum + (r.points ?? 0), 0);
@@ -158,41 +159,55 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
   const adjustedPct = totalMax > 0 ? (adjustedTotalPoints / totalMax) * 100 : 0;
   const delta = adjustedTotalPoints - originalTotalPoints;
 
+  const navTitle = (
+    <Group gap="sm" align="center" wrap="nowrap">
+      <Button
+        variant="outline"
+        size="sm"
+        leftSection={<IconChevronLeft size={14} />}
+        onClick={() => void navigate(`/assessments/${safeId}/results`)}
+        px="xs"
+      >
+        Results
+      </Button>
+      <Select
+        searchable
+        size="sm"
+        w={220}
+        placeholder="Select student"
+        value={encodedStudentId}
+        onChange={(v) => v && void navigate(`/assessments/${safeId}/results/${encodeURIComponent(v)}`)}
+        data={studentIds.map((id) => ({
+          value: id,
+          label: decryptedIds[id] ?? id,
+        }))}
+      />
+      {sortedIndex >= 0 && (
+        <Text size="sm" c="dimmed" style={{ whiteSpace: 'nowrap' }}>({sortedIndex + 1} of {studentIds.length})</Text>
+      )}
+      {isDecryptingIds && (
+        <Badge variant="light" color="gray" size="sm">Decrypting...</Badge>
+      )}
+    </Group>
+  );
+
+  const navActions = (
+    <Group gap="xs">
+      <ActionIcon variant="outline" onClick={gotoPrev} disabled={!prevId} aria-label="Previous">
+        <IconChevronLeft size={16} />
+      </ActionIcon>
+      <ActionIcon variant="outline" onClick={gotoNext} disabled={!nextId} aria-label="Next">
+        <IconChevronRight size={16} />
+      </ActionIcon>
+    </Group>
+  );
+
   return (
-    <Stack gap="md">
-      <Group align="center" justify="space-between">
-        <Group gap="sm" align="center">
-          <Button variant="outline" size="sm" onClick={() => void navigate(`/results/${safeId}`)} leftSection={<IconChevronLeft size={16} />}>
-            Back
-          </Button>
-          <Select
-            searchable
-            size="sm"
-            w={240}
-            placeholder="Select student"
-            value={encodedStudentId}
-            onChange={(v) => v && void navigate(`/results/${safeId}/${encodeURIComponent(v)}`)}
-            data={studentIds.map((id) => ({
-              value: id,
-              label: decryptedIds[id] ?? id,
-            }))}
-          />
-          {isDecryptingIds && (
-            <Badge variant="light" color="gray" size="sm">Decrypting IDs...</Badge>
-          )}
-        </Group>
-        <Group gap="xs">
-          <ActionIcon variant="outline" onClick={gotoPrev} disabled={!prevId} aria-label="Previous">
-            <IconChevronLeft size={16} />
-          </ActionIcon>
-          <ActionIcon variant="outline" onClick={gotoNext} disabled={!nextId} aria-label="Next">
-            <IconChevronRight size={16} />
-          </ActionIcon>
-        </Group>
-      </Group>
+    <PageShell title={navTitle} actions={navActions}>
+      <Stack gap="md">
 
       {adjustMutation.isError && (
-        <Alert color="red">{getErrorMessages(adjustMutation.error).join(' ')}</Alert>
+        <Alert color="red">{getErrorMessage(adjustMutation.error)}</Alert>
       )}
 
       <SimpleGrid cols={{ base: 1, sm: 3 }}>
@@ -271,180 +286,186 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
         </Popover>
       </Group>
 
-      <Table.ScrollContainer minWidth={700}>
-        <Table withTableBorder withColumnBorders verticalSpacing="xs">
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Question ID</Table.Th>
-              <Table.Th>Rule</Table.Th>
-              <Table.Th title="Passed"><IconCircleCheck size={14} /></Table.Th>
-              <Table.Th>Answer</Table.Th>
-              <Table.Th>Points</Table.Th>
-              <Table.Th>Feedback</Table.Th>
-              <Table.Th>Actions</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {visibleResults.map((res) => {
+      <DataTable
+        idAccessor="question_id"
+        records={visibleResults}
+        verticalAlign="top"
+        withTableBorder
+        withColumnBorders
+        rowStyle={(res) => {
+          const adjustedExists =
+            (res.adjusted_points !== undefined && res.adjusted_points !== null) ||
+            (res.adjusted_feedback !== undefined && res.adjusted_feedback !== null);
+          return { background: adjustedExists ? 'var(--mantine-color-yellow-0)' : undefined };
+        }}
+        columns={[
+          {
+            accessor: 'question_id',
+            title: 'Question ID',
+            render: (res) => <Text ff="monospace" size="sm">{res.question_id}</Text>,
+          },
+          {
+            accessor: 'rule',
+            title: 'Rule',
+            render: (res) => (
+              <Badge variant="light" color="gray" ff="monospace" size="sm">
+                {friendlyRuleLabel(res.rule)}
+              </Badge>
+            ),
+          },
+          {
+            accessor: 'passed',
+            title: <IconCircleCheck size={14} />,
+            render: (res) =>
+              !res.graded ? (
+                <Badge color="yellow" size="sm">Ungraded</Badge>
+              ) : res.passed ? (
+                <IconCircleCheck size={16} color="var(--mantine-color-green-6)" aria-label="Passed" />
+              ) : (
+                <IconAlertCircle size={16} color="var(--mantine-color-red-6)" aria-label="Failed" />
+              ),
+          },
+          {
+            accessor: 'answer',
+            title: 'Answer',
+            render: (res) => <AnswerText value={current.answer_map?.[res.question_id]} maxLength={100} />,
+          },
+          {
+            accessor: 'points',
+            title: 'Points',
+            render: (res) => {
               const qid = res.question_id;
               const isEditing = !!openEdits[qid];
               const local = editing[qid];
-
               const adjustedExists =
                 (res.adjusted_points !== undefined && res.adjusted_points !== null) ||
                 (res.adjusted_feedback !== undefined && res.adjusted_feedback !== null);
-
-              return (
-                <Table.Tr
-                  key={qid}
-                  style={{
-                    background: adjustedExists ? 'var(--mantine-color-yellow-0)' : undefined,
-                    verticalAlign: 'top',
-                  }}
-                >
-                  <Table.Td>
-                    <Text ff="monospace" size="sm">{qid}</Text>
-                  </Table.Td>
-
-                  <Table.Td>
-                    <Badge variant="light" color="gray" ff="monospace" size="sm">
-                      {friendlyRuleLabel(res.rule)}
+              return !isEditing ? (
+                <Stack gap={2}>
+                  <Group gap="xs" align="baseline">
+                    <Text ff="monospace" size="sm">{res.adjusted_points ?? res.points}</Text>
+                    <Text c="dimmed" size="xs">/ {res.max_points}</Text>
+                  </Group>
+                  {adjustedExists && res.adjusted_points !== null && res.adjusted_points !== undefined && (
+                    <Badge variant="light" color="gray" size="xs" ff="monospace">
+                      Original: {res.points} / {res.max_points}
                     </Badge>
-                  </Table.Td>
-
-                  <Table.Td>
-                    {!res.graded ? (
-                      <Badge color="yellow" size="sm">Ungraded</Badge>
-                    ) : res.passed ? (
-                      <IconCircleCheck size={16} color="var(--mantine-color-green-6)" aria-label="Passed" />
-                    ) : (
-                      <IconAlertCircle size={16} color="var(--mantine-color-red-6)" aria-label="Failed" />
-                    )}
-                  </Table.Td>
-
-                  <Table.Td>
-                    <AnswerText value={current.answer_map?.[qid]} maxLength={100} />
-                  </Table.Td>
-
-                  <Table.Td>
-                    {!isEditing ? (
-                      <Stack gap={2}>
-                        <Group gap="xs" align="baseline">
-                          <Text ff="monospace" size="sm">{res.adjusted_points ?? res.points}</Text>
-                          <Text c="dimmed" size="xs">/ {res.max_points}</Text>
-                        </Group>
-                        {adjustedExists && res.adjusted_points !== null && res.adjusted_points !== undefined && (
-                          <Badge variant="light" color="gray" size="xs" ff="monospace">
-                            Original: {res.points} / {res.max_points}
-                          </Badge>
-                        )}
-                      </Stack>
-                    ) : (
-                      <Group align="center" gap="xs">
-                        <NumberInput
-                          size="xs"
-                          w={96}
-                          value={local?.points ?? ''}
-                          onChange={(v) =>
-                            setEditing((prev) => ({
-                              ...prev,
-                              [qid]: {
-                                ...prev[qid],
-                                points: v === '' ? undefined : Number(v),
-                              },
-                            }))
-                          }
-                          placeholder="Points"
-                          min={0}
-                          max={res.max_points ?? undefined}
-                        />
-                        <Text c="dimmed" size="xs">/ {res.max_points}</Text>
-                      </Group>
-                    )}
-                  </Table.Td>
-
-                  <Table.Td>
-                    {!isEditing ? (
-                      <Stack gap={4}>
-                        <Text size="sm" style={{ whiteSpace: 'pre-line' }}>
-                          {(res.adjusted_feedback ?? res.feedback) || <Text component="span" c="dimmed">—</Text>}
-                        </Text>
-                        {adjustedExists && res.adjusted_feedback !== null && res.adjusted_feedback !== undefined && (
-                          <Accordion variant="contained" mt={4}>
-                            <Accordion.Item value="original">
-                              <Accordion.Control>
-                                <Text size="xs">Original</Text>
-                              </Accordion.Control>
-                              <Accordion.Panel>
-                                <Text size="xs" style={{ whiteSpace: 'pre-line' }}>
-                                  {res.feedback || <Text component="span" c="dimmed">—</Text>}
-                                </Text>
-                              </Accordion.Panel>
-                            </Accordion.Item>
-                          </Accordion>
-                        )}
-                      </Stack>
-                    ) : (
-                      <Textarea
-                        size="xs"
-                        value={local?.feedback ?? ''}
-                        onChange={(e) =>
-                          setEditing((prev) => ({
-                            ...prev,
-                            [qid]: {
-                              ...prev[qid],
-                              feedback: e.target.value === '' ? undefined : e.target.value,
-                            },
-                          }))
-                        }
-                        placeholder="Feedback"
-                        autosize
-                        minRows={2}
-                      />
-                    )}
-                  </Table.Td>
-
-                  <Table.Td>
-                    {!isEditing ? (
-                      <Group gap="xs">
-                        <Button size="xs" leftSection={<IconPencil size={12} />} onClick={() => startEdit(qid, res)}>
-                          Edit
-                        </Button>
-                        {adjustedExists && (
-                          <Button
-                            size="xs"
-                            color="red"
-                            variant="outline"
-                            leftSection={<IconTrash size={12} />}
-                            onClick={() => setRemoveAdjustQid(qid)}
-                            title="Remove Adjustment"
-                          >
-                            Remove
-                          </Button>
-                        )}
-                      </Group>
-                    ) : (
-                      <Group gap="xs">
-                        <Button
-                          size="xs"
-                          leftSection={<IconDeviceFloppy size={12} />}
-                          loading={adjustMutation.isPending}
-                          onClick={() => void saveEdit(qid)}
-                        >
-                          Save
-                        </Button>
-                        <Button size="xs" variant="default" onClick={() => cancelEdit(qid)}>
-                          Cancel
-                        </Button>
-                      </Group>
-                    )}
-                  </Table.Td>
-                </Table.Tr>
+                  )}
+                </Stack>
+              ) : (
+                <Group align="center" gap="xs">
+                  <NumberInput
+                    size="xs"
+                    w={96}
+                    value={local?.points ?? ''}
+                    onChange={(v) =>
+                      setEditing((prev) => ({
+                        ...prev,
+                        [qid]: { ...prev[qid], points: v === '' ? undefined : Number(v) },
+                      }))
+                    }
+                    placeholder="Points"
+                    min={0}
+                    max={res.max_points ?? undefined}
+                  />
+                  <Text c="dimmed" size="xs">/ {res.max_points}</Text>
+                </Group>
               );
-            })}
-          </Table.Tbody>
-        </Table>
-      </Table.ScrollContainer>
+            },
+          },
+          {
+            accessor: 'feedback',
+            title: 'Feedback',
+            render: (res) => {
+              const qid = res.question_id;
+              const isEditing = !!openEdits[qid];
+              const local = editing[qid];
+              const adjustedExists =
+                (res.adjusted_points !== undefined && res.adjusted_points !== null) ||
+                (res.adjusted_feedback !== undefined && res.adjusted_feedback !== null);
+              return !isEditing ? (
+                <Stack gap={4}>
+                  <Text size="sm" style={{ whiteSpace: 'pre-line' }}>
+                    {(res.adjusted_feedback ?? res.feedback) || <Text component="span" c="dimmed">—</Text>}
+                  </Text>
+                  {adjustedExists && res.adjusted_feedback !== null && res.adjusted_feedback !== undefined && (
+                    <Accordion variant="contained" mt={4}>
+                      <Accordion.Item value="original">
+                        <Accordion.Control>
+                          <Text size="xs">Original</Text>
+                        </Accordion.Control>
+                        <Accordion.Panel>
+                          <Text size="xs" style={{ whiteSpace: 'pre-line' }}>
+                            {res.feedback || <Text component="span" c="dimmed">—</Text>}
+                          </Text>
+                        </Accordion.Panel>
+                      </Accordion.Item>
+                    </Accordion>
+                  )}
+                </Stack>
+              ) : (
+                <Textarea
+                  size="xs"
+                  value={local?.feedback ?? ''}
+                  onChange={(e) =>
+                    setEditing((prev) => ({
+                      ...prev,
+                      [qid]: { ...prev[qid], feedback: e.target.value === '' ? undefined : e.target.value },
+                    }))
+                  }
+                  placeholder="Feedback"
+                  autosize
+                  minRows={2}
+                />
+              );
+            },
+          },
+          {
+            accessor: 'actions',
+            title: 'Actions',
+            render: (res) => {
+              const qid = res.question_id;
+              const isEditing = !!openEdits[qid];
+              const adjustedExists =
+                (res.adjusted_points !== undefined && res.adjusted_points !== null) ||
+                (res.adjusted_feedback !== undefined && res.adjusted_feedback !== null);
+              return !isEditing ? (
+                <Group gap="xs">
+                  <Button size="xs" leftSection={<IconPencil size={12} />} onClick={() => startEdit(qid, res)}>
+                    Edit
+                  </Button>
+                  {adjustedExists && (
+                    <Button
+                      size="xs"
+                      color="red"
+                      variant="outline"
+                      leftSection={<IconTrash size={12} />}
+                      onClick={() => setRemoveAdjustQid(qid)}
+                      title="Remove Adjustment"
+                    >
+                      Remove
+                    </Button>
+                  )}
+                </Group>
+              ) : (
+                <Group gap="xs">
+                  <Button
+                    size="xs"
+                    leftSection={<IconDeviceFloppy size={12} />}
+                    loading={adjustMutation.isPending}
+                    onClick={() => void saveEdit(qid)}
+                  >
+                    Save
+                  </Button>
+                  <Button size="xs" variant="default" onClick={() => cancelEdit(qid)}>
+                    Cancel
+                  </Button>
+                </Group>
+              );
+            },
+          },
+        ]}
+      />
 
       <Modal
         opened={!!removeAdjustQid}
@@ -480,7 +501,8 @@ const GradedSubmissionDetailInner: React.FC<{ assessmentId: string; encodedStude
           </Button>
         </Group>
       </Modal>
-    </Stack>
+      </Stack>
+    </PageShell>
   );
 };
 
@@ -489,11 +511,8 @@ const GradedSubmissionDetailPage: React.FC = () => {
   if (!assessmentId || !studentId) {
     return <Alert color="red">Assessment ID or Student ID is missing.</Alert>;
   }
-  return (
-    <AssessmentPassphraseProvider assessmentId={assessmentId}>
-      <GradedSubmissionDetailInner assessmentId={assessmentId} encodedStudentId={studentId} />
-    </AssessmentPassphraseProvider>
-  );
+  // AssessmentPassphraseProvider is provided by AssessmentShell in the route tree
+  return <GradedSubmissionDetailInner assessmentId={assessmentId} encodedStudentId={studentId} />;
 };
 
 export default GradedSubmissionDetailPage;

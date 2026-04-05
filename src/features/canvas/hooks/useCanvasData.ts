@@ -21,6 +21,8 @@ export const useCanvasData = (canvasBaseUrl: string, canvasToken: string) => {
   return {
     courses: coursesQuery.data ?? [],
     isLoading: coursesQuery.isLoading || coursesQuery.isFetching,
+    isError: coursesQuery.isError,
+    error: coursesQuery.error,
     refetch: coursesQuery.refetch,
     missingConfig,
   };

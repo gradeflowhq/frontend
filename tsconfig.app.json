@@ -27,7 +27,8 @@
       "@pages": ["pages"],
       "@pages/*": ["pages/*"],
       "@schemas/*": ["schemas/*"],
-      "@lib/*": ["lib/*"]
+      "@lib/*": ["lib/*"],
+      "@app/*": ["app/*"]
     },
 
     /* Linting */

@@ -1,4 +1,4 @@
-import { Alert, Center, Loader } from '@mantine/core';
+import { Center, Loader } from '@mantine/core';
 import React, { useEffect, useState } from 'react';
 
 import { api } from '@api';
@@ -30,7 +30,7 @@ const AuthBootstrap: React.FC<Props> = ({ children }) => {
   if (loading) {
     return (
       <Center style={{ minHeight: '100vh' }}>
-        <Loader color="blue" />;
+        <Loader color="blue" />
       </Center>
     );
   }

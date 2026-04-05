@@ -1,15 +1,16 @@
 import {
-  Alert, Button, Checkbox, Group, Select, Skeleton, Stack, Table, Text,
+  Alert, Button, Checkbox, Group, Select, Skeleton, Stack, Text,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
+import { DataTable } from 'mantine-datatable';
 import React, { useMemo, useState, useEffect } from 'react';
 
 import { useInferAndParseQuestionSet, useQuestionSet } from '@features/questions/hooks';
 import {
   useSourceData, useImportConfig, useSaveImportConfig, useImportSubmissions,
 } from '@features/submissions';
-import { getErrorMessages } from '@utils/error';
+import { getErrorMessage } from '@utils/error';
 
 import type { SubmissionsImportConfig } from '@api/models';
 
@@ -150,61 +151,66 @@ export const ConfigureStep: React.FC<{
         </Group>
       </Group>
 
-      <Table.ScrollContainer minWidth={480}>
-        <Table withTableBorder withColumnBorders verticalSpacing="xs">
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Include</Table.Th>
-              <Table.Th>Column</Table.Th>
-              <Table.Th>Sample values</Table.Th>
-              <Table.Th>Pre-grade points from</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {allDataCols.map((col) => {
-              const colIdx = sourceData.headers.indexOf(col);
-              const samples = sourceData.rows.slice(0, 3).map((r) => r[colIdx] ?? '').filter(Boolean);
-              const isSelected = selectedCols.includes(col);
-              const pointChoices = getPointChoices(col);
-              return (
-                <Table.Tr key={col}>
-                  <Table.Td>
-                    <Checkbox
-                      size="sm"
-                      checked={isSelected}
-                      onChange={() => toggleCol(col)}
-                    />
-                  </Table.Td>
-                  <Table.Td>
-                    <Text ff="monospace" size="sm">{col}</Text>
-                  </Table.Td>
-                  <Table.Td>
-                    <Text ff="monospace" size="xs" c="dimmed">{samples.join(' · ')}</Text>
-                  </Table.Td>
-                  <Table.Td>
-                    {isSelected ? (
-                      <Select
-                        size="xs"
-                        w={224}
-                        placeholder="(none)"
-                        clearable
-                        value={pointColumns[col] ?? null}
-                        onChange={(v) => setPointCol(col, v ?? '')}
-                        data={pointChoices.map((pc) => ({ value: pc, label: pc }))}
-                      />
-                    ) : (
-                      <Text size="xs" c="dimmed">—</Text>
-                    )}
-                  </Table.Td>
-                </Table.Tr>
+      <DataTable
+        columns={[
+          {
+            accessor: 'include',
+            title: 'Include',
+            render: (row) => (
+              <Checkbox
+                size="sm"
+                checked={selectedCols.includes(row.col)}
+                onChange={() => toggleCol(row.col)}
+              />
+            ),
+          },
+          {
+            accessor: 'column',
+            title: 'Column',
+            render: (row) => (
+              <Text ff="monospace" size="sm">{row.col}</Text>
+            ),
+          },
+          {
+            accessor: 'samples',
+            title: 'Sample values',
+            render: (row) => (
+              <Text ff="monospace" size="xs" c="dimmed">{row.samples.join(' · ')}</Text>
+            ),
+          },
+          {
+            accessor: 'points',
+            title: 'Pre-grade points from',
+            render: (row) => {
+              const isSelected = selectedCols.includes(row.col);
+              return isSelected ? (
+                <Select
+                  size="xs"
+                  w={224}
+                  placeholder="(none)"
+                  clearable
+                  value={pointColumns[row.col] ?? null}
+                  onChange={(v) => setPointCol(row.col, v ?? '')}
+                  data={row.pointChoices.map((pc) => ({ value: pc, label: pc }))}
+                />
+              ) : (
+                <Text size="xs" c="dimmed">—</Text>
               );
-            })}
-          </Table.Tbody>
-        </Table>
-      </Table.ScrollContainer>
+            },
+          },
+        ]}
+        records={allDataCols.map((col) => {
+          const colIdx = sourceData.headers.indexOf(col);
+          const samples = sourceData.rows.slice(0, 3).map((r) => r[colIdx] ?? '').filter(Boolean);
+          return { col, samples, pointChoices: getPointChoices(col) };
+        })}
+        idAccessor="col"
+        striped
+        highlightOnHover
+      />
 
       {(saveConfig.isError || importMutation.isError) && (
-        <Alert color="red">{getErrorMessages(saveConfig.error ?? importMutation.error).join(' ')}</Alert>
+        <Alert color="red">{getErrorMessage(saveConfig.error ?? importMutation.error)}</Alert>
       )}
 
       <Group justify="space-between" mt="md">

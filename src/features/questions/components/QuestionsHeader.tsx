@@ -1,4 +1,4 @@
-import { Group, Title, TextInput, Menu, Button } from '@mantine/core';
+import { Group, TextInput, Menu, Button } from '@mantine/core';
 import { IconBolt, IconChevronDown, IconSearch, IconTrash, IconUpload } from '@tabler/icons-react';
 import React from 'react';
 
@@ -26,52 +26,49 @@ const QuestionsHeader: React.FC<QuestionsHeaderProps> = ({
   onSearchChange,
 }) => {
   return (
-    <Group justify="space-between" mb="sm" wrap="wrap">
-      <Title order={4}>Questions</Title>
-      <Group gap="sm">
-        {onSearchChange && (
-          <TextInput
-            leftSection={<IconSearch size={16} />}
-            placeholder="Search questions"
-            value={searchQuery ?? ''}
-            onChange={(e) => onSearchChange(e.target.value)}
-          />
-        )}
-        <Menu position="bottom-end">
-          <Menu.Target>
-            <Button variant="subtle" rightSection={<IconChevronDown size={16} />}>
-              Manage
-            </Button>
-          </Menu.Target>
-          <Menu.Dropdown>
-            {showInfer && (
-              <Menu.Item leftSection={<IconBolt size={16} />} onClick={onInfer} title="Infer question set from submissions">
-                Infer from Submissions
+    <Group gap="sm">
+      {onSearchChange && (
+        <TextInput
+          leftSection={<IconSearch size={14} />}
+          placeholder="Search questions"
+          value={searchQuery ?? ''}
+          onChange={(e) => onSearchChange(e.target.value)}
+        />
+      )}
+      <Menu position="bottom-end">
+        <Menu.Target>
+          <Button size="sm" variant="default" rightSection={<IconChevronDown size={14} />}>
+            Manage
+          </Button>
+        </Menu.Target>
+        <Menu.Dropdown>
+          {showInfer && (
+            <Menu.Item leftSection={<IconBolt size={16} />} onClick={onInfer} title="Infer question set from submissions">
+              Infer from Submissions
+            </Menu.Item>
+          )}
+          <Menu.Item leftSection={<IconUpload size={16} />} onClick={onUpload} title="Upload Question Set">
+            Upload
+          </Menu.Item>
+          <Menu.Item leftSection={<IconUpload size={16} />} onClick={onImport} title="Import Question Set">
+            Import
+          </Menu.Item>
+          {showDelete && (
+            <>
+              <Menu.Divider />
+              <Menu.Item
+                color="red"
+                leftSection={<IconTrash size={16} />}
+                onClick={onDelete}
+                disabled={disableDelete}
+                title="Delete Question Set"
+              >
+                Delete
               </Menu.Item>
-            )}
-            <Menu.Item leftSection={<IconUpload size={16} />} onClick={onUpload} title="Upload Question Set">
-              Upload
-            </Menu.Item>
-            <Menu.Item leftSection={<IconUpload size={16} />} onClick={onImport} title="Import Question Set">
-              Import
-            </Menu.Item>
-            {showDelete && (
-              <>
-                <Menu.Divider />
-                <Menu.Item
-                  color="red"
-                  leftSection={<IconTrash size={16} />}
-                  onClick={onDelete}
-                  disabled={disableDelete}
-                  title="Delete Question Set"
-                >
-                  Delete
-                </Menu.Item>
-              </>
-            )}
-          </Menu.Dropdown>
-        </Menu>
-      </Group>
+            </>
+          )}
+        </Menu.Dropdown>
+      </Menu>
     </Group>
   );
 };

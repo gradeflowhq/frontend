@@ -21,7 +21,7 @@ const StatCard = ({ title, value, desc }: StatCardProps) => (
 );
 
 const BIN_OPTIONS = [
-  { label: 'Auto (adaptive)', value: 'auto' },
+  { label: 'Auto', value: 'auto' },
   { label: '0.5 pts', value: '0.5' },
   { label: '1 pt', value: '1' },
   { label: '2 pts', value: '2' },
@@ -85,16 +85,18 @@ const ResultsStats: React.FC<Props> = ({ items }) => {
       </SimpleGrid>
 
       <Card withBorder>
-        <Group justify="space-between" mb="sm">
+        <Group justify="space-between" mb="sm" align="center">
           <Text fw={600}>Distribution</Text>
-          <Select
-            size="xs"
-            w={140}
-            label="Bin width"
-            value={String(binWidth)}
-            onChange={(v) => setBinWidth(v === 'auto' ? 'auto' : Number(v))}
-            data={BIN_OPTIONS}
-          />
+          <Group gap="xs" align="center">
+            <Text size="xs" c="dimmed">Bin width</Text>
+            <Select
+              size="xs"
+              w={140}
+              value={String(binWidth)}
+              onChange={(v) => setBinWidth(v === 'auto' ? 'auto' : Number(v))}
+              data={BIN_OPTIONS}
+            />
+          </Group>
         </Group>
         {histogramData.length === 0 ? (
           <Text size="xs" c="dimmed">No data</Text>

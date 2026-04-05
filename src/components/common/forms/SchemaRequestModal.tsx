@@ -4,7 +4,7 @@ import { IconAlertCircle } from '@tabler/icons-react';
 import { useMutation, type UseMutationOptions } from '@tanstack/react-query';
 import React, { useMemo, useState } from 'react';
 
-import { getErrorMessages } from '@utils/error';
+import { getErrorMessage } from '@utils/error';
 
 import HiddenAwareFieldTemplate from './HiddenAwareFieldTemplate';
 import { SchemaForm, type SchemaFormProps } from './SchemaForm';
@@ -48,6 +48,7 @@ const SchemaRequestModalInner = <TForm, TData = unknown>({
   validate,
 }: Omit<SchemaRequestModalProps<TForm, TData>, 'open'>) => {
   const [formData, setFormData] = useState<TForm | undefined>(() => initialValues?.());
+  const [validationError, setValidationError] = useState<unknown>(null);
 
   const uiSchema = useMemo(() => buildUiSchema?.(formData), [buildUiSchema, formData]);
 
@@ -89,7 +90,13 @@ const SchemaRequestModalInner = <TForm, TData = unknown>({
           submitIdleLabel={submitIdleLabel}
           submitLoadingLabel={submitLoadingLabel}
           onSubmit={({ formData }) => {
-            validate?.(formData as TForm | undefined);
+            setValidationError(null);
+            try {
+              validate?.(formData as TForm | undefined);
+            } catch (err) {
+              setValidationError(err);
+              return;
+            }
             if (!formData) throw new Error('Form data is required');
             void mutation.mutateAsync(formData as TForm);
           }}
@@ -97,9 +104,14 @@ const SchemaRequestModalInner = <TForm, TData = unknown>({
         />
       )}
 
+      {!!validationError && (
+        <Alert color="red" icon={<IconAlertCircle size={16} />} mt="md">
+          {getErrorMessage(validationError)}
+        </Alert>
+      )}
       {mutation.isError && (
         <Alert color="red" icon={<IconAlertCircle size={16} />} mt="md">
-          {getErrorMessages(mutation.error).join(' ')}
+          {getErrorMessage(mutation.error)}
         </Alert>
       )}
     </Modal>

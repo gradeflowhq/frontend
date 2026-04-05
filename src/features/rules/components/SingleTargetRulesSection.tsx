@@ -3,7 +3,7 @@ import { notifications } from '@mantine/notifications';
 import { IconCircleCheck, IconPlus } from '@tabler/icons-react';
 import React, { useMemo, useState } from 'react';
 
-import { getErrorMessages } from '@utils/error';
+import { getErrorMessage } from '@utils/error';
 
 import RuleDialog from './RuleDialog';
 import RuleItem from './RuleItem';
@@ -21,6 +21,8 @@ type Props = {
   questionMap: QuestionSetOutputQuestionMap;
   coveredQuestionIds: Set<string>;
   searchQuery?: string;
+  coveringRuleByQid?: Record<string, RuleValue>;
+  onViewGlobalRule?: (qid: string) => void;
 };
 
 const SingleTargetRulesSection: React.FC<Props> = ({
@@ -31,6 +33,8 @@ const SingleTargetRulesSection: React.FC<Props> = ({
   questionMap,
   coveredQuestionIds,
   searchQuery,
+  coveringRuleByQid,
+  onViewGlobalRule,
 }) => {
   const defs = useRuleDefinitions();
   const validateAndReplace = useValidateAndReplaceRubric(assessmentId);
@@ -42,11 +46,13 @@ const SingleTargetRulesSection: React.FC<Props> = ({
   const [selectedRuleKey, setSelectedRuleKey] = useState<string | null>(null);
   const [editingForQid, setEditingForQid] = useState<string | null>(null);
   const [editingRule, setEditingRule] = useState<RuleValue | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<{ qid: string; rule: RuleValue } | null>(null);
+  const [editingRuleIndex, setEditingRuleIndex] = useState<number | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ qid: string; index: number } | null>(null);
 
   const resetRuleDialog = () => {
     setDialogOpen(false);
     setEditingRule(null);
+    setEditingRuleIndex(null);
     setEditingForQid(null);
     setSelectedRuleKey(null);
   };
@@ -107,14 +113,15 @@ const SingleTargetRulesSection: React.FC<Props> = ({
     const key = findKeyByType(String(rule.type ?? ''), true);
     setSelectedRuleKey(key);
     setEditingRule(rule);
+    setEditingRuleIndex(allRules.indexOf(rule));
     setDialogOpen(true);
   };
 
   const onSaveRuleDialog = async (ruleObj: RuleValue) => {
     if (!editingForQid) return;
     const nextRule = { ...ruleObj, question_id: editingForQid } as RuleValue;
-    const nextRules = editingRule
-      ? allRules.map((r) => (r === editingRule ? nextRule : r))
+    const nextRules = editingRuleIndex !== null
+      ? allRules.map((r, i) => (i === editingRuleIndex ? nextRule : r))
       : [...allRules, nextRule];
 
     await validateAndReplace.mutateAsync(nextRules, {
@@ -128,9 +135,6 @@ const SingleTargetRulesSection: React.FC<Props> = ({
 
   return (
     <section>
-      <Group justify="space-between" mb="sm">
-        <Text fw={600} size="lg">Single Target Rules</Text>
-      </Group>
 
       {questionIds.length === 0 && (
         <Alert color="blue" mt="sm">No questions found. Infer or set a question set first.</Alert>
@@ -178,7 +182,14 @@ const SingleTargetRulesSection: React.FC<Props> = ({
 
               {rules.length === 0 ? (
                 isCovered ? (
-                  <Alert color="gray" variant="light">Covered by multi-target rule.</Alert>
+                  <Group gap="xs" align="center">
+                    <Text size="sm" c="dimmed">
+                      Covered by {coveringRuleByQid?.[qid] ? friendlyRuleLabel(coveringRuleByQid[qid]) : 'global rule'}
+                    </Text>
+                    {onViewGlobalRule && (
+                      <Button size="xs" variant="subtle" onClick={() => onViewGlobalRule(qid)}>View</Button>
+                    )}
+                  </Group>
                 ) : (
                   <Alert color="gray" variant="light">No rule for this question yet.</Alert>
                 )
@@ -189,7 +200,7 @@ const SingleTargetRulesSection: React.FC<Props> = ({
                       key={idx}
                       rule={r}
                       onEdit={(rule) => handleEdit(qid, rule)}
-                      onDelete={(rule) => setDeleteTarget({ qid, rule })}
+                      onDelete={(rule) => setDeleteTarget({ qid, index: allRules.indexOf(rule) })}
                       contextQuestionId={qid}
                     />
                   ))}
@@ -230,7 +241,7 @@ const SingleTargetRulesSection: React.FC<Props> = ({
             loading={replace.isPending}
             onClick={() => {
               if (!deleteTarget) return;
-              const nextRules = allRules.filter((r) => r !== deleteTarget.rule);
+              const nextRules = allRules.filter((_, i) => i !== deleteTarget.index);
               void replace.mutateAsync(nextRules, {
                 onSuccess: () => {
                   setDeleteTarget(null);
@@ -246,7 +257,7 @@ const SingleTargetRulesSection: React.FC<Props> = ({
       </Modal>
 
       {replace.isError && (
-        <Alert color="red" mt="sm">{getErrorMessages(replace.error).join(' ')}</Alert>
+        <Alert color="red" mt="sm">{getErrorMessage(replace.error)}</Alert>
       )}
     </section>
   );

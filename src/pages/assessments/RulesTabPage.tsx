@@ -1,21 +1,28 @@
 
-import { Alert, Button, Center, Group, Modal, Paper, SimpleGrid, Skeleton, Stack, Text, Title } from '@mantine/core';
+import { Alert, Badge, Button, Center, Group, Modal, Skeleton, Stack, Tabs, Text, Title } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconAdjustments } from '@tabler/icons-react';
 import React from 'react';
 import { useParams } from 'react-router-dom';
 
+import { useAssessmentContext } from '@app/AssessmentContext';
+import PageShell from '@components/common/PageShell';
 import { useQuestionSet } from '@features/questions/hooks';
 import { useRubric, useRubricCoverage, useDeleteRubric } from '@features/rubric/hooks';
 import { MultiTargetRulesSection, RulesHeader, SingleTargetRulesSection } from '@features/rules/components';
 import RubricImportModal from '@features/rules/components/RubricImportModal';
 import RubricUploadModal from '@features/rules/components/RubricUploadModal';
-import { getErrorMessages } from '@utils/error';
+import { useDocumentTitle } from '@hooks/useDocumentTitle';
+import { getErrorMessage } from '@utils/error';
 
 import type { RubricOutput, QuestionSetOutputQuestionMap } from '@api/models';
+import type { RuleValue } from '@features/rules/types';
 
 const RulesTabPage: React.FC = () => {
   const { assessmentId } = useParams<{ assessmentId: string }>();
+  const { assessment } = useAssessmentContext();
+  
+  useDocumentTitle(`Rules - ${assessment?.name ?? 'Assessment'} - GradeFlow`);
 
   const enabled = Boolean(assessmentId);
   const safeId = assessmentId ?? '';
@@ -63,7 +70,10 @@ const RulesTabPage: React.FC = () => {
     return m;
   }, [questionMap]);
 
-  const rubric: RubricOutput = rubricRes?.rubric ?? { rules: [] };
+  const rubric: RubricOutput = React.useMemo(
+    () => rubricRes?.rubric ?? { rules: [] },
+    [rubricRes]
+  );
 
   const cov = coverageRes?.coverage;
   const coveredQuestionIds = React.useMemo(
@@ -71,10 +81,42 @@ const RulesTabPage: React.FC = () => {
     [cov]
   );
 
+  // Map from question ID to the global rule that covers it
+  const coveringRuleByQid = React.useMemo(() => {
+    const map: Record<string, RuleValue> = {};
+    for (const rule of (rubric?.rules ?? [])) {
+      const qids = (rule as unknown as { question_ids?: string[] }).question_ids;
+      if (Array.isArray(qids)) {
+        for (const qid of qids) {
+          if (!map[qid]) map[qid] = rule as RuleValue;
+        }
+      }
+    }
+    return map;
+  }, [rubric]);
+
   const [openRubricUpload, setOpenRubricUpload] = React.useState(false);
   const [openRubricImport, setOpenRubricImport] = React.useState(false);
   const [confirmDeleteRubric, setConfirmDeleteRubric] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState('');
+  const [activeTab, setActiveTab] = React.useState<string>('questions');
+  const [highlightedRule, setHighlightedRule] = React.useState<RuleValue | null>(null);
+
+  const covTotal = cov?.total ?? 0;
+  const covCovered = cov?.covered ?? 0;
+
+  // Clear highlight after 2s
+  React.useEffect(() => {
+    if (!highlightedRule) return;
+    const timer = setTimeout(() => setHighlightedRule(null), 2000);
+    return () => clearTimeout(timer);
+  }, [highlightedRule]);
+
+  const handleViewGlobalRule = (qid: string) => {
+    const rule = coveringRuleByQid[qid] ?? null;
+    setActiveTab('global');
+    setHighlightedRule(rule);
+  };
 
   const deleteRubric = useDeleteRubric(safeId);
 
@@ -82,26 +124,8 @@ const RulesTabPage: React.FC = () => {
 
   const renderSkeleton = () => (
     <Stack gap="md">
-      <SimpleGrid cols={{ base: 1, sm: 3 }}>
-        {[...Array(3)].map((_, i) => (
-          <Paper key={i} withBorder p="md">
-            <Skeleton height={12} width={96} mb={8} />
-            <Skeleton height={24} width={80} />
-          </Paper>
-        ))}
-      </SimpleGrid>
-      <Paper withBorder p="md">
-        <Stack gap="sm">
-          {[...Array(4)].map((_, i) => (
-            <SimpleGrid key={i} cols={4}>
-              <Skeleton height={12} />
-              <Skeleton height={12} />
-              <Skeleton height={12} />
-              <Skeleton height={12} />
-            </SimpleGrid>
-          ))}
-        </Stack>
-      </Paper>
+      <Skeleton height={16} mb={4} />
+      <Skeleton height={12} width="60%" />
     </Stack>
   );
 
@@ -111,7 +135,43 @@ const RulesTabPage: React.FC = () => {
 
   if (!loadingQS && (qsNotFound || !hasQuestions)) {
     return (
-      <Stack gap="md">
+      <PageShell
+        title="Rules"
+        actions={
+          <RulesHeader
+            onUpload={() => setOpenRubricUpload(true)}
+            onImport={() => setOpenRubricImport(true)}
+            onDelete={() => setConfirmDeleteRubric(true)}
+            disableDelete={deleteRubric.isPending}
+            hasRules={hasRules}
+            searchQuery={searchQuery}
+            onSearchChange={(v) => setSearchQuery(v)}
+            disabled
+          />
+        }
+      >
+        <Center py="xl">
+          <Stack align="center" gap="sm">
+            <IconAdjustments size={32} color="var(--mantine-color-dimmed)" />
+            <Title order={5}>Rules are locked</Title>
+            <Text c="dimmed" size="sm">Set up questions first to configure rules.</Text>
+          </Stack>
+        </Center>
+      </PageShell>
+    );
+  }
+
+  return (
+    <PageShell
+      title={
+        <Group gap="sm" align="center">
+          <Title order={3}>Rules</Title>
+          {!loadingCoverage && !errorCoverage && covTotal > 0 && (
+            <Badge variant="light" size="sm">{covCovered}/{covTotal}</Badge>
+          )}
+        </Group>
+      }
+      actions={
         <RulesHeader
           onUpload={() => setOpenRubricUpload(true)}
           onImport={() => setOpenRubricImport(true)}
@@ -120,79 +180,53 @@ const RulesTabPage: React.FC = () => {
           hasRules={hasRules}
           searchQuery={searchQuery}
           onSearchChange={(v) => setSearchQuery(v)}
-          disabled
         />
-
-        <Center py="xl">
-          <Stack align="center" gap="sm">
-            <IconAdjustments size={32} color="var(--mantine-color-dimmed)" />
-            <Title order={5}>Rules are locked</Title>
-            <Text c="dimmed" size="sm">Set up questions first to configure rules.</Text>
-          </Stack>
-        </Center>
-      </Stack>
-    );
-  }
-
-  return (
+      }
+    >
     <Stack gap="md">
-      <RulesHeader
-        onUpload={() => setOpenRubricUpload(true)}
-        onImport={() => setOpenRubricImport(true)}
-        onDelete={() => setConfirmDeleteRubric(true)}
-        disableDelete={deleteRubric.isPending}
-        hasRules={hasRules}
-        searchQuery={searchQuery}
-        onSearchChange={(v) => setSearchQuery(v)}
-      />
-
-      {!loadingCoverage && !errorCoverage && cov && (
-        <SimpleGrid cols={{ base: 1, sm: 3 }}>
-          <Paper withBorder p="md">
-            <Text size="xs" c="dimmed" mb={4}>Total Questions</Text>
-            <Text fw={700} size="xl">{cov.total ?? 0}</Text>
-          </Paper>
-          <Paper withBorder p="md">
-            <Text size="xs" c="dimmed" mb={4}>Covered</Text>
-            <Text fw={700} size="xl">{cov.covered ?? 0}</Text>
-          </Paper>
-          <Paper withBorder p="md">
-            <Text size="xs" c="dimmed" mb={4}>Coverage</Text>
-            <Text fw={700} size="xl">{((cov.percentage ?? 0) * 100).toFixed(1)}%</Text>
-          </Paper>
-        </SimpleGrid>
-      )}
 
       {(loadingQS || loadingRubric || loadingCoverage) && renderSkeleton()}
       {errorQS && !qsNotFound && (
-        <Alert color="red">{getErrorMessages(qsError).join(' ')}</Alert>
+        <Alert color="red">{getErrorMessage(qsError)}</Alert>
       )}
       {errorRubric && (
-        <Alert color="red">{getErrorMessages(rubricError).join(' ')}</Alert>
+        <Alert color="red">{getErrorMessage(rubricError)}</Alert>
       )}
       {errorCoverage && (
-        <Alert color="red">{getErrorMessages(coverageError).join(' ')}</Alert>
+        <Alert color="red">{getErrorMessage(coverageError)}</Alert>
       )}
 
       {!loadingQS && !errorQS && !loadingRubric && !errorRubric && (
-        <>
-          <SingleTargetRulesSection
-            rubric={rubric}
-            questionIds={questionIds}
-            questionTypesById={questionTypesById}
-            assessmentId={safeId}
-            questionMap={questionMap}
-            coveredQuestionIds={coveredQuestionIds}
-            searchQuery={searchQuery}
-          />
+        <Tabs value={activeTab} onChange={(v) => setActiveTab(v ?? 'questions')}>
+          <Tabs.List>
+            <Tabs.Tab value="questions">Question Rules</Tabs.Tab>
+            <Tabs.Tab value="global">Global Rules</Tabs.Tab>
+          </Tabs.List>
 
-          <MultiTargetRulesSection
-            rubric={rubric}
-            assessmentId={safeId}
-            questionMap={questionMap}
-            searchQuery={searchQuery}
-          />
-        </>
+          <Tabs.Panel value="questions" pt="md">
+            <SingleTargetRulesSection
+              rubric={rubric}
+              questionIds={questionIds}
+              questionTypesById={questionTypesById}
+              assessmentId={safeId}
+              questionMap={questionMap}
+              coveredQuestionIds={coveredQuestionIds}
+              searchQuery={searchQuery}
+              coveringRuleByQid={coveringRuleByQid}
+              onViewGlobalRule={handleViewGlobalRule}
+            />
+          </Tabs.Panel>
+
+          <Tabs.Panel value="global" pt="md">
+            <MultiTargetRulesSection
+              rubric={rubric}
+              assessmentId={safeId}
+              questionMap={questionMap}
+              searchQuery={searchQuery}
+              highlightedRule={highlightedRule}
+            />
+          </Tabs.Panel>
+        </Tabs>
       )}
 
       {openRubricUpload && <RubricUploadModal
@@ -231,10 +265,11 @@ const RulesTabPage: React.FC = () => {
           </Button>
         </Group>
         {deleteRubric.isError && (
-          <Alert color="red" mt="sm">{getErrorMessages(deleteRubric.error).join(' ')}</Alert>
+          <Alert color="red" mt="sm">{getErrorMessage(deleteRubric.error)}</Alert>
         )}
       </Modal>
     </Stack>
+    </PageShell>
   );
 };
 
