@@ -39,7 +39,7 @@ export const TOKEN_SEPARATORS = /[,|;~]+/;
 // Value-level metadata patterns
 export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const TIMESTAMP_REGEX = /^\d{4}-\d{2}-\d{2}(?:[ T]\d{2}:\d{2}(?::\d{2})?)?$/;
-export const SHORT_ID_REGEX = /^[A-Za-z0-9\-_]{6,12}$/; // avoid penalising single letters (likely MCQ)
+export const SHORT_ID_REGEX = /^[A-Za-z0-9\-_]{6,12}$/;
 
 // Choice signals (case-insensitive via toUpperCase)
 export const CHOICE_LETTERS = new Set(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']);
@@ -142,7 +142,6 @@ const buildSeriesAuxiliaryMap = (headers: string[]): Map<string, Set<string>> =>
 
 /**
  * Treat headers like "Q1 Pts", "Question 1 marks" as auxiliary of their base.
- * We still INCLUDE these in scoring, but mark them as auxiliary so their confidence is reduced (not excluded).
  */
 const isAuxiliaryOfSeries = (h: string, seriesMap: Map<string, Set<string>>): boolean => {
   const s = h.toLowerCase().trim();
@@ -155,26 +154,14 @@ const isAuxiliaryOfSeries = (h: string, seriesMap: Map<string, Set<string>>): bo
     : null;
 
   if (!base) return false;
-
-  // If exact base, it's primary; otherwise auxiliary
   if (s === base) return false;
-
-  // If header contains an auxiliary term, mark as auxiliary
   if (AUXILIARY_TERMS.some((kw) => s.includes(kw))) return true;
-
-  // Fallback: if series has multiple variants and this isn't the base form, treat as auxiliary
   const members = seriesMap.get(base);
   return !!members && members.size > 1;
 };
 
 // ======================= Value signals (MCQ/MRQ aware) =======================
 
-/**
- * Detect columns that look like single/multi-choice answers:
- * - Small finite alphabet (e.g., A/B/C/D) ignoring case
- * - Multi-valued separated by common delimiters (comma/semicolon/pipe/tilde) with items from a small set
- * - Low average token length (mostly 1–3 chars)
- */
 const detectChoiceLike = (values: string[]): {
   singleLetterRate: number;
   choiceWordRate: number;
@@ -299,7 +286,7 @@ const confidenceForColumn = ({ header, values, seriesMap }: ColumnScoreInput): n
   });
 };
 
-// ======================= Public API =======================
+// ======================= Public API (answer columns) =======================
 
 export const computeAutoScores = (
   headers: string[],
@@ -359,4 +346,111 @@ export const computeNextMapping = (
     return { studentIdColumn: nextSID, questionColumns: nextQs };
   }
   return prev;
+};
+
+// ======================= Points column inference =======================
+
+const POINTS_HEADER_KEYWORDS = ['pts', 'points', 'marks', 'score', 'grade', 'mark'];
+
+const isPointsHeader = (h: string): boolean => {
+  const s = h.toLowerCase();
+  return POINTS_HEADER_KEYWORDS.some((kw) => s.includes(kw));
+};
+
+const numericRate = (values: string[]): number => {
+  if (!values.length) return 0;
+  const nonEmpty = values.filter((v) => v.trim().length > 0);
+  if (!nonEmpty.length) return 0;
+  const numericCount = nonEmpty.filter((v) => Number.isFinite(Number(v.trim()))).length;
+  return numericCount / nonEmpty.length;
+};
+
+const MIN_POINTS_CONFIDENCE = 0.55;
+
+/**
+ * For each answer column, find the best matching points column.
+ *
+ * Scoring:
+ *   headerScore    = 0.60 if header contains a points keyword
+ *   numScore       = 0.40 * fraction of numeric values
+ *   proximityBonus = 0.25 if candidate header contains the answer col name
+ *   adjacencyBonus = 0.15 if candidate is the column immediately after the answer col
+ *
+ * A candidate is only suggested if total score >= MIN_POINTS_CONFIDENCE.
+ * Each candidate column is only paired with one answer column (highest score wins).
+ */
+export const inferPointColumns = (
+  headers: string[],
+  rows: string[][],
+  studentIdCol: string,
+  answerCols: string[]
+): Record<string, string> => {
+  const answerSet = new Set(answerCols);
+  const candidateHeaders = headers.filter(
+    (h) => h !== studentIdCol && !answerSet.has(h)
+  );
+
+  if (!candidateHeaders.length) return {};
+
+  // Precompute column values for candidates
+  const colValues: Record<string, string[]> = {};
+  for (const h of candidateHeaders) {
+    const idx = headers.indexOf(h);
+    colValues[h] = rows.map((r) => String(r[idx] ?? '').trim());
+  }
+
+  // Track which candidate cols have already been claimed
+  const claimed = new Set<string>();
+  const result: Record<string, string> = {};
+
+  for (const ansCol of answerCols) {
+    const ansLower = ansCol.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const ansIdx = headers.indexOf(ansCol);
+
+    let bestCol: string | null = null;
+    let bestScore = -1;
+
+    for (const candidate of candidateHeaders) {
+      if (claimed.has(candidate)) continue;
+
+      const candLower = candidate.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const values = colValues[candidate];
+      const candIdx = headers.indexOf(candidate);
+
+      const headerScore = isPointsHeader(candidate) ? 0.6 : 0;
+      const numScore = numericRate(values) * 0.4;
+      const proximityBonus =
+        candLower.startsWith(ansLower) || candLower.includes(ansLower) ? 0.25 : 0;
+      const adjacencyBonus = candIdx === ansIdx + 1 ? 0.15 : 0;
+
+      const score = headerScore + numScore + proximityBonus + adjacencyBonus;
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestCol = candidate;
+      }
+    }
+
+    if (bestCol !== null && bestScore >= MIN_POINTS_CONFIDENCE) {
+      result[ansCol] = bestCol;
+      claimed.add(bestCol);
+    }
+  }
+
+  return result;
+};
+
+/**
+ * Top-level entry point: infer both answer columns and point columns
+ * from raw CSV headers + rows and the known student ID column.
+ */
+export const inferColumnsFromSource = (
+  headers: string[],
+  rows: string[][],
+  studentIdCol: string,
+  opts?: { minConfidence?: number }
+): { answerCols: string[]; pointColMap: Record<string, string> } => {
+  const answerCols = computeAutoQuestions(headers, rows, studentIdCol, opts);
+  const pointColMap = inferPointColumns(headers, rows, studentIdCol, answerCols);
+  return { answerCols, pointColMap };
 };

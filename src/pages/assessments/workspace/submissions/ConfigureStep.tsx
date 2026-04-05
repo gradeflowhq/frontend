@@ -1,5 +1,5 @@
 import {
-  Alert, Button, Checkbox, Group, Select, Skeleton, Stack, Text,
+  Alert, Badge, Button, Checkbox, Group, Select, Skeleton, Stack, Text,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
@@ -10,6 +10,7 @@ import { useInferAndParseQuestionSet, useQuestionSet } from '@features/questions
 import {
   useSourceData, useImportConfig, useSaveImportConfig,
 } from '@features/submissions';
+import { inferColumnsFromSource } from '@features/submissions/inference/questionColumnInference';
 import { getErrorMessage } from '@utils/error';
 
 import type { SubmissionsImportConfig } from '@api/models';
@@ -42,18 +43,38 @@ export const ConfigureStep: React.FC<{
     if (initialized || sourceFetching || !sourceData) return;
     if (existingConfig === undefined && !configError) return;
 
-    const validSelected = existingConfig?.answer_columns
-      ? existingConfig.answer_columns.filter((c) => allDataCols.includes(c))
-      : allDataCols;
-    setSelectedCols(validSelected);
+    // If a saved config exists and has answer columns, restore it
+    if (existingConfig?.answer_columns && existingConfig.answer_columns.length > 0) {
+      const validSelected = existingConfig.answer_columns.filter((c) =>
+        allDataCols.includes(c)
+      );
+      setSelectedCols(validSelected);
 
-    const validPointCols: Record<string, string> = {};
-    for (const [ansCol, ptsCol] of Object.entries(existingConfig?.point_columns ?? {})) {
-      if (allDataCols.includes(ansCol) && sourceData.headers.includes(ptsCol) && ptsCol !== sidCol) {
-        validPointCols[ansCol] = ptsCol;
+      const validPointCols: Record<string, string> = {};
+      for (const [ansCol, ptsCol] of Object.entries(existingConfig.point_columns ?? {})) {
+        if (
+          allDataCols.includes(ansCol) &&
+          sourceData.headers.includes(ptsCol) &&
+          ptsCol !== sidCol
+        ) {
+          validPointCols[ansCol] = ptsCol;
+        }
       }
+      setPointColumns(validPointCols);
+      setInitialized(true);
+      return;
     }
-    setPointColumns(validPointCols);
+
+    // No saved config (or empty) — infer from source data
+    const { answerCols, pointColMap } = inferColumnsFromSource(
+      sourceData.headers,
+      sourceData.rows,
+      sidCol
+    );
+
+    // Fall back to all data cols if inference found nothing
+    setSelectedCols(answerCols.length > 0 ? answerCols : allDataCols);
+    setPointColumns(pointColMap);
     setInitialized(true);
   }, [initialized, sourceFetching, sourceData, existingConfig, configError, allDataCols, sidCol]);
 
@@ -108,12 +129,14 @@ export const ConfigureStep: React.FC<{
           Object.keys(qsRes.question_set.question_map ?? {}).length > 0;
         if (!hasQS) {
           inferAndParse.mutate(undefined, {
-            onError: () => notifications.show({ color: 'red', message: 'Could not auto-infer question set' }),
+            onError: () =>
+              notifications.show({ color: 'red', message: 'Could not auto-infer question set' }),
           });
         }
         onSuccess();
       },
-      onError: () => notifications.show({ color: 'red', message: 'Failed to save configuration' }),
+      onError: () =>
+        notifications.show({ color: 'red', message: 'Failed to save configuration' }),
     });
   };
 
@@ -136,12 +159,16 @@ export const ConfigureStep: React.FC<{
     <Stack gap="md">
       <Group justify="space-between" align="center">
         <Text size="sm" c="dimmed">
-          Choose which columns to import as answer data and optionally map pre-grade point columns.
-          This configuration is saved and can be changed later without re-uploading.
+          Choose which columns to import as answer data and optionally map pre-grade point
+          columns. This configuration is saved and can be changed later without re-uploading.
         </Text>
         <Group gap="xs" style={{ flexShrink: 0 }}>
-          <Button size="xs" variant="default" onClick={() => setSelectedCols(allDataCols)}>Select all</Button>
-          <Button size="xs" variant="default" onClick={() => setSelectedCols([])}>Deselect all</Button>
+          <Button size="xs" variant="default" onClick={() => setSelectedCols(allDataCols)}>
+            Select all
+          </Button>
+          <Button size="xs" variant="default" onClick={() => setSelectedCols([])}>
+            Deselect all
+          </Button>
         </Group>
       </Group>
 
@@ -177,16 +204,24 @@ export const ConfigureStep: React.FC<{
             title: 'Pre-grade points from',
             render: (row) => {
               const isSelected = selectedCols.includes(row.col);
+              const isInferred = !!pointColumns[row.col] && !existingConfig?.answer_columns?.length;
               return isSelected ? (
-                <Select
-                  size="xs"
-                  w={224}
-                  placeholder="(none)"
-                  clearable
-                  value={pointColumns[row.col] ?? null}
-                  onChange={(v) => setPointCol(row.col, v ?? '')}
-                  data={row.pointChoices.map((pc) => ({ value: pc, label: pc }))}
-                />
+                <Group gap={6} align="center">
+                  <Select
+                    size="xs"
+                    w={224}
+                    placeholder="(none)"
+                    clearable
+                    value={pointColumns[row.col] ?? null}
+                    onChange={(v) => setPointCol(row.col, v ?? '')}
+                    data={row.pointChoices.map((pc) => ({ value: pc, label: pc }))}
+                  />
+                  {isInferred && (
+                    <Badge size="xs" variant="light" color="blue">
+                      Inferred
+                    </Badge>
+                  )}
+                </Group>
               ) : (
                 <Text size="xs" c="dimmed">—</Text>
               );
@@ -195,7 +230,10 @@ export const ConfigureStep: React.FC<{
         ]}
         records={allDataCols.map((col) => {
           const colIdx = sourceData.headers.indexOf(col);
-          const samples = sourceData.rows.slice(0, 3).map((r) => r[colIdx] ?? '').filter(Boolean);
+          const samples = sourceData.rows
+            .slice(0, 3)
+            .map((r) => r[colIdx] ?? '')
+            .filter(Boolean);
           return { col, samples, pointChoices: getPointChoices(col) };
         })}
         idAccessor="col"
