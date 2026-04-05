@@ -35,6 +35,7 @@ export const useUpdateQuestionSet = (assessmentId: string) => {
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: QK.questionSet.item(assessmentId) });
       await qc.invalidateQueries({ queryKey: QK.questionSet.parsed(assessmentId) });
+      await qc.invalidateQueries({ queryKey: QK.assessments.item(assessmentId) });
     },
   });
 };
@@ -50,6 +51,7 @@ export const useDeleteQuestionSet = (assessmentId: string) => {
       await qc.invalidateQueries({ queryKey: QK.questionSet.item(assessmentId) });
       await qc.invalidateQueries({ queryKey: QK.questionSet.parsed(assessmentId) });
       await qc.invalidateQueries({ queryKey: QK.rubric.coverage(assessmentId) });
+      await qc.invalidateQueries({ queryKey: QK.assessments.item(assessmentId) });
     },
   });
 };
@@ -72,6 +74,7 @@ export const useInferAndParseQuestionSet = (assessmentId: string) => {
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: QK.questionSet.item(assessmentId) });
       await qc.invalidateQueries({ queryKey: QK.questionSet.parsed(assessmentId) });
+      await qc.invalidateQueries({ queryKey: QK.assessments.item(assessmentId) });
     },
   });
 };

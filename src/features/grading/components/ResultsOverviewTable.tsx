@@ -268,7 +268,6 @@ const ResultsOverviewTable: React.FC<Props> = ({
 
   return (
     <Stack gap="md">
-
       {/* ── Filter + per-page card ── */}
       <Card withBorder p="sm">
         <Group justify="space-between" align="center">

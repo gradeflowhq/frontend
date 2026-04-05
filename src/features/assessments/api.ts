@@ -20,11 +20,12 @@ export const useAssessmentsList = () =>
     staleTime: 2 * 60 * 1000,
   });
 
-export const useAssessment = (id: string, enabled = true) =>
+export const useAssessment = (id: string, enabled = true, options?: { staleTime?: number }) =>
   useQuery({
     queryKey: QK.assessments.item(id),
     queryFn: async () => (await api.getAssessmentAssessmentsAssessmentIdGet(id)).data as AssessmentResponse,
     enabled,
+    ...options,
   });
 
 export const useCreateAssessment = () => {

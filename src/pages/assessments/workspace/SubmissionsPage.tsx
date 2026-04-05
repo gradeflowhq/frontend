@@ -6,6 +6,7 @@ import { useParams } from 'react-router-dom';
 
 import { useAssessmentContext } from '@app/contexts/AssessmentContext';
 import PageShell from '@components/common/PageShell';
+import SectionStatusBadge from '@components/common/SectionStatusBadge';
 import { useDeleteSubmissions, useSubmissions, useSourceData } from '@features/submissions';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { getErrorMessage } from '@utils/error';
@@ -69,7 +70,9 @@ const SubmissionsPage: React.FC = () => {
         setConfirmDeleteAll(false);
         setIsConfiguring(true);
         notifications.show({ color: 'green', message: 'Submissions deleted' });
-        setStep(sourceData ? 'configure' : 'upload');
+        // Deletion clears source data and config too (backend behaviour),
+        // so always return to the upload step.
+        setStep('upload');
       },
       onError: () => notifications.show({ color: 'red', message: 'Delete failed' }),
     });
@@ -134,6 +137,8 @@ const SubmissionsPage: React.FC = () => {
   return (
     <PageShell title={pageTitle} actions={pageActions}>
       <Stack gap="md">
+        <SectionStatusBadge updatedAt={assessment?.source_updated_at} />
+
         {showSteps && (
           <StepIndicator
             current={step}

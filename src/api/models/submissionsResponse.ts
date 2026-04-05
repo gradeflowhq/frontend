@@ -6,7 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { RawSubmission } from './rawSubmission';
+import type { SubmissionsResponseUpdatedAt } from './submissionsResponseUpdatedAt';
 
 export interface SubmissionsResponse {
   raw_submissions: RawSubmission[];
+  updated_at?: SubmissionsResponseUpdatedAt;
 }

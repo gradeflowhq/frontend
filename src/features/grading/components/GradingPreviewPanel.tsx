@@ -1,6 +1,7 @@
-import { Alert, Skeleton, Paper, ScrollArea, Text } from '@mantine/core';
-import { IconAlertCircle, IconCircleCheck } from '@tabler/icons-react';
-import React, { useMemo } from 'react';
+import { Alert, Skeleton } from '@mantine/core';
+import { IconCircleCheck, IconAlertCircle } from '@tabler/icons-react';
+import { DataTable } from 'mantine-datatable';
+import React, { useMemo, useState } from 'react';
 
 import AnswerText from '@components/common/AnswerText';
 import DecryptedText from '@components/encryption/DecryptedText';
@@ -14,11 +15,18 @@ type Props = {
   items: AdjustableSubmission[];
   loading?: boolean;
   error?: unknown;
-  maxHeightVh?: number;
+  initialPageSize?: number;
 };
 
-const GradingPreviewPanel: React.FC<Props> = ({ items, loading, error, maxHeightVh = 60 }) => {
+const GradingPreviewPanel: React.FC<Props> = ({
+  items,
+  loading,
+  error,
+  initialPageSize = 5,
+}) => {
   const { passphrase } = useAssessmentPassphrase();
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(initialPageSize);
 
   const sorted = useMemo(
     () => [...(items ?? [])].sort((a, b) => natsort(a.student_id, b.student_id)),
@@ -35,6 +43,67 @@ const GradingPreviewPanel: React.FC<Props> = ({ items, loading, error, maxHeight
     return [...seen].sort((a, b) => natsort(a, b));
   }, [sorted]);
 
+  const columns = useMemo(() => {
+    return [
+      {
+        accessor: 'student_id' as const,
+        title: 'Student ID',
+        render: (row: AdjustableSubmission) => (
+          <DecryptedText value={row.student_id} passphrase={passphrase} mono size="sm" />
+        ),
+      },
+      ...allQids.flatMap((qid) => [
+        {
+          accessor: `answer_${qid}` as keyof AdjustableSubmission,
+          title: allQids.length > 1 ? `Answer (${qid})` : 'Answer',
+          render: (row: AdjustableSubmission) => {
+            const r: AdjustableQuestionResult | undefined = row.result_map?.[qid];
+            const answerRaw = row.answer_map?.[qid] as unknown;
+            return r ? <AnswerText value={answerRaw} /> : <span style={{ color: 'var(--mantine-color-dimmed)' }}>—</span>;
+          },
+        },
+        {
+          accessor: `passed_${qid}` as keyof AdjustableSubmission,
+          title: allQids.length > 1 ? `Passed (${qid})` : 'Passed',
+          render: (row: AdjustableSubmission) => {
+            const r: AdjustableQuestionResult | undefined = row.result_map?.[qid];
+            if (!r) return <span style={{ color: 'var(--mantine-color-dimmed)' }}>—</span>;
+            return r.passed
+              ? <IconCircleCheck color="var(--mantine-color-green-6)" />
+              : <IconAlertCircle color="var(--mantine-color-red-6)" />;
+          },
+        },
+        {
+          accessor: `points_${qid}` as keyof AdjustableSubmission,
+          title: allQids.length > 1 ? `Points (${qid})` : 'Points',
+          render: (row: AdjustableSubmission) => {
+            const r: AdjustableQuestionResult | undefined = row.result_map?.[qid];
+            if (!r) return <span style={{ color: 'var(--mantine-color-dimmed)' }}>—</span>;
+            const points = (r.adjusted_points ?? r.points) ?? 0;
+            const max = r.max_points ?? 0;
+            return (
+              <span style={{ fontFamily: 'monospace', fontSize: 14 }}>
+                {points.toFixed(2)} / {max}
+              </span>
+            );
+          },
+        },
+        {
+          accessor: `feedback_${qid}` as keyof AdjustableSubmission,
+          title: allQids.length > 1 ? `Feedback (${qid})` : 'Feedback',
+          render: (row: AdjustableSubmission) => {
+            const r: AdjustableQuestionResult | undefined = row.result_map?.[qid];
+            if (!r) return <span style={{ color: 'var(--mantine-color-dimmed)' }}>—</span>;
+            const feedback = r.adjusted_feedback ?? r.feedback ?? '';
+            return feedback
+              ? <span style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: 14 }}>{feedback}</span>
+              : <span style={{ color: 'var(--mantine-color-dimmed)' }}>—</span>;
+          },
+        },
+      ]),
+    ];
+  }, [allQids, passphrase]);
+
   if (loading) {
     return (
       <div>
@@ -42,6 +111,7 @@ const GradingPreviewPanel: React.FC<Props> = ({ items, loading, error, maxHeight
       </div>
     );
   }
+
   if (error) {
     return (
       <div>
@@ -49,76 +119,28 @@ const GradingPreviewPanel: React.FC<Props> = ({ items, loading, error, maxHeight
       </div>
     );
   }
+
   if (!sorted.length) return null;
 
-  return (
-    <div>
-      <Paper withBorder shadow="xs">
-        <ScrollArea h={`${maxHeightVh}vh`}>
-          <table style={{ width: '100%', minWidth: 720, borderCollapse: 'collapse', fontSize: 14 }}>
-            <thead style={{ position: 'sticky', top: 0, background: 'var(--mantine-color-body)' }}>
-              <tr>
-                <th style={{ padding: '6px 8px', textAlign: 'left' }}>Student ID</th>
-                {allQids.map((qid) => (
-                  <React.Fragment key={qid}>
-                    <th style={{ padding: '6px 8px', fontWeight: 500 }}>Answer ({qid})</th>
-                    <th style={{ padding: '6px 8px', fontWeight: 500 }}>Passed</th>
-                    <th style={{ padding: '6px 8px', fontWeight: 500 }}>Points</th>
-                    <th style={{ padding: '6px 8px', fontWeight: 500 }}>Feedback</th>
-                  </React.Fragment>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {sorted.map((gs) => (
-                <tr key={gs.student_id} style={{ verticalAlign: 'top' }}>
-                  <th style={{ padding: '6px 8px', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                    <DecryptedText value={gs.student_id} passphrase={passphrase} mono size="sm" />
-                  </th>
-                  {allQids.map((qid) => {
-                    const r: AdjustableQuestionResult | undefined = gs.result_map?.[qid];
-                    const passed = !!r?.passed;
-                    const points = r ? (r.adjusted_points ?? r.points) : 0;
-                    const max = r?.max_points ?? 0;
-                    const feedback = r?.adjusted_feedback ?? r?.feedback ?? '';
-                    const answerRaw = gs.answer_map?.[qid] as unknown;
+  const records = sorted.slice((page - 1) * pageSize, page * pageSize);
 
-                    return (
-                      <React.Fragment key={qid}>
-                        <td style={{ padding: '6px 8px' }}>
-                          {r ? <AnswerText value={answerRaw} /> : <Text c="dimmed">—</Text>}
-                        </td>
-                        <td style={{ padding: '6px 8px' }}>
-                          {r ? (
-                            passed ? (
-                              <IconCircleCheck color="var(--mantine-color-green-6)" />
-                            ) : (
-                              <IconAlertCircle color="var(--mantine-color-red-6)" />
-                            )
-                          ) : (
-                            <Text c="dimmed">—</Text>
-                          )}
-                        </td>
-                        <td style={{ padding: '6px 8px' }}>
-                          {r ? (
-                            <Text ff="monospace" size="sm">{points.toFixed(2)} / {max}</Text>
-                          ) : (
-                            <Text c="dimmed">—</Text>
-                          )}
-                        </td>
-                        <td style={{ padding: '6px 8px', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-                          {r ? (feedback || <Text c="dimmed">—</Text>) : <Text c="dimmed">—</Text>}
-                        </td>
-                      </React.Fragment>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </ScrollArea>
-      </Paper>
-    </div>
+  return (
+    <DataTable
+      columns={columns}
+      records={records}
+      totalRecords={sorted.length}
+      recordsPerPage={pageSize}
+      page={page}
+      onPageChange={setPage}
+      recordsPerPageOptions={[5, 10, 20, 50]}
+      onRecordsPerPageChange={(size) => { setPageSize(size); setPage(1); }}
+      withTableBorder
+      withColumnBorders
+      striped
+      highlightOnHover
+      verticalAlign="top"
+      pinFirstColumn
+    />
   );
 };
 

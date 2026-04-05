@@ -6,6 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { AssessmentResponseDescription } from './assessmentResponseDescription';
+import type { AssessmentResponseSourceUpdatedAt } from './assessmentResponseSourceUpdatedAt';
+import type { AssessmentResponseQuestionSetUpdatedAt } from './assessmentResponseQuestionSetUpdatedAt';
+import type { AssessmentResponseRubricUpdatedAt } from './assessmentResponseRubricUpdatedAt';
+import type { AssessmentResponseResultsUpdatedAt } from './assessmentResponseResultsUpdatedAt';
 
 export interface AssessmentResponse {
   id: string;
@@ -13,4 +17,8 @@ export interface AssessmentResponse {
   description?: AssessmentResponseDescription;
   created_at: string;
   updated_at: string;
+  source_updated_at?: AssessmentResponseSourceUpdatedAt;
+  question_set_updated_at?: AssessmentResponseQuestionSetUpdatedAt;
+  rubric_updated_at?: AssessmentResponseRubricUpdatedAt;
+  results_updated_at?: AssessmentResponseResultsUpdatedAt;
 }

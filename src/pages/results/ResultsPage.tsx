@@ -8,6 +8,7 @@ import { QK } from '@api/queryKeys';
 import { useAssessmentContext } from '@app/contexts/AssessmentContext';
 import EmptyState from '@components/common/EmptyState';
 import PageShell from '@components/common/PageShell';
+import SectionStatusBadge from '@components/common/SectionStatusBadge';
 import { useAssessmentPassphrase } from '@features/encryption/passphraseContext';
 import { useGrading, useGradingJob, useJobStatus } from '@features/grading/api';
 import { ResultsOverviewTable, ResultsStatsPanel, QuestionAnalysisGrid } from '@features/grading/components';
@@ -108,6 +109,14 @@ const ResultsPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) 
           Grading in progress... Showing previous results. This page will update automatically.
         </Alert>
       )}
+
+      <Stack mb="md">
+        <SectionStatusBadge
+          updatedAt={gradingData?.status?.updated_at}
+          isStale={gradingData?.status?.is_stale}
+          staleMessage="Results may be out of date — submissions or rules have changed since the last grading run."
+        />
+      </Stack>
 
       {isLoading ? (
         <Stack gap="xs">

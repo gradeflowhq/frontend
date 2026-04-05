@@ -319,7 +319,7 @@ const QuestionsTable: React.FC<Props> = ({
         highlightOnHover
         verticalAlign="top"
       />
-      <Group justify="flex-end" gap="sm">
+      <Group justify="space-between" align="flex-end" gap="sm">
         <Select
           size="xs"
           label="Per page"

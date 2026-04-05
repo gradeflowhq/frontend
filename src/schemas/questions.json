@@ -443,13 +443,36 @@
     "properties": {
       "question_set": {
         "$ref": "#/definitions/QuestionSet"
+      },
+      "status": {
+        "$ref": "#/definitions/SectionStatus"
       }
     },
     "type": "object",
     "required": [
-      "question_set"
+      "question_set",
+      "status"
     ],
     "title": "QuestionSetResponse"
+  },
+  "SectionStatus": {
+    "properties": {
+      "updated_at": {
+        "title": "Updated At",
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time"
+      },
+      "is_stale": {
+        "type": "boolean",
+        "title": "Is Stale",
+        "default": false
+      }
+    },
+    "type": "object",
+    "title": "SectionStatus"
   },
   "QuestionResult": {
     "properties": {
@@ -653,10 +676,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "CHOICE",
           "TEXT",
-          "NUMERIC",
           "MULTI_VALUED",
-          "CHOICE"
+          "NUMERIC"
         ]
       },
       "constraints": {
@@ -1226,10 +1249,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "CHOICE",
           "TEXT",
-          "NUMERIC",
           "MULTI_VALUED",
-          "CHOICE"
+          "NUMERIC"
         ]
       },
       "constraints": {
@@ -1576,10 +1599,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "CHOICE",
           "TEXT",
-          "NUMERIC",
           "MULTI_VALUED",
-          "CHOICE"
+          "NUMERIC"
         ]
       },
       "constraints": {
@@ -1858,10 +1881,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "CHOICE",
           "TEXT",
-          "NUMERIC",
           "MULTI_VALUED",
-          "CHOICE"
+          "NUMERIC"
         ]
       },
       "constraints": {
@@ -1993,10 +2016,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "CHOICE",
           "TEXT",
-          "NUMERIC",
           "MULTI_VALUED",
-          "CHOICE"
+          "NUMERIC"
         ]
       },
       "constraints": {
@@ -2299,10 +2322,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "CHOICE",
           "TEXT",
-          "NUMERIC",
           "MULTI_VALUED",
-          "CHOICE"
+          "NUMERIC"
         ]
       },
       "constraints": {
@@ -2346,10 +2369,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "CHOICE",
           "TEXT",
-          "NUMERIC",
           "MULTI_VALUED",
-          "CHOICE"
+          "NUMERIC"
         ]
       },
       "constraints": {
@@ -2647,10 +2670,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "CHOICE",
           "TEXT",
-          "NUMERIC",
           "MULTI_VALUED",
-          "CHOICE"
+          "NUMERIC"
         ]
       },
       "constraints": {
@@ -2914,10 +2937,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "CHOICE",
           "TEXT",
-          "NUMERIC",
           "MULTI_VALUED",
-          "CHOICE"
+          "NUMERIC"
         ]
       },
       "constraints": {

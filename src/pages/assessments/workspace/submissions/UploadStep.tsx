@@ -192,6 +192,8 @@ export const UploadStep: React.FC<{
       })).data,
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: QK.submissions.source(assessmentId) });
+      await qc.invalidateQueries({ queryKey: QK.submissions.list(assessmentId) });
+      await qc.invalidateQueries({ queryKey: QK.assessments.item(assessmentId) });
       onNext();
     },
     onError: () => notifications.show({ color: 'red', message: 'Upload failed' }),

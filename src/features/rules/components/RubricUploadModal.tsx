@@ -42,6 +42,7 @@ const RubricUploadModal: React.FC<Props> = ({ open, assessmentId, onClose }) => 
       onSuccess={async () => {
         await qc.invalidateQueries({ queryKey: QK.rubric.item(assessmentId) });
         await qc.invalidateQueries({ queryKey: QK.rubric.coverage(assessmentId) });
+        await qc.invalidateQueries({ queryKey: QK.assessments.item(assessmentId) });
       }}
       initialValues={() => ({ data: '', serializer: { format: 'yaml' } } as LoadRubricRequest)}
       buildUiSchema={(formData) => {

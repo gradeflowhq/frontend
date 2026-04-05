@@ -24,6 +24,14 @@
         },
         "type": "array",
         "title": "Raw Submissions"
+      },
+      "updated_at": {
+        "title": "Updated At",
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time"
       }
     },
     "type": "object",

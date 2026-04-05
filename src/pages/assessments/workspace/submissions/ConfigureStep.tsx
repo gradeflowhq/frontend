@@ -8,7 +8,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 
 import { useInferAndParseQuestionSet, useQuestionSet } from '@features/questions/api';
 import {
-  useSourceData, useImportConfig, useSaveImportConfig, useImportSubmissions,
+  useSourceData, useImportConfig, useSaveImportConfig,
 } from '@features/submissions';
 import { getErrorMessage } from '@utils/error';
 
@@ -58,11 +58,10 @@ export const ConfigureStep: React.FC<{
   }, [initialized, sourceFetching, sourceData, existingConfig, configError, allDataCols, sidCol]);
 
   const saveConfig = useSaveImportConfig(assessmentId);
-  const importMutation = useImportSubmissions(assessmentId);
   const inferAndParse = useInferAndParseQuestionSet(assessmentId);
   const { data: qsRes } = useQuestionSet(assessmentId, true);
 
-  const isPending = saveConfig.isPending || importMutation.isPending;
+  const isPending = saveConfig.isPending;
 
   const toggleCol = (col: string) => {
     setSelectedCols((prev) =>
@@ -104,20 +103,15 @@ export const ConfigureStep: React.FC<{
     };
     saveConfig.mutate(config, {
       onSuccess: () => {
-        importMutation.mutate(undefined, {
-          onSuccess: () => {
-            const hasQS =
-              !!qsRes?.question_set &&
-              Object.keys(qsRes.question_set.question_map ?? {}).length > 0;
-            if (!hasQS) {
-              inferAndParse.mutate(undefined, {
-                onError: () => notifications.show({ color: 'red', message: 'Could not auto-infer question set' }),
-              });
-            }
-            onSuccess();
-          },
-          onError: () => notifications.show({ color: 'red', message: 'Import failed' }),
-        });
+        const hasQS =
+          !!qsRes?.question_set &&
+          Object.keys(qsRes.question_set.question_map ?? {}).length > 0;
+        if (!hasQS) {
+          inferAndParse.mutate(undefined, {
+            onError: () => notifications.show({ color: 'red', message: 'Could not auto-infer question set' }),
+          });
+        }
+        onSuccess();
       },
       onError: () => notifications.show({ color: 'red', message: 'Failed to save configuration' }),
     });
@@ -209,8 +203,8 @@ export const ConfigureStep: React.FC<{
         highlightOnHover
       />
 
-      {(saveConfig.isError || importMutation.isError) && (
-        <Alert color="red">{getErrorMessage(saveConfig.error ?? importMutation.error)}</Alert>
+      {saveConfig.isError && (
+        <Alert color="red">{getErrorMessage(saveConfig.error)}</Alert>
       )}
 
       <Group justify="space-between" mt="md">

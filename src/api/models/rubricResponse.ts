@@ -6,7 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { RubricOutput } from './rubricOutput';
+import type { SectionStatus } from './sectionStatus';
 
 export interface RubricResponse {
   rubric: RubricOutput;
+  status: SectionStatus;
 }

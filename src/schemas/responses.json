@@ -82,6 +82,14 @@
         },
         "type": "array",
         "title": "Raw Submissions"
+      },
+      "updated_at": {
+        "title": "Updated At",
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time"
       }
     },
     "type": "object",
@@ -215,13 +223,36 @@
     "properties": {
       "rubric": {
         "$ref": "#/definitions/Rubric"
+      },
+      "status": {
+        "$ref": "#/definitions/SectionStatus"
       }
     },
     "type": "object",
     "required": [
-      "rubric"
+      "rubric",
+      "status"
     ],
     "title": "RubricResponse"
+  },
+  "SectionStatus": {
+    "properties": {
+      "updated_at": {
+        "title": "Updated At",
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time"
+      },
+      "is_stale": {
+        "type": "boolean",
+        "title": "Is Stale",
+        "default": false
+      }
+    },
+    "type": "object",
+    "title": "SectionStatus"
   },
   "Rubric": {
     "properties": {
@@ -619,10 +650,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "CHOICE",
           "TEXT",
-          "NUMERIC",
           "MULTI_VALUED",
-          "CHOICE"
+          "NUMERIC"
         ]
       },
       "constraints": {
@@ -1120,10 +1151,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "CHOICE",
           "TEXT",
-          "NUMERIC",
           "MULTI_VALUED",
-          "CHOICE"
+          "NUMERIC"
         ]
       },
       "constraints": {
@@ -1470,10 +1501,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "CHOICE",
           "TEXT",
-          "NUMERIC",
           "MULTI_VALUED",
-          "CHOICE"
+          "NUMERIC"
         ]
       },
       "constraints": {
@@ -1752,10 +1783,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "CHOICE",
           "TEXT",
-          "NUMERIC",
           "MULTI_VALUED",
-          "CHOICE"
+          "NUMERIC"
         ]
       },
       "constraints": {
@@ -1864,10 +1895,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "CHOICE",
           "TEXT",
-          "NUMERIC",
           "MULTI_VALUED",
-          "CHOICE"
+          "NUMERIC"
         ]
       },
       "constraints": {
@@ -2046,10 +2077,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "CHOICE",
           "TEXT",
-          "NUMERIC",
           "MULTI_VALUED",
-          "CHOICE"
+          "NUMERIC"
         ]
       },
       "constraints": {
@@ -2437,10 +2468,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "CHOICE",
           "TEXT",
-          "NUMERIC",
           "MULTI_VALUED",
-          "CHOICE"
+          "NUMERIC"
         ]
       },
       "constraints": {
@@ -2484,10 +2515,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "CHOICE",
           "TEXT",
-          "NUMERIC",
           "MULTI_VALUED",
-          "CHOICE"
+          "NUMERIC"
         ]
       },
       "constraints": {
@@ -2638,10 +2669,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "CHOICE",
           "TEXT",
-          "NUMERIC",
           "MULTI_VALUED",
-          "CHOICE"
+          "NUMERIC"
         ]
       },
       "constraints": {
@@ -2782,11 +2813,15 @@
     "properties": {
       "question_set": {
         "$ref": "#/definitions/QuestionSet"
+      },
+      "status": {
+        "$ref": "#/definitions/SectionStatus"
       }
     },
     "type": "object",
     "required": [
-      "question_set"
+      "question_set",
+      "status"
     ],
     "title": "QuestionSetResponse"
   },
@@ -3205,11 +3240,15 @@
         },
         "type": "array",
         "title": "Submissions"
+      },
+      "status": {
+        "$ref": "#/definitions/SectionStatus"
       }
     },
     "type": "object",
     "required": [
-      "submissions"
+      "submissions",
+      "status"
     ],
     "title": "GradingResponse"
   },
@@ -3455,11 +3494,45 @@
       },
       "created_at": {
         "type": "string",
+        "format": "date-time",
         "title": "Created At"
       },
       "updated_at": {
         "type": "string",
+        "format": "date-time",
         "title": "Updated At"
+      },
+      "source_updated_at": {
+        "title": "Source Updated At",
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time"
+      },
+      "question_set_updated_at": {
+        "title": "Question Set Updated At",
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time"
+      },
+      "rubric_updated_at": {
+        "title": "Rubric Updated At",
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time"
+      },
+      "results_updated_at": {
+        "title": "Results Updated At",
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time"
       }
     },
     "type": "object",

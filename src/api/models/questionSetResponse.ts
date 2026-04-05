@@ -6,7 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { QuestionSetOutput } from './questionSetOutput';
+import type { SectionStatus } from './sectionStatus';
 
 export interface QuestionSetResponse {
   question_set: QuestionSetOutput;
+  status: SectionStatus;
 }

@@ -6,9 +6,4 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface UploadSourceDataRequest {
-  /** Processed CSV text */
-  data: string;
-  /** Name of the student ID column */
-  student_id_column: string;
-}
+export type AssessmentResponseSourceUpdatedAt = string | null;

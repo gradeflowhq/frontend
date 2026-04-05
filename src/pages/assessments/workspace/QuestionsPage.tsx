@@ -6,6 +6,7 @@ import { useParams } from 'react-router-dom';
 import { useAssessmentContext } from '@app/contexts/AssessmentContext';
 import AnswerText from '@components/common/AnswerText';
 import PageShell from '@components/common/PageShell';
+import SectionStatusBadge from '@components/common/SectionStatusBadge';
 import { SchemaForm } from '@components/forms/SchemaForm';
 import {
   useQuestionSet,
@@ -115,6 +116,14 @@ const QuestionsPage: React.FC = () => {
     setEditingDraft(null);
   };
 
+  // No-op save to acknowledge staleness and refresh updated_at
+  const handleDismissStale = React.useCallback(() => {
+    if (!qsRes?.question_set) return;
+    updateMutation.mutate(qsRes.question_set as unknown as QuestionSetInput, {
+      onError: () => notifications.show({ color: 'red', message: 'Could not acknowledge staleness' }),
+    });
+  }, [qsRes, updateMutation]);
+
   const saveEditDrawer = async () => {
     if (!editingQid || !editingDraft) return;
     const next: QuestionSetInput = {
@@ -167,23 +176,32 @@ const QuestionsPage: React.FC = () => {
           <Skeleton height={200} />
         </Stack>
       ) : (
-        <QuestionsTable
-          questionMap={questionMap}
-          examplesByQuestion={examplesByQuestion}
-          onUpdateQuestionSet={async (next: QuestionSetInput) => {
-            await updateMutation.mutateAsync(next, {
-              onSuccess: () => notifications.show({ color: 'green', message: 'Question set saved' }),
-              onError: () => notifications.show({ color: 'red', message: 'Save failed' }),
-            });
-          }}
-          onEdit={openEditDrawer}
-          updating={updateMutation.isPending}
-          updateError={updateMutation.isError ? updateMutation.error : null}
-          searchQuery={searchQuery}
-          loadingQuestions={loadingQS}
-          loadingExamples={loadingParsed}
-          examplesError={missingSubmissions ? 'No submissions available to derive example answers yet.' : undefined}
-        />
+        <>
+          <SectionStatusBadge
+            updatedAt={qsRes?.status?.updated_at}
+            isStale={qsRes?.status?.is_stale}
+            staleMessage="Questions may be out of date — submissions have been updated since the last question set was configured."
+            onDismiss={qsRes?.status?.is_stale ? handleDismissStale : undefined}
+            isDismissing={updateMutation.isPending}
+          />
+          <QuestionsTable
+            questionMap={questionMap}
+            examplesByQuestion={examplesByQuestion}
+            onUpdateQuestionSet={async (next: QuestionSetInput) => {
+              await updateMutation.mutateAsync(next, {
+                onSuccess: () => notifications.show({ color: 'green', message: 'Question set saved' }),
+                onError: () => notifications.show({ color: 'red', message: 'Save failed' }),
+              });
+            }}
+            onEdit={openEditDrawer}
+            updating={updateMutation.isPending}
+            updateError={updateMutation.isError ? updateMutation.error : null}
+            searchQuery={searchQuery}
+            loadingQuestions={loadingQS}
+            loadingExamples={loadingParsed}
+            examplesError={missingSubmissions ? 'No submissions available to derive example answers yet.' : undefined}
+          />
+        </>
       )}
 
       {/* Question Edit Drawer */}

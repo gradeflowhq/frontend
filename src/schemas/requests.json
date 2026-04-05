@@ -685,10 +685,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "CHOICE",
           "TEXT",
-          "NUMERIC",
           "MULTI_VALUED",
-          "CHOICE"
+          "NUMERIC"
         ]
       },
       "constraints": {
@@ -1186,10 +1186,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "CHOICE",
           "TEXT",
-          "NUMERIC",
           "MULTI_VALUED",
-          "CHOICE"
+          "NUMERIC"
         ]
       },
       "constraints": {
@@ -1536,10 +1536,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "CHOICE",
           "TEXT",
-          "NUMERIC",
           "MULTI_VALUED",
-          "CHOICE"
+          "NUMERIC"
         ]
       },
       "constraints": {
@@ -1818,10 +1818,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "CHOICE",
           "TEXT",
-          "NUMERIC",
           "MULTI_VALUED",
-          "CHOICE"
+          "NUMERIC"
         ]
       },
       "constraints": {
@@ -1930,10 +1930,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "CHOICE",
           "TEXT",
-          "NUMERIC",
           "MULTI_VALUED",
-          "CHOICE"
+          "NUMERIC"
         ]
       },
       "constraints": {
@@ -2112,10 +2112,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "CHOICE",
           "TEXT",
-          "NUMERIC",
           "MULTI_VALUED",
-          "CHOICE"
+          "NUMERIC"
         ]
       },
       "constraints": {
@@ -2503,10 +2503,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "CHOICE",
           "TEXT",
-          "NUMERIC",
           "MULTI_VALUED",
-          "CHOICE"
+          "NUMERIC"
         ]
       },
       "constraints": {
@@ -2550,10 +2550,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "CHOICE",
           "TEXT",
-          "NUMERIC",
           "MULTI_VALUED",
-          "CHOICE"
+          "NUMERIC"
         ]
       },
       "constraints": {
@@ -2704,10 +2704,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "CHOICE",
           "TEXT",
-          "NUMERIC",
           "MULTI_VALUED",
-          "CHOICE"
+          "NUMERIC"
         ]
       },
       "constraints": {
@@ -2849,12 +2849,12 @@
       "data": {
         "type": "string",
         "title": "Data",
-        "description": "Processed CSV text (rows trimmed, student IDs optionally encrypted)"
+        "description": "Processed CSV text"
       },
       "student_id_column": {
         "type": "string",
         "title": "Student Id Column",
-        "description": "Name of the student ID column in the uploaded CSV"
+        "description": "Name of the student ID column"
       }
     },
     "type": "object",

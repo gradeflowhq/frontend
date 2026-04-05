@@ -6,7 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { AdjustableSubmission } from './adjustableSubmission';
+import type { SectionStatus } from './sectionStatus';
 
 export interface GradingResponse {
   submissions: AdjustableSubmission[];
+  status: SectionStatus;
 }

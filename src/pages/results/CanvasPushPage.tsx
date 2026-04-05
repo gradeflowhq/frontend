@@ -7,6 +7,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 
 import { createCanvasClient, parseCanvasBaseUrl } from '@api/canvasClient';
 import PageShell from '@components/common/PageShell';
+import SectionStatusBadge from '@components/common/SectionStatusBadge';
 import { useAssessment } from '@features/assessments/api';
 import { useCanvasData, useCourseData } from '@features/canvas/api/useCanvasData';
 import { useCanvasProgress } from '@features/canvas/api/useCanvasProgress';
@@ -15,6 +16,7 @@ import { useCsvGrades } from '@features/canvas/api/useCsvGrades';
 import { usePreparedRows } from '@features/canvas/api/usePreparedRows';
 import { pickValue } from '@features/canvas/helpers';
 import { useAssessmentPassphrase } from '@features/encryption/passphraseContext';
+import { useGrading } from '@features/grading/api';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { useCanvasPushStore } from '@state/canvasStore';
 import { useUserSettingsStore } from '@state/userStore';
@@ -54,6 +56,7 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
   const [openSteps, setOpenSteps] = useState<string[]>(() => ['connection']);
 
   const csvGrades = useCsvGrades(assessmentId, roundingBase ?? 0, passphrase ?? '', notifyEncryptedDetected);
+  const { data: gradingData } = useGrading(assessmentId, Boolean(assessmentId));
   const canvasData = useCanvasData(canvasBaseUrl, canvasToken);
   const courseData = useCourseData(courseId, canvasBaseUrl, canvasToken);
 
@@ -254,6 +257,12 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
             onClear={handleClearProgress}
           />
         )}
+
+        <SectionStatusBadge
+          updatedAt={gradingData?.status?.updated_at}
+          isStale={gradingData?.status?.is_stale}
+          staleMessage="Grading results may be out of date — submissions or rules changed since the last run. Consider re-running grading before publishing."
+        />
 
         <Accordion
           multiple

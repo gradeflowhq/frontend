@@ -220,7 +220,6 @@ const RuleDialog: React.FC<RuleDialogProps> = ({
                   items={previewMutation.data?.submissions ?? []}
                   loading={previewMutation.isPending}
                   error={previewMutation.isError ? previewMutation.error : undefined}
-                  maxHeightVh={40}
                 />
               </Box>
             )}

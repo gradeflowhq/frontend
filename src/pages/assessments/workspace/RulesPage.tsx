@@ -7,8 +7,10 @@ import { useParams } from 'react-router-dom';
 
 import { useAssessmentContext } from '@app/contexts/AssessmentContext';
 import PageShell from '@components/common/PageShell';
+import SectionStatusBadge from '@components/common/SectionStatusBadge';
 import { useQuestionSet } from '@features/questions/api';
 import { useRubric, useRubricCoverage, useDeleteRubric } from '@features/rubric/api';
+import { useReplaceRubric } from '@features/rules/api';
 import { MultiTargetRulesSection, RulesToolbar, SingleTargetRulesSection } from '@features/rules/components';
 import RubricImportModal from '@features/rules/components/RubricImportModal';
 import RubricUploadModal from '@features/rules/components/RubricUploadModal';
@@ -119,6 +121,15 @@ const RulesPage: React.FC = () => {
   };
 
   const deleteRubric = useDeleteRubric(safeId);
+  const replaceRubric = useReplaceRubric(safeId);
+
+  // No-op save to acknowledge staleness and refresh updated_at
+  const handleDismissStale = React.useCallback(() => {
+    if (!rubric) return;
+    replaceRubric.mutate(rubric.rules as RuleValue[], {
+      onError: () => notifications.show({ color: 'red', message: 'Could not acknowledge staleness' }),
+    });
+  }, [rubric, replaceRubric]);
 
   const hasRules = (rubric?.rules?.length ?? 0) > 0;
 
@@ -184,6 +195,13 @@ const RulesPage: React.FC = () => {
       }
     >
     <Stack gap="md">
+      <SectionStatusBadge
+        updatedAt={rubricRes?.status?.updated_at}
+        isStale={rubricRes?.status?.is_stale}
+        staleMessage="Rules may be out of date — questions have changed since the last rubric was configured."
+        onDismiss={rubricRes?.status?.is_stale ? handleDismissStale : undefined}
+        isDismissing={replaceRubric.isPending}
+      />
 
       {(loadingQS || loadingRubric || loadingCoverage) && renderSkeleton()}
       {errorQS && !qsNotFound && (

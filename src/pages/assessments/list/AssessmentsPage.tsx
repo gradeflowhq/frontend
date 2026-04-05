@@ -1,9 +1,11 @@
 import {
   ActionIcon,
   Alert,
+  Badge,
   Box,
   Button,
   Card,
+  Divider,
   Group,
   Menu,
   Modal,
@@ -12,14 +14,18 @@ import {
   Skeleton,
   Text,
   TextInput,
+  Tooltip,
 } from '@mantine/core';
 import { useDebouncedValue } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
 import {
   IconDots,
   IconGridDots,
+  IconInbox,
+  IconListCheck,
   IconPencil,
   IconPlus,
+  IconQuestionMark,
   IconSearch,
   IconTrash,
   IconUsers,
@@ -29,6 +35,7 @@ import { useNavigate } from 'react-router-dom';
 
 import EmptyState from '@components/common/EmptyState';
 import PageShell from '@components/common/PageShell';
+import SectionStatusBadge from '@components/common/SectionStatusBadge';
 import {
   useAssessmentsList,
   useCreateAssessment,
@@ -44,9 +51,7 @@ import { useQuestionSet } from '@features/questions/api';
 import { useRubricCoverage } from '@features/rubric/api';
 import { useSubmissions } from '@features/submissions/api';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
-import { formatSmartLabel } from '@utils/datetime';
 import { getErrorMessage } from '@utils/error';
-import { pluralize } from '@utils/format';
 import { compareDateDesc } from '@utils/sort';
 
 import type { AssessmentResponse, AssessmentCreateRequest, AssessmentUpdateRequest } from '@api/models';
@@ -76,17 +81,17 @@ const AssessmentCard: React.FC<{
     ? Object.keys(questionSetData.question_set.question_map).length
     : null;
 
-  const updatedLabel = formatSmartLabel(item.updated_at);
+  const covColor = covPct >= 1 ? 'green' : covPct > 0 ? 'yellow' : 'gray';
 
   return (
     <Card withBorder padding="md" radius="md" shadow="xs" style={{ display: 'flex', flexDirection: 'column' }}>
+      {/* Header: name + menu */}
       <Group justify="space-between" align="flex-start" mb="xs">
         <Box style={{ flex: 1, minWidth: 0 }}>
           <Text fw={600} size="sm" truncate>{item.name}</Text>
           {item.description && (
             <Text size="xs" c="dimmed" mt={2} lineClamp={2}>{item.description}</Text>
           )}
-          <Text size="xs" c="dimmed" mt={2}>Updated {updatedLabel}</Text>
         </Box>
         <Menu position="bottom-end" withArrow>
           <Menu.Target>
@@ -103,45 +108,60 @@ const AssessmentCard: React.FC<{
         </Menu>
       </Group>
 
-      {hasRules ? (
-        <Box mb="sm">
-          <Group justify="space-between" mb={4}>
-            <Text size="xs" c="dimmed">{covCovered}/{covTotal} rules covered</Text>
-            <Text size="xs" c="dimmed">{Math.round(covPct * 100)}%</Text>
-          </Group>
-          <Progress value={covPct * 100} size="sm" radius="sm" />
-        </Box>
-      ) : (
-        <Text size="xs" c="dimmed" mb="sm">No rules configured</Text>
-      )}
-
-      <Group gap="md" mb="md">
-        <Text size="xs" c="dimmed">
-          {submissionsCount === null
-            ? '—'
-            : submissionsCount === 0
-              ? 'No submissions'
-              : pluralize(submissionsCount, 'submission')}
-        </Text>
-        <Text size="xs" c="dimmed">·</Text>
-        <Text size="xs" c="dimmed">
-          {questionsCount === null
-            ? '—'
-            : questionsCount === 0
-              ? 'No questions'
-              : pluralize(questionsCount, 'question')}
-        </Text>
-        {gradedCount > 0 && (
+      {/* Coverage */}
+      <Box mb="sm">
+        {hasRules ? (
           <>
-            <Text size="xs" c="dimmed">·</Text>
-            <Text size="xs" c="dimmed">{pluralize(gradedCount, 'graded', 'graded')}</Text>
+            <Group justify="space-between" mb={4}>
+              <Text size="xs" c="dimmed">{covCovered}/{covTotal} rules covered</Text>
+              <Badge size="xs" variant="light" color={covColor}>
+                {Math.round(covPct * 100)}%
+              </Badge>
+            </Group>
+            <Progress value={covPct * 100} size="sm" radius="sm" color={covColor} />
           </>
+        ) : (
+          <Text size="xs" c="dimmed">No rules configured</Text>
+        )}
+      </Box>
+
+      {/* Stats with icons */}
+      <Group gap="sm" mb="md" wrap="wrap">
+        <Tooltip label="Submissions" withArrow>
+          <Group gap={4} align="center">
+            <IconInbox size={13} color="var(--mantine-color-dimmed)" />
+            <Text size="xs" c="dimmed">
+              {submissionsCount === null ? '—' : submissionsCount === 0 ? 'None' : submissionsCount}
+            </Text>
+          </Group>
+        </Tooltip>
+        <Tooltip label="Questions" withArrow>
+          <Group gap={4} align="center">
+            <IconQuestionMark size={13} color="var(--mantine-color-dimmed)" />
+            <Text size="xs" c="dimmed">
+              {questionsCount === null ? '—' : questionsCount === 0 ? 'None' : questionsCount}
+            </Text>
+          </Group>
+        </Tooltip>
+        {gradedCount > 0 && (
+          <Tooltip label="Graded submissions" withArrow>
+            <Group gap={4} align="center">
+              <IconListCheck size={13} color="var(--mantine-color-green-6)" />
+              <Text size="xs" c="green.7">{gradedCount} graded</Text>
+            </Group>
+          </Tooltip>
         )}
       </Group>
 
-      <Button size="xs" variant="light" onClick={onOpen} fullWidth mt="auto">
-        Open
-      </Button>
+      <Divider mb="sm" />
+
+      {/* Footer: updated at + open button */}
+      <Group justify="space-between" align="center">
+        <SectionStatusBadge updatedAt={item.updated_at} />
+        <Button size="xs" variant="light" onClick={onOpen}>
+          Open
+        </Button>
+      </Group>
     </Card>
   );
 };

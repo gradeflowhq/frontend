@@ -42,6 +42,7 @@ const QuestionSetUploadModal: React.FC<Props> = ({ open, assessmentId, onClose }
       onSuccess={async () => {
         await qc.invalidateQueries({ queryKey: QK.questionSet.item(assessmentId) });
         await qc.invalidateQueries({ queryKey: QK.questionSet.parsed(assessmentId) });
+        await qc.invalidateQueries({ queryKey: QK.assessments.item(assessmentId) });
       }}
       initialValues={() => ({ data: '', serializer: { format: 'yaml' } } as LoadQuestionSetRequest)}
       buildUiSchema={(formData) => {

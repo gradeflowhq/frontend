@@ -25,7 +25,11 @@ export const useDeleteSubmissions = (assessmentId: string) => {
     mutationKey: ['submissions', assessmentId, 'delete'],
     mutationFn: async () => (await api.deleteSubmissionsAssessmentsAssessmentIdSubmissionsDelete(assessmentId)).data,
     onSuccess: async () => {
+      // Backend delete clears source data, config, and submissions together
       await qc.invalidateQueries({ queryKey: QK.submissions.list(assessmentId) });
+      await qc.invalidateQueries({ queryKey: QK.submissions.source(assessmentId) });
+      await qc.invalidateQueries({ queryKey: QK.submissions.config(assessmentId) });
+      await qc.invalidateQueries({ queryKey: QK.assessments.item(assessmentId) });
     },
   });
 };
@@ -56,6 +60,7 @@ export const useImportConfig = (assessmentId: string, enabled = true) =>
 
 /**
  * Persist the import config (answer_columns + point_columns) so user can reconfigure later.
+ * Submissions are derived on-the-fly from source data + config, so invalidate the list too.
  */
 export const useSaveImportConfig = (assessmentId: string) => {
   const qc = useQueryClient();
@@ -65,21 +70,8 @@ export const useSaveImportConfig = (assessmentId: string) => {
       (await api.saveImportConfigAssessmentsAssessmentIdSubmissionsConfigPut(assessmentId, config)).data,
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: QK.submissions.config(assessmentId) });
-    },
-  });
-};
-
-/**
- * Run the import using stored source data + stored config.
- */
-export const useImportSubmissions = (assessmentId: string) => {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ['submissions', assessmentId, 'import'],
-    mutationFn: async (): Promise<SubmissionsResponse> =>
-      (await api.importSubmissionsAssessmentsAssessmentIdSubmissionsImportPut(assessmentId)).data as SubmissionsResponse,
-    onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: QK.submissions.list(assessmentId) });
+      await qc.invalidateQueries({ queryKey: QK.assessments.item(assessmentId) });
     },
   });
 };

@@ -10,6 +10,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 
 import AnswerText from '@components/common/AnswerText';
 import PageShell from '@components/common/PageShell';
+import SectionStatusBadge from '@components/common/SectionStatusBadge';
 import { useAssessmentPassphrase } from '@features/encryption/passphraseContext';
 import { useDecryptedIds } from '@features/encryption/useDecryptedIds';
 import { useGrading, useAdjustGrading } from '@features/grading/api';
@@ -205,6 +206,12 @@ const SubmissionDetailInner: React.FC<{ assessmentId: string; encodedStudentId: 
   return (
     <PageShell title={navTitle} actions={navActions}>
       <Stack gap="md">
+
+      <SectionStatusBadge
+        updatedAt={data?.status?.updated_at}
+        isStale={data?.status?.is_stale}
+        staleMessage="Grading results may be out of date — submissions or rules have changed since the last run."
+      />
 
       {adjustMutation.isError && (
         <Alert color="red">{getErrorMessage(adjustMutation.error)}</Alert>
