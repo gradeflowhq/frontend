@@ -81,9 +81,9 @@ const ResultsOverviewTable: React.FC<Props> = ({
                 <Badge color="yellow">Ungraded</Badge>
               ) : (
                 <Stack gap={2}>
-                  <Text ff="monospace" size="sm">{pointsDisplay}/{maxPoints}</Text>
+                  <Text ff="monospace" size="sm">{pointsDisplay.toFixed(2)}/{maxPoints}</Text>
                   {adjustedExists && (
-                    <Text ff="monospace" size="xs" c="dimmed">Original: {r.points} / {maxPoints}</Text>
+                    <Text ff="monospace" size="xs" c="dimmed">Original: {r.points.toFixed(2)} / {maxPoints}</Text>
                   )}
                 </Stack>
               )}
@@ -103,10 +103,10 @@ const ResultsOverviewTable: React.FC<Props> = ({
         const pct = totalMax > 0 ? Math.round((totalPoints / totalMax) * 100) : 0;
         return (
           <Stack gap={4}>
-            <Text ff="monospace" size="sm">{totalPoints}/{totalMax}</Text>
+            <Text ff="monospace" size="sm">{totalPoints.toFixed(2)}/{totalMax}</Text>
             <Group gap="xs">
               <Progress value={pct} size="sm" style={{ flex: 1, minWidth: 80 }} />
-              <Text ff="monospace" size="xs">{pct}%</Text>
+              <Text ff="monospace" size="xs">{pct.toFixed(2)}%</Text>
             </Group>
           </Stack>
         );

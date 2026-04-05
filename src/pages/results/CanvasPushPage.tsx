@@ -1,10 +1,10 @@
 import { Accordion, Alert, Box, Button, Group, Stack, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconCheck, IconSettings } from '@tabler/icons-react';
+import { useQuery } from '@tanstack/react-query';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { useQuery } from '@tanstack/react-query';
 import { createCanvasClient, parseCanvasBaseUrl } from '@api/canvasClient';
 import PageShell from '@components/common/PageShell';
 import UserSettingsDialog from '@components/dialogs/UserSettingsDialog';

@@ -214,7 +214,7 @@ const SubmissionDetailInner: React.FC<{ assessmentId: string; encodedStudentId: 
         <Paper withBorder p="md">
           <Text size="xs" c="dimmed" mb={4}>Total (Original)</Text>
           <Group gap="xs" align="baseline">
-            <Text ff="monospace" fw={700} size="xl">{originalTotalPoints}</Text>
+            <Text ff="monospace" fw={700} size="xl">{originalTotalPoints.toFixed(2)}</Text>
             <Text c="dimmed" size="sm">/ {totalMax}</Text>
           </Group>
           <Group gap="xs" mt={6} align="center">
@@ -226,7 +226,7 @@ const SubmissionDetailInner: React.FC<{ assessmentId: string; encodedStudentId: 
         <Paper withBorder p="md">
           <Text size="xs" c="dimmed" mb={4}>Total (Adjusted)</Text>
           <Group gap="xs" align="baseline">
-            <Text ff="monospace" fw={700} size="xl">{adjustedTotalPoints}</Text>
+            <Text ff="monospace" fw={700} size="xl">{adjustedTotalPoints.toFixed(2)}</Text>
             <Text c="dimmed" size="sm">/ {totalMax}</Text>
           </Group>
           <Group gap="xs" mt={6} align="center">
@@ -343,12 +343,12 @@ const SubmissionDetailInner: React.FC<{ assessmentId: string; encodedStudentId: 
               return !isEditing ? (
                 <Stack gap={2}>
                   <Group gap="xs" align="baseline">
-                    <Text ff="monospace" size="sm">{res.adjusted_points ?? res.points}</Text>
+                    <Text ff="monospace" size="sm">{(res.adjusted_points ?? res.points).toFixed(2)}</Text>
                     <Text c="dimmed" size="xs">/ {res.max_points}</Text>
                   </Group>
                   {adjustedExists && res.adjusted_points !== null && res.adjusted_points !== undefined && (
                     <Badge variant="light" color="gray" size="xs" ff="monospace">
-                      Original: {res.points} / {res.max_points}
+                      Original: {res.points.toFixed(2)} / {res.max_points}
                     </Badge>
                   )}
                 </Stack>

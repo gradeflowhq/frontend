@@ -101,7 +101,7 @@ const GradingPreviewPanel: React.FC<Props> = ({ items, loading, error, maxHeight
                         </td>
                         <td style={{ padding: '6px 8px' }}>
                           {r ? (
-                            <Text ff="monospace" size="sm">{points} / {max}</Text>
+                            <Text ff="monospace" size="sm">{points.toFixed(2)} / {max}</Text>
                           ) : (
                             <Text c="dimmed">—</Text>
                           )}
