@@ -1,10 +1,11 @@
-
 import { Accordion, Alert, Box, Button, Group, Stack, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconCheck, IconSettings } from '@tabler/icons-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
+import { useQuery } from '@tanstack/react-query';
+import { createCanvasClient, parseCanvasBaseUrl } from '@api/canvasClient';
 import PageShell from '@components/common/PageShell';
 import UserSettingsDialog from '@components/dialogs/UserSettingsDialog';
 import { useAssessment } from '@features/assessments/api';
@@ -49,18 +50,31 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
   const [includeComments, setIncludeComments] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
   const [previewTab, setPreviewTab] = useState<PreviewTab>('mapped');
-
-  // Accordion state — open steps that need attention
-  const [openSteps, setOpenSteps] = useState<string[]>(() => {
-    const initial: string[] = [];
-    // Open connection step if not configured
-    initial.push('connection');
-    return initial;
-  });
+  const [openSteps, setOpenSteps] = useState<string[]>(() => ['connection']);
 
   const csvGrades = useCsvGrades(assessmentId, roundingBase ?? 0, passphrase ?? '', notifyEncryptedDetected);
   const canvasData = useCanvasData(canvasBaseUrl, canvasToken);
   const courseData = useCourseData(courseId, canvasBaseUrl, canvasToken);
+
+  // Fetch Canvas current user for display in the connection step
+  const parsedCanvasUrl = parseCanvasBaseUrl(canvasBaseUrl);
+  const { data: canvasUser } = useQuery({
+    queryKey: ['canvas', 'me', canvasBaseUrl, canvasToken],
+    queryFn: async () => {
+      const client = createCanvasClient({ canvasBaseUrl: parsedCanvasUrl!, token: canvasToken });
+      const res = await client.getCurrentUser();
+      return res.data;
+    },
+    enabled: !!parsedCanvasUrl && !!canvasToken && !canvasData.missingConfig && !canvasData.isError,
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
+  const canvasUserLabel =
+    canvasUser?.name ??
+    canvasUser?.short_name ??
+    canvasUser?.sortable_name ??
+    canvasUser?.login_id ??
+    null;
 
   const csvTotalMax = useMemo(() => {
     const first = csvGrades.rows.find(row => Number.isFinite(row.roundedTotalMaxPoints ?? row.totalMaxPoints));
@@ -118,13 +132,13 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
   }, [courseData.assignments, assignmentGroupId]);
 
   useEffect(() => {
-    if (assignmentId && assignmentGroupId && filteredAssignments.length > 0) {
+    if (assignmentId && assignmentGroupId && !courseData.isLoading && courseData.assignments.length > 0) {
       const assignmentExists = filteredAssignments.some(a => a.id.toString() === assignmentId);
       if (!assignmentExists) {
         setConfig({ assignmentId: '', assignmentName: assessmentRes?.name ?? '' });
       }
     }
-  }, [assignmentId, assignmentGroupId, filteredAssignments, assessmentRes?.name, setConfig]);
+  }, [assignmentId, assignmentGroupId, filteredAssignments, courseData.isLoading, courseData.assignments.length, assessmentRes?.name, setConfig]);
 
   useEffect(() => {
     if (!assignmentName && assessmentRes?.name) {
@@ -159,7 +173,7 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
     setConfig({
       assignmentId: value,
       assignmentName: found?.name ?? assignmentName,
-      pointsPossible: found?.points_possible ?? pointsPossible
+      pointsPossible: found?.points_possible ?? pointsPossible,
     });
   };
 
@@ -196,11 +210,39 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
   const disablePush = canvasData.missingConfig || !courseId || !csvGrades.rows.length || !!hasActiveJob;
 
   const isConnected = !canvasData.missingConfig && !canvasData.isError;
-  const courseLabel = courseId ? canvasData.courses.find(c => String(c.id) === courseId)?.name ?? courseId : null;
+  const courseLabel = courseId
+    ? canvasData.courses.find(c => String(c.id) === courseId)?.name ?? courseId
+    : null;
+
+  // Assignment accordion summary — requires at minimum a group to be selected
+  const selectedGroupName = useMemo(
+    () => courseData.assignmentGroups.find(g => g.id.toString() === assignmentGroupId)?.name ?? null,
+    [courseData.assignmentGroups, assignmentGroupId]
+  );
+  const selectedAssignmentName = useMemo(() => {
+    if (!assignmentId) return null;
+    return filteredAssignments.find(a => a.id.toString() === assignmentId)?.name ?? assignmentName ?? null;
+  }, [assignmentId, filteredAssignments, assignmentName]);
+
+  const assignmentSummary = useMemo(() => {
+    if (!assignmentGroupId || !selectedGroupName) return null;
+    const parts: string[] = [selectedGroupName];
+    parts.push(selectedAssignmentName ?? (assignmentName || 'New assignment'));
+    return parts.join(' · ');
+  }, [assignmentGroupId, selectedGroupName, selectedAssignmentName, assignmentName]);
+
+  // Grade settings accordion summary
+  const gradeSettingsSummary = useMemo(() => {
+    if (!courseId) return null;
+    const parts: string[] = [];
+    parts.push(gradeMode === 'percent' ? 'Percentage' : 'Points');
+    if (enableRounding) parts.push(`Round to ${roundingBase}`);
+    parts.push(includeComments ? 'With comments' : 'No comments');
+    return parts.join(' · ');
+  }, [courseId, gradeMode, enableRounding, roundingBase, includeComments]);
 
   return (
     <PageShell title="Push to Canvas">
-      {/* Bottom padding to prevent content sneaking under sticky footer */}
       <Stack gap="md" pb={72}>
 
         {(pushState.status === 'pushing' || (progressUrl && progressQuery.data)) && (
@@ -221,11 +263,12 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
           <Accordion.Item value="connection">
             <Accordion.Control>
               <Group gap="xs" align="center">
-                {isConnected ? (
-                  <IconCheck size={14} color="var(--mantine-color-green-6)" />
-                ) : null}
+                {isConnected && <IconCheck size={14} color="var(--mantine-color-green-6)" />}
                 <Text fw={500}>Canvas Connection</Text>
-                {isConnected && (
+                {isConnected && canvasUserLabel && (
+                  <Text size="sm" c="dimmed" ml="xs">Connected as {canvasUserLabel}</Text>
+                )}
+                {isConnected && !canvasUserLabel && (
                   <Text size="sm" c="dimmed" ml="xs">Connected</Text>
                 )}
               </Group>
@@ -251,7 +294,9 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
                 </Group>
               ) : (
                 <Group align="center" gap="sm">
-                  <Text size="sm" c="dimmed">Canvas is configured.</Text>
+                  <Text size="sm" c="dimmed">
+                    Connected{canvasUserLabel ? ` as ${canvasUserLabel}` : ''}.
+                  </Text>
                   <Button size="xs" variant="subtle" onClick={() => setShowSettings(true)}>Change</Button>
                 </Group>
               )}
@@ -262,9 +307,7 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
           <Accordion.Item value="course">
             <Accordion.Control>
               <Group gap="xs" align="center">
-                {courseId ? (
-                  <IconCheck size={14} color="var(--mantine-color-green-6)" />
-                ) : null}
+                {courseId && <IconCheck size={14} color="var(--mantine-color-green-6)" />}
                 <Text fw={500}>Course</Text>
                 {courseLabel && (
                   <Text size="sm" c="dimmed" ml="xs">{courseLabel}</Text>
@@ -288,7 +331,13 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
           {/* Step 3: Assignment */}
           <Accordion.Item value="assignment">
             <Accordion.Control>
-              <Text fw={500}>Assignment</Text>
+              <Group gap="xs" align="center">
+                {assignmentSummary && <IconCheck size={14} color="var(--mantine-color-green-6)" />}
+                <Text fw={500}>Assignment</Text>
+                {assignmentSummary && (
+                  <Text size="sm" c="dimmed" ml="xs">{assignmentSummary}</Text>
+                )}
+              </Group>
             </Accordion.Control>
             <Accordion.Panel>
               <AssignmentSection
@@ -322,7 +371,13 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
           {/* Step 4: Grade Settings */}
           <Accordion.Item value="grade-settings">
             <Accordion.Control>
-              <Text fw={500}>Grade Settings</Text>
+              <Group gap="xs" align="center">
+                {gradeSettingsSummary && <IconCheck size={14} color="var(--mantine-color-green-6)" />}
+                <Text fw={500}>Grade Settings</Text>
+                {gradeSettingsSummary && (
+                  <Text size="sm" c="dimmed" ml="xs">{gradeSettingsSummary}</Text>
+                )}
+              </Group>
             </Accordion.Control>
             <Accordion.Panel>
               <AssignmentSection
@@ -411,9 +466,7 @@ const CanvasPushPage: React.FC = () => {
   if (!assessmentId) {
     return <Alert color="red">Assessment ID is missing.</Alert>;
   }
-  // AssessmentPassphraseProvider is provided by AssessmentShell in the route tree
   return <CanvasPushInner assessmentId={assessmentId} />;
 };
 
 export default CanvasPushPage;
-
