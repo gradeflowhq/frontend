@@ -101,7 +101,7 @@ const QuestionDetailPanel: React.FC<Props> = ({
 
   // Label for the covering global rule
   const coveringRuleLabel = useMemo((): string => {
-    if (!coveringRule) return 'global rule';
+    if (!coveringRule) return 'a global rule';
     const ruleType = String((coveringRule as { type?: unknown }).type ?? '');
     const schemaKey = findSchemaKeyByType(defs, ruleType, false);
     return friendlyRuleLabel(schemaKey ?? ruleType);
@@ -193,7 +193,7 @@ const QuestionDetailPanel: React.FC<Props> = ({
 
   const canAddRule = !coveredByGlobal && !existingRule && !isEditing;
   const canEditRule = !coveredByGlobal && !!existingRule && !isEditing;
-  const showPreview = (existingRule !== null || isEditing) && !!assessmentId;
+  const showPreview = (existingRule !== null || (isEditing && previewRule !== null)) && !!assessmentId;
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
@@ -282,16 +282,25 @@ const QuestionDetailPanel: React.FC<Props> = ({
       {/* ── Rule section ── */}
       <Stack gap="xs">
         {coveredByGlobal ? (
-          <Group gap="xs" align="center">
-            <Text size="sm" c="dimmed">
-              Covered by {coveringRuleLabel}
-            </Text>
-            {onViewGlobalRule && (
-              <Button size="xs" variant="subtle" onClick={onViewGlobalRule}>
-                View
-              </Button>
-            )}
-          </Group>
+          <Alert
+            variant="light"
+            color="blue"
+            icon={<IconCircleCheck size={16} />}
+          >
+            <Group justify="space-between" align="center" wrap="nowrap">
+              <Text size="sm">
+                Covered by{' '}
+                <Text component="span" size="sm" fw={600}>
+                  {coveringRuleLabel}
+                </Text>
+              </Text>
+              {onViewGlobalRule && (
+                <Button size="xs" variant="subtle" onClick={onViewGlobalRule} px={6}>
+                  View →
+                </Button>
+              )}
+            </Group>
+          </Alert>
         ) : isEditing ? (
           <InlineRuleEditor
             selectedRuleKey={editState!.ruleKey}
@@ -314,9 +323,9 @@ const QuestionDetailPanel: React.FC<Props> = ({
         )}
 
         {/* ── Grading preview — always shown when rule exists or is being created ── */}
-        {showPreview && (
+        {showPreview && previewRule !== null && (
           <InlineRulePreview
-            rule={previewRule ?? ({} as RuleValue)}
+            rule={previewRule}
             assessmentId={assessmentId}
           />
         )}
