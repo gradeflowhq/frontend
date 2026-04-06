@@ -4,7 +4,7 @@ import axios from 'axios';
 import { api } from '@api';
 import { QK } from '@api/queryKeys';
 
-import type { RubricResponse, CoverageResponse, RubricOutput, SetRubricByModelRequest } from '@api/models';
+import type { RubricResponse, CoverageResponse } from '@api/models';
 
 export const useRubric = (assessmentId: string) =>
   useQuery({
@@ -31,22 +31,6 @@ export const useRubricCoverage = (assessmentId: string) =>
         use_stored_question_set: true,
       })).data as CoverageResponse,
   });
-
-export const useReplaceRubric = (assessmentId: string) => {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationKey: ['rubric', assessmentId, 'setByModel'],
-    mutationFn: async (nextRubric: RubricOutput) => {
-      const payload: SetRubricByModelRequest = { rubric: nextRubric };
-      return (await api.setRubricByModelAssessmentsAssessmentIdRubricPut(assessmentId, payload)).data as RubricResponse;
-    },
-    onSuccess: async () => {
-      await qc.invalidateQueries({ queryKey: QK.rubric.item(assessmentId) });
-      await qc.invalidateQueries({ queryKey: QK.rubric.coverage(assessmentId) });
-      await qc.invalidateQueries({ queryKey: QK.assessments.item(assessmentId) });
-    },
-  });
-};
 
 export const useDeleteRubric = (assessmentId: string) => {
   const qc = useQueryClient();

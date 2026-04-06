@@ -1,4 +1,3 @@
-export { default as RuleCard } from './RuleCard';
 export { default as RuleRenderer } from './RuleRenderer';
 export { default as RuleEditorForm } from './RuleEditorForm';
 export { default as InlineRuleEditor } from './InlineRuleEditor';
