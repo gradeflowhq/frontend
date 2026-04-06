@@ -121,7 +121,7 @@ const StepItem: React.FC<{
           )}
 
           {!isLocked && step.updatedAt && (
-            <SectionStatusBadge updatedAt={step.updatedAt} />
+            <SectionStatusBadge />
           )}
         </Group>
       }

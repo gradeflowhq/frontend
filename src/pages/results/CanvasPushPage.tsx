@@ -259,7 +259,6 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
         )}
 
         <SectionStatusBadge
-          updatedAt={gradingData?.status?.updated_at}
           isStale={gradingData?.status?.is_stale}
           staleMessage="Grading results may be out of date — submissions or rules changed since the last run. Consider re-running grading before publishing."
         />

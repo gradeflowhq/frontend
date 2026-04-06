@@ -92,7 +92,7 @@ const GradingResultsCard: React.FC<Props> = ({
       )}
 
       {assessment?.results_updated_at && (
-        <SectionStatusBadge updatedAt={assessment.results_updated_at} />
+        <SectionStatusBadge />
       )}
 
       {quickStats && quickStats.count > 0 && (

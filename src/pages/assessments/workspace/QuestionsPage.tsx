@@ -161,6 +161,7 @@ const QuestionsPage: React.FC = () => {
           onSearchChange={(v) => setSearchQuery(v)}
         />
       }
+      updatedAt={qsRes?.status?.updated_at}
     >
       <Stack gap="md">
         {errorQS && !qsMissing && (
@@ -178,7 +179,6 @@ const QuestionsPage: React.FC = () => {
       ) : (
         <>
           <SectionStatusBadge
-            updatedAt={qsRes?.status?.updated_at}
             isStale={qsRes?.status?.is_stale}
             staleMessage="Questions may be out of date — submissions have been updated since the last question set was configured."
             onDismiss={qsRes?.status?.is_stale ? handleDismissStale : undefined}

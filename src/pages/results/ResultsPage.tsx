@@ -99,6 +99,7 @@ const ResultsPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) 
           </Menu>
         </>
       }
+      updatedAt={gradingData?.status?.updated_at}
     >
 
       {isError && <Alert color="red" mb="md">{getErrorMessage(error)}</Alert>}
@@ -112,7 +113,6 @@ const ResultsPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) 
 
       <Stack mb="md">
         <SectionStatusBadge
-          updatedAt={gradingData?.status?.updated_at}
           isStale={gradingData?.status?.is_stale}
           staleMessage="Results may be out of date — submissions or rules have changed since the last grading run."
         />

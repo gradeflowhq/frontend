@@ -264,10 +264,10 @@ const RulesPage: React.FC = () => {
           onSearchChange={(v) => setSearchQuery(v)}
         />
       }
+      updatedAt={rubricRes?.status?.updated_at}
     >
       <Stack gap="md">
         <SectionStatusBadge
-          updatedAt={rubricRes?.status?.updated_at}
           isStale={rubricRes?.status?.is_stale}
           staleMessage="Rules may be out of date — questions have changed since the last rubric was configured."
           onDismiss={rubricRes?.status?.is_stale ? handleDismissStale : undefined}

@@ -6,7 +6,6 @@ import { useParams } from 'react-router-dom';
 
 import { useAssessmentContext } from '@app/contexts/AssessmentContext';
 import PageShell from '@components/common/PageShell';
-import SectionStatusBadge from '@components/common/SectionStatusBadge';
 import { useDeleteSubmissions, useSubmissions, useSourceData } from '@features/submissions';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { getErrorMessage } from '@utils/error';
@@ -135,10 +134,8 @@ const SubmissionsPage: React.FC = () => {
   ) : undefined;
 
   return (
-    <PageShell title={pageTitle} actions={pageActions}>
+    <PageShell title={pageTitle} actions={pageActions} updatedAt={assessment?.source_updated_at}>
       <Stack gap="md">
-        <SectionStatusBadge updatedAt={assessment?.source_updated_at} />
-
         {showSteps && (
           <StepIndicator
             current={step}

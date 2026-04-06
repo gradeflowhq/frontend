@@ -157,7 +157,7 @@ const AssessmentCard: React.FC<{
 
       {/* Footer: updated at + open button */}
       <Group justify="space-between" align="center">
-        <SectionStatusBadge updatedAt={item.updated_at} />
+        <SectionStatusBadge />
         <Button size="xs" variant="light" onClick={onOpen}>
           Open
         </Button>

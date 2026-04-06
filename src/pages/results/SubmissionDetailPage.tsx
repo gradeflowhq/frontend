@@ -204,11 +204,10 @@ const SubmissionDetailInner: React.FC<{ assessmentId: string; encodedStudentId: 
   );
 
   return (
-    <PageShell title={navTitle} actions={navActions}>
+    <PageShell title={navTitle} actions={navActions} updatedAt={data?.status?.updated_at}>
       <Stack gap="md">
 
       <SectionStatusBadge
-        updatedAt={data?.status?.updated_at}
         isStale={data?.status?.is_stale}
         staleMessage="Grading results may be out of date — submissions or rules have changed since the last run."
       />
