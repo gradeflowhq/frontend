@@ -8,6 +8,7 @@ import { useParams } from 'react-router-dom';
 import { useAssessmentContext } from '@app/contexts/AssessmentContext';
 import PageShell from '@components/common/PageShell';
 import SectionStatusBadge from '@components/common/SectionStatusBadge';
+import { useGrading } from '@features/grading/api';
 import { useQuestionSet } from '@features/questions/api';
 import { useRubric, useRubricCoverage, useDeleteRubric } from '@features/rubric/api';
 import { useReplaceRubric } from '@features/rules/api';
@@ -17,7 +18,7 @@ import RubricUploadModal from '@features/rules/components/RubricUploadModal';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { getErrorMessage } from '@utils/error';
 
-import type { RubricOutput, QuestionSetOutputQuestionMap } from '@api/models';
+import type { AdjustableSubmission, RubricOutput, QuestionSetOutputQuestionMap } from '@api/models';
 import type { RuleValue } from '@features/rules/types';
 
 const RulesPage: React.FC = () => {
@@ -76,6 +77,14 @@ const RulesPage: React.FC = () => {
     () => rubricRes?.rubric ?? { rules: [] },
     [rubricRes]
   );
+
+  const { data: gradingData } = useGrading(safeId, enabled);
+
+  const gradingItems = React.useMemo(
+    () => (gradingData?.submissions ?? []) as AdjustableSubmission[],
+    [gradingData],
+  );
+  const totalStudents = gradingItems.length;
 
   const cov = coverageRes?.coverage;
   const coveredQuestionIds = React.useMemo(
@@ -232,6 +241,8 @@ const RulesPage: React.FC = () => {
               searchQuery={searchQuery}
               coveringRuleByQid={coveringRuleByQid}
               onViewGlobalRule={handleViewGlobalRule}
+              gradingItems={gradingItems}
+              totalStudents={totalStudents}
             />
           </Tabs.Panel>
 

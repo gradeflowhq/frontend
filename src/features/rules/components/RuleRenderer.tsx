@@ -1,6 +1,6 @@
 import { python } from '@codemirror/lang-python';
 import { oneDark } from '@codemirror/theme-one-dark';
-import { Button, Badge, Paper, Text, Box, Stack, Group, Accordion } from '@mantine/core';
+import { Button, Badge, Text, Box, Stack, Group, Accordion, Card } from '@mantine/core';
 import { IconPencil, IconTrash } from '@tabler/icons-react';
 import CodeMirror from '@uiw/react-codemirror';
 import React from 'react';
@@ -17,13 +17,17 @@ type RenderOptions = {
   showActions?: boolean;
   onEdit?: (rule: RuleValue) => void;
   onDelete?: (rule: RuleValue) => void;
+  hideRootType?: boolean;
+  flatRoot?: boolean;
 };
 
 type Definitions = Record<string, JSONSchema7>;
 type RenderNodeFn = (value: unknown, path: string, options: RenderOptions) => React.ReactNode;
 
-const RuleContainer: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <Paper withBorder p="sm" shadow="xs">{children}</Paper>
+const RuleContainer: React.FC<{ children: React.ReactNode; isRoot?: boolean; flatRoot?: boolean }> = ({ children, isRoot, flatRoot }) => (
+  <Card withBorder={!isRoot || !flatRoot} p={isRoot && flatRoot ? 0 : 'xs'}>
+    {children}
+  </Card>
 );
 
 const LabeledBlock: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
@@ -112,15 +116,18 @@ const RuleObjectView: React.FC<{
   renderNode: RenderNodeFn;
   options: RenderOptions;
 }> = ({ obj, path, defs: _defs, renderNode, options }) => {
-  const { contextQuestionId, showActions, onEdit, onDelete } = options;
+  const { contextQuestionId, showActions, onEdit, onDelete, hideRootType, flatRoot } = options;
   const typeVal = String(obj?.type ?? '\u2014');
   const qidValue = obj?.question_id;
+  const isRoot = path === '$';
 
   return (
-    <RuleContainer>
+    <RuleContainer isRoot={isRoot} flatRoot={flatRoot}>
       <Group justify="space-between" mb="xs">
         <Group gap="xs">
-          <Badge variant="light" color="gray">{typeVal}</Badge>
+          {!(isRoot && hideRootType) && (
+            <Badge variant="light" color="gray">{typeVal}</Badge>
+          )}
           {typeof qidValue === 'string' && (!contextQuestionId || qidValue !== contextQuestionId) && (
             <Badge variant="light" color="gray" ff="monospace" fw={700}>{qidValue}</Badge>
           )}
@@ -147,7 +154,7 @@ const RuleObjectView: React.FC<{
           if (k === 'question_id' && contextQuestionId && obj[k] === contextQuestionId) return null;
           const v = obj[k];
           const title = prettifyKey(k);
-          const childOptions: RenderOptions = { ...options, showActions: false };
+          const childOptions: RenderOptions = { ...options, showActions: false, hideRootType: false };
           return (
             <LabeledBlock key={`${path}.${k}`} label={title}>
               {renderNode(v, `${path}.${k}`, childOptions)}
@@ -192,13 +199,13 @@ const PlainObjectView: React.FC<{
   }
 
   return (
-    <Paper withBorder p="sm">
+    <Box py="xs">
       {keys.map((k) => (
         <LabeledBlock key={`${path}.${k}`} label={prettifyKey(k)}>
           {renderNode(obj[k], `${path}.${k}`, options)}
         </LabeledBlock>
       ))}
-    </Paper>
+    </Box>
   );
 };
 
@@ -255,7 +262,9 @@ const RuleRenderer: React.FC<{
   contextQuestionId?: string | null;
   onEdit?: (rule: RuleValue) => void;
   onDelete?: (rule: RuleValue) => void;
-}> = ({ value, path = '$', contextQuestionId = null, onEdit, onDelete }) => {
+  hideRootType?: boolean;
+  flatRoot?: boolean;
+}> = ({ value, path = '$', contextQuestionId = null, onEdit, onDelete, hideRootType = false, flatRoot = false }) => {
   const defs = getRuleDefinitions();
 
   const rootOptions: RenderOptions = {
@@ -263,6 +272,8 @@ const RuleRenderer: React.FC<{
     showActions: !!(onEdit || onDelete),
     onEdit,
     onDelete,
+    hideRootType,
+    flatRoot,
   };
 
   return <>{renderNode(value, path, defs, rootOptions)}</>;

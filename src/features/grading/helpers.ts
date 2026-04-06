@@ -98,3 +98,23 @@ export const buildDynamicHistogram = (
     };
   });
 };
+
+/**
+ * Computes the fraction of students who received full credit for a given question.
+ * Returns a value in [0, 1]. Returns 0 if totalStudents is 0 or the question has no results.
+ */
+export const computeQuestionPassRate = (
+  items: AdjustableSubmission[],
+  qid: string,
+  totalStudents: number,
+): number => {
+  if (totalStudents === 0) return 0;
+  const passing = items.filter((item) => {
+    const result = item.result_map?.[qid];
+    if (!result) return false;
+    const awarded = result.adjusted_points ?? result.points ?? 0;
+    const max = result.max_points ?? 0;
+    return max > 0 && awarded >= max;
+  });
+  return passing.length / totalStudents;
+};

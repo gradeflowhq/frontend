@@ -50,6 +50,21 @@ const AppLayoutInner: React.FC<{
           <Burger opened={mobileOpened} onClick={onMobileToggle} size="sm" />
           <Text fw={800} size="sm" c="black">GradeFlow</Text>
         </Box>
+
+        <Box
+          hiddenFrom="sm"
+          onClick={onMobileToggle}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 100,
+            background: 'rgba(0, 0, 0, 0.4)',
+            opacity: mobileOpened ? 1 : 0,
+            pointerEvents: mobileOpened ? 'auto' : 'none',
+            transition: 'opacity 200ms ease',
+          }}
+        />
+
         <ErrorBoundary>
           <Outlet />
         </ErrorBoundary>
