@@ -1,4 +1,4 @@
-import { Badge, Card, Group, Progress, Select, Stack, Text, Tooltip } from '@mantine/core';
+import { Badge, Group, Progress, Select, RangeSlider, Stack, Text, Tooltip } from '@mantine/core';
 import { IconAdjustments } from '@tabler/icons-react';
 import { DataTable } from 'mantine-datatable';
 import React, { useMemo, useState } from 'react';
@@ -271,44 +271,42 @@ const ResultsOverviewTable: React.FC<Props> = ({
 
   return (
     <Stack gap="md">
-      {/* ── Filter + per-page card ── */}
-      <Card withBorder p="sm">
+      {/* ── Filter + per-page toolbar ── */}
+      <div style={{
+        border: '1px solid var(--mantine-color-default-border)',
+        borderRadius: 'var(--mantine-radius-sm)',
+        padding: 'var(--mantine-spacing-sm)',
+      }}>
         <Group justify="space-between" align="center">
-          <Group gap="md" align="center">
-            <Text size="xs" fw={600}>Score filter</Text>
-            <Group gap="xs" align="center">
-              <Text size="xs">Min</Text>
-              <Select
-                size="xs"
-                w={80}
-                value={String(scoreRange[0])}
-                onChange={(v) => setScoreRange([Number(v ?? '0'), scoreRange[1]])}
-                data={['0','5','10','15','20','25','30','35','40','45','50','55','60','65','70','75','80','85','90','95','100']}
-              />
-              <Text size="xs">%</Text>
-            </Group>
-            <Group gap="xs" align="center">
-              <Text size="xs">Max</Text>
-              <Select
-                size="xs"
-                w={80}
-                value={String(scoreRange[1])}
-                onChange={(v) => setScoreRange([scoreRange[0], Number(v ?? '100')])}
-                data={['0','5','10','15','20','25','30','35','40','45','50','55','60','65','70','75','80','85','90','95','100']}
-              />
-              <Text size="xs">%</Text>
-            </Group>
+          <Group gap="md" align="center" style={{ flex: 1 }}>
+            <Text size="xs" fw={600} style={{ whiteSpace: 'nowrap' }}>Score filter</Text>
             {isFiltered && (
               <Text
                 size="xs"
-                style={{ cursor: 'pointer', textDecoration: 'underline' }}
+                c="blue"
+                style={{ cursor: 'pointer', textDecoration: 'underline', whiteSpace: 'nowrap' }}
                 onClick={() => setScoreRange([0, 100])}
               >
                 Reset
               </Text>
             )}
+            <Group gap="xs" align="center" style={{ flex: 1, minWidth: 160 }}>
+              <Text size="xs" c="dimmed" ff="monospace">{scoreRange[0]}%</Text>
+              <RangeSlider
+                min={0}
+                max={100}
+                step={5}
+                value={scoreRange}
+                onChange={setScoreRange}
+                onChangeEnd={() => setPage(1)}
+                label={(v) => `${v}%`}
+                style={{ flex: 1 }}
+                minRange={0}
+              />
+              <Text size="xs" c="dimmed" ff="monospace">{scoreRange[1]}%</Text>
+            </Group>
           </Group>
-          <Group gap="xs" align="center">
+          <Group gap="xs" align="center" ml="md">
             <Text size="xs" fw={600}>Per page</Text>
             <Select
               size="xs"
@@ -319,7 +317,7 @@ const ResultsOverviewTable: React.FC<Props> = ({
             />
           </Group>
         </Group>
-      </Card>
+      </div>
 
       {/* ── Table ── */}
       <DataTable
