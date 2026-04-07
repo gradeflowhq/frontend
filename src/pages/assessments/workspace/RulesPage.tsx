@@ -1,7 +1,10 @@
 import {
   Alert,
+  Anchor,
   Badge,
+  Box,
   Button,
+  Card,
   Center,
   Group,
   Modal,
@@ -9,12 +12,19 @@ import {
   Stack,
   Tabs,
   Text,
+  ThemeIcon,
   Title,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { IconAdjustments } from '@tabler/icons-react';
+import {
+  IconAdjustments,
+  IconFileImport,
+  IconPlus,
+  IconQuestionMark,
+  IconUpload,
+} from '@tabler/icons-react';
 import React from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 
 import { useAssessmentContext } from '@app/contexts/AssessmentContext';
 import PageShell from '@components/common/PageShell';
@@ -65,6 +75,9 @@ const RulesPage: React.FC = () => {
     isError: errorRubric,
     error: rubricError,
   } = useRubric(safeId);
+
+  // rubricRes is null when the server returned 404 (no rubric created yet)
+  const rubricMissing = rubricRes === null;
 
   const {
     data: coverageRes,
@@ -196,6 +209,16 @@ const RulesPage: React.FC = () => {
     });
   }, [rubric, replaceRubric]);
 
+  // Create an empty rubric explicitly when the user requests it
+  const handleCreateEmptyRubric = React.useCallback(() => {
+    replaceRubric.mutate([], {
+      onSuccess: () =>
+        notifications.show({ color: 'green', message: 'Empty rubric created' }),
+      onError: () =>
+        notifications.show({ color: 'red', message: 'Could not create rubric' }),
+    });
+  }, [replaceRubric]);
+
   const hasRules = (rubric?.rules?.length ?? 0) > 0;
   const covTotal = cov?.total ?? 0;
   const covCovered = cov?.covered ?? 0;
@@ -210,6 +233,8 @@ const RulesPage: React.FC = () => {
   if (!enabled) {
     return <Alert color="red">Assessment ID is missing.</Alert>;
   }
+
+  // ── Locked: no questions configured yet ───────────────────────────────────
 
   if (!loadingQS && (qsNotFound || !hasQuestions)) {
     return (
@@ -229,17 +254,160 @@ const RulesPage: React.FC = () => {
         }
       >
         <Center py="xl">
-          <Stack align="center" gap="sm">
-            <IconAdjustments size={32} color="var(--mantine-color-dimmed)" />
-            <Title order={5}>Rules are locked</Title>
-            <Text c="dimmed" size="sm">
-              Set up questions first to configure rules.
+          <Stack align="center" gap="md" maw={480} mx="auto">
+            <IconAdjustments size={40} opacity={0.3} />
+
+            <Title order={4} ta="center">Rules are locked</Title>
+
+            <Text c="dimmed" size="sm" ta="center">
+              Rules define how each question is graded. You need to configure your
+              questions before you can set up grading rules.
             </Text>
+
+            <Card withBorder p="sm" radius="md" w="100%">
+              <Group gap="sm" align="flex-start" wrap="nowrap">
+                <ThemeIcon variant="light" color="blue" size="md" radius="xl" style={{ flexShrink: 0 }}>
+                  <IconQuestionMark size={14} />
+                </ThemeIcon>
+                <Box>
+                  <Text size="sm" fw={500}>Set up questions first</Text>
+                  <Text size="xs" c="dimmed">
+                    Questions define the structure of your assessment — rules are
+                    built on top of them.{' '}
+                    <Anchor
+                      component={Link}
+                      to={`/assessments/${safeId}/questions`}
+                      size="xs"
+                    >
+                      Go to Questions →
+                    </Anchor>
+                  </Text>
+                </Box>
+              </Group>
+            </Card>
           </Stack>
         </Center>
       </PageShell>
     );
   }
+
+  // ── No rubric yet: offer to create, upload, or import ─────────────────────
+
+  if (!loadingRubric && rubricMissing) {
+    return (
+      <PageShell
+        title="Rules"
+        actions={
+          <RulesToolbar
+            onUpload={() => setOpenRubricUpload(true)}
+            onImport={() => setOpenRubricImport(true)}
+            onDelete={() => setConfirmDeleteRubric(true)}
+            disableDelete={deleteRubric.isPending}
+            hasRules={false}
+            searchQuery={searchQuery}
+            onSearchChange={(v) => setSearchQuery(v)}
+          />
+        }
+      >
+        <Center py="xl">
+          <Stack align="center" gap="md" maw={480} mx="auto">
+            <IconAdjustments size={40} opacity={0.3} />
+
+            <Title order={4} ta="center">No rubric configured yet</Title>
+
+            <Text c="dimmed" size="sm" ta="center">
+              A rubric contains the grading rules for your assessment. Choose how
+              you would like to get started:
+            </Text>
+
+            <Stack gap="xs" w="100%">
+              <Card withBorder p="sm" radius="md">
+                <Group gap="sm" align="flex-start" wrap="nowrap">
+                  <ThemeIcon variant="light" color="blue" size="md" radius="xl" style={{ flexShrink: 0 }}>
+                    <IconPlus size={14} />
+                  </ThemeIcon>
+                  <Box>
+                    <Text size="sm" fw={500}>Start with an empty rubric</Text>
+                    <Text size="xs" c="dimmed">
+                      Create a blank rubric and define rules question by question.{' '}
+                      <Anchor
+                        component="button"
+                        size="xs"
+                        onClick={handleCreateEmptyRubric}
+                      >
+                        {replaceRubric.isPending ? 'Creating…' : 'Create now →'}
+                      </Anchor>
+                    </Text>
+                  </Box>
+                </Group>
+              </Card>
+
+              <Card withBorder p="sm" radius="md">
+                <Group gap="sm" align="flex-start" wrap="nowrap">
+                  <ThemeIcon variant="light" color="teal" size="md" radius="xl" style={{ flexShrink: 0 }}>
+                    <IconUpload size={14} />
+                  </ThemeIcon>
+                  <Box>
+                    <Text size="sm" fw={500}>Upload a rubric file</Text>
+                    <Text size="xs" c="dimmed">
+                      Load a YAML or JSON rubric file you have already prepared.{' '}
+                      <Anchor
+                        component="button"
+                        size="xs"
+                        onClick={() => setOpenRubricUpload(true)}
+                      >
+                        Upload now →
+                      </Anchor>
+                    </Text>
+                  </Box>
+                </Group>
+              </Card>
+
+              <Card withBorder p="sm" radius="md">
+                <Group gap="sm" align="flex-start" wrap="nowrap">
+                  <ThemeIcon variant="light" color="violet" size="md" radius="xl" style={{ flexShrink: 0 }}>
+                    <IconFileImport size={14} />
+                  </ThemeIcon>
+                  <Box>
+                    <Text size="sm" fw={500}>Import from another format</Text>
+                    <Text size="xs" c="dimmed">
+                      Import from a supported adapter format (e.g. Examplify).{' '}
+                      <Anchor
+                        component="button"
+                        size="xs"
+                        onClick={() => setOpenRubricImport(true)}
+                      >
+                        Import now →
+                      </Anchor>
+                    </Text>
+                  </Box>
+                </Group>
+              </Card>
+            </Stack>
+
+            {replaceRubric.isError && (
+              <Alert color="red" w="100%">
+                {getErrorMessage(replaceRubric.error)}
+              </Alert>
+            )}
+          </Stack>
+        </Center>
+
+        <RubricUploadModal
+          open={openRubricUpload}
+          assessmentId={safeId}
+          onClose={() => setOpenRubricUpload(false)}
+        />
+        <RubricImportModal
+          open={openRubricImport}
+          assessmentId={safeId}
+          onClose={() => setOpenRubricImport(false)}
+        />
+      </PageShell>
+    );
+  }
+
+  // ── Main view ──────────────────────────────────────────────────────────────
 
   return (
     <PageShell

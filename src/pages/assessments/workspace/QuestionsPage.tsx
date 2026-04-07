@@ -1,18 +1,38 @@
-import { Alert, Button, Center, Group, Modal, Skeleton, Stack, Text, Title } from '@mantine/core';
+import {
+  Alert,
+  Anchor,
+  Box,
+  Button,
+  Card,
+  Center,
+  Group,
+  Modal,
+  Skeleton,
+  Stack,
+  Text,
+  ThemeIcon,
+  Title,
+} from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { IconQuestionMark } from '@tabler/icons-react';
+import {
+  IconBolt,
+  IconFileImport,
+  IconInbox,
+  IconQuestionMark,
+  IconUpload,
+} from '@tabler/icons-react';
 import React, { useCallback, useMemo, useState } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 
 import { useAssessmentContext } from '@app/contexts/AssessmentContext';
 import PageShell from '@components/common/PageShell';
 import SectionStatusBadge from '@components/common/SectionStatusBadge';
 import {
-  useQuestionSet,
-  useParsedSubmissions,
-  useUpdateQuestionSet,
-  useInferAndParseQuestionSet,
   useDeleteQuestionSet,
+  useInferAndParseQuestionSet,
+  useParsedSubmissions,
+  useQuestionSet,
+  useUpdateQuestionSet,
 } from '@features/questions/api';
 import { QuestionsHeader } from '@features/questions/components';
 import QuestionEditorPanel from '@features/questions/components/QuestionEditorPanel';
@@ -44,14 +64,14 @@ const QuestionsPage: React.FC = () => {
   const [openQsImport, setOpenQsImport] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Unsaved-changes guard state
   const [detailEditing, setDetailEditing] = useState(false);
   const [pendingQid, setPendingQid] = useState<string | null>(null);
-  // Controlled mobile-detail visibility
   const [mobileShowDetail, setMobileShowDetail] = useState(false);
 
-  // Raw submissions (to decide whether to show the Infer button)
-  const { data: subsRes } = useSubmissions(safeAssessmentId);
+  const {
+    data: subsRes,
+    isLoading: loadingSubmissions,
+  } = useSubmissions(safeAssessmentId);
   const hasSubmissions = (subsRes?.raw_submissions?.length ?? 0) > 0;
 
   // Question set
@@ -211,22 +231,172 @@ const QuestionsPage: React.FC = () => {
     return <Alert color="red">Assessment ID is missing.</Alert>;
   }
 
-  // ── Empty state — no question set yet ──────────────────────────────────────
-  if (!loadingQS && (qsMissing || !hasQuestionSet)) {
+  // ── Loading ────────────────────────────────────────────────────────────────
+
+  if (loadingSubmissions || loadingQS) {
+    return (
+      <PageShell title="Questions" actions={pageActions}>
+        <Stack gap="xs">
+          <Skeleton height={40} />
+          <Skeleton height={200} />
+        </Stack>
+      </PageShell>
+    );
+  }
+
+  // ── Locked: no submissions uploaded yet ───────────────────────────────────
+
+  if (!hasSubmissions) {
+    return (
+      <PageShell title="Questions" actions={pageActions}>
+        <Center py="xl">
+          <Stack align="center" gap="md" maw={480} mx="auto">
+            <IconQuestionMark size={40} opacity={0.3} />
+
+            <Title order={4} ta="center">Questions are locked</Title>
+
+            <Text c="dimmed" size="sm" ta="center">
+              Questions define the structure of your assessment.
+              You need to upload your submissions before you can set up questions.
+            </Text>
+
+            <Card withBorder p="sm" radius="md" w="100%">
+              <Group gap="sm" align="flex-start" wrap="nowrap">
+                <ThemeIcon
+                  variant="light"
+                  color="blue"
+                  size="md"
+                  radius="xl"
+                  style={{ flexShrink: 0 }}
+                >
+                  <IconInbox size={14} />
+                </ThemeIcon>
+                <Box>
+                  <Text size="sm" fw={500}>Upload submissions first</Text>
+                  <Text size="xs" c="dimmed">
+                    Import a CSV from Examplify or any other source.{' '}
+                    <Anchor
+                      component={Link}
+                      to={`/assessments/${safeAssessmentId}/submissions`}
+                      size="xs"
+                    >
+                      Go to Submissions →
+                    </Anchor>
+                  </Text>
+                </Box>
+              </Group>
+            </Card>
+          </Stack>
+        </Center>
+      </PageShell>
+    );
+  }
+
+  // ── Empty: submissions exist but no question set yet ───────────────────────
+
+  if (qsMissing || !hasQuestionSet) {
     return (
       <PageShell title="Questions" actions={pageActions} updatedAt={qsRes?.status?.updated_at}>
         {errorQS && !qsMissing && (
           <Alert color="red" mb="md">{getErrorMessage(qsError)}</Alert>
         )}
+
         <Center py="xl">
-          <Stack align="center" gap="sm">
-            <IconQuestionMark size={32} opacity={0.4} />
-            <Title order={5}>No questions yet</Title>
-            <Text c="dimmed" size="sm">
-              Upload or import a question set, or infer from submissions.
+          <Stack align="center" gap="md" maw={480} mx="auto">
+            <IconQuestionMark size={40} opacity={0.3} />
+
+            <Title order={4} ta="center">No questions configured yet</Title>
+
+            <Text c="dimmed" size="sm" ta="center">
+              Questions define the structure of your assessment. Choose one of
+              the following options to get started:
             </Text>
+
+            <Stack gap="xs" w="100%">
+              <Card withBorder p="sm" radius="md">
+                <Group gap="sm" align="flex-start" wrap="nowrap">
+                  <ThemeIcon
+                    variant="light"
+                    color="blue"
+                    size="md"
+                    radius="xl"
+                    style={{ flexShrink: 0 }}
+                  >
+                    <IconBolt size={14} />
+                  </ThemeIcon>
+                  <Box>
+                    <Text size="sm" fw={500}>Infer from submissions</Text>
+                    <Text size="xs" c="dimmed">
+                      Automatically detect questions from your uploaded CSV.{' '}
+                      <Anchor
+                        component="button"
+                        size="xs"
+                        onClick={() => setConfirmInfer(true)}
+                      >
+                        Infer now →
+                      </Anchor>
+                    </Text>
+                  </Box>
+                </Group>
+              </Card>
+
+              <Card withBorder p="sm" radius="md">
+                <Group gap="sm" align="flex-start" wrap="nowrap">
+                  <ThemeIcon
+                    variant="light"
+                    color="teal"
+                    size="md"
+                    radius="xl"
+                    style={{ flexShrink: 0 }}
+                  >
+                    <IconUpload size={14} />
+                  </ThemeIcon>
+                  <Box>
+                    <Text size="sm" fw={500}>Upload a question set</Text>
+                    <Text size="xs" c="dimmed">
+                      Load a YAML or JSON file defining your questions.{' '}
+                      <Anchor
+                        component="button"
+                        size="xs"
+                        onClick={() => setOpenQsUpload(true)}
+                      >
+                        Upload now →
+                      </Anchor>
+                    </Text>
+                  </Box>
+                </Group>
+              </Card>
+
+              <Card withBorder p="sm" radius="md">
+                <Group gap="sm" align="flex-start" wrap="nowrap">
+                  <ThemeIcon
+                    variant="light"
+                    color="violet"
+                    size="md"
+                    radius="xl"
+                    style={{ flexShrink: 0 }}
+                  >
+                    <IconFileImport size={14} />
+                  </ThemeIcon>
+                  <Box>
+                    <Text size="sm" fw={500}>Import from another format</Text>
+                    <Text size="xs" c="dimmed">
+                      Import from a supported adapter (e.g. Examplify).{' '}
+                      <Anchor
+                        component="button"
+                        size="xs"
+                        onClick={() => setOpenQsImport(true)}
+                      >
+                        Import now →
+                      </Anchor>
+                    </Text>
+                  </Box>
+                </Group>
+              </Card>
+            </Stack>
           </Stack>
         </Center>
+
         <InferModal
           opened={confirmInfer}
           onClose={() => setConfirmInfer(false)}
@@ -250,7 +420,7 @@ const QuestionsPage: React.FC = () => {
     );
   }
 
-  // ── Main view with master-detail layout ────────────────────────────────────
+  // ── Main view ──────────────────────────────────────────────────────────────
 
   const listPanel = (
     <QuestionListPanel
@@ -290,9 +460,7 @@ const QuestionsPage: React.FC = () => {
       actions={pageActions}
       updatedAt={qsRes?.status?.updated_at}
     >
-      <Stack
-        gap="md"
-      >
+      <Stack gap="md">
         <SectionStatusBadge
           isStale={qsRes?.status?.is_stale}
           staleMessage="Questions may be out of date — submissions have been updated since the last question set was configured."
@@ -307,25 +475,16 @@ const QuestionsPage: React.FC = () => {
           <Alert color="red">{getErrorMessage(parsedError)}</Alert>
         )}
 
-        {loadingQS ? (
-          <Stack gap="xs">
-            <Skeleton height={40} />
-            <Skeleton height={200} />
-          </Stack>
-        ) : (
-          <MasterDetailLayout
-            listPanel={listPanel}
-            detailPanel={detailPanel}
-            isDetailEditing={detailEditing}
-            listWidth="170px"
-            layoutHeight="calc(100dvh - 105px)"
-            backLabel="Back to questions"
-            mobileShowDetail={mobileShowDetail}
-            onMobileShowDetailChange={setMobileShowDetail}
-          />
-        )}
-
-        {/* ── Modals ──────────────────────────────────────────────────────── */}
+        <MasterDetailLayout
+          listPanel={listPanel}
+          detailPanel={detailPanel}
+          isDetailEditing={detailEditing}
+          listWidth="170px"
+          layoutHeight="calc(100dvh - 105px)"
+          backLabel="Back to questions"
+          mobileShowDetail={mobileShowDetail}
+          onMobileShowDetailChange={setMobileShowDetail}
+        />
 
         <InferModal
           opened={confirmInfer}
@@ -408,8 +567,7 @@ const QuestionsPage: React.FC = () => {
   );
 };
 
-// ── InferModal ────────────────────────────────────────────────────────────────
-// Extracted to avoid repetition in both conditional renders.
+// ── InferModal ─────────────────────────────────────────────────────────────────
 
 interface InferModalProps {
   opened: boolean;

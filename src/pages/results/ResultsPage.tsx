@@ -1,13 +1,17 @@
-import { Alert, Button, Skeleton, Stack, Tabs } from '@mantine/core';
-import { IconActivity, IconArrowRight, IconChartBar } from '@tabler/icons-react';
+import { Alert, Skeleton, Stack, Tabs } from '@mantine/core';
+import { IconActivity, IconChartBar } from '@tabler/icons-react';
 import React, { useMemo, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 import { useAssessmentContext } from '@app/contexts/AssessmentContext';
-import EmptyState from '@components/common/EmptyState';
 import PageShell from '@components/common/PageShell';
 import { useGrading } from '@features/grading/api';
-import { GradingStatusBanner, ResultsStatsPanel, QuestionAnalysisGrid } from '@features/grading/components';
+import {
+  GradingStatusBanner,
+  NoGradingResults,
+  QuestionAnalysisGrid,
+  ResultsStatsPanel,
+} from '@features/grading/components';
 import { useGradingStatus } from '@features/grading/hooks/useGradingStatus';
 import { useQuestionSet } from '@features/questions/api';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
@@ -17,7 +21,6 @@ import { natsort } from '@utils/sort';
 import type { AdjustableSubmission, QuestionSetOutputQuestionMap } from '@api/models';
 
 const ResultsPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) => {
-  const navigate = useNavigate();
   const { assessment } = useAssessmentContext();
 
   const [activeTab, setActiveTab] = useState<string>('stats');
@@ -49,20 +52,7 @@ const ResultsPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) 
           <Skeleton height={300} />
         </Stack>
       ) : !isError && !hasItems && !gradingInProgress ? (
-        <EmptyState
-          icon={<IconChartBar size={48} opacity={0.3} />}
-          title="No grading results yet"
-          description="Run grading from the Overview page to see results here."
-          action={
-            <Button
-              variant="light"
-              rightSection={<IconArrowRight size={14} />}
-              onClick={() => void navigate(`/assessments/${assessmentId}/overview`)}
-            >
-              Go to Overview
-            </Button>
-          }
-        />
+        <NoGradingResults assessmentId={assessmentId} />
       ) : (
         <Tabs value={activeTab} onChange={(v) => setActiveTab(v ?? 'stats')}>
           <Tabs.List>

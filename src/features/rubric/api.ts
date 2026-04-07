@@ -14,8 +14,7 @@ export const useRubric = (assessmentId: string) =>
         return (await api.getRubricAssessmentsAssessmentIdRubricGet(assessmentId)).data as RubricResponse;
       } catch (e: unknown) {
         if (axios.isAxiosError(e) && e.response?.status === 404) {
-          const created = await api.setRubricByModelAssessmentsAssessmentIdRubricPut(assessmentId, { rubric: { rules: [] } });
-          return created.data as RubricResponse;
+          return null;
         }
         throw e;
       }

@@ -6,10 +6,7 @@ import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 import { DataTable } from 'mantine-datatable';
 import React, { useMemo, useState, useEffect } from 'react';
 
-import { useInferAndParseQuestionSet, useQuestionSet } from '@features/questions/api';
-import {
-  useSourceData, useImportConfig, useSaveImportConfig,
-} from '@features/submissions';
+import { useImportConfig, useSaveImportConfig, useSourceData } from '@features/submissions';
 import { inferColumnsFromSource } from '@features/submissions/inference/questionColumnInference';
 import { getErrorMessage } from '@utils/error';
 
@@ -69,7 +66,7 @@ export const ConfigureStep: React.FC<{
     const { answerCols, pointColMap } = inferColumnsFromSource(
       sourceData.headers,
       sourceData.rows,
-      sidCol
+      sidCol,
     );
 
     // Fall back to all data cols if inference found nothing
@@ -79,8 +76,6 @@ export const ConfigureStep: React.FC<{
   }, [initialized, sourceFetching, sourceData, existingConfig, configError, allDataCols, sidCol]);
 
   const saveConfig = useSaveImportConfig(assessmentId);
-  const inferAndParse = useInferAndParseQuestionSet(assessmentId);
-  const { data: qsRes } = useQuestionSet(assessmentId, true);
 
   const isPending = saveConfig.isPending;
 
@@ -123,18 +118,7 @@ export const ConfigureStep: React.FC<{
       point_columns: Object.keys(pointColumns).length > 0 ? pointColumns : null,
     };
     saveConfig.mutate(config, {
-      onSuccess: () => {
-        const hasQS =
-          !!qsRes?.question_set &&
-          Object.keys(qsRes.question_set.question_map ?? {}).length > 0;
-        if (!hasQS) {
-          inferAndParse.mutate(undefined, {
-            onError: () =>
-              notifications.show({ color: 'red', message: 'Could not auto-infer question set' }),
-          });
-        }
-        onSuccess();
-      },
+      onSuccess: () => onSuccess(),
       onError: () =>
         notifications.show({ color: 'red', message: 'Failed to save configuration' }),
     });

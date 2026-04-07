@@ -9,7 +9,10 @@ import EmptyState from '@components/common/EmptyState';
 import PageShell from '@components/common/PageShell';
 import { useAssessmentPassphrase } from '@features/encryption/passphraseContext';
 import { useAdjustGrading, useBulkAdjustGrading, useGrading } from '@features/grading/api';
-import { GradingStatusBanner } from '@features/grading/components';
+import {
+  GradingStatusBanner,
+  NoGradingResults,
+} from '@features/grading/components';
 import {
   AnswerGroupList,
   GroupModeSelector,
@@ -303,7 +306,20 @@ const GroupViewPage: React.FC = () => {
     );
   }
 
-  if (!isLoading && questionIds.length === 0) {
+  // ── No grading results yet ─────────────────────────────────────────────────
+
+  if (submissions.length === 0) {
+    return (
+      <PageShell title="Groups">
+        <GradingStatusBanner assessmentId={assessmentId} />
+        <NoGradingResults assessmentId={assessmentId} />
+      </PageShell>
+    );
+  }
+
+  // ── No questions found ─────────────────────────────────────────────────────
+
+  if (questionIds.length === 0) {
     return (
       <PageShell title="Groups">
         <EmptyState

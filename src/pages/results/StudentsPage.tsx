@@ -1,13 +1,16 @@
 import { Alert, Button, Menu, Skeleton, TextInput } from '@mantine/core';
-import { IconChartBar, IconChevronDown, IconDownload, IconSearch } from '@tabler/icons-react';
+import { IconChevronDown, IconDownload, IconSearch } from '@tabler/icons-react';
 import React, { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { useAssessmentContext } from '@app/contexts/AssessmentContext';
-import EmptyState from '@components/common/EmptyState';
 import PageShell from '@components/common/PageShell';
 import { useGrading } from '@features/grading/api';
-import { GradingStatusBanner, ResultsOverviewTable } from '@features/grading/components';
+import {
+  GradingStatusBanner,
+  NoGradingResults,
+  ResultsOverviewTable,
+} from '@features/grading/components';
 import ResultsDownloadModal from '@features/grading/components/ResultsDownloadModal';
 import { useGradingStatus } from '@features/grading/hooks/useGradingStatus';
 import { useQuestionSet } from '@features/questions/api';
@@ -80,16 +83,7 @@ const StudentsPage: React.FC = () => {
       {isError && <Alert color="red">{getErrorMessage(error)}</Alert>}
 
       {!isLoading && !isError && items.length === 0 && !gradingInProgress && (
-        <EmptyState
-          icon={<IconChartBar size={48} opacity={0.3} />}
-          title="No grading results yet"
-          description="Run grading from the Overview page."
-          action={
-            <Button variant="light" onClick={() => void navigate(`/assessments/${assessmentId}/overview`)}>
-              Go to Overview
-            </Button>
-          }
-        />
+        <NoGradingResults assessmentId={assessmentId} />
       )}
 
       {!isLoading && !isError && items.length > 0 && (
