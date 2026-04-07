@@ -1,13 +1,28 @@
-import { AppShell, Anchor, Button, Card, Group, Text, Title, SimpleGrid, Box, Center, Stack } from '@mantine/core';
+import {
+  AppShell,
+  Anchor,
+  Button,
+  Card,
+  Group,
+  Text,
+  Title,
+  SimpleGrid,
+  Box,
+  Center,
+  Stack,
+} from '@mantine/core';
 import { useWindowScroll } from '@mantine/hooks';
 import {
   IconAdjustments,
   IconBrandGithub,
   IconChartBar,
   IconCode,
+  IconEye,
   IconGitBranch,
+  IconLayoutColumns,
   IconSend,
   IconStack2,
+  IconUsers,
 } from '@tabler/icons-react';
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
@@ -24,7 +39,6 @@ type FeatureItem = {
   icon: React.ReactNode;
   title: string;
   description: string;
-  featured?: boolean;
 };
 
 const features: FeatureItem[] = [
@@ -33,14 +47,12 @@ const features: FeatureItem[] = [
     title: 'Rich grading rules',
     description:
       '15+ built-in rule types — text/number equality, regex, keywords, numeric ranges, similarity, length, multiple choice, and more. Handle any question format.',
-    featured: true,
   },
   {
     icon: <IconGitBranch size={28} />,
     title: 'Assumption and conditional rules',
     description:
       'Assumption sets pick the interpretation that earns the highest score across multiple questions. Conditional rules branch scoring based on earlier answers.',
-    featured: true,
   },
   {
     icon: <IconCode size={28} />,
@@ -55,10 +67,28 @@ const features: FeatureItem[] = [
       'Combine rules with ALL / ANY / PARTIAL aggregation, nest composite rules, and add bonus rules — all without writing a single line of code.',
   },
   {
+    icon: <IconLayoutColumns size={28} />,
+    title: 'Answer grouping & bulk review',
+    description:
+      'Cluster similar student answers by exact match or fuzzy similarity threshold. Adjust points and feedback for an entire answer group at once, then fine-tune individuals as needed.',
+  },
+  {
+    icon: <IconEye size={28} />,
+    title: 'Live grading preview',
+    description:
+      'Test any rule against real student submissions before saving it. The inline preview shows exactly which answers pass or fail — so you iterate in seconds, not after re-running the whole job.',
+  },
+  {
     icon: <IconChartBar size={28} />,
     title: 'Transparent, auditable results',
     description:
-      'See exactly which rules fired for every submission. Per-student and per-question breakdowns let you verify and manually adjust any grade.',
+      'See exactly which rules fired for every submission. Per-student and per-question breakdowns let you verify and adjust any grade. GradeFlow automatically warns you when results are stale after rules or submissions change.',
+  },
+  {
+    icon: <IconUsers size={28} />,
+    title: 'Team collaboration',
+    description:
+      'Invite teaching assistants and co-instructors as owners, editors, or viewers. Everyone works on the same assessment with role-based access — no emailing spreadsheets back and forth.',
   },
   {
     icon: <IconSend size={28} />,
@@ -70,26 +100,55 @@ const features: FeatureItem[] = [
 
 const trustStats = [
   { value: '15+', label: 'Rule types' },
-  { value: 'Secure', label: 'Client-side encryption' },
-  { value: 'Open source', label: 'MIT licensed' },
+  { value: 'Zero-knowledge', label: 'AES-GCM client-side' },
+  { value: 'Team roles', label: 'Owner · Editor · Viewer' },
   { value: 'Canvas LMS', label: 'Native integration' },
 ];
 
 const howItWorksSteps = [
-  { n: '1', label: 'Create an assessment', description: 'Set up the assessment and invite collaborators.' },
-  { n: '2', label: 'Upload submissions', description: 'Import student answers from Examplify or other platforms.' },
-  { n: '3', label: 'Define grading rules', description: 'Configure your assessment — questions, rules, and scoring.' },
-  { n: '4', label: 'Review & export', description: 'Download results or push grades directly to Canvas.' },
+  {
+    n: '1',
+    label: 'Create an assessment',
+    description: 'Set up the assessment and invite your team as owners, editors, or viewers.',
+  },
+  {
+    n: '2',
+    label: 'Upload submissions',
+    description: 'Import student answers from Examplify or any CSV. GradeFlow auto-detects columns and layout.',
+  },
+  {
+    n: '3',
+    label: 'Define grading rules',
+    description: 'Configure questions and rules. Preview results live against real submissions before committing.',
+  },
+  {
+    n: '4',
+    label: 'Review by answer groups',
+    description: 'Cluster similar answers and bulk-adjust scores. Fine-tune individual submissions as needed.',
+  },
+  {
+    n: '5',
+    label: 'Export or publish',
+    description: 'Download results as CSV, JSON, or YAML — or push grades directly to Canvas.',
+  },
 ];
 
 const faqs: { q: string; a: string }[] = [
   {
     q: 'Does it work with Examplify?',
-    a: 'Yes. Export your Examplify results as a CSV and upload it directly.',
+    a: 'Yes. Export your Examplify results as a CSV and upload it directly. GradeFlow lets you configure which row contains headers, where data starts and ends, and which columns to import as answer data — with auto-detection that you can override.',
   },
   {
     q: 'Is student data stored on your servers?',
     a: 'Student IDs can be encrypted client-side before upload using AES-GCM. The server only ever sees the ciphertext — your passphrase never leaves the browser.',
+  },
+  {
+    q: 'Can multiple instructors work on the same assessment?',
+    a: 'Yes. You can invite collaborators by email and assign them owner, editor, or viewer roles. Everyone sees the same rules, results, and adjustments.',
+  },
+  {
+    q: 'How does answer grouping work?',
+    a: 'The group view clusters student answers by exact match or fuzzy similarity — you control the threshold. You can then set the score and feedback for an entire cluster at once, which is useful when many students gave essentially the same answer with minor wording differences.',
   },
   {
     q: 'Can I self-host GradeFlow?',
@@ -97,7 +156,7 @@ const faqs: { q: string; a: string }[] = [
   },
   {
     q: 'What if the built-in rules are not enough?',
-    a: 'Use the Python rule to write arbitrary grading logic, or the programming rule to run student code against test cases — all sandboxed server-side.',
+    a: 'Use the programmable rule to write arbitrary grading logic, or the programming rule to run student code against test cases — all sandboxed server-side.',
   },
 ];
 
@@ -159,16 +218,16 @@ const LandingPage: React.FC = () => {
       document.head.appendChild(meta);
     }
     meta.content =
-      'GradeFlow is an open-source automated assessment grading platform. Define composable grading rules, review every result, and publish grades directly to Canvas LMS.';
+      'GradeFlow is an open-source automated assessment grading platform. Define composable grading rules, cluster answers for bulk review, and publish grades directly to Canvas LMS.';
   }, []);
 
   const accessToken = useAuthStore((s) => s.accessToken);
 
+  // How-it-works grid adapts to 5 columns on desktop
+  const hiwCols = howItWorksSteps.length;
+
   return (
-    <AppShell
-      header={{ height: 60 }}
-      withBorder={false}
-    >
+    <AppShell header={{ height: 60 }} withBorder={false}>
       <AppShell.Header
         style={{
           backdropFilter: scrolled ? 'blur(10px)' : 'none',
@@ -176,7 +235,8 @@ const LandingPage: React.FC = () => {
           borderBottom: scrolled
             ? '1px solid var(--mantine-color-default-border)'
             : '1px solid transparent',
-          transition: 'background-color 200ms ease, border-color 200ms ease, backdrop-filter 200ms ease',
+          transition:
+            'background-color 200ms ease, border-color 200ms ease, backdrop-filter 200ms ease',
         }}
       >
         <PublicNavbar />
@@ -236,7 +296,8 @@ const LandingPage: React.FC = () => {
                   span
                   inherit
                   style={{
-                    background: 'linear-gradient(90deg, var(--mantine-color-blue-6), var(--mantine-color-cyan-5))',
+                    background:
+                      'linear-gradient(90deg, var(--mantine-color-blue-6), var(--mantine-color-cyan-5))',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
                   }}
@@ -245,8 +306,8 @@ const LandingPage: React.FC = () => {
                 </Text>
               </Title>
 
-              <Text size="lg" c="dimmed" maw={480} mx="auto" lh={1.7}>
-                Build composable rules that reflect how you actually mark. Review every result. Publish to Canvas instantly.
+              <Text size="lg" c="dimmed" maw={560} mx="auto" lh={1.7}>
+                Build composable gradingrules that reflect how you actually mark. Cluster similar answers for bulk review. Publish to Canvas instantly.
               </Text>
 
               <Group justify="center" gap="sm" mt="xs">
@@ -306,19 +367,26 @@ const LandingPage: React.FC = () => {
         >
           <Center mb={52}>
             <Stack align="center" gap="xs">
-              <Text size="sm" fw={600} c="blue" tt="uppercase" style={{ letterSpacing: '0.06em' }}>
+              <Text
+                size="sm"
+                fw={600}
+                c="blue"
+                tt="uppercase"
+                style={{ letterSpacing: '0.06em' }}
+              >
                 Features
               </Text>
               <Title id="features-heading" order={2} ta="center">
                 Built for the nuances of real assessments
               </Title>
-              <Text c="dimmed" ta="center" maw={480}>
-                Everything you need to go from raw submissions to published grades — without sacrificing auditability.
+              <Text c="dimmed" ta="center" maw={520}>
+                Everything you need to go from raw submissions to published grades — without
+                sacrificing auditability or flexibility.
               </Text>
             </Stack>
           </Center>
 
-          <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg" maw={980} mx="auto">
+          <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="lg" maw={1080} mx="auto">
             {features.map((feature) => (
               <Card
                 key={feature.title}
@@ -331,7 +399,8 @@ const LandingPage: React.FC = () => {
                 }}
                 onMouseEnter={(e) => {
                   (e.currentTarget as HTMLElement).style.transform = 'translateY(-3px)';
-                  (e.currentTarget as HTMLElement).style.boxShadow = 'var(--mantine-shadow-md)';
+                  (e.currentTarget as HTMLElement).style.boxShadow =
+                    'var(--mantine-shadow-md)';
                 }}
                 onMouseLeave={(e) => {
                   (e.currentTarget as HTMLElement).style.transform = '';
@@ -354,7 +423,9 @@ const LandingPage: React.FC = () => {
                   {feature.icon}
                 </Box>
                 <Title order={5} mb="xs">{feature.title}</Title>
-                <Text size="sm" c="dimmed" lh={1.65}>{feature.description}</Text>
+                <Text size="sm" c="dimmed" lh={1.65}>
+                  {feature.description}
+                </Text>
               </Card>
             ))}
           </SimpleGrid>
@@ -380,7 +451,13 @@ const LandingPage: React.FC = () => {
           px="md"
         >
           <Center mb={12}>
-            <Text size="xs" fw={700} tt="uppercase" c="blue" style={{ letterSpacing: '0.1em' }}>
+            <Text
+              size="xs"
+              fw={700}
+              tt="uppercase"
+              c="blue"
+              style={{ letterSpacing: '0.1em' }}
+            >
               How it works
             </Text>
           </Center>
@@ -390,15 +467,17 @@ const LandingPage: React.FC = () => {
             </Title>
           </Center>
 
-          <Box maw={860} mx="auto">
+          <Box maw={1080} mx="auto">
             <Box style={{ position: 'relative' }}>
+              {/* Dashed connector line — only visible at the breakpoint where
+                  all steps sit in a single row */}
               <Box
-                visibleFrom="sm"
+                visibleFrom="md"
                 style={{
                   position: 'absolute',
                   top: 24,
-                  left: 'calc(100% / 8)',
-                  right: 'calc(100% / 8)',
+                  left: `calc(100% / ${hiwCols * 2})`,
+                  right: `calc(100% / ${hiwCols * 2})`,
                   height: 0,
                   borderTop: '2px dashed var(--mantine-color-blue-3)',
                   zIndex: 0,
@@ -447,19 +526,19 @@ const LandingPage: React.FC = () => {
                     >
                       <Text c="white" fw={700} size="lg">{step.n}</Text>
                     </Box>
-
                     <Text fw={600} mb={4}>{step.label}</Text>
-                    <Text size="sm" c="dimmed" maw={180}>{step.description}</Text>
+                    <Text size="sm" c="dimmed" maw={160}>{step.description}</Text>
                   </Box>
                 ))}
               </Box>
             </Box>
           </Box>
 
+          {/* Responsive grid: 1 col on mobile, 5 cols on md+ */}
           <style>{`
             [data-hiw="steps"] { grid-template-columns: repeat(1, 1fr); }
             @media (min-width: 768px) {
-              [data-hiw="steps"] { grid-template-columns: repeat(4, 1fr); }
+              [data-hiw="steps"] { grid-template-columns: repeat(${hiwCols}, 1fr); }
             }
           `}</style>
         </Box>
@@ -474,7 +553,13 @@ const LandingPage: React.FC = () => {
         >
           <Center mb={48}>
             <Stack align="center" gap="xs">
-              <Text size="sm" fw={600} c="blue" tt="uppercase" style={{ letterSpacing: '0.06em' }}>
+              <Text
+                size="sm"
+                fw={600}
+                c="blue"
+                tt="uppercase"
+                style={{ letterSpacing: '0.06em' }}
+              >
                 FAQ
               </Text>
               <Title id="faq-heading" order={2} ta="center">
@@ -500,7 +585,7 @@ const LandingPage: React.FC = () => {
           }}
         >
           <Center>
-            <Stack align="center" gap="lg" style={{ maxWidth: 560, textAlign: 'center' }}>
+            <Stack align="center" gap="lg" style={{ maxWidth: 500, textAlign: 'center' }}>
               <Title order={2} c="white">
                 Ready to get started?
               </Title>
@@ -510,15 +595,33 @@ const LandingPage: React.FC = () => {
               </Text>
               <Group justify="center" gap="sm">
                 {accessToken ? (
-                  <Button size="lg" variant="white" color="blue" component={Link} to="/assessments">
+                  <Button
+                    size="lg"
+                    variant="white"
+                    color="blue"
+                    component={Link}
+                    to="/assessments"
+                  >
                     Go to my assessments
                   </Button>
                 ) : (
                   <>
-                    <Button size="lg" variant="white" color="blue" component={Link} to="/register">
+                    <Button
+                      size="lg"
+                      variant="white"
+                      color="blue"
+                      component={Link}
+                      to="/register"
+                    >
                       Create account
                     </Button>
-                    <Button size="lg" variant="outline" color="white" component={Link} to="/login">
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      color="white"
+                      component={Link}
+                      to="/login"
+                    >
                       Log in
                     </Button>
                   </>
