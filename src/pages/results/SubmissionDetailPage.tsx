@@ -128,10 +128,10 @@ const SubmissionDetailInner: React.FC<{ assessmentId: string; encodedStudentId: 
   };
 
   const gotoPrev = () => {
-    if (prevId) void navigate(`/assessments/${safeId}/results/${encodeURIComponent(prevId)}`);
+    if (prevId) void navigate(`/assessments/${safeId}/results/students/${encodeURIComponent(prevId)}`);
   };
   const gotoNext = () => {
-    if (nextId) void navigate(`/assessments/${safeId}/results/${encodeURIComponent(nextId)}`);
+    if (nextId) void navigate(`/assessments/${safeId}/results/students/${encodeURIComponent(nextId)}`);
   };
 
   React.useEffect(() => {
@@ -166,10 +166,10 @@ const SubmissionDetailInner: React.FC<{ assessmentId: string; encodedStudentId: 
         variant="outline"
         size="sm"
         leftSection={<IconChevronLeft size={14} />}
-        onClick={() => void navigate(`/assessments/${safeId}/results`)}
+        onClick={() => void navigate(`/assessments/${safeId}/results/students`)}
         px="xs"
       >
-        Results
+        Students
       </Button>
       <Select
         searchable
@@ -177,7 +177,7 @@ const SubmissionDetailInner: React.FC<{ assessmentId: string; encodedStudentId: 
         w={220}
         placeholder="Select student"
         value={encodedStudentId}
-        onChange={(v) => v && void navigate(`/assessments/${safeId}/results/${encodeURIComponent(v)}`)}
+        onChange={(v) => v && void navigate(`/assessments/${safeId}/results/students/${encodeURIComponent(v)}`)}
         data={studentIds.map((id) => ({
           value: id,
           label: decryptedIds[id] ?? id,

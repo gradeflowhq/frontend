@@ -112,7 +112,7 @@ const OverviewPage: React.FC = () => {
                 variant="light"
                 onClick={() => {
                   notifications.hide(notifId);
-                  void navigate(`/assessments/${assessmentId}/results`);
+                  void navigate(`/assessments/${assessmentId}/results/statistics`);
                 }}
               >
                 See Results

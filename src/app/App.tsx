@@ -12,7 +12,9 @@ import LoginPage from '@pages/auth/LoginPage';
 import RegisterPage from '@pages/auth/RegisterPage';
 import LandingPage from '@pages/landing/LandingPage';
 import CanvasPushPage from '@pages/results/CanvasPushPage';
+import GroupViewPage from '@pages/results/GroupViewPage';
 import ResultsPage from '@pages/results/ResultsPage';
+import StudentsPage from '@pages/results/StudentsPage';
 import SubmissionDetailPage from '@pages/results/SubmissionDetailPage';
 import UserSettingsPage from '@pages/settings/UserSettingsPage';
 
@@ -53,8 +55,17 @@ const App: React.FC = () => {
               <Route path="submissions" element={<SubmissionsPage />} />
               <Route path="questions" element={<QuestionsPage />} />
               <Route path="rules" element={<RulesPage />} />
-              <Route path="results" element={<ResultsPage />} />
-              <Route path="results/:studentId" element={<SubmissionDetailPage />} />
+
+              {/* Results — nested under results/ parent */}
+              <Route path="results">
+                <Route index element={<Navigate to="statistics" replace />} />
+                <Route path="statistics" element={<ResultsPage />} />
+                <Route path="statistics/:studentId" element={<SubmissionDetailPage />} />
+                <Route path="students" element={<StudentsPage />} />
+                <Route path="students/:studentId" element={<SubmissionDetailPage />} />
+                <Route path="groups" element={<GroupViewPage />} />
+              </Route>
+
               <Route path="publish" element={<CanvasPushPage />} />
               <Route path="members" element={<MembersPage />} />
               <Route path="settings" element={<SettingsPage />} />

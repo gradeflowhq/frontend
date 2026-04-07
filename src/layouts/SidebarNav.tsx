@@ -2,6 +2,7 @@ import {
   AppShell,
   Avatar,
   Box,
+  Collapse,
   Group,
   Loader,
   Menu,
@@ -15,11 +16,13 @@ import { notifications } from '@mantine/notifications';
 import {
   IconAdjustments,
   IconArrowLeft,
+  IconChartBar,
   IconChevronDown,
   IconChevronLeft,
   IconChevronRight,
   IconGridDots,
   IconInbox,
+  IconLayersSubtract,
   IconLayoutDashboard,
   IconListCheck,
   IconLogout,
@@ -29,7 +32,7 @@ import {
   IconUsers,
 } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Link, useMatch, useNavigate, useLocation } from 'react-router-dom';
 
 import { api } from '@api';
@@ -86,6 +89,82 @@ const SidebarNavItem: React.FC<NavItemProps> = ({ icon, label, to, expanded, bad
     );
   }
   return content;
+};
+
+interface SidebarNavSectionProps {
+  icon: React.ReactNode;
+  label: string;
+  basePath: string;
+  expanded: boolean;
+  badge?: React.ReactNode;
+  children: React.ReactNode;
+}
+
+const SidebarNavSection: React.FC<SidebarNavSectionProps> = ({
+  icon,
+  label,
+  basePath,
+  expanded,
+  badge,
+  children,
+}) => {
+  const location = useLocation();
+  const isActive = location.pathname.startsWith(basePath);
+  const [isOpen, setIsOpen] = useState(false);
+
+  if (!expanded) {
+    return (
+      <Tooltip label={label} position="right" withArrow>
+        <NavLink
+          component={Link}
+          to={basePath}
+          active={isActive}
+          leftSection={icon}
+          styles={{
+            root: {
+              borderRadius: 6,
+              padding: '8px',
+              justifyContent: 'center',
+            },
+            label: { display: 'none' },
+            section: { marginInlineEnd: 0 },
+          }}
+        />
+      </Tooltip>
+    );
+  }
+
+  return (
+    <Box>
+      <NavLink
+        active={false}
+        label={label}
+        leftSection={icon}
+        rightSection={
+          <Group gap={4} wrap="nowrap">
+            {badge}
+            {isActive || isOpen ? (
+              <IconChevronDown size={12} />
+            ) : (
+              <IconChevronRight size={12} />
+            )}
+          </Group>
+        }
+        onClick={() => setIsOpen((o) => !o)}
+        styles={{
+          root: {
+            borderRadius: 6,
+            padding: '8px 12px',
+          },
+        }}
+      />
+      <Collapse expanded={isActive || isOpen}>
+        <Stack gap={2} pl={12}>
+          {children}
+        </Stack>
+      </Collapse>
+    </Box>
+  );
 };
 
 const SectionLabel: React.FC<{ label: string; expanded: boolean }> = ({ label, expanded }) => {
@@ -256,9 +335,33 @@ const AssessmentSidebarItems: React.FC<{ assessmentId: string; expanded: boolean
       <SidebarNavItem icon={<IconInbox size={SIDEBAR_ICON_SIZE} />} label="Submissions" to={`${base}/submissions`} expanded={expanded} />
       <SidebarNavItem icon={<IconQuestionMark size={SIDEBAR_ICON_SIZE} />} label="Questions" to={`${base}/questions`} expanded={expanded} />
       <SidebarNavItem icon={<IconAdjustments size={SIDEBAR_ICON_SIZE} />} label="Rules" to={`${base}/rules`} expanded={expanded} />
-
       <SectionLabel label="Output" expanded={expanded} />
-      <SidebarNavItem icon={<IconListCheck size={SIDEBAR_ICON_SIZE} />} label="Results" to={`${base}/results`} expanded={expanded} badge={gradingBadge} />
+      <SidebarNavSection
+        icon={<IconListCheck size={SIDEBAR_ICON_SIZE} />}
+        label="Results"
+        basePath={`${base}/results`}
+        expanded={expanded}
+        badge={gradingBadge}
+      >
+        <SidebarNavItem
+          icon={<IconChartBar size={SIDEBAR_ICON_SIZE} />}
+          label="Statistics"
+          to={`${base}/results/statistics`}
+          expanded={expanded}
+        />
+        <SidebarNavItem
+          icon={<IconUsers size={SIDEBAR_ICON_SIZE} />}
+          label="Students"
+          to={`${base}/results/students`}
+          expanded={expanded}
+        />
+        <SidebarNavItem
+          icon={<IconLayersSubtract size={SIDEBAR_ICON_SIZE} />}
+          label="Groups"
+          to={`${base}/results/groups`}
+          expanded={expanded}
+        />
+      </SidebarNavSection>
       <SidebarNavItem icon={<IconSend size={SIDEBAR_ICON_SIZE} />} label="Publish" to={`${base}/publish`} expanded={expanded} />
 
       <SectionLabel label="Admin" expanded={expanded} />

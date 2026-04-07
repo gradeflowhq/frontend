@@ -67,7 +67,7 @@ const GradingResultsCard: React.FC<Props> = ({
             size="xs"
             variant="light"
             leftSection={<IconListCheck size={13} />}
-            onClick={() => void navigate(`/assessments/${assessmentId}/results`)}
+            onClick={() => void navigate(`/assessments/${assessmentId}/results/statistics`)}
           >
             View Results
           </Button>
@@ -110,14 +110,14 @@ const GradingResultsCard: React.FC<Props> = ({
           </Text>
           <SimpleGrid cols={{ base: 2, sm: 5 }} spacing="xs">
             <StatCard
-              label="Mean"
+              title="Mean"
               value={`${quickStats.mean.toFixed(1)}%`}
               sub={`± ${quickStats.stdev.toFixed(1)}%`}
             />
-            <StatCard label="Median"  value={`${quickStats.q2.toFixed(1)}%`} />
-            <StatCard label="Std Dev" value={quickStats.stdev.toFixed(1)} />
-            <StatCard label="Min"     value={`${quickStats.min.toFixed(1)}%`} />
-            <StatCard label="Max"     value={`${quickStats.max.toFixed(1)}%`} />
+            <StatCard title="Median"  value={`${quickStats.q2.toFixed(1)}%`} />
+            <StatCard title="Std Dev" value={quickStats.stdev.toFixed(1)} />
+            <StatCard title="Min"     value={`${quickStats.min.toFixed(1)}%`} />
+            <StatCard title="Max"     value={`${quickStats.max.toFixed(1)}%`} />
           </SimpleGrid>
         </>
       )}

@@ -31,7 +31,7 @@ const rowColour = (pct: number): string => {
   if (pct < 40)  return 'var(--mantine-color-red-0)';
   if (pct < 60)  return 'var(--mantine-color-orange-0)';
   if (pct >= 80) return 'var(--mantine-color-green-0)';
-  return 'transparent';
+  return 'var(--mantine-color-body)';
 };
 
 const pctBarColour = (pct: number): string => {
@@ -118,7 +118,10 @@ const ResultsOverviewTable: React.FC<Props> = ({
         const plain = decryptedIds[it.student_id ?? ''] ?? it.student_id ?? '';
         if (!plain.toLowerCase().includes(q)) return false;
       }
-      if (it._pct < scoreRange[0] || it._pct > scoreRange[1]) return false;
+      // Clamp to [0, 100] so students with adjusted scores above 100% are still
+      // included when the "max" filter is at its default of 100.
+      const clampedPct = Math.max(0, Math.min(100, it._pct));
+      if (clampedPct < scoreRange[0] || clampedPct > scoreRange[1]) return false;
       return true;
     });
   }, [enriched, decryptedIds, searchQuery, scoreRange]);

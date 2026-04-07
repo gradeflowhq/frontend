@@ -2,12 +2,12 @@ import { Card, Text } from '@mantine/core';
 import React from 'react';
 
 interface Props {
-  label: string;
+  title: string;
   value: string;
   sub?: string;
 }
 
-const StatCard: React.FC<Props> = ({ label, value, sub }) => (
+const StatCard: React.FC<Props> = ({ title, value, sub }) => (
   <Card withBorder padding="sm" radius="md">
     <Text
       size="xs"
@@ -17,7 +17,7 @@ const StatCard: React.FC<Props> = ({ label, value, sub }) => (
       style={{ letterSpacing: '0.05em' }}
       mb={4}
     >
-      {label}
+      {title}
     </Text>
     <Text ff="monospace" fw={700} size="lg">
       {value}

@@ -22,9 +22,10 @@ const C = {
 
 // ── Stat card ────────────────────────────────────────────────────────────────
 
-type StatCardProps = { title: string; value: React.ReactNode; sub?: React.ReactNode };
+type PanelStatCardProps = { title: string; value: React.ReactNode; sub?: React.ReactNode };
 
-const StatCard = ({ title, value, sub }: StatCardProps) => (
+/** Local stat card — uses Paper + richer ReactNode value. See StatCard.tsx for the simpler export. */
+const PanelStatCard = ({ title, value, sub }: PanelStatCardProps) => (
   <Paper withBorder p="sm">
     <Text size="xs" fw={700} tt="uppercase" style={{ letterSpacing: '0.06em' }} mb={3}>
       {title}
@@ -231,8 +232,6 @@ const ResultsStatsPanel: React.FC<Props> = ({ items }) => {
 
   const totals    = useMemo(() => buildTotals(items), [items]);
   const totalVals = useMemo(() => totals.map((t) => t.totalPoints), [totals]);
-  const maxTotal  = useMemo(() => Math.max(1, ...totals.map((t) => t.totalMax)), [totals]);
-
   const sp    = useMemo(() => computeStats(totalVals), [totalVals]);
   const pctVals = useMemo(
     () => totals.map((t) => (t.totalMax > 0 ? (t.totalPoints / t.totalMax) * 100 : 0)),
@@ -248,19 +247,16 @@ const ResultsStatsPanel: React.FC<Props> = ({ items }) => {
     [totalVals, binWidth],
   );
 
-  // suppress unused warning — maxTotal is used implicitly via totals
-  void maxTotal;
-
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
       {/* ── Stat cards ── */}
       <SimpleGrid cols={{ base: 2, sm: 4 }} spacing="sm">
-        <StatCard
+        <PanelStatCard
           title="Students"
           value={sp.count}
         />
-        <StatCard
+        <PanelStatCard
           title="Mean"
           value={
             <Text span ff="monospace" size="lg" fw={700}>
@@ -270,12 +266,12 @@ const ResultsStatsPanel: React.FC<Props> = ({ items }) => {
           }
           sub={`${spPct.mean.toFixed(1)}% ± ${spPct.stdev.toFixed(1)}%`}
         />
-        <StatCard
+        <PanelStatCard
           title="Median"
           value={<Text span ff="monospace" fw={700}>{sp.q2.toFixed(2)}</Text>}
           sub={`${spPct.q2.toFixed(1)}%`}
         />
-        <StatCard
+        <PanelStatCard
           title="Min – Max"
           value={
             <Text span ff="monospace" size="lg" fw={700}>
