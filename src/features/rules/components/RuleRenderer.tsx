@@ -59,7 +59,7 @@ const labelFromPath = (path: string): string => {
 const CodeCollapsible: React.FC<{ title: string; code: string; height?: string; language?: 'python' | 'text' }> = ({
   title,
   code,
-  height = '220px',
+  height = '350px',
   language = 'python',
 }) => {
   const extensions = language === 'python' ? [python()] : [];

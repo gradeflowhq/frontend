@@ -27,7 +27,7 @@ const CodeEditorWidget: React.FC<WidgetProps> = ({
   options,
 }) => {
   const opts = (options || {}) as EditorOptions;
-  const height = opts.height ?? '220px';
+  const height = opts.height ?? '400px';
   const isReadOnly = disabled || readonly || opts.readOnly;
   const isPython = (opts.language ?? 'python') === 'python';
 
