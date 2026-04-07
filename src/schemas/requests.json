@@ -391,8 +391,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "TEXT"
         ]
       },
       "constraints": {
@@ -685,10 +685,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "NUMERIC",
           "CHOICE",
           "TEXT",
-          "MULTI_VALUED",
-          "NUMERIC"
+          "MULTI_VALUED"
         ]
       },
       "constraints": {
@@ -1010,8 +1010,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "TEXT"
         ]
       },
       "constraints": {
@@ -1186,10 +1186,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "NUMERIC",
           "CHOICE",
           "TEXT",
-          "MULTI_VALUED",
-          "NUMERIC"
+          "MULTI_VALUED"
         ]
       },
       "constraints": {
@@ -1536,10 +1536,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "NUMERIC",
           "CHOICE",
           "TEXT",
-          "MULTI_VALUED",
-          "NUMERIC"
+          "MULTI_VALUED"
         ]
       },
       "constraints": {
@@ -1699,8 +1699,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "TEXT"
         ]
       },
       "constraints": {
@@ -1818,10 +1818,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "NUMERIC",
           "CHOICE",
           "TEXT",
-          "MULTI_VALUED",
-          "NUMERIC"
+          "MULTI_VALUED"
         ]
       },
       "constraints": {
@@ -1930,10 +1930,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "NUMERIC",
           "CHOICE",
           "TEXT",
-          "MULTI_VALUED",
-          "NUMERIC"
+          "MULTI_VALUED"
         ]
       },
       "constraints": {
@@ -2112,10 +2112,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "NUMERIC",
           "CHOICE",
           "TEXT",
-          "MULTI_VALUED",
-          "NUMERIC"
+          "MULTI_VALUED"
         ]
       },
       "constraints": {
@@ -2379,8 +2379,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "TEXT"
         ]
       },
       "constraints": {
@@ -2503,10 +2503,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "NUMERIC",
           "CHOICE",
           "TEXT",
-          "MULTI_VALUED",
-          "NUMERIC"
+          "MULTI_VALUED"
         ]
       },
       "constraints": {
@@ -2550,10 +2550,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "NUMERIC",
           "CHOICE",
           "TEXT",
-          "MULTI_VALUED",
-          "NUMERIC"
+          "MULTI_VALUED"
         ]
       },
       "constraints": {
@@ -2704,10 +2704,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "NUMERIC",
           "CHOICE",
           "TEXT",
-          "MULTI_VALUED",
-          "NUMERIC"
+          "MULTI_VALUED"
         ]
       },
       "constraints": {
@@ -3451,8 +3451,8 @@
           "integer",
           "null"
         ],
-        "minimum": 1,
-        "maximum": 20
+        "maximum": 20,
+        "minimum": 1
       },
       "selection": {
         "type": "string",
@@ -3665,6 +3665,24 @@
     },
     "type": "object",
     "title": "CoverageRequest"
+  },
+  "BulkGradeAdjustmentRequest": {
+    "properties": {
+      "adjustments": {
+        "items": {
+          "$ref": "#/definitions/GradeAdjustmentRequest"
+        },
+        "type": "array",
+        "minItems": 1,
+        "title": "Adjustments",
+        "description": "List of grade adjustments to apply in a single request"
+      }
+    },
+    "type": "object",
+    "required": [
+      "adjustments"
+    ],
+    "title": "BulkGradeAdjustmentRequest"
   },
   "AssessmentUpdateRequest": {
     "properties": {

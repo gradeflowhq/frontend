@@ -10,6 +10,7 @@ import type { AssessmentResponseSourceUpdatedAt } from './assessmentResponseSour
 import type { AssessmentResponseQuestionSetUpdatedAt } from './assessmentResponseQuestionSetUpdatedAt';
 import type { AssessmentResponseRubricUpdatedAt } from './assessmentResponseRubricUpdatedAt';
 import type { AssessmentResponseResultsUpdatedAt } from './assessmentResponseResultsUpdatedAt';
+import type { AssessmentResponseSummary } from './assessmentResponseSummary';
 
 export interface AssessmentResponse {
   id: string;
@@ -21,4 +22,6 @@ export interface AssessmentResponse {
   question_set_updated_at?: AssessmentResponseQuestionSetUpdatedAt;
   rubric_updated_at?: AssessmentResponseRubricUpdatedAt;
   results_updated_at?: AssessmentResponseResultsUpdatedAt;
+  /** Pre-computed summary stats */
+  summary?: AssessmentResponseSummary;
 }

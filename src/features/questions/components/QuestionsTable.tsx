@@ -7,6 +7,7 @@ import React, { useMemo, useState } from 'react';
 
 import AnswerText from '@components/common/AnswerText';
 import { SchemaForm } from '@components/forms/SchemaForm';
+import { QUESTION_TYPES, selectRootSchema } from '@features/questions/constants';
 import { getQuestionIdsSorted } from '@features/questions/helpers';
 import questionsSchema from '@schemas/questions.json';
 import { getErrorMessage } from '@utils/error';
@@ -84,17 +85,6 @@ const QuestionsTable: React.FC<Props> = ({
     return filteredIds.slice(start, start + pageSize);
   }, [filteredIds, page, pageSize]);
 
-  const selectRootSchema = (type: string | undefined) => {
-    const dict = questionsSchema as Record<string, unknown>;
-    switch (type) {
-      case 'CHOICE': return (dict as Record<string, unknown>).ChoiceQuestion ?? null;
-      case 'MULTI_VALUED': return (dict as Record<string, unknown>).MultiValuedQuestion ?? null;
-      case 'NUMERIC': return (dict as Record<string, unknown>).NumericQuestion ?? null;
-      case 'TEXT':
-      default: return (dict as Record<string, unknown>).TextQuestion ?? null;
-    }
-  };
-
   const buildQuestionSetInput = (): QuestionSetInput => {
     const resolvedDrafts = Object.fromEntries(
       Object.entries(drafts).map(([qid, draft]) => [
@@ -144,7 +134,7 @@ const QuestionsTable: React.FC<Props> = ({
         return (
           <Select
             size="sm"
-            data={['TEXT', 'NUMERIC', 'CHOICE', 'MULTI_VALUED']}
+            data={[...QUESTION_TYPES]}
             value={type}
             onChange={(v) => {
               const nextType = (v ?? 'TEXT') as QuestionDef['type'];

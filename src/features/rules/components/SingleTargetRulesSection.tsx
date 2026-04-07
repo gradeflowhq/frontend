@@ -173,6 +173,7 @@ const SingleTargetRulesSection: React.FC<Props> = ({
         detailPanel={detailPanel}
         isDetailEditing={detailPanelEditing}
         listWidth="150px"
+        layoutHeight="calc(100dvh - 100px - 55px)"
         backLabel="Back to questions"
         mobileShowDetail={mobileShowDetail}
         onMobileShowDetailChange={setMobileShowDetail}

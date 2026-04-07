@@ -46,17 +46,13 @@ import {
   AssessmentCreateModal,
   AssessmentEditModal,
 } from '@features/assessments/components';
-import { useGrading } from '@features/grading/api';
-import { useQuestionSet } from '@features/questions/api';
-import { useRubricCoverage } from '@features/rubric/api';
-import { useSubmissions } from '@features/submissions/api';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { getErrorMessage } from '@utils/error';
 import { compareDateDesc } from '@utils/sort';
 
 import type { AssessmentResponse, AssessmentCreateRequest, AssessmentUpdateRequest } from '@api/models';
 
-// A single card that fetches its own coverage + grading data
+// A single card that renders from summary data already included in the list response
 const AssessmentCard: React.FC<{
   item: AssessmentResponse;
   onOpen: () => void;
@@ -64,22 +60,16 @@ const AssessmentCard: React.FC<{
   onDelete: () => void;
   onMembers: () => void;
 }> = ({ item, onOpen, onEdit, onDelete, onMembers }) => {
-  const { data: coverageRes } = useRubricCoverage(item.id);
-  const { data: gradingData } = useGrading(item.id);
-  const { data: submissionsData } = useSubmissions(item.id);
-  const { data: questionSetData } = useQuestionSet(item.id);
-
-  const cov = coverageRes?.coverage;
+  const summary = item.summary;
+  const cov = summary?.coverage;
   const covTotal = cov?.total ?? 0;
   const covCovered = cov?.covered ?? 0;
   const covPct = cov?.percentage ?? 0;
   const hasRules = covTotal > 0;
 
-  const gradedCount = gradingData?.submissions?.length ?? 0;
-  const submissionsCount = submissionsData?.raw_submissions?.length ?? null;
-  const questionsCount = questionSetData
-    ? Object.keys(questionSetData.question_set.question_map).length
-    : null;
+  const gradedCount = summary?.graded_count ?? 0;
+  const submissionsCount = summary?.submission_count ?? null;
+  const questionsCount = summary?.question_count ?? null;
 
   const covColor = covPct >= 1 ? 'green' : covPct > 0 ? 'yellow' : 'gray';
 

@@ -6,6 +6,8 @@ import { QK } from '@api/queryKeys';
 import type {
   GradingResponse,
   GradeAdjustmentRequest,
+  BulkGradeAdjustmentRequest,
+  BulkGradeAdjustmentResponse,
   GradingPreviewRequest,
   GradingJob,
   JobStatusResponse,
@@ -71,6 +73,23 @@ export const useAdjustGrading = (assessmentId: string) => {
       (await api.adjustGradingAssessmentsAssessmentIdGradingAdjustPost(assessmentId, payload)).data,
     onSuccess: (data) => {
       qc.setQueryData(QK.grading.item(assessmentId), data);
+    },
+  });
+};
+
+export const useBulkAdjustGrading = (assessmentId: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ['grading', assessmentId, 'bulk-adjust'],
+    mutationFn: async (payload: BulkGradeAdjustmentRequest) =>
+      (
+        await api.bulkAdjustGradingAssessmentsAssessmentIdGradingBulkAdjustPost(
+          assessmentId,
+          payload,
+        )
+      ).data as BulkGradeAdjustmentResponse,
+    onSuccess: (data) => {
+      qc.setQueryData(QK.grading.item(assessmentId), data.result);
     },
   });
 };

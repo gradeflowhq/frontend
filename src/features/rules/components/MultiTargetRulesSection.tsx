@@ -298,6 +298,7 @@ const MultiTargetRulesSection: React.FC<Props> = ({
         detailPanel={detailPanel}
         isDetailEditing={isCurrentlyEditing}
         listWidth="210px"
+        layoutHeight="calc(100dvh - 100px - 55px)"
         backLabel="Back to rules"
         mobileShowDetail={mobileShowDetail}
         onMobileShowDetailChange={setMobileShowDetail}

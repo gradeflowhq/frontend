@@ -1,16 +1,19 @@
 import {
   Accordion,
+  ActionIcon,
   Badge,
   Button,
   Group,
+  Modal,
   NumberInput,
   Pagination,
   Popover,
   Stack,
   Text,
   Textarea,
+  Tooltip,
 } from '@mantine/core';
-import { IconGitMerge } from '@tabler/icons-react';
+import { IconEraser, IconGitMerge } from '@tabler/icons-react';
 import { DataTable } from 'mantine-datatable';
 import React, { useState } from 'react';
 
@@ -30,6 +33,7 @@ interface AnswerGroupListProps {
   maxPoints: number;
   qid: string;
   onBulkAdjust: (group: AnswerGroup, args: BulkAdjustArgs) => void;
+  onBulkRemove: (group: AnswerGroup) => void;
   onIndividualAdjust: (
     studentId: string,
     args: { points: number | null; feedback: string | null },
@@ -46,6 +50,7 @@ const AnswerGroupList: React.FC<AnswerGroupListProps> = ({
   groups,
   maxPoints,
   onBulkAdjust,
+  onBulkRemove,
   onIndividualAdjust,
   bulkLoadingKey,
   individualLoadingId,
@@ -57,6 +62,8 @@ const AnswerGroupList: React.FC<AnswerGroupListProps> = ({
   const [openItems, setOpenItems] = useState<string[]>([]);
   // Per-group current page (1-indexed)
   const [groupPages, setGroupPages] = useState<Record<string, number>>({});
+  // Confirm modal for bulk remove
+  const [confirmRemoveGroup, setConfirmRemoveGroup] = useState<AnswerGroup | null>(null);
 
   const startEdit = (entry: GroupEntry) => {
     setEditingMap((prev) => ({
@@ -113,6 +120,7 @@ const AnswerGroupList: React.FC<AnswerGroupListProps> = ({
   };
 
   return (
+    <>
     <Accordion
       value={openItems}
       onChange={setOpenItems}
@@ -186,6 +194,20 @@ const AnswerGroupList: React.FC<AnswerGroupListProps> = ({
                     {group.entries.length} students
                     {group.adjustmentCount > 0 && ` · ${group.adjustmentCount} adjusted`}
                   </Text>
+                  {group.adjustmentCount > 0 && (
+                    <Tooltip label="Remove adjustments for this group" withArrow>
+                      <ActionIcon
+                        size="sm"
+                        variant="subtle"
+                        color="red"
+                        aria-label="Remove adjustments"
+                        loading={bulkLoadingKey === `remove-${group.key}`}
+                        onClick={() => setConfirmRemoveGroup(group)}
+                      >
+                        <IconEraser size={13} />
+                      </ActionIcon>
+                    </Tooltip>
+                  )}
                   <BulkAdjustPopover
                     key={group.key}
                     group={group}
@@ -400,6 +422,35 @@ const AnswerGroupList: React.FC<AnswerGroupListProps> = ({
         );
       })}
     </Accordion>
+
+    {/* ── Confirm bulk-remove modal ─────────────────────────────────────── */}
+    <Modal
+      opened={confirmRemoveGroup !== null}
+      onClose={() => setConfirmRemoveGroup(null)}
+      title="Remove adjustments"
+      size="sm"
+    >
+      <Text mb="md" size="sm">
+        Remove all manual adjustments for the{' '}
+        <strong>{confirmRemoveGroup?.entries.length ?? 0} students</strong> in this group?
+        Their grades will revert to the originally scored values.
+      </Text>
+      <Group justify="flex-end" gap="sm">
+        <Button variant="default" onClick={() => setConfirmRemoveGroup(null)}>
+          Cancel
+        </Button>
+        <Button
+          color="red"
+          onClick={() => {
+            if (confirmRemoveGroup) onBulkRemove(confirmRemoveGroup);
+            setConfirmRemoveGroup(null);
+          }}
+        >
+          Remove adjustments
+        </Button>
+      </Group>
+    </Modal>
+    </>
   );
 };
 

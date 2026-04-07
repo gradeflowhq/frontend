@@ -356,8 +356,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "TEXT"
         ]
       },
       "constraints": {
@@ -650,10 +650,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "NUMERIC",
           "CHOICE",
           "TEXT",
-          "MULTI_VALUED",
-          "NUMERIC"
+          "MULTI_VALUED"
         ]
       },
       "constraints": {
@@ -975,8 +975,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "TEXT"
         ]
       },
       "constraints": {
@@ -1151,10 +1151,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "NUMERIC",
           "CHOICE",
           "TEXT",
-          "MULTI_VALUED",
-          "NUMERIC"
+          "MULTI_VALUED"
         ]
       },
       "constraints": {
@@ -1501,10 +1501,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "NUMERIC",
           "CHOICE",
           "TEXT",
-          "MULTI_VALUED",
-          "NUMERIC"
+          "MULTI_VALUED"
         ]
       },
       "constraints": {
@@ -1664,8 +1664,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "TEXT"
         ]
       },
       "constraints": {
@@ -1783,10 +1783,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "NUMERIC",
           "CHOICE",
           "TEXT",
-          "MULTI_VALUED",
-          "NUMERIC"
+          "MULTI_VALUED"
         ]
       },
       "constraints": {
@@ -1895,10 +1895,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "NUMERIC",
           "CHOICE",
           "TEXT",
-          "MULTI_VALUED",
-          "NUMERIC"
+          "MULTI_VALUED"
         ]
       },
       "constraints": {
@@ -2077,10 +2077,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "NUMERIC",
           "CHOICE",
           "TEXT",
-          "MULTI_VALUED",
-          "NUMERIC"
+          "MULTI_VALUED"
         ]
       },
       "constraints": {
@@ -2344,8 +2344,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "TEXT"
         ]
       },
       "constraints": {
@@ -2468,10 +2468,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "NUMERIC",
           "CHOICE",
           "TEXT",
-          "MULTI_VALUED",
-          "NUMERIC"
+          "MULTI_VALUED"
         ]
       },
       "constraints": {
@@ -2515,10 +2515,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "NUMERIC",
           "CHOICE",
           "TEXT",
-          "MULTI_VALUED",
-          "NUMERIC"
+          "MULTI_VALUED"
         ]
       },
       "constraints": {
@@ -2669,10 +2669,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "NUMERIC",
           "CHOICE",
           "TEXT",
-          "MULTI_VALUED",
-          "NUMERIC"
+          "MULTI_VALUED"
         ]
       },
       "constraints": {
@@ -3459,6 +3459,33 @@
     "type": "object",
     "title": "RubricCoverage"
   },
+  "BulkGradeAdjustmentResponse": {
+    "properties": {
+      "applied": {
+        "type": "integer",
+        "title": "Applied",
+        "description": "Number of adjustments successfully applied"
+      },
+      "errors": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array",
+        "title": "Errors",
+        "description": "Error messages for failed adjustments"
+      },
+      "result": {
+        "$ref": "#/definitions/GradingResponse",
+        "description": "Updated grading results"
+      }
+    },
+    "type": "object",
+    "required": [
+      "applied",
+      "result"
+    ],
+    "title": "BulkGradeAdjustmentResponse"
+  },
   "AssessmentsListResponse": {
     "properties": {
       "items": {
@@ -3533,6 +3560,17 @@
           "null"
         ],
         "format": "date-time"
+      },
+      "summary": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/AssessmentSummary"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "Pre-computed summary stats (included in list responses)"
       }
     },
     "type": "object",
@@ -3543,6 +3581,66 @@
       "updated_at"
     ],
     "title": "AssessmentResponse"
+  },
+  "AssessmentSummary": {
+    "properties": {
+      "submission_count": {
+        "title": "Submission Count",
+        "description": "Raw submission count (None when no source data uploaded)",
+        "type": [
+          "integer",
+          "null"
+        ]
+      },
+      "question_count": {
+        "title": "Question Count",
+        "description": "Question count (None when no question set configured)",
+        "type": [
+          "integer",
+          "null"
+        ]
+      },
+      "graded_count": {
+        "type": "integer",
+        "title": "Graded Count",
+        "description": "Number of graded student submissions in the database",
+        "default": 0
+      },
+      "coverage": {
+        "anyOf": [
+          {
+            "$ref": "#/definitions/AssessmentCoverage"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "Rubric coverage stats (None when rubric or question set is absent)"
+      }
+    },
+    "type": "object",
+    "title": "AssessmentSummary"
+  },
+  "AssessmentCoverage": {
+    "properties": {
+      "total": {
+        "type": "integer",
+        "title": "Total",
+        "default": 0
+      },
+      "covered": {
+        "type": "integer",
+        "title": "Covered",
+        "default": 0
+      },
+      "percentage": {
+        "type": "number",
+        "title": "Percentage",
+        "default": 0
+      }
+    },
+    "type": "object",
+    "title": "AssessmentCoverage"
   },
   "AssessmentUsersResponse": {
     "properties": {

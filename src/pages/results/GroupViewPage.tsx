@@ -8,7 +8,7 @@ import { useAssessmentContext } from '@app/contexts/AssessmentContext';
 import EmptyState from '@components/common/EmptyState';
 import PageShell from '@components/common/PageShell';
 import { useAssessmentPassphrase } from '@features/encryption/passphraseContext';
-import { useAdjustGrading, useGrading } from '@features/grading/api';
+import { useAdjustGrading, useBulkAdjustGrading, useGrading } from '@features/grading/api';
 import { GradingStatusBanner } from '@features/grading/components';
 import {
   AnswerGroupList,
@@ -64,6 +64,7 @@ const GroupViewPage: React.FC = () => {
   const { data: gradingData, isLoading, isError, error } = useGrading(assessmentId, true);
   const { data: qsRes } = useQuestionSet(assessmentId, true);
   const adjustMutation = useAdjustGrading(assessmentId);
+  const bulkAdjustMutation = useBulkAdjustGrading(assessmentId);
   const { updatedAt } = useGradingStatus(assessmentId);
 
   useDocumentTitle(`Groups - ${assessment?.name ?? 'Assessment'} - GradeFlow`);
@@ -188,38 +189,74 @@ const GroupViewPage: React.FC = () => {
       if (targets.length === 0) return;
 
       setBulkLoadingKey(group.key);
-      let successCount = 0;
       try {
-        for (const entry of targets) {
-          await adjustMutation.mutateAsync({
-            student_id: entry.studentId,
-            question_id: selectedQid,
-            adjusted_points:
-              points !== null
-                ? points
-                : entry.effectivePoints !== entry.originalPoints
-                ? entry.effectivePoints
-                : null,
-            adjusted_feedback:
-              feedback !== null
-                ? feedback
-                : entry.effectiveFeedback !== entry.originalFeedback
-                ? entry.effectiveFeedback
-                : null,
-          });
-          successCount++;
-        }
-        notifications.show({ color: 'green', message: `Adjusted ${successCount} students` });
+        const adjustments = targets.map((entry) => ({
+          student_id: entry.studentId,
+          question_id: selectedQid,
+          adjusted_points:
+            points !== null
+              ? points
+              : entry.effectivePoints !== entry.originalPoints
+              ? entry.effectivePoints
+              : null,
+          adjusted_feedback:
+            feedback !== null
+              ? feedback
+              : entry.effectiveFeedback !== entry.originalFeedback
+              ? entry.effectiveFeedback
+              : null,
+        }));
+
+        const result = await bulkAdjustMutation.mutateAsync({ adjustments });
+        const errorCount = result.errors?.length ?? 0;
+        const msg =
+          errorCount > 0
+            ? `Adjusted ${result.applied} students (${errorCount} failed)`
+            : `Adjusted ${result.applied} students`;
+        notifications.show({
+          color: errorCount > 0 ? 'yellow' : 'green',
+          message: msg,
+        });
       } catch (err) {
         notifications.show({
           color: 'red',
-          message: `Failed after ${successCount} of ${targets.length}: ${getErrorMessage(err)}`,
+          message: getErrorMessage(err),
         });
       } finally {
         setBulkLoadingKey(null);
       }
     },
-    [selectedQid, adjustMutation],
+    [selectedQid, bulkAdjustMutation],
+  );
+
+  const handleBulkRemove = useCallback(
+    async (group: AnswerGroup) => {
+      if (!selectedQid) return;
+      if (group.entries.length === 0) return;
+
+      setBulkLoadingKey(`remove-${group.key}`);
+      try {
+        const adjustments = group.entries.map((entry) => ({
+          student_id: entry.studentId,
+          question_id: selectedQid,
+          adjusted_points: null,
+          adjusted_feedback: null,
+        }));
+        const result = await bulkAdjustMutation.mutateAsync({ adjustments });
+        const errorCount = result.errors?.length ?? 0;
+        notifications.show({
+          color: errorCount > 0 ? 'yellow' : 'green',
+          message: errorCount > 0
+            ? `Removed adjustments for ${result.applied} students (${errorCount} failed)`
+            : `Removed adjustments for ${result.applied} students`,
+        });
+      } catch (err) {
+        notifications.show({ color: 'red', message: getErrorMessage(err) });
+      } finally {
+        setBulkLoadingKey(null);
+      }
+    },
+    [selectedQid, bulkAdjustMutation],
   );
 
   const handleIndividualAdjust = useCallback(
@@ -324,6 +361,7 @@ const GroupViewPage: React.FC = () => {
           maxPoints={headerStats?.maxPoints ?? 0}
           qid={selectedQid}
           onBulkAdjust={(group, args) => { void handleBulkAdjust(group, args); }}
+          onBulkRemove={(group) => { void handleBulkRemove(group); }}
           onIndividualAdjust={handleIndividualAdjust}
           bulkLoadingKey={bulkLoadingKey}
           individualLoadingId={individualLoadingId}
@@ -349,17 +387,18 @@ const GroupViewPage: React.FC = () => {
         />
       }
     >
-      <GradingStatusBanner assessmentId={assessmentId} />
-      <MasterDetailLayout
-        listPanel={listPanel}
-        detailPanel={detailPanel}
-        listWidth="180px"
-        // Fill remaining viewport height: 100dvh minus PageShell header
-        layoutHeight="max(480px, calc(100dvh - 110px))"
-        backLabel="Back to questions"
-        mobileShowDetail={mobileShowDetail}
-        onMobileShowDetailChange={setMobileShowDetail}
-      />
+      <Stack gap={0}>
+        <GradingStatusBanner assessmentId={assessmentId} />
+        <MasterDetailLayout
+          listPanel={listPanel}
+          detailPanel={detailPanel}
+          listWidth="180px"
+          layoutHeight="calc(100dvh - 105px)"
+          backLabel="Back to questions"
+          mobileShowDetail={mobileShowDetail}
+          onMobileShowDetailChange={setMobileShowDetail}
+        />
+      </Stack>
     </PageShell>
   );
 };
