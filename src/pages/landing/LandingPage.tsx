@@ -307,7 +307,7 @@ const LandingPage: React.FC = () => {
               </Title>
 
               <Text size="lg" c="dimmed" maw={560} mx="auto" lh={1.7}>
-                Build composable gradingrules that reflect how you actually mark. Cluster similar answers for bulk review. Publish to Canvas instantly.
+                Build composable grading rules that reflect how you actually mark. Cluster similar answers for bulk review. Publish to Canvas instantly.
               </Text>
 
               <Group justify="center" gap="sm" mt="xs">
