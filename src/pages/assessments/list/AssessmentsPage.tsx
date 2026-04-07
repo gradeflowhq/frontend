@@ -35,7 +35,7 @@ import { useNavigate } from 'react-router-dom';
 
 import EmptyState from '@components/common/EmptyState';
 import PageShell from '@components/common/PageShell';
-import SectionStatusBadge from '@components/common/SectionStatusBadge';
+import UpdatedAtBadge from '@components/common/UpdatedAtBadge';
 import {
   useAssessmentsList,
   useCreateAssessment,
@@ -157,7 +157,7 @@ const AssessmentCard: React.FC<{
 
       {/* Footer: updated at + open button */}
       <Group justify="space-between" align="center">
-        <SectionStatusBadge />
+        <UpdatedAtBadge updatedAt={item.updated_at} />
         <Button size="xs" variant="light" onClick={onOpen}>
           Open
         </Button>
