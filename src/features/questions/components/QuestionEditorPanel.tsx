@@ -137,26 +137,48 @@ const QuestionEditorPanel: React.FC<Props> = ({
 
   const examplesSection = (loadingExamples || cleanExamples.length > 0 || badExamples.length > 0) ? (
     <Box>
-      <Text size="sm" fw={500} mb={4}>
+      <Text size="sm" fw={500} mb="xs">
         Example answers
       </Text>
       {loadingExamples ? (
         <Stack gap="xs">
           {[0, 1, 2].map((i) => (
-            <Skeleton key={i} height={14} w={180} />
+            <Skeleton key={i} height={28} radius="sm" />
           ))}
         </Stack>
       ) : (
-        <Stack gap={2}>
+        <Stack gap={6}>
           {cleanExamples.map((ex, i) => (
-            <Text key={`clean-${i}`} ff="monospace" size="xs" c="dimmed">
-              <AnswerText value={ex} maxLength={80} />
-            </Text>
+            <Box
+              key={`clean-${i}`}
+              px="sm"
+              py={6}
+              style={{
+                borderRadius: 'var(--mantine-radius-sm)',
+                border: '1px solid var(--mantine-color-default-border)',
+                backgroundColor: 'var(--mantine-color-default-hover)',
+              }}
+            >
+              <Text ff="monospace" size="xs">
+                <AnswerText value={ex} maxLength={80} />
+              </Text>
+            </Box>
           ))}
           {badExamples.map((ex, i) => (
-            <Text key={`bad-${i}`} ff="monospace" size="xs" c="red">
-              <AnswerText value={ex.replace(UNPARSABLE_MARKER, '')} maxLength={80} />
-            </Text>
+            <Box
+              key={`bad-${i}`}
+              px="sm"
+              py={6}
+              style={{
+                borderRadius: 'var(--mantine-radius-sm)',
+                border: '1px solid var(--mantine-color-red-3)',
+                backgroundColor: 'var(--mantine-color-red-0)',
+              }}
+            >
+              <Text ff="monospace" size="xs" c="red">
+                <AnswerText value={ex.replace(UNPARSABLE_MARKER, '')} maxLength={80} />
+              </Text>
+            </Box>
           ))}
         </Stack>
       )}
