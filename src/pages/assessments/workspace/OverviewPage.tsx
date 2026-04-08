@@ -2,7 +2,6 @@ import {
   Alert,
   Button,
   Group,
-  Modal,
   Skeleton,
   Stack,
   Text,
@@ -12,6 +11,7 @@ import { notifications } from '@mantine/notifications';
 import {
   IconLoader,
   IconPlayerPlay,
+  IconX,
 } from '@tabler/icons-react';
 import { useQueryClient } from '@tanstack/react-query';
 import React, { useEffect, useState } from 'react';
@@ -23,12 +23,15 @@ import PageShell from '@components/common/PageShell';
 import { useAssessment } from '@features/assessments/api';
 import { OverviewSetupTimeline } from '@features/assessments/components';
 import { useSetupSteps } from '@features/assessments/hooks/useSetupSteps';
-import { useGrading, useGradingJob, useJobStatus, useRunGrading } from '@features/grading/api';
+import { useGrading, useRunGrading, useCancelGrading } from '@features/grading/api';
 import { GradingResultsCard } from '@features/grading/components';
+import RunGradingModal from '@features/grading/components/RunGradingModal';
+import { useGradingStatus } from '@features/grading/hooks/useGradingStatus';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { getErrorMessage } from '@utils/error';
 
 import type { AdjustableSubmission } from '@api/models';
+import type { GradingWarning } from '@features/grading/components/RunGradingModal';
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
@@ -40,14 +43,11 @@ const OverviewPage: React.FC = () => {
 
   useDocumentTitle(`Overview - ${assessmentCtx?.name ?? 'Assessment'} - GradeFlow`);
 
-  // Fetch assessment directly with short staleTime so timestamps stay fresh
-  // without needing to navigate away. Falls back to context value on first render.
   const { data: assessmentData } = useAssessment(assessmentId, !!assessmentId, {
     staleTime: 10_000,
   });
   const assessment = assessmentData ?? assessmentCtx;
 
-  // Setup steps (submissions / questions / rules) — data fetching + derivation
   const {
     setupSteps,
     completeCount,
@@ -58,29 +58,53 @@ const OverviewPage: React.FC = () => {
     uncoveredIds,
   } = useSetupSteps(assessmentId);
 
-  // Grading data
   const { data: gradingData, isLoading: gradingLoading } = useGrading(assessmentId, !!assessmentId);
-  const { data: gradingJob }   = useGradingJob(assessmentId, !!assessmentId);
-
-  const jobId = gradingJob?.job_id ?? null;
-  const { data: jobStatusRes } = useJobStatus(jobId, !!jobId);
-  const jobStatus         = jobStatusRes?.status;
-  const gradingInProgress = jobStatus === 'queued' || jobStatus === 'running';
+  const { gradingInProgress, jobStatus } = useGradingStatus(assessmentId);
 
   const runGradingMutation = useRunGrading(assessmentId);
+  const cancelGradingMutation = useCancelGrading(assessmentId);
 
-  const [confirmCoverage, setConfirmCoverage] = useState(false);
-  const [confirmOverride, setConfirmOverride] = useState(false);
-  const [awaitingNav,     setAwaitingNav    ] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [awaitingNav, setAwaitingNav] = useState(false);
 
   const submissions = (gradingData?.submissions ?? []) as AdjustableSubmission[];
-  const hasGrading    = submissions.length > 0;
-  const hasGradingJob = !!gradingJob?.job_id;
+  const hasGrading = submissions.length > 0;
+  const hasGradingJob = jobStatus !== undefined;
+
+  // Detect whether any manual adjustments exist across all submissions
+  const hasExistingAdjustments = submissions.some((s) =>
+    Object.values(s.result_map ?? {}).some(
+      (r) =>
+        (r.adjusted_points !== null && r.adjusted_points !== undefined) ||
+        (r.adjusted_feedback !== null && r.adjusted_feedback !== undefined),
+    ),
+  );
+
+  // ── Build warnings list ───────────────────────────────────────────────────
+
+  const warnings: GradingWarning[] = [];
+
+  if (covPct < 1 && covTotal > 0) {
+    warnings.push({
+      key: 'coverage',
+      message:
+        uncoveredIds.length > 0
+          ? `${uncoveredIds.length} question${uncoveredIds.length !== 1 ? 's' : ''} have no rules: ${uncoveredIds.join(', ')}.`
+          : 'Rubric coverage is below 100%.',
+    });
+  }
+
+  if (hasGrading) {
+    warnings.push({
+      key: 'override',
+      message: 'Submissions have already been graded. Running again will override all existing results.',
+    });
+  }
 
   // ── Grading actions ───────────────────────────────────────────────────────
 
-  const startRunAndAwait = () => {
-    runGradingMutation.mutate(undefined, {
+  const startRunAndAwait = (removeAdjustments: boolean) => {
+    runGradingMutation.mutate(removeAdjustments, {
       onSuccess: () => {
         setAwaitingNav(true);
         notifications.show({ color: 'blue', message: 'Grading job started' });
@@ -92,13 +116,24 @@ const OverviewPage: React.FC = () => {
     });
   };
 
+  const handleCancelGrading = () => {
+    cancelGradingMutation.mutate(undefined, {
+      onSuccess: () => {
+        setAwaitingNav(false);
+        notifications.show({ color: 'yellow', message: 'Grading job cancelled' });
+      },
+      onError: (e) => {
+        notifications.show({ color: 'red', message: getErrorMessage(e) || 'Failed to cancel grading' });
+      },
+    });
+  };
+
   useEffect(() => {
     if (!awaitingNav) return;
     if (jobStatus === 'completed') {
       setAwaitingNav(false);
       void (async () => {
         await qc.invalidateQueries({ queryKey: QK.grading.item(assessmentId) });
-        // Also invalidate assessment so results_updated_at refreshes
         await qc.invalidateQueries({ queryKey: QK.assessments.item(assessmentId) });
         const notifId = `grading-complete-${assessmentId}-${Date.now()}`;
         notifications.show({
@@ -137,9 +172,14 @@ const OverviewPage: React.FC = () => {
   }, [awaitingNav, jobStatus, navigate, assessmentId, qc]);
 
   const handleGradeClick = () => {
-    if (covPct < 1 && covTotal > 0) { setConfirmCoverage(true); return; }
-    if (hasGrading)                  { setConfirmOverride(true); return; }
-    startRunAndAwait();
+    // Always open the unified modal — it shows a simple confirmation when
+    // there are no warnings, and lists all issues when there are.
+    setConfirmOpen(true);
+  };
+
+  const handleConfirm = (removeAdjustments: boolean) => {
+    setConfirmOpen(false);
+    startRunAndAwait(removeAdjustments);
   };
 
   const isRunning = gradingInProgress || runGradingMutation.isPending || awaitingNav;
@@ -183,21 +223,29 @@ const OverviewPage: React.FC = () => {
     >
       <Stack gap="md">
 
-        {/* ── In-progress banner ── */}
         {gradingInProgress && (
           <Alert icon={<IconLoader size={16} />} color="blue" radius="md">
-            Grading in progress...
+            <Group justify="space-between" align="center">
+              <Text size="sm">Grading in progress...</Text>
+              <Button
+                size="xs"
+                color="red"
+                leftSection={<IconX size={13} />}
+                loading={cancelGradingMutation.isPending}
+                onClick={handleCancelGrading}
+              >
+                Cancel
+              </Button>
+            </Group>
           </Alert>
         )}
 
-        {/* ── Setup timeline ── */}
         <OverviewSetupTimeline
           steps={setupSteps}
           completeCount={completeCount}
           onNavigate={(link) => void navigate(link)}
         />
 
-        {/* ── Grading results card ── */}
         <GradingResultsCard
           assessmentId={assessmentId}
           assessment={assessment}
@@ -207,53 +255,14 @@ const OverviewPage: React.FC = () => {
           gradingData={gradingData}
         />
 
-        {/* ── Confirm: incomplete coverage ── */}
-        <Modal
-          opened={confirmCoverage}
-          onClose={() => setConfirmCoverage(false)}
-          title="Incomplete Coverage"
-          radius="md"
-        >
-          <Text mb="md">
-            {uncoveredIds.length > 0
-              ? `The following questions have no rules: ${uncoveredIds.join(', ')}. Proceed anyway?`
-              : 'Rubric coverage is below 100%. Proceed anyway?'}
-          </Text>
-          <Group justify="flex-end">
-            <Button variant="default" onClick={() => setConfirmCoverage(false)}>Cancel</Button>
-            <Button
-              onClick={() => {
-                setConfirmCoverage(false);
-                if (hasGrading) setConfirmOverride(true);
-                else startRunAndAwait();
-              }}
-            >
-              Proceed
-            </Button>
-          </Group>
-        </Modal>
-
-        {/* ── Confirm: override existing ── */}
-        <Modal
-          opened={confirmOverride}
-          onClose={() => setConfirmOverride(false)}
-          title="Override Existing Grading"
-          radius="md"
-        >
-          <Text mb="md">
-            Submissions have already been graded. This will override all results and
-            adjustments. Proceed?
-          </Text>
-          <Group justify="flex-end">
-            <Button variant="default" onClick={() => setConfirmOverride(false)}>Cancel</Button>
-            <Button
-              loading={runGradingMutation.isPending}
-              onClick={() => { setConfirmOverride(false); startRunAndAwait(); }}
-            >
-              Proceed
-            </Button>
-          </Group>
-        </Modal>
+        <RunGradingModal
+          opened={confirmOpen}
+          onClose={() => setConfirmOpen(false)}
+          onConfirm={handleConfirm}
+          warnings={warnings}
+          isLoading={runGradingMutation.isPending}
+          hasExistingAdjustments={hasExistingAdjustments}
+        />
 
       </Stack>
     </PageShell>

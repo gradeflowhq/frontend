@@ -35,6 +35,7 @@ export const useGradingStatus = (assessmentId: string): GradingStatusResult => {
   useEffect(() => {
     if (jobStatus === 'completed') {
       void qc.invalidateQueries({ queryKey: QK.grading.item(assessmentId) });
+      void qc.invalidateQueries({ queryKey: QK.grading.job(assessmentId) });
     }
   }, [jobStatus, assessmentId, qc]);
 

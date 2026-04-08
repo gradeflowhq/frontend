@@ -6,4 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface GradingRunRequest { [key: string]: unknown }
+export interface GradingRunRequest {
+  /** When True, clear all manual adjustments on re-graded submissions. */
+  remove_adjustments?: boolean;
+}

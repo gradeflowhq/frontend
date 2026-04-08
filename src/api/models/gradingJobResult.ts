@@ -12,4 +12,6 @@ export interface GradingJobResult {
   assessment_id: string;
   type: GradingJobResultType;
   submissions: Submission[];
+  /** When True, clear all manual adjustments on re-graded submissions. */
+  remove_adjustments?: boolean;
 }

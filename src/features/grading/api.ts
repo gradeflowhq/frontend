@@ -55,12 +55,40 @@ export const useRunGrading = (assessmentId: string) => {
   return useMutation({
     mutationKey: ['grading', assessmentId, 'run'],
     // Start job (returns GradingJob)
-    mutationFn: async () =>
-      (await api.runGradingAssessmentsAssessmentIdGradingPost(assessmentId, {})).data as GradingJob,
+    mutationFn: async (removeAdjustments: boolean = false) =>
+      (
+        await api.runGradingAssessmentsAssessmentIdGradingPost(assessmentId, {
+          remove_adjustments: removeAdjustments,
+        })
+      ).data as GradingJob,
     onSuccess: async () => {
       // Refresh job and grading queries; results will update when job completes
       await qc.invalidateQueries({ queryKey: QK.grading.job(assessmentId) });
       await qc.invalidateQueries({ queryKey: QK.grading.item(assessmentId) });
+    },
+  });
+};
+
+export const useCancelGrading = (assessmentId: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ['grading', assessmentId, 'cancel'],
+    mutationFn: async () =>
+      api.cancelGradingJobAssessmentsAssessmentIdGradingJobDelete(assessmentId),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: QK.grading.job(assessmentId) });
+    },
+  });
+};
+
+export const useCancelGradingPreview = (assessmentId: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ['grading', assessmentId, 'preview', 'cancel'],
+    mutationFn: async () =>
+      api.cancelGradingPreviewJobAssessmentsAssessmentIdGradingPreviewJobDelete(assessmentId),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: QK.grading.job(assessmentId) });
     },
   });
 };

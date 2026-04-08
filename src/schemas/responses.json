@@ -651,9 +651,9 @@
         "title": "Question Types",
         "default": [
           "NUMERIC",
+          "MULTI_VALUED",
           "CHOICE",
-          "TEXT",
-          "MULTI_VALUED"
+          "TEXT"
         ]
       },
       "constraints": {
@@ -1152,9 +1152,9 @@
         "title": "Question Types",
         "default": [
           "NUMERIC",
+          "MULTI_VALUED",
           "CHOICE",
-          "TEXT",
-          "MULTI_VALUED"
+          "TEXT"
         ]
       },
       "constraints": {
@@ -1502,9 +1502,9 @@
         "title": "Question Types",
         "default": [
           "NUMERIC",
+          "MULTI_VALUED",
           "CHOICE",
-          "TEXT",
-          "MULTI_VALUED"
+          "TEXT"
         ]
       },
       "constraints": {
@@ -1784,9 +1784,9 @@
         "title": "Question Types",
         "default": [
           "NUMERIC",
+          "MULTI_VALUED",
           "CHOICE",
-          "TEXT",
-          "MULTI_VALUED"
+          "TEXT"
         ]
       },
       "constraints": {
@@ -1896,9 +1896,9 @@
         "title": "Question Types",
         "default": [
           "NUMERIC",
+          "MULTI_VALUED",
           "CHOICE",
-          "TEXT",
-          "MULTI_VALUED"
+          "TEXT"
         ]
       },
       "constraints": {
@@ -2078,9 +2078,9 @@
         "title": "Question Types",
         "default": [
           "NUMERIC",
+          "MULTI_VALUED",
           "CHOICE",
-          "TEXT",
-          "MULTI_VALUED"
+          "TEXT"
         ]
       },
       "constraints": {
@@ -2469,9 +2469,9 @@
         "title": "Question Types",
         "default": [
           "NUMERIC",
+          "MULTI_VALUED",
           "CHOICE",
-          "TEXT",
-          "MULTI_VALUED"
+          "TEXT"
         ]
       },
       "constraints": {
@@ -2516,9 +2516,9 @@
         "title": "Question Types",
         "default": [
           "NUMERIC",
+          "MULTI_VALUED",
           "CHOICE",
-          "TEXT",
-          "MULTI_VALUED"
+          "TEXT"
         ]
       },
       "constraints": {
@@ -2670,9 +2670,9 @@
         "title": "Question Types",
         "default": [
           "NUMERIC",
+          "MULTI_VALUED",
           "CHOICE",
-          "TEXT",
-          "MULTI_VALUED"
+          "TEXT"
         ]
       },
       "constraints": {
@@ -3570,7 +3570,7 @@
             "type": "null"
           }
         ],
-        "description": "Pre-computed summary stats (included in list responses)"
+        "description": "Pre-computed summary stats"
       }
     },
     "type": "object",

@@ -84,6 +84,12 @@
         },
         "type": "array",
         "title": "Submissions"
+      },
+      "remove_adjustments": {
+        "type": "boolean",
+        "title": "Remove Adjustments",
+        "description": "When True, clear all manual adjustments on re-graded submissions.",
+        "default": false
       }
     },
     "type": "object",
