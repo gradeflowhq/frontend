@@ -9,9 +9,10 @@ import {
   Text,
 } from '@mantine/core';
 import { IconPlus } from '@tabler/icons-react';
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
-import { friendlyRuleLabel, getRuleTargetQids } from '../schema';
+import { friendlyRuleLabel, getRuleTargetQids } from '@features/rules/schema';
+import { useScrollIntoView } from '@hooks/useScrollIntoView';
 
 import type { RuleValue } from '../types';
 
@@ -116,11 +117,7 @@ const GlobalRuleMasterList: React.FC<Props> = ({
   addableRuleKeys,
   searchQuery = '',
 }) => {
-  const selectedRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    selectedRef.current?.scrollIntoView({ block: 'nearest' });
-  }, [selectedIndex]);
+  const selectedRef = useScrollIntoView<HTMLDivElement>(selectedIndex);
 
   const rows = useMemo((): GlobalRuleRowData[] => {
     const q = searchQuery.trim().toLowerCase();

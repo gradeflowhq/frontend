@@ -6,12 +6,13 @@ import { notifications } from '@mantine/notifications';
 import { IconAlertCircle, IconChevronLeft, IconChevronRight, IconCircleCheck, IconDeviceFloppy, IconFilter, IconPencil, IconTrash } from '@tabler/icons-react';
 import { DataTable } from 'mantine-datatable';
 import React, { useMemo, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 
+import { PATHS } from '@app/routes/paths';
 import AnswerText from '@components/common/AnswerText';
 import PageShell from '@components/common/PageShell';
 import SectionStatusBadge from '@components/common/SectionStatusBadge';
-import { useAssessmentPassphrase } from '@features/encryption/passphraseContext';
+import { useAssessmentPassphrase } from '@features/encryption/PassphraseContext';
 import { useDecryptedIds } from '@features/encryption/useDecryptedIds';
 import { useGrading, useAdjustGrading } from '@features/grading/api';
 import { friendlyRuleLabel } from '@features/rules/schema';
@@ -30,17 +31,22 @@ type EditState = Record<string, { points?: number; feedback?: string }>;
 
 const SubmissionDetailInner: React.FC<{ assessmentId: string; encodedStudentId: string }> = ({ assessmentId, encodedStudentId }) => {
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const safeId = assessmentId;
+  // Preserve the originating tab context (statistics vs students) for back/prev/next navigation
+  const isFromStatistics = location.pathname.includes('/results/statistics/');
+  const ap = PATHS.assessment(assessmentId);
+  const backPath = isFromStatistics ? ap.results.statistics : ap.results.students;
+  const detailPath = isFromStatistics ? ap.results.statistic : ap.results.student;
 
   const { passphrase, notifyEncryptedDetected } = useAssessmentPassphrase();
-  const [encryptedDetected] = useState<boolean>(() => isEncrypted(encodedStudentId));
+  const encryptedDetected = isEncrypted(encodedStudentId);
   React.useEffect(() => {
     if (encryptedDetected) notifyEncryptedDetected();
   }, [encryptedDetected, notifyEncryptedDetected]);
 
-  const { data, isLoading, isError, error } = useGrading(safeId);
-  const adjustMutation = useAdjustGrading(safeId);
+  const { data, isLoading, isError, error } = useGrading(assessmentId);
+  const adjustMutation = useAdjustGrading(assessmentId);
 
   const submissions = useMemo<AdjustableSubmission[]>(() => data?.submissions ?? [], [data]);
   const studentIds = useMemo(() => submissions.map((s) => s.student_id).sort(natsort), [submissions]);
@@ -122,16 +128,16 @@ const SubmissionDetailInner: React.FC<{ assessmentId: string; encodedStudentId: 
       });
       cancelEdit(qid);
       notifications.show({ color: 'green', message: 'Adjustment saved' });
-    } catch {
-      notifications.show({ color: 'red', message: 'Save failed' });
+    } catch (err) {
+      notifications.show({ color: 'red', message: getErrorMessage(err) });
     }
   };
 
   const gotoPrev = () => {
-    if (prevId) void navigate(`/assessments/${safeId}/results/students/${encodeURIComponent(prevId)}`);
+    if (prevId) void navigate(detailPath(prevId));
   };
   const gotoNext = () => {
-    if (nextId) void navigate(`/assessments/${safeId}/results/students/${encodeURIComponent(nextId)}`);
+    if (nextId) void navigate(detailPath(nextId));
   };
 
   React.useEffect(() => {
@@ -166,7 +172,7 @@ const SubmissionDetailInner: React.FC<{ assessmentId: string; encodedStudentId: 
         variant="outline"
         size="sm"
         leftSection={<IconChevronLeft size={14} />}
-        onClick={() => void navigate(`/assessments/${safeId}/results/students`)}
+        onClick={() => void navigate(backPath)}
         px="xs"
       >
         Students
@@ -175,9 +181,10 @@ const SubmissionDetailInner: React.FC<{ assessmentId: string; encodedStudentId: 
         searchable
         size="sm"
         w={220}
+        aria-label="Navigate to student"
         placeholder="Select student"
         value={encodedStudentId}
-        onChange={(v) => v && void navigate(`/assessments/${safeId}/results/students/${encodeURIComponent(v)}`)}
+        onChange={(v) => v && void navigate(detailPath(v))}
         data={studentIds.map((id) => ({
           value: id,
           label: decryptedIds[id] ?? id,
@@ -211,10 +218,6 @@ const SubmissionDetailInner: React.FC<{ assessmentId: string; encodedStudentId: 
         isStale={data?.status?.is_stale}
         staleMessage="Grading results may be out of date — submissions or rules have changed since the last run."
       />
-
-      {adjustMutation.isError && (
-        <Alert color="red">{getErrorMessage(adjustMutation.error)}</Alert>
-      )}
 
       <SimpleGrid cols={{ base: 1, sm: 3 }}>
         <Paper withBorder p="md">
@@ -363,6 +366,7 @@ const SubmissionDetailInner: React.FC<{ assessmentId: string; encodedStudentId: 
                   <NumberInput
                     size="xs"
                     w={96}
+                    aria-label="Adjusted points"
                     value={local?.points ?? ''}
                     onChange={(v) =>
                       setEditing((prev) => ({
@@ -412,6 +416,7 @@ const SubmissionDetailInner: React.FC<{ assessmentId: string; encodedStudentId: 
               ) : (
                 <Textarea
                   size="xs"
+                  aria-label="Adjusted feedback"
                   value={local?.feedback ?? ''}
                   onChange={(e) =>
                     setEditing((prev) => ({

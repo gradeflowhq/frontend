@@ -18,7 +18,7 @@ import { DataTable } from 'mantine-datatable';
 import React, { useState } from 'react';
 
 import AnswerText from '@components/common/AnswerText';
-import DecryptedText from '@components/encryption/DecryptedText';
+import DecryptedText from '@features/encryption/components/DecryptedText';
 
 import BulkAdjustPopover from './BulkAdjustPopover';
 
@@ -31,7 +31,6 @@ const GROUP_PAGE_SIZE = 50;
 interface AnswerGroupListProps {
   groups: AnswerGroup[];
   maxPoints: number;
-  qid: string;
   onBulkAdjust: (group: AnswerGroup, args: BulkAdjustArgs) => void;
   onBulkRemove: (group: AnswerGroup) => void;
   onIndividualAdjust: (
@@ -178,7 +177,7 @@ const AnswerGroupList: React.FC<AnswerGroupListProps> = ({
                               Merged similar {group.mode === 'answer' ? 'answers' : 'feedback'} ({group.mergedAnswers.length}):
                             </Text>
                             {group.mergedAnswers.map((answer, i) => (
-                              <Text key={i} size="xs" ff="monospace" style={{ wordBreak: 'break-word' }}>
+                              <Text key={`${i}:${answer}`} size="xs" ff="monospace" style={{ wordBreak: 'break-word' }}>
                                 {answer || <Text component="span" c="dimmed">(empty)</Text>}
                               </Text>
                             ))}
@@ -265,6 +264,7 @@ const AnswerGroupList: React.FC<AnswerGroupListProps> = ({
                                 <NumberInput
                                   size="xs"
                                   w={80}
+                                  aria-label="Points"
                                   value={editingMap[e.studentId]?.points ?? ''}
                                   onChange={(v) =>
                                     setEditingMap((prev) => ({

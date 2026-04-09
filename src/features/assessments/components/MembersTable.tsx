@@ -3,6 +3,8 @@ import { IconDeviceFloppy, IconPencil, IconTrash, IconUsers } from '@tabler/icon
 import { DataTable } from 'mantine-datatable';
 import React, { useState } from 'react';
 
+import { usePagination } from '@hooks/usePagination';
+
 import type { UserResponse, UserResponseRole } from '@api/models';
 
 type MembersTableProps = {
@@ -23,12 +25,7 @@ const MembersTable: React.FC<MembersTableProps> = ({
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [pendingRole, setPendingRole] = useState<UserResponseRole | null>(null);
   const [saving, setSaving] = useState(false);
-  const [page, setPage] = useState(1);
-  const PAGE_SIZE = initialPageSize;
-
-  React.useEffect(() => {
-    setPage(1);
-  }, [items]);
+  const { page, setPage, pageSize: PAGE_SIZE, paginate } = usePagination([items], initialPageSize);
 
   const beginEdit = (user: UserResponse) => {
     setEditingUserId(user.id);
@@ -66,7 +63,7 @@ const MembersTable: React.FC<MembersTableProps> = ({
     );
   }
 
-  const records = items.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const records = paginate(items);
 
   return (
     <DataTable

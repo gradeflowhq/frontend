@@ -24,9 +24,9 @@ const AnswerText: React.FC<AnswerTextProps> = ({
       }
 
       return (
-        <List m={0} p={0}>
+        <List m={0} p={0} listStyleType="none">
           {value.map((item, idx) => (
-            <List.Item key={idx}>
+            <List.Item key={`${idx}:${String(item)}`}>
               <Badge size="sm" color="gray" mr="xs">
                 {idx + 1}
               </Badge>

@@ -4,7 +4,7 @@ import { isEncrypted, encryptString, decryptString } from '@utils/crypto';
 import { normalizePresent } from '@utils/passphrase';
 import { natsort } from '@utils/sort';
 
-import type { RawSubmission, CsvPreview, UploadCsvResult, PassphraseContext } from './types';
+import type { RawSubmission, CsvPreview, UploadCsvResult, SubmissionPassphraseConfig } from './types';
 
 /**
  * Extract unique question keys from raw submissions (sorted).
@@ -25,7 +25,7 @@ export const extractQuestionKeys = (items: RawSubmission[]): string[] => {
 export const buildSourceCsv = async (
   preview: CsvPreview,
   studentIdColumn: string,
-  passphraseCtx?: PassphraseContext
+  passphraseCtx?: SubmissionPassphraseConfig
 ): Promise<UploadCsvResult> => {
   const { headers, rows } = preview;
   const sidIdx = headers.indexOf(studentIdColumn);
@@ -51,13 +51,13 @@ export const buildSourceCsv = async (
  * Decode student IDs in a CSV exported by the server (if passphrase available).
  * Returns the decoded CSV string; falls back to original if decode fails.
  */
-export const tryDecodeExportCsv = async (csv: string, passphraseCtx?: PassphraseContext): Promise<string> => {
+export const tryDecodeExportCsv = async (csv: string, passphraseCtx?: SubmissionPassphraseConfig): Promise<string> => {
   const passphrase = normalizePresent(passphraseCtx?.passphrase ?? null);
   if (!passphrase) return csv;
 
   try {
     const parsed = Papa.parse<string[]>(csv, { header: false, skipEmptyLines: true });
-    const rows = parsed.data as unknown as string[][];
+    const rows = parsed.data;
     if (!rows || rows.length < 2) return csv;
 
     const headerRow = rows[0];

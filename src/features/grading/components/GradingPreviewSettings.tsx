@@ -1,5 +1,5 @@
-import { SimpleGrid, NumberInput, Select, Box, Button } from '@mantine/core';
-import { IconPlayerPlay } from '@tabler/icons-react';
+import { SimpleGrid, NumberInput, Select, Box, Button, Group } from '@mantine/core';
+import { IconPlayerPlay, IconX } from '@tabler/icons-react';
 import React from 'react';
 
 export type GradingPreviewParams = {
@@ -8,14 +8,26 @@ export type GradingPreviewParams = {
   seed?: number | null;
 };
 
+type WithRun = {
+  onRun: () => Promise<void> | void;
+  runLoading?: boolean;
+  onCancel?: () => void;
+  cancelLoading?: boolean;
+};
+
+type WithoutRun = {
+  onRun?: never;
+  runLoading?: never;
+  onCancel?: never;
+  cancelLoading?: never;
+};
+
 type Props = {
   value: GradingPreviewParams;
   onChange: (next: GradingPreviewParams) => void;
-  onRun?: () => Promise<void> | void;
-  runLoading?: boolean;
-};
+} & (WithRun | WithoutRun);
 
-const GradingPreviewSettings: React.FC<Props> = ({ value, onChange, onRun, runLoading }) => {
+const GradingPreviewSettings: React.FC<Props> = ({ value, onChange, onRun, runLoading, onCancel, cancelLoading }) => {
   const { limit, selection, seed } = value;
   return (
     <SimpleGrid cols={{ base: 1, md: onRun ? 4 : 3 }} spacing="sm">
@@ -43,14 +55,29 @@ const GradingPreviewSettings: React.FC<Props> = ({ value, onChange, onRun, runLo
       />
       {onRun && (
         <Box style={{ display: 'flex', alignItems: 'flex-end' }}>
-          <Button
-            leftSection={<IconPlayerPlay size={16} />}
-            onClick={() => void onRun()}
-            loading={!!runLoading}
-            fullWidth
-          >
-            Run Preview
-          </Button>
+          <Group gap="xs" style={{ width: '100%' }}>
+            <Button
+              leftSection={<IconPlayerPlay size={16} />}
+              onClick={() => void onRun()}
+              loading={!!runLoading}
+              disabled={!!runLoading}
+              style={{ flex: 1 }}
+            >
+              Run Preview
+            </Button>
+            {runLoading && onCancel && (
+              <Button
+                color="red"
+                variant="light"
+                leftSection={<IconX size={16} />}
+                onClick={onCancel}
+                loading={cancelLoading}
+                style={{ flex: 1 }}
+              >
+                Cancel
+              </Button>
+            )}
+          </Group>
         </Box>
       )}
     </SimpleGrid>

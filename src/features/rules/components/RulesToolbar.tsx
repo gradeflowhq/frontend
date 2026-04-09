@@ -28,6 +28,7 @@ const RulesToolbar: React.FC<RulesToolbarProps> = ({
       {onSearchChange && (
         <TextInput
           leftSection={<IconSearch size={14} />}
+          aria-label="Search rules"
           placeholder="Search rules"
           value={searchQuery ?? ''}
           onChange={(e) => onSearchChange(e.target.value)}

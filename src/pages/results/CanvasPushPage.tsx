@@ -6,36 +6,38 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 import { createCanvasClient, parseCanvasBaseUrl } from '@api/canvasClient';
+import { QK } from '@api/queryKeys';
+import { PATHS } from '@app/routes/paths';
 import PageShell from '@components/common/PageShell';
 import SectionStatusBadge from '@components/common/SectionStatusBadge';
 import { useAssessment } from '@features/assessments/api';
-import { useCanvasData, useCourseData } from '@features/canvas/api/useCanvasData';
-import { useCanvasProgress } from '@features/canvas/api/useCanvasProgress';
-import { useCanvasPush } from '@features/canvas/api/useCanvasPush';
-import { useCsvGrades } from '@features/canvas/api/useCsvGrades';
-import { usePreparedRows } from '@features/canvas/api/usePreparedRows';
+import { CourseSelector, PreviewSection, PushProgressBanner } from '@features/canvas/components';
+import AssignmentPicker from '@features/canvas/components/AssignmentPicker';
+import GradeSettings from '@features/canvas/components/GradeSettings';
 import { pickValue } from '@features/canvas/helpers';
-import { useAssessmentPassphrase } from '@features/encryption/passphraseContext';
+import { useCanvasData, useCourseData } from '@features/canvas/hooks/useCanvasData';
+import { useCanvasProgress } from '@features/canvas/hooks/useCanvasProgress';
+import { useCanvasPush } from '@features/canvas/hooks/useCanvasPush';
+import { useCsvGrades } from '@features/canvas/hooks/useCsvGrades';
+import { usePreparedRows } from '@features/canvas/hooks/usePreparedRows';
+import { type PreviewTab } from '@features/canvas/types';
+import { useAssessmentPassphrase } from '@features/encryption/PassphraseContext';
 import { useGrading } from '@features/grading/api';
+import { GradingStatusBanner, NoGradingResults } from '@features/grading/components';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
+import { CACHE_STALE_TIME_CANVAS } from '@lib/constants';
 import { useCanvasPushStore } from '@state/canvasStore';
 import { useUserSettingsStore } from '@state/userStore';
 import { getErrorMessage } from '@utils/error';
 
-import AssignmentSection from '../../features/canvas/components/AssignmentSection';
-import CourseSelector from '../../features/canvas/components/CourseSelector';
-import PreviewSection from '../../features/canvas/components/PreviewSection';
-import PushProgressBanner from '../../features/canvas/components/PushProgressBanner';
-import { type PreviewTab } from '../../features/canvas/types';
-
-const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) => {
+const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) => {
   const { passphrase, notifyEncryptedDetected } = useAssessmentPassphrase();
   const { data: assessmentRes } = useAssessment(assessmentId, true);
 
   useDocumentTitle(`Push to Canvas - ${assessmentRes?.name ?? 'Assessment'} - GradeFlow`);
 
   const navigate = useNavigate();
-  const goToSettings = () => void navigate('/settings?tab=integrations');
+  const goToSettings = () => void navigate(PATHS.SETTINGS_INTEGRATIONS);
 
   const { canvasBaseUrl, canvasToken } = useUserSettingsStore();
   const {
@@ -63,14 +65,14 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
   // Fetch Canvas current user for display in the connection step
   const parsedCanvasUrl = parseCanvasBaseUrl(canvasBaseUrl);
   const { data: canvasUser } = useQuery({
-    queryKey: ['canvas', 'me', canvasBaseUrl, canvasToken],
+    queryKey: QK.canvas.me(canvasBaseUrl, canvasToken),
     queryFn: async () => {
       const client = createCanvasClient({ canvasBaseUrl: parsedCanvasUrl!, token: canvasToken });
       const res = await client.getCurrentUser();
       return res.data;
     },
     enabled: !!parsedCanvasUrl && !!canvasToken && !canvasData.missingConfig && !canvasData.isError,
-    staleTime: 5 * 60 * 1000,
+    staleTime: CACHE_STALE_TIME_CANVAS,
     retry: false,
   });
   const canvasUserLabel =
@@ -151,12 +153,14 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
     }
   }, [assignmentName, assessmentRes?.name, setConfig]);
 
+  // Only react to gradeMode/csvTotalMax changes; pointsPossible excluded from deps
+  // to prevent auto-derived value from overwriting user-selected assignment points.
   useEffect(() => {
     const nextPoints = gradeMode === 'percent' ? 100 : csvTotalMax;
-    if (Number.isFinite(nextPoints) && nextPoints > 0 && nextPoints !== pointsPossible) {
+    if (Number.isFinite(nextPoints) && nextPoints > 0) {
       setConfig({ pointsPossible: nextPoints });
     }
-  }, [gradeMode, csvTotalMax, pointsPossible, setConfig]);
+  }, [gradeMode, csvTotalMax, setConfig]);
 
   const handleCourseChange = (value: string) => {
     if (value === courseId) return;
@@ -245,6 +249,16 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
     parts.push(includeComments ? 'With comments' : 'No comments');
     return parts.join(' · ');
   }, [courseId, gradeMode, enableRounding, roundingBase, includeComments]);
+
+        
+  if (gradingData?.submissions.length === 0) {
+    return (
+      <PageShell title="Push to Canvas">
+        <GradingStatusBanner assessmentId={assessmentId} />
+        <NoGradingResults assessmentId={assessmentId} />
+      </PageShell>
+    );
+  }
 
   return (
     <PageShell title="Push to Canvas">
@@ -350,7 +364,7 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
               </Group>
             </Accordion.Control>
             <Accordion.Panel>
-              <AssignmentSection
+              <AssignmentPicker
                 loadingCourseData={courseData.isLoading}
                 assignments={filteredAssignments}
                 assignmentGroups={courseData.assignmentGroups}
@@ -358,22 +372,12 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
                 assignmentName={assignmentName}
                 assessmentName={assessmentRes?.name}
                 assignmentGroupId={assignmentGroupId}
-                enableRounding={enableRounding}
-                roundingBase={roundingBase ?? 0}
-                includeComments={includeComments}
-                gradeMode={gradeMode}
                 onAssignmentSelect={handleAssignmentSelect}
                 onAssignmentNameChange={value => setConfig({ assignmentName: value })}
                 onAssignmentGroupChange={handleAssignmentGroupChange}
-                onEnableRoundingChange={value => setConfig({ enableRounding: value })}
-                onRoundingBaseChange={value => setConfig({ roundingBase: value })}
-                onIncludeCommentsChange={setIncludeComments}
-                onGradeModeChange={value => setConfig({ gradeMode: value })}
                 onRefresh={async () => {
                   await courseData.refetch();
                 }}
-                showAssignment
-                showGradeSettings={false}
               />
             </Accordion.Panel>
           </Accordion.Item>
@@ -390,30 +394,15 @@ const CanvasPushInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) =
               </Group>
             </Accordion.Control>
             <Accordion.Panel>
-              <AssignmentSection
-                loadingCourseData={courseData.isLoading}
-                assignments={filteredAssignments}
-                assignmentGroups={courseData.assignmentGroups}
-                assignmentId={assignmentId}
-                assignmentName={assignmentName}
-                assessmentName={assessmentRes?.name}
-                assignmentGroupId={assignmentGroupId}
+              <GradeSettings
                 enableRounding={enableRounding}
                 roundingBase={roundingBase ?? 0}
                 includeComments={includeComments}
                 gradeMode={gradeMode}
-                onAssignmentSelect={handleAssignmentSelect}
-                onAssignmentNameChange={value => setConfig({ assignmentName: value })}
-                onAssignmentGroupChange={handleAssignmentGroupChange}
                 onEnableRoundingChange={value => setConfig({ enableRounding: value })}
                 onRoundingBaseChange={value => setConfig({ roundingBase: value })}
                 onIncludeCommentsChange={setIncludeComments}
                 onGradeModeChange={value => setConfig({ gradeMode: value })}
-                onRefresh={async () => {
-                  await courseData.refetch();
-                }}
-                showAssignment={false}
-                showGradeSettings
               />
             </Accordion.Panel>
           </Accordion.Item>
@@ -474,7 +463,7 @@ const CanvasPushPage: React.FC = () => {
   if (!assessmentId) {
     return <Alert color="red">Assessment ID is missing.</Alert>;
   }
-  return <CanvasPushInner assessmentId={assessmentId} />;
+  return <CanvasPushPageInner assessmentId={assessmentId} />;
 };
 
 export default CanvasPushPage;

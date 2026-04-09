@@ -1,11 +1,12 @@
 import { Alert, Skeleton } from '@mantine/core';
 import { IconCircleCheck, IconAlertCircle } from '@tabler/icons-react';
 import { DataTable } from 'mantine-datatable';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 
 import AnswerText from '@components/common/AnswerText';
-import DecryptedText from '@components/encryption/DecryptedText';
-import { useAssessmentPassphrase } from '@features/encryption/passphraseContext';
+import DecryptedText from '@features/encryption/components/DecryptedText';
+import { useAssessmentPassphrase } from '@features/encryption/PassphraseContext';
+import { usePagination } from '@hooks/usePagination';
 import { getErrorMessage } from '@utils/error';
 import { natsort } from '@utils/sort';
 
@@ -25,8 +26,6 @@ const GradingPreviewPanel: React.FC<Props> = ({
   initialPageSize = 5,
 }) => {
   const { passphrase } = useAssessmentPassphrase();
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(initialPageSize);
 
   const sorted = useMemo(
     () => [...(items ?? [])].sort((a, b) => natsort(a.student_id, b.student_id)),
@@ -104,6 +103,8 @@ const GradingPreviewPanel: React.FC<Props> = ({
     ];
   }, [allQids, passphrase]);
 
+  const { page, setPage, pageSize, setPageSize, paginate } = usePagination([], initialPageSize);
+
   if (loading) {
     return (
       <div>
@@ -122,7 +123,7 @@ const GradingPreviewPanel: React.FC<Props> = ({
 
   if (!sorted.length) return null;
 
-  const records = sorted.slice((page - 1) * pageSize, page * pageSize);
+  const records = paginate(sorted);
 
   return (
     <DataTable

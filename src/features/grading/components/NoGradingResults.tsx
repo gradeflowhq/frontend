@@ -1,17 +1,9 @@
-import {
-  Anchor,
-  Box,
-  Card,
-  Center,
-  Group,
-  Stack,
-  Text,
-  ThemeIcon,
-  Title,
-} from '@mantine/core';
+import { Anchor, Center, Stack, Text, Title } from '@mantine/core';
 import { IconAdjustments, IconChartBar, IconInbox, IconPlayerPlay } from '@tabler/icons-react';
 import React from 'react';
 import { Link } from 'react-router-dom';
+
+import { ActionOptionCard } from '@components/common/ActionOptionCard';
 
 interface NoGradingResultsProps {
   assessmentId: string;
@@ -30,69 +22,24 @@ const NoGradingResults: React.FC<NoGradingResultsProps> = ({ assessmentId }) => 
       </Text>
 
       <Stack gap="xs" w="100%">
-        <Card withBorder p="sm" radius="md">
-          <Group gap="sm" align="flex-start" wrap="nowrap">
-            <ThemeIcon variant="light" color="blue" size="md" radius="xl" style={{ flexShrink: 0 }}>
-              <IconPlayerPlay size={14} />
-            </ThemeIcon>
-            <Box>
-              <Text size="sm" fw={500}>Run grading</Text>
-              <Text size="xs" c="dimmed">
-                Once submissions, questions, and rules are configured, run
-                grading from the Overview page.{' '}
-                <Anchor
-                  component={Link}
-                  to={`/assessments/${assessmentId}/overview`}
-                  size="xs"
-                >
-                  Go to Overview →
-                </Anchor>
-              </Text>
-            </Box>
-          </Group>
-        </Card>
-
-        <Card withBorder p="sm" radius="md">
-          <Group gap="sm" align="flex-start" wrap="nowrap">
-            <ThemeIcon variant="light" color="teal" size="md" radius="xl" style={{ flexShrink: 0 }}>
-              <IconInbox size={14} />
-            </ThemeIcon>
-            <Box>
-              <Text size="sm" fw={500}>Make sure submissions are uploaded</Text>
-              <Text size="xs" c="dimmed">
-                Grading requires student submissions.{' '}
-                <Anchor
-                  component={Link}
-                  to={`/assessments/${assessmentId}/submissions`}
-                  size="xs"
-                >
-                  Go to Submissions →
-                </Anchor>
-              </Text>
-            </Box>
-          </Group>
-        </Card>
-
-        <Card withBorder p="sm" radius="md">
-          <Group gap="sm" align="flex-start" wrap="nowrap">
-            <ThemeIcon variant="light" color="violet" size="md" radius="xl" style={{ flexShrink: 0 }}>
-              <IconAdjustments size={14} />
-            </ThemeIcon>
-            <Box>
-              <Text size="sm" fw={500}>Make sure rules are configured</Text>
-              <Text size="xs" c="dimmed">
-                Rules determine how each question is scored.{' '}
-                <Anchor
-                  component={Link}
-                  to={`/assessments/${assessmentId}/rules`}
-                  size="xs"
-                >
-                  Go to Rules →
-                </Anchor>
-          </Text>
-            </Box>
-          </Group>
-        </Card>
+        <ActionOptionCard
+          icon={<IconPlayerPlay size={14} />}
+          iconColor="blue"
+          title="Run grading"
+          description={<>Once submissions, questions, and rules are configured, run grading from the Overview page.{' '}<Anchor component={Link} to={`/assessments/${assessmentId}/overview`} size="xs">Go to Overview →</Anchor></>}
+        />
+        <ActionOptionCard
+          icon={<IconInbox size={14} />}
+          iconColor="teal"
+          title="Make sure submissions are uploaded"
+          description={<>Grading requires student submissions.{' '}<Anchor component={Link} to={`/assessments/${assessmentId}/submissions`} size="xs">Go to Submissions →</Anchor></>}
+        />
+        <ActionOptionCard
+          icon={<IconAdjustments size={14} />}
+          iconColor="violet"
+          title="Make sure rules are configured"
+          description={<>Rules determine how each question is scored.{' '}<Anchor component={Link} to={`/assessments/${assessmentId}/rules`} size="xs">Go to Rules →</Anchor></>}
+        />
       </Stack>
     </Stack>
   </Center>

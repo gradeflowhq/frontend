@@ -2,6 +2,8 @@ import { BarChart } from '@mantine/charts';
 import { SimpleGrid, Card, Group, Text, Badge, Progress, Divider, SegmentedControl, ScrollArea, Tooltip } from '@mantine/core';
 import React, { useMemo, useState } from 'react';
 
+import SectionLabel from '@components/common/SectionLabel';
+
 import { computeStats } from '../helpers';
 
 import type { AdjustableSubmission, AdjustableQuestionResult } from '../types';
@@ -37,18 +39,6 @@ const ProgressRow = ({ label, pct, color = 'blue' }: { label: string; pct: numbe
 );
 
 // ── Section header ───────────────────────────────────────────────────────────
-
-const SectionLabel = ({ children }: { children: React.ReactNode }) => (
-  <Text
-    size="xs"
-    fw={700}
-    tt="uppercase"
-   
-    style={{ letterSpacing: '0.06em', marginTop: 8, marginBottom: 2 }}
-  >
-    {children}
-  </Text>
-);
 
 // ── Answer distribution ──────────────────────────────────────────────────────
 
@@ -211,12 +201,12 @@ const QuestionAnalysisGrid: React.FC<Props> = ({ items, questionIds }) => {
             </Group>
 
             {/* ── Rates ── */}
-            <SectionLabel>Coverage &amp; Difficulty</SectionLabel>
+              <SectionLabel style={{ marginTop: 8, marginBottom: 2 }}>Coverage &amp; Difficulty</SectionLabel>
             <ProgressRow label="Missing" pct={q.missingRatePct} color="orange" />
             <ProgressRow label="Full credit" pct={q.difficultyPct} color="green" />
 
             {/* ── Stats ── */}
-            <SectionLabel>Score Stats</SectionLabel>
+              <SectionLabel style={{ marginTop: 8, marginBottom: 2 }}>Score Stats</SectionLabel>
             <StatRow
               label="Mean"
               right={
@@ -248,9 +238,9 @@ const QuestionAnalysisGrid: React.FC<Props> = ({ items, questionIds }) => {
             {/* ── Distribution ── */}
             <Divider mt={8} mb={6} />
             <Group justify="space-between" align="center" mb={6}>
-              <Text size="xs" fw={700} tt="uppercase" style={{ letterSpacing: '0.06em' }}>
+              <SectionLabel>
                 Distribution
-              </Text>
+              </SectionLabel>
               <SegmentedControl
                 size="xs"
                 value={view}

@@ -2,12 +2,13 @@ import { Alert, Skeleton, Stack, TextInput } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconQuestionMark, IconSearch } from '@tabler/icons-react';
 import React, { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
 
 import { useAssessmentContext } from '@app/contexts/AssessmentContext';
 import EmptyState from '@components/common/EmptyState';
+import MasterDetailLayout from '@components/common/MasterDetailLayout';
 import PageShell from '@components/common/PageShell';
-import { useAssessmentPassphrase } from '@features/encryption/passphraseContext';
+import QuestionMasterList from '@components/common/QuestionMasterList';
+import { useAssessmentPassphrase } from '@features/encryption/PassphraseContext';
 import { useAdjustGrading, useBulkAdjustGrading, useGrading } from '@features/grading/api';
 import {
   GradingStatusBanner,
@@ -21,8 +22,8 @@ import {
 import { buildGroups } from '@features/grading/helpers/grouping';
 import { useGradingStatus } from '@features/grading/hooks/useGradingStatus';
 import { useQuestionSet } from '@features/questions/api';
-import { MasterDetailLayout, QuestionMasterList } from '@features/rules/components';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
+import { useUrlSelectedId } from '@hooks/useUrlSelectedId';
 import { isEncrypted } from '@utils/crypto';
 import { getErrorMessage } from '@utils/error';
 import { natsort } from '@utils/sort';
@@ -47,10 +48,8 @@ const AQ_PARAM = 'aq';
 // ── Page component ────────────────────────────────────────────────────────────
 
 const GroupViewPage: React.FC = () => {
-  const { assessmentId = '' } = useParams<{ assessmentId: string }>();
-  const { assessment } = useAssessmentContext();
+  const { assessmentId, assessment } = useAssessmentContext();
   const { passphrase, notifyEncryptedDetected } = useAssessmentPassphrase();
-  const [searchParams, setSearchParams] = useSearchParams();
 
   const [mode, setMode] = useState<GroupingMode>('answer');
   const [threshold, setThreshold] = useState(DEFAULT_THRESHOLD);
@@ -101,25 +100,7 @@ const GroupViewPage: React.FC = () => {
     return m;
   }, [questionMap]);
 
-  const urlQid = searchParams.get(AQ_PARAM);
-  const selectedQid = useMemo(() => {
-    if (urlQid && questionIds.includes(urlQid)) return urlQid;
-    return questionIds[0] ?? null;
-  }, [urlQid, questionIds]);
-
-  // Initialise URL param on first mount
-  useEffect(() => {
-    if (!urlQid && questionIds.length > 0 && questionIds[0]) {
-      setSearchParams(
-        (prev) => {
-          const next = new URLSearchParams(prev);
-          next.set(AQ_PARAM, questionIds[0]!);
-          return next;
-        },
-        { replace: true },
-      );
-    }
-  }, [urlQid, questionIds, setSearchParams]);
+  const { selectedId: selectedQid, setSelectedId: setSelectedQid } = useUrlSelectedId(questionIds, AQ_PARAM);
 
   const byQuestion = useMemo(() => {
     const map: Record<string, [unknown]> = {};
@@ -170,17 +151,10 @@ const GroupViewPage: React.FC = () => {
 
   const handleSelect = useCallback(
     (qid: string) => {
-      setSearchParams(
-        (prev) => {
-          const next = new URLSearchParams(prev);
-          next.set(AQ_PARAM, qid);
-          return next;
-        },
-        { replace: true },
-      );
+      setSelectedQid(qid);
       setMobileShowDetail(true);
     },
-    [setSearchParams],
+    [setSelectedQid],
   );
 
   const handleBulkAdjust = useCallback(
@@ -375,7 +349,6 @@ const GroupViewPage: React.FC = () => {
           key={selectedQid}
           groups={groups}
           maxPoints={headerStats?.maxPoints ?? 0}
-          qid={selectedQid}
           onBulkAdjust={(group, args) => { void handleBulkAdjust(group, args); }}
           onBulkRemove={(group) => { void handleBulkRemove(group); }}
           onIndividualAdjust={handleIndividualAdjust}
@@ -395,6 +368,7 @@ const GroupViewPage: React.FC = () => {
       actions={
         <TextInput
           leftSection={<IconSearch size={14} />}
+          aria-label="Search questions"
           placeholder="Search questions"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}

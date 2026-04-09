@@ -11,7 +11,7 @@ const AuthBootstrap: React.FC<Props> = ({ children }) => {
 
   useEffect(() => {
     const run = async () => {
-      const { refreshToken, setTokens, clearTokens, markBootstrapped } = useAuthStore.getState();
+      const { refreshToken, setTokens, clearTokens } = useAuthStore.getState();
       try {
         if (refreshToken) {
           const res = await api.refreshAuthRefreshPost({ refresh_token: refreshToken });
@@ -20,7 +20,6 @@ const AuthBootstrap: React.FC<Props> = ({ children }) => {
       } catch {
         clearTokens();
       } finally {
-        markBootstrapped();
         setLoading(false);
       }
     };

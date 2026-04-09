@@ -31,16 +31,15 @@ import {
   IconSettings,
   IconUsers,
 } from '@tabler/icons-react';
-import { useQuery } from '@tanstack/react-query';
 import React, { useCallback, useState } from 'react';
 import { Link, useMatch, useNavigate, useLocation } from 'react-router-dom';
 
-import { api } from '@api';
+import { PATHS } from '@app/routes/paths';
 import { useAssessment } from '@features/assessments/api';
+import { useMe, useLogout } from '@features/auth/api';
 import { useGradingJob, useJobStatus } from '@features/grading/api';
+import { SIDEBAR_EXPANDED_WIDTH, SIDEBAR_COLLAPSED_WIDTH } from '@lib/constants';
 import { useAuthStore } from '@state/authStore';
-
-import type { MeResponse } from '@api/models';
 
 interface SidebarNavProps {
   expanded: boolean;
@@ -189,28 +188,21 @@ const AccountSection: React.FC<{ expanded: boolean }> = ({ expanded }) => {
   const clearTokens = useAuthStore((s) => s.clearTokens);
   const navigate = useNavigate();
 
-  const { data } = useQuery({
-    queryKey: ['auth', 'me'],
-    queryFn: async () => (await api.meAuthMeGet()).data as MeResponse,
-    staleTime: 5 * 60 * 1000,
-  });
+  const { data } = useMe();
+  const logoutMutation = useLogout();
 
   const username = data?.name ?? data?.email ?? 'Account';
   const initial = username.charAt(0).toUpperCase();
 
   const handleLogout = useCallback(() => {
-    void (async () => {
-      try {
-        await api.logoutAuthLogoutPost();
-        notifications.show({ color: 'green', message: 'Logged out' });
-      } catch {
-        notifications.show({ color: 'red', message: 'Logout failed' });
-      } finally {
-        clearTokens();
-        void navigate('/login');
-      }
-    })();
-  }, [clearTokens, navigate]);
+    void logoutMutation.mutateAsync(undefined, {
+      onSuccess: () => notifications.show({ color: 'green', message: 'Logged out' }),
+      onError: () => notifications.show({ color: 'red', message: 'Logout failed' }),
+    }).finally(() => {
+      clearTokens();
+      void navigate(PATHS.LOGIN);
+    });
+  }, [logoutMutation, clearTokens, navigate]);
 
   const avatarEl = (
     <Avatar size="sm" radius="xl" color="blue">
@@ -290,7 +282,7 @@ const AssessmentSidebarItems: React.FC<{ assessmentId: string; expanded: boolean
   expanded,
 }) => {
   const { data: assessment, isLoading: assessmentLoading } = useAssessment(assessmentId, !!assessmentId);
-  const base = `/assessments/${assessmentId}`;
+  const ap = PATHS.assessment(assessmentId);
 
   const { data: gradingJob } = useGradingJob(assessmentId, !!assessmentId);
   const jobId = gradingJob?.job_id ?? null;
@@ -310,7 +302,7 @@ const AssessmentSidebarItems: React.FC<{ assessmentId: string; expanded: boolean
     <Stack gap={2}>
       <NavLink
         component={Link}
-        to="/assessments"
+        to={PATHS.ASSESSMENTS}
         label={assessmentLabel}
         leftSection={<IconArrowLeft size={SIDEBAR_ICON_SIZE} />}
         styles={{
@@ -331,73 +323,73 @@ const AssessmentSidebarItems: React.FC<{ assessmentId: string; expanded: boolean
       />
 
       <SectionLabel label="Setup" expanded={expanded} />
-      <SidebarNavItem icon={<IconLayoutDashboard size={SIDEBAR_ICON_SIZE} />} label="Overview" to={`${base}/overview`} expanded={expanded} />
-      <SidebarNavItem icon={<IconInbox size={SIDEBAR_ICON_SIZE} />} label="Submissions" to={`${base}/submissions`} expanded={expanded} />
-      <SidebarNavItem icon={<IconQuestionMark size={SIDEBAR_ICON_SIZE} />} label="Questions" to={`${base}/questions`} expanded={expanded} />
-      <SidebarNavItem icon={<IconAdjustments size={SIDEBAR_ICON_SIZE} />} label="Rules" to={`${base}/rules`} expanded={expanded} />
+      <SidebarNavItem icon={<IconLayoutDashboard size={SIDEBAR_ICON_SIZE} />} label="Overview" to={ap.overview} expanded={expanded} />
+      <SidebarNavItem icon={<IconInbox size={SIDEBAR_ICON_SIZE} />} label="Submissions" to={ap.submissions} expanded={expanded} />
+      <SidebarNavItem icon={<IconQuestionMark size={SIDEBAR_ICON_SIZE} />} label="Questions" to={ap.questions} expanded={expanded} />
+      <SidebarNavItem icon={<IconAdjustments size={SIDEBAR_ICON_SIZE} />} label="Rules" to={ap.rules} expanded={expanded} />
       <SectionLabel label="Output" expanded={expanded} />
       <SidebarNavSection
         icon={<IconListCheck size={SIDEBAR_ICON_SIZE} />}
         label="Results"
-        basePath={`${base}/results`}
+        basePath={ap.results.index}
         expanded={expanded}
         badge={gradingBadge}
       >
         <SidebarNavItem
           icon={<IconChartBar size={SIDEBAR_ICON_SIZE} />}
           label="Statistics"
-          to={`${base}/results/statistics`}
+          to={ap.results.statistics}
           expanded={expanded}
         />
         <SidebarNavItem
           icon={<IconUsers size={SIDEBAR_ICON_SIZE} />}
           label="Students"
-          to={`${base}/results/students`}
+          to={ap.results.students}
           expanded={expanded}
         />
         <SidebarNavItem
           icon={<IconLayersSubtract size={SIDEBAR_ICON_SIZE} />}
           label="Groups"
-          to={`${base}/results/groups`}
+          to={ap.results.groups}
           expanded={expanded}
         />
       </SidebarNavSection>
-      <SidebarNavItem icon={<IconSend size={SIDEBAR_ICON_SIZE} />} label="Publish" to={`${base}/publish`} expanded={expanded} />
+      <SidebarNavItem icon={<IconSend size={SIDEBAR_ICON_SIZE} />} label="Publish" to={ap.publish} expanded={expanded} />
 
       <SectionLabel label="Admin" expanded={expanded} />
-      <SidebarNavItem icon={<IconUsers size={SIDEBAR_ICON_SIZE} />} label="Members" to={`${base}/members`} expanded={expanded} />
-      <SidebarNavItem icon={<IconSettings size={SIDEBAR_ICON_SIZE} />} label="Settings" to={`${base}/settings`} expanded={expanded} />
+      <SidebarNavItem icon={<IconUsers size={SIDEBAR_ICON_SIZE} />} label="Members" to={ap.members} expanded={expanded} />
+      <SidebarNavItem icon={<IconSettings size={SIDEBAR_ICON_SIZE} />} label="Settings" to={ap.settings} expanded={expanded} />
     </Stack>
   );
 };
 
 const TopLevelSidebarItems: React.FC<{ expanded: boolean }> = ({ expanded }) => (
   <Stack gap={2}>
-    <SidebarNavItem icon={<IconGridDots size={SIDEBAR_ICON_SIZE} />} label="Assessments" to="/assessments" expanded={expanded} />
+    <SidebarNavItem icon={<IconGridDots size={SIDEBAR_ICON_SIZE} />} label="Assessments" to={PATHS.ASSESSMENTS} expanded={expanded} />
   </Stack>
 );
 
 const SidebarNav: React.FC<SidebarNavProps> = ({ expanded, onToggle }) => {
-  const matchAssessment = useMatch('/assessments/:assessmentId/*');
-  const matchAssessmentList = useMatch('/assessments');
+  const matchAssessment = useMatch(`${PATHS.ASSESSMENTS}/:assessmentId/*`);
+  const matchAssessmentList = useMatch(PATHS.ASSESSMENTS);
   const assessmentId = matchAssessment?.params.assessmentId;
 
   const [lastAssessmentId, setLastAssessmentId] = React.useState<string | undefined>(undefined);
 
   React.useEffect(() => {
-    if (assessmentId) setLastAssessmentId(assessmentId);
-  }, [assessmentId]);
-
-  React.useEffect(() => {
-    if (matchAssessmentList) setLastAssessmentId(undefined);
-  }, [matchAssessmentList]);
+    if (assessmentId) {
+      setLastAssessmentId(assessmentId);
+    } else if (matchAssessmentList) {
+      setLastAssessmentId(undefined);
+    }
+  }, [assessmentId, matchAssessmentList]);
 
   const effectiveAssessmentId = assessmentId ?? lastAssessmentId;
 
   return (
     <AppShell.Navbar
       style={{
-        width: expanded ? 220 : 56,
+        width: expanded ? SIDEBAR_EXPANDED_WIDTH : SIDEBAR_COLLAPSED_WIDTH,
         transition: 'width 200ms ease',
         overflow: 'hidden',
         backgroundColor: 'var(--mantine-color-default-hover)',
@@ -442,7 +434,7 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ expanded, onToggle }) => {
           <SidebarNavItem
             icon={<IconSettings size={SIDEBAR_ICON_SIZE} />}
             label="Settings"
-            to="/settings"
+            to={PATHS.SETTINGS}
             expanded={expanded}
           />
           <AccountSection expanded={expanded} />

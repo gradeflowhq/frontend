@@ -3,16 +3,16 @@ import { IconListCheck, IconSend } from '@tabler/icons-react';
 import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import SectionStatusBadge from '@components/common/SectionStatusBadge';
+import { PATHS } from '@app/routes/paths';
+import SectionLabel from '@components/common/SectionLabel';
 import { buildTotals, computeStats } from '@features/grading/helpers';
 
 import StatCard from './StatCard';
 
-import type { AdjustableSubmission, AssessmentResponse, GradingResponse } from '@api/models';
+import type { AdjustableSubmission, GradingResponse } from '@api/models';
 
 interface Props {
   assessmentId: string;
-  assessment: AssessmentResponse | null | undefined;
   hasGrading: boolean;
   hasGradingJob: boolean;
   submissions: AdjustableSubmission[];
@@ -21,7 +21,6 @@ interface Props {
 
 const GradingResultsCard: React.FC<Props> = ({
   assessmentId,
-  assessment,
   hasGrading,
   hasGradingJob,
   submissions,
@@ -42,15 +41,9 @@ const GradingResultsCard: React.FC<Props> = ({
     <Card withBorder radius="md" padding="lg">
       <Group justify="space-between" align="center" mb="xs">
         <Box>
-          <Text
-            fw={700}
-            size="xs"
-            tt="uppercase"
-            c="dimmed"
-            style={{ letterSpacing: '0.06em' }}
-          >
+          <SectionLabel c="dimmed">
             Grading Results
-          </Text>
+          </SectionLabel>
           <Group gap="xs" mt={2} align="center">
             <Text size="sm">
               {hasGrading ? `${submissions.length} students graded` : 'Job queued'}
@@ -67,7 +60,7 @@ const GradingResultsCard: React.FC<Props> = ({
             size="xs"
             variant="light"
             leftSection={<IconListCheck size={13} />}
-            onClick={() => void navigate(`/assessments/${assessmentId}/results/statistics`)}
+            onClick={() => void navigate(PATHS.assessment(assessmentId).results.statistics)}
           >
             View Results
           </Button>
@@ -75,7 +68,7 @@ const GradingResultsCard: React.FC<Props> = ({
             size="xs"
             variant="light"
             leftSection={<IconSend size={13} />}
-            onClick={() => void navigate(`/assessments/${assessmentId}/publish`)}
+            onClick={() => void navigate(PATHS.assessment(assessmentId).publish)}
           >
             Publish
           </Button>
@@ -89,10 +82,6 @@ const GradingResultsCard: React.FC<Props> = ({
             grading run.
           </Text>
         </Alert>
-      )}
-
-      {assessment?.results_updated_at && (
-        <SectionStatusBadge />
       )}
 
       {quickStats && quickStats.count > 0 && (

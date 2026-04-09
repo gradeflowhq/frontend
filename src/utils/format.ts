@@ -1,13 +1,7 @@
 /**
- * Pluralize a word: returns `${count} word` or `${count} words`.
- * Pass a custom plural form for irregular words.
- */
-export const pluralize = (count: number, singular: string, plural?: string) =>
-  `${count} ${count === 1 ? singular : (plural ?? `${singular}s`)}`;
-
-/**
  * Parse a value into a number, returning undefined if invalid.
  */
+
 export const parseNumber = (value?: string | number | null): number | undefined => {
   if (value === undefined || value === null) return undefined;
   const parsed = typeof value === 'number' ? value : Number(String(value).trim());

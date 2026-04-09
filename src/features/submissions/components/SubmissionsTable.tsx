@@ -3,9 +3,10 @@ import { DataTable } from 'mantine-datatable';
 import React, { useMemo, useState } from 'react';
 
 import AnswerText from '@components/common/AnswerText';
-import DecryptedText from '@components/encryption/DecryptedText';
-import { useAssessmentPassphrase } from '@features/encryption/passphraseContext';
+import DecryptedText from '@features/encryption/components/DecryptedText';
+import { useAssessmentPassphrase } from '@features/encryption/PassphraseContext';
 import { extractQuestionKeys } from '@features/submissions/helpers';
+import { usePagination } from '@hooks/usePagination';
 
 import type { RawSubmission } from '@features/submissions/types';
 import type { DataTableColumn, DataTableSortStatus } from 'mantine-datatable';
@@ -26,8 +27,6 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
   isDecryptingIds = false,
 }) => {
   const { passphrase, notifyEncryptedDetected } = useAssessmentPassphrase();
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(initialPageSize);
   const [sortStatus, setSortStatus] = useState<DataTableSortStatus<RawSubmission>>({
     columnAccessor: 'student_id',
     direction: 'asc',
@@ -52,9 +51,10 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
     });
   }, [items, sortStatus]);
 
-  React.useEffect(() => {
-    setPage(1);
-  }, [sortStatus, items]);
+  const { page, setPage, pageSize, setPageSize, paginate } = usePagination(
+    [sortStatus, items],
+    initialPageSize,
+  );
 
   const columns = useMemo(() => {
     const cols: DataTableColumn<RawSubmission>[] = [];
@@ -101,7 +101,7 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
     return cols;
   }, [isDecryptingIds, notifyEncryptedDetected, passphrase, questionKeys]);
 
-  const records = sortedItems.slice((page - 1) * pageSize, page * pageSize);
+  const records = paginate(sortedItems);
 
   return (
     <Stack gap="md">

@@ -1,13 +1,12 @@
-import { python } from '@codemirror/lang-python';
-import { oneDark } from '@codemirror/theme-one-dark';
-import { Button, Badge, Text, Box, Stack, Group, Accordion, Card } from '@mantine/core';
+import { Button, Badge, Text, Box, Stack, Group, Accordion, Card, Skeleton } from '@mantine/core';
 import { IconPencil, IconTrash } from '@tabler/icons-react';
-import CodeMirror from '@uiw/react-codemirror';
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 
 import { HIDE_KEYS_SINGLE } from '../constants';
 import { getRuleDefinitions, isRuleObject } from '../schema';
 import { prettifyKey } from '../schema';
+
+const CodeCollapsible = lazy(() => import('./CodeCollapsible'));
 
 import type { RuleValue } from '../types';
 import type { JSONSchema7 } from 'json-schema';
@@ -56,36 +55,6 @@ const labelFromPath = (path: string): string => {
   return key ? prettifyKey(key) : 'Details';
 };
 
-const CodeCollapsible: React.FC<{ title: string; code: string; height?: string; language?: 'python' | 'text' }> = ({
-  title,
-  code,
-  height = '350px',
-  language = 'python',
-}) => {
-  const extensions = language === 'python' ? [python()] : [];
-  return (
-    <Accordion variant="contained">
-      <Accordion.Item value="code">
-        <Accordion.Control>
-          <Text size="xs" fw={500}>{title}</Text>
-        </Accordion.Control>
-        <Accordion.Panel>
-          <Box style={{ borderRadius: 4, overflow: 'hidden', border: '1px solid var(--mantine-color-default-border)' }}>
-            <CodeMirror
-              value={code}
-              height={height}
-              extensions={extensions}
-              theme={oneDark}
-              readOnly
-              basicSetup={{ lineNumbers: true, highlightActiveLine: true }}
-            />
-          </Box>
-        </Accordion.Panel>
-      </Accordion.Item>
-    </Accordion>
-  );
-};
-
 const hasRuleDescendant = (value: unknown, defs: Definitions): boolean => {
   if (!value || typeof value !== 'object') return false;
   if (isRuleObject(value, defs)) return true;
@@ -112,10 +81,9 @@ const ArrayView: React.FC<{
 const RuleObjectView: React.FC<{
   obj: Record<string, unknown>;
   path: string;
-  defs: Definitions;
   renderNode: RenderNodeFn;
   options: RenderOptions;
-}> = ({ obj, path, defs: _defs, renderNode, options }) => {
+}> = ({ obj, path, renderNode, options }) => {
   const { contextQuestionId, showActions, onEdit, onDelete, hideRootType, flatRoot } = options;
   const typeVal = String(obj?.type ?? '\u2014');
   const qidValue = obj?.question_id;
@@ -225,7 +193,11 @@ const renderNode = (
   if (typeof value === 'string') {
     if (isCodeKey) {
       const title = prettifyKey(keyName || 'Code');
-      return <CodeCollapsible title={title} code={value} />;
+      return (
+        <Suspense fallback={<Skeleton height={60} />}>
+          <CodeCollapsible title={title} code={value} />
+        </Suspense>
+      );
     }
     return <PrimitiveView value={value} />;
   }
@@ -240,7 +212,6 @@ const renderNode = (
         <RuleObjectView
           obj={value as Record<string, unknown>}
           path={path}
-          defs={defs}
           renderNode={(v, p, opts) => renderNode(v, p, defs, opts)}
           options={options}
         />

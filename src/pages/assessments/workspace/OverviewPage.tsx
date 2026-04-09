@@ -14,18 +14,21 @@ import {
   IconX,
 } from '@tabler/icons-react';
 import { useQueryClient } from '@tanstack/react-query';
-import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { lazy, Suspense, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { QK } from '@api/queryKeys';
 import { useAssessmentContext } from '@app/contexts/AssessmentContext';
+import { PATHS } from '@app/routes/paths';
 import PageShell from '@components/common/PageShell';
 import { useAssessment } from '@features/assessments/api';
 import { OverviewSetupTimeline } from '@features/assessments/components';
 import { useSetupSteps } from '@features/assessments/hooks/useSetupSteps';
 import { useGrading, useRunGrading, useCancelGrading } from '@features/grading/api';
 import { GradingResultsCard } from '@features/grading/components';
-import RunGradingModal from '@features/grading/components/RunGradingModal';
+const RunGradingModal = lazy(
+  () => import('@features/grading/components/RunGradingModal'),
+);
 import { useGradingStatus } from '@features/grading/hooks/useGradingStatus';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { getErrorMessage } from '@utils/error';
@@ -36,8 +39,7 @@ import type { GradingWarning } from '@features/grading/components/RunGradingModa
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 const OverviewPage: React.FC = () => {
-  const { assessmentId = '' } = useParams<{ assessmentId: string }>();
-  const { assessment: assessmentCtx } = useAssessmentContext();
+  const { assessmentId, assessment: assessmentCtx } = useAssessmentContext();
   const navigate = useNavigate();
   const qc = useQueryClient();
 
@@ -50,7 +52,6 @@ const OverviewPage: React.FC = () => {
 
   const {
     setupSteps,
-    completeCount,
     allComplete,
     isLoading: setupLoading,
     covPct,
@@ -147,7 +148,7 @@ const OverviewPage: React.FC = () => {
                 variant="light"
                 onClick={() => {
                   notifications.hide(notifId);
-                  void navigate(`/assessments/${assessmentId}/results/statistics`);
+                  void navigate(PATHS.assessment(assessmentId).results.statistics);
                 }}
               >
                 See Results
@@ -242,27 +243,27 @@ const OverviewPage: React.FC = () => {
 
         <OverviewSetupTimeline
           steps={setupSteps}
-          completeCount={completeCount}
           onNavigate={(link) => void navigate(link)}
         />
 
         <GradingResultsCard
           assessmentId={assessmentId}
-          assessment={assessment}
           hasGrading={hasGrading}
           hasGradingJob={hasGradingJob}
           submissions={submissions}
           gradingData={gradingData}
         />
 
-        <RunGradingModal
-          opened={confirmOpen}
-          onClose={() => setConfirmOpen(false)}
-          onConfirm={handleConfirm}
-          warnings={warnings}
-          isLoading={runGradingMutation.isPending}
-          hasExistingAdjustments={hasExistingAdjustments}
-        />
+        <Suspense fallback={null}>
+          <RunGradingModal
+            opened={confirmOpen}
+            onClose={() => setConfirmOpen(false)}
+            onConfirm={handleConfirm}
+            warnings={warnings}
+            isLoading={runGradingMutation.isPending}
+            hasExistingAdjustments={hasExistingAdjustments}
+          />
+        </Suspense>
 
       </Stack>
     </PageShell>

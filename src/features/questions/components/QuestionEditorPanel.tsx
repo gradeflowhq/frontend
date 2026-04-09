@@ -1,4 +1,5 @@
 import {
+  Accordion,
   ActionIcon,
   Badge,
   Box,
@@ -14,10 +15,10 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import AnswerText from '@components/common/AnswerText';
 import { SchemaForm } from '@components/forms/SchemaForm';
-import { QUESTION_TYPE_COLORS, QUESTION_TYPES, selectRootSchema } from '@features/questions/constants';
+import { QUESTION_TYPE_COLORS, QUESTION_TYPES, UNPARSABLE_MARKER, selectRootSchema } from '@features/questions/constants';
 import questionsSchema from '@schemas/questions.json';
 
-import type { JsonValue } from './QuestionsConfigRender';
+import type { JsonValue } from './QuestionConfigPreview';
 import type {
   ChoiceQuestion,
   MultiValuedQuestion,
@@ -29,8 +30,6 @@ import type { JSONSchema7Definition } from 'json-schema';
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export type QuestionDef = ChoiceQuestion | MultiValuedQuestion | TextQuestion | NumericQuestion;
-
-const UNPARSABLE_MARKER = '__UNPARSABLE__:';
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 
@@ -136,53 +135,55 @@ const QuestionEditorPanel: React.FC<Props> = ({
   // ── Examples section (shared between read and edit views) ──────────────────
 
   const examplesSection = (loadingExamples || cleanExamples.length > 0 || badExamples.length > 0) ? (
-    <Box>
-      <Text size="sm" fw={500} mb="xs">
-        Example answers
-      </Text>
-      {loadingExamples ? (
-        <Stack gap="xs">
-          {[0, 1, 2].map((i) => (
-            <Skeleton key={i} height={28} radius="sm" />
-          ))}
-        </Stack>
-      ) : (
-        <Stack gap={6}>
-          {cleanExamples.map((ex, i) => (
-            <Box
-              key={`clean-${i}`}
-              px="sm"
-              py={6}
-              style={{
-                borderRadius: 'var(--mantine-radius-sm)',
-                border: '1px solid var(--mantine-color-default-border)',
-                backgroundColor: 'var(--mantine-color-default-hover)',
-              }}
-            >
-              <Text ff="monospace" size="xs">
-                <AnswerText value={ex} maxLength={80} />
-              </Text>
-            </Box>
-          ))}
-          {badExamples.map((ex, i) => (
-            <Box
-              key={`bad-${i}`}
-              px="sm"
-              py={6}
-              style={{
-                borderRadius: 'var(--mantine-radius-sm)',
-                border: '1px solid var(--mantine-color-red-3)',
-                backgroundColor: 'var(--mantine-color-red-0)',
-              }}
-            >
-              <Text ff="monospace" size="xs" c="red">
-                <AnswerText value={ex.replace(UNPARSABLE_MARKER, '')} maxLength={80} />
-              </Text>
-            </Box>
-          ))}
-        </Stack>
-      )}
-    </Box>
+    <Accordion variant="separated" defaultValue={'example-answers'}>
+      <Accordion.Item value="example-answers">
+        <Accordion.Control>Example answers</Accordion.Control>
+        <Accordion.Panel>
+          {loadingExamples ? (
+            <Stack gap="xs">
+              {[0, 1, 2].map((i) => (
+                <Skeleton key={i} height={28} radius="sm" />
+              ))}
+            </Stack>
+          ) : (
+            <Stack gap={6}>
+              {cleanExamples.map((ex, i) => (
+                <Box
+                  key={`clean-${i}`}
+                  px="sm"
+                  py={6}
+                  style={{
+                    borderRadius: 'var(--mantine-radius-sm)',
+                    border: '1px solid var(--mantine-color-default-border)',
+                    backgroundColor: 'var(--mantine-color-default)',
+                  }}
+                >
+                  <Text ff="monospace" size="xs">
+                    <AnswerText value={ex} maxLength={80} />
+                  </Text>
+                </Box>
+              ))}
+              {badExamples.map((ex, i) => (
+                <Box
+                  key={`bad-${i}`}
+                  px="sm"
+                  py={6}
+                  style={{
+                    borderRadius: 'var(--mantine-radius-sm)',
+                    border: '1px solid var(--mantine-color-red-3)',
+                    backgroundColor: 'var(--mantine-color-red-0)',
+                  }}
+                >
+                  <Text ff="monospace" size="xs" c="red">
+                    <AnswerText value={ex.replace(UNPARSABLE_MARKER, '')} maxLength={80} />
+                  </Text>
+                </Box>
+              ))}
+            </Stack>
+          )}
+        </Accordion.Panel>
+      </Accordion.Item>
+    </Accordion>
   ) : examplesError && !loadingExamples ? (
     <Text size="sm" c="dimmed">{examplesError}</Text>
   ) : null;
@@ -209,7 +210,7 @@ const QuestionEditorPanel: React.FC<Props> = ({
           </ActionIcon>
         </Group>
 
-        <QuestionsConfigRender value={questionDef as JsonValue} />
+        <QuestionConfigPreview value={questionDef as JsonValue} />
 
         {examplesSection}
       </Stack>
@@ -281,4 +282,4 @@ export default QuestionEditorPanel;
 
 // Local import to avoid circular TS errors
 // eslint-disable-next-line import/order
-import QuestionsConfigRender from './QuestionsConfigRender';
+import QuestionConfigPreview from './QuestionConfigPreview';

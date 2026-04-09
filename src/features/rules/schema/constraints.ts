@@ -111,24 +111,3 @@ export function injectEnumsFromConstraintsForQuestion(
 
   return updated;
 }
-
-// Example usage:
-/*
-import fs from "fs";
-
-const rulesSchema = JSON.parse(fs.readFileSync("src/schemas/rules.json", "utf-8"));
-
-// Suppose your question map (instances) looks like this:
-const questionMap: Record<string, any> = {
-  Q1: { type: "CHOICE", options: ["A", "B", "C"], allow_multiple: true },
-  Q2: { type: "TEXT" },
-  Q3: { type: "CHOICE", options: ["A", "B"], allow_multiple: true },
-};
-
-// If you want to inject constraints for Q1:
-// For MultipleChoiceRule, its default constraint is { type: "CHOICE", source: "options", target: "answer" }
-// This will set:
-// - MultipleChoiceRule.properties.answer.items.enum = ["A", "B", "C"]
-const updated = injectEnumsFromConstraintsForQuestion(rulesSchema, questionMap, "Q1");
-console.log(JSON.stringify(updated, null, 2));
-*/

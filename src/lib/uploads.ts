@@ -11,9 +11,9 @@ export type FileFormat = string;
  * Mapping from file format (lowercased) to the accept string.
  * You can extend/override this map at call sites.
  */
-export type AcceptMap = Record<FileFormat, string>;
+type AcceptMap = Record<FileFormat, string>;
 
-export const DEFAULT_ACCEPT_MAP: AcceptMap = {
+const DEFAULT_ACCEPT_MAP: AcceptMap = {
   csv: '.csv,text/csv',
   json: '.json,application/json,text/plain',
   yaml: '.yml,.yaml,application/yaml,application/x-yaml,text/plain',
@@ -23,7 +23,7 @@ export const DEFAULT_ACCEPT_MAP: AcceptMap = {
 /**
  * Fallback accept string when a format isn’t found in the map.
  */
-export const DEFAULT_FALLBACK_ACCEPT =
+const DEFAULT_FALLBACK_ACCEPT =
   '.yml,.yaml,.json,.csv,application/yaml,application/x-yaml,application/json,text/plain,text/csv';
 
 /**
@@ -32,7 +32,7 @@ export const DEFAULT_FALLBACK_ACCEPT =
  * - map is customizable and defaults to DEFAULT_ACCEPT_MAP
  * - fallback is customizable and defaults to DEFAULT_FALLBACK_ACCEPT
  */
-export const fileAcceptForFormat = (
+const fileAcceptForFormat = (
   format: unknown,
   map: AcceptMap = DEFAULT_ACCEPT_MAP,
   fallback: string = DEFAULT_FALLBACK_ACCEPT

@@ -30,9 +30,10 @@ import {
   IconTrash,
   IconUsers,
 } from '@tabler/icons-react';
-import React, { useMemo, useState } from 'react';
+import React, { lazy, Suspense, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { PATHS } from '@app/routes/paths';
 import EmptyState from '@components/common/EmptyState';
 import PageShell from '@components/common/PageShell';
 import UpdatedAtBadge from '@components/common/UpdatedAtBadge';
@@ -42,10 +43,9 @@ import {
   useUpdateAssessment,
   useDeleteAssessment,
 } from '@features/assessments/api';
-import {
-  AssessmentCreateModal,
-  AssessmentEditModal,
-} from '@features/assessments/components';
+const AssessmentFormModal = lazy(
+  () => import('@features/assessments/components/AssessmentFormModal'),
+);
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { getErrorMessage } from '@utils/error';
 import { compareDateDesc } from '@utils/sort';
@@ -189,7 +189,7 @@ const AssessmentsPage: React.FC = () => {
   }, [sortedItems, debouncedSearch]);
 
   const openAssessment = (item: AssessmentResponse) => {
-    void navigate(`/assessments/${item.id}/overview`);
+    void navigate(PATHS.assessment(item.id).overview);
   };
 
   return (
@@ -199,6 +199,7 @@ const AssessmentsPage: React.FC = () => {
         <Group gap="xs" align="center">
           <TextInput
             leftSection={<IconSearch size={14} />}
+            aria-label="Search assessments"
             placeholder="Search assessments..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -245,40 +246,48 @@ const AssessmentsPage: React.FC = () => {
               onOpen={() => openAssessment(item)}
               onEdit={() => setEditItem(item)}
               onDelete={() => setDeleteTarget(item)}
-              onMembers={() => void navigate(`/assessments/${item.id}/members`)}
+              onMembers={() => void navigate(PATHS.assessment(item.id).members)}
             />
           ))}
         </SimpleGrid>
       )}
 
-      <AssessmentCreateModal
-        open={showCreate}
-        isSubmitting={createMutation.isPending}
-        error={createMutation.isError ? createMutation.error : null}
-        onClose={() => setShowCreate(false)}
-        onSubmit={async (formData: AssessmentCreateRequest) => {
-          const created = await createMutation.mutateAsync(formData);
-          setShowCreate(false);
-          notifications.show({ color: 'green', message: 'Assessment created' });
-          void navigate(`/assessments/${created.id}/overview`);
-        }}
-      />
+      <Suspense fallback={null}>
+        <AssessmentFormModal
+          mode="create"
+          opened={showCreate}
+          isSubmitting={createMutation.isPending}
+          error={createMutation.isError ? createMutation.error : null}
+          onClose={() => setShowCreate(false)}
+          onSubmit={async (formData) => {
+            const created = await createMutation.mutateAsync(formData as AssessmentCreateRequest);
+            setShowCreate(false);
+            notifications.show({ color: 'green', message: 'Assessment created' });
+            void navigate(PATHS.assessment(created.id).overview);
+          }}
+        />
+      </Suspense>
 
-      <AssessmentEditModal
-        openItem={editItem}
-        isSubmitting={updateMutation.isPending}
-        error={updateMutation.isError ? updateMutation.error : null}
-        onClose={() => setEditItem(null)}
-        onSubmit={async (id: string, formData: AssessmentUpdateRequest) => {
-          await updateMutation.mutateAsync({ id, payload: formData }, {
-            onSuccess: () => {
-              setEditItem(null);
-              notifications.show({ color: 'green', message: 'Assessment updated' });
-            },
-            onError: () => notifications.show({ color: 'red', message: 'Update failed' }),
-          });
-        }}
-      />
+      <Suspense fallback={null}>
+        <AssessmentFormModal
+          mode="edit"
+          opened={!!editItem}
+          initialData={editItem ?? undefined}
+          isSubmitting={updateMutation.isPending}
+          error={updateMutation.isError ? updateMutation.error : null}
+          onClose={() => setEditItem(null)}
+          onSubmit={async (formData) => {
+            if (!editItem) return;
+            await updateMutation.mutateAsync({ id: editItem.id, payload: formData as AssessmentUpdateRequest }, {
+              onSuccess: () => {
+                setEditItem(null);
+                notifications.show({ color: 'green', message: 'Assessment updated' });
+              },
+              onError: (err) => notifications.show({ color: 'red', message: getErrorMessage(err) }),
+            });
+          }}
+        />
+      </Suspense>
 
       <Modal
         opened={!!deleteTarget}
@@ -298,7 +307,7 @@ const AssessmentsPage: React.FC = () => {
                   setDeleteTarget(null);
                   notifications.show({ color: 'green', message: 'Assessment deleted' });
                 },
-                onError: () => notifications.show({ color: 'red', message: 'Delete failed' }),
+                onError: (err) => notifications.show({ color: 'red', message: getErrorMessage(err) }),
               })
             }
           >

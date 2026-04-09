@@ -1,17 +1,17 @@
 import { Alert, Card, Title, Anchor, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { useMutation } from '@tanstack/react-query';
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 
-import { api } from '@api';
+import { PATHS } from '@app/routes/paths';
 import { SchemaForm } from '@components/forms/SchemaForm';
+import { useSignup } from '@features/auth/api';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import requestsSchema from '@schemas/requests.json';
 import { useAuthStore } from '@state/authStore';
 import { getErrorMessage } from '@utils/error';
 
-import type { SignupRequest, TokenPairResponse } from '@api/models';
+import type { SignupRequest } from '@api/models';
 import type { JSONSchema7 } from 'json-schema';
 
 const getSignupSchema = (): JSONSchema7 => {
@@ -35,17 +35,7 @@ const RegisterPage: React.FC = () => {
     []
   );
 
-  const { mutateAsync, isPending, isError, error } = useMutation({
-    mutationKey: ['auth', 'signup'],
-    mutationFn: async (payload: SignupRequest) => {
-      const res = await api.signupAuthSignupPost(payload);
-      return res.data as TokenPairResponse;
-    },
-    onSuccess: (tokenPair) => {
-      setTokens(tokenPair);
-      notifications.show({ color: 'green', message: 'Signup successful' });
-    },
-  });
+  const { mutateAsync, isPending, isError, error } = useSignup();
 
   return (
     <Card withBorder shadow="sm" w={400} p="xl">
@@ -57,7 +47,10 @@ const RegisterPage: React.FC = () => {
           isSubmitting={isPending}
           onSubmit={({ formData }) => {
             if (!formData) return;
-            void mutateAsync(formData);
+            void mutateAsync(formData).then((tokenPair) => {
+              setTokens(tokenPair);
+              notifications.show({ color: 'green', message: 'Signup successful' });
+            });
           }}
           formProps={{ noHtml5Validate: true }}
         />
@@ -68,7 +61,7 @@ const RegisterPage: React.FC = () => {
 
         <Text size="sm" ta="center" mt="md">
           Already have an account?{' '}
-          <Anchor component={Link} to="/login">Login</Anchor>
+          <Anchor component={Link} to={PATHS.LOGIN}>Login</Anchor>
         </Text>
     </Card>
   );

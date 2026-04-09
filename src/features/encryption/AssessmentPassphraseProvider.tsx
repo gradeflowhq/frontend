@@ -1,10 +1,10 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
-import EncryptedDataGuard from '@components/encryption/EncryptedDataGuard';
+import EncryptedDataGuard from '@features/encryption/components/EncryptedDataGuard';
 import { startCryptoSession } from '@utils/crypto';
 import { buildPassphraseKey, readPassphrase, normalizePresent, writePassphrase } from '@utils/passphrase';
 
-import { PassphraseContext, type PassphraseCtx } from './passphraseContext';
+import { PassphraseContext, type PassphraseContextValue } from './PassphraseContext';
 
 export const AssessmentPassphraseProvider: React.FC<{ assessmentId: string; children: React.ReactNode }> = ({ assessmentId, children }) => {
   const storageKey = buildPassphraseKey(assessmentId);
@@ -36,7 +36,7 @@ export const AssessmentPassphraseProvider: React.FC<{ assessmentId: string; chil
 
   const guardOpen = encryptedDetected && !normalizePresent(passphrase);
 
-  const ctx = useMemo<PassphraseCtx>(() => ({
+  const ctx = useMemo<PassphraseContextValue>(() => ({
     passphrase,
     setPassphrase,
     notifyEncryptedDetected,

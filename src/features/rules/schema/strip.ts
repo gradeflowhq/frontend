@@ -44,6 +44,3 @@ export function stripEngineKeysFromRulesSchema<T extends Record<string, unknown>
 
   return cloned;
 }
-
-// Example:
-// const cleanedSchema = stripEngineKeysFromRulesSchema(rulesJsonSchema);

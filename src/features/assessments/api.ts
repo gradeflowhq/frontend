@@ -63,7 +63,7 @@ export const useDeleteAssessment = () => {
 // Members (optional under assessments)
 export const useMembers = (assessmentId: string, enabled = true) =>
   useQuery({
-    queryKey: ['members', assessmentId],
+    queryKey: QK.assessments.members(assessmentId),
     queryFn: async () => (await api.listMembersAssessmentsAssessmentIdMembersGet(assessmentId)).data as AssessmentUsersResponse,
     enabled,
   });
@@ -74,7 +74,7 @@ export const useAddMember = (assessmentId: string) => {
     mutationKey: ['members', assessmentId, 'add'],
     mutationFn: async (payload: AddMemberRequest) =>
       (await api.addMemberAssessmentsAssessmentIdMembersPost(assessmentId, payload)).data,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['members', assessmentId] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: QK.assessments.members(assessmentId) }),
   });
 };
 
@@ -84,7 +84,7 @@ export const useSetMemberRole = (assessmentId: string) => {
     mutationKey: ['members', assessmentId, 'setRole'],
     mutationFn: async ({ userId, role }: { userId: string; role: SetRoleRequest['role'] }) =>
       (await api.setMemberRoleAssessmentsAssessmentIdMembersUserIdPatch(assessmentId, userId, { role })).data,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['members', assessmentId] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: QK.assessments.members(assessmentId) }),
   });
 };
 
@@ -94,6 +94,6 @@ export const useRemoveMember = (assessmentId: string) => {
     mutationKey: ['members', assessmentId, 'remove'],
     mutationFn: async (userId: string) =>
       (await api.removeMemberAssessmentsAssessmentIdMembersUserIdDelete(assessmentId, userId)).data,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['members', assessmentId] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: QK.assessments.members(assessmentId) }),
   });
 };

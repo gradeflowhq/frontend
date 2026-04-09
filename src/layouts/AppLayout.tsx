@@ -3,10 +3,9 @@ import React, { useCallback, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 
 import ErrorBoundary from '@components/common/ErrorBoundary';
+import { SIDEBAR_EXPANDED_WIDTH, SIDEBAR_COLLAPSED_WIDTH } from '@lib/constants';
 
 import { SidebarNav } from './SidebarNav';
-
-const SIDEBAR_COLLAPSED_WIDTH = 56;
 
 const AppLayoutInner: React.FC<{
   expanded: boolean;
@@ -22,7 +21,7 @@ const AppLayoutInner: React.FC<{
   return (
     <AppShell
       navbar={{
-        width: expanded ? 220 : SIDEBAR_COLLAPSED_WIDTH,
+        width: expanded ? SIDEBAR_EXPANDED_WIDTH : SIDEBAR_COLLAPSED_WIDTH,
         breakpoint: 'sm',
         collapsed: { mobile: !mobileOpened },
       }}

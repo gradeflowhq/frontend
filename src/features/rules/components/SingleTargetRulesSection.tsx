@@ -1,10 +1,13 @@
-import { Alert, Button, Group, Modal, Text } from '@mantine/core';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Alert, Text } from '@mantine/core';
+import React, { useCallback, useMemo, useState } from 'react';
 
-import { MasterDetailLayout } from './MasterDetailLayout';
+import MasterDetailLayout from '@components/common/MasterDetailLayout';
+import QuestionMasterList from '@components/common/QuestionMasterList';
+import { UnsavedChangesModal } from '@components/common/UnsavedChangesModal';
+import { useUrlSelectedId } from '@hooks/useUrlSelectedId';
+
 import QuestionDetailPanel from './QuestionDetailPanel';
-import QuestionMasterList from './QuestionMasterList';
+
 
 import type { RuleValue } from '../types';
 import type { AdjustableSubmission, QuestionSetOutputQuestionMap, RubricOutput } from '@api/models';
@@ -36,7 +39,6 @@ const SingleTargetRulesSection: React.FC<Props> = ({
   gradingItems,
   totalStudents,
 }) => {
-  const [searchParams, setSearchParams] = useSearchParams();
   const [detailPanelEditing, setDetailPanelEditing] = useState(false);
   const [pendingQid, setPendingQid] = useState<string | null>(null);
   // Controlled mobile-detail visibility — opened by handleSelect, closed by
@@ -60,25 +62,7 @@ const SingleTargetRulesSection: React.FC<Props> = ({
     return map;
   }, [allRules]);
 
-  const urlQid = searchParams.get('q');
-  const selectedQid = useMemo(() => {
-    if (urlQid && questionIds.includes(urlQid)) return urlQid;
-    return questionIds[0] ?? null;
-  }, [urlQid, questionIds]);
-
-  // Initialise URL param on first mount
-  useEffect(() => {
-    if (!urlQid && questionIds.length > 0 && questionIds[0]) {
-      setSearchParams(
-        (prev) => {
-          const next = new URLSearchParams(prev);
-          next.set('q', questionIds[0]!);
-          return next;
-        },
-        { replace: true },
-      );
-    }
-  }, [urlQid, questionIds, setSearchParams]);
+  const { selectedId: selectedQid, setSelectedId: setSelectedQid } = useUrlSelectedId(questionIds, 'q');
 
   const handleSelect = useCallback(
     (qid: string): void => {
@@ -88,32 +72,18 @@ const SingleTargetRulesSection: React.FC<Props> = ({
         setPendingQid(qid);
         return;
       }
-      setSearchParams(
-        (prev) => {
-          const next = new URLSearchParams(prev);
-          next.set('q', qid);
-          return next;
-        },
-        { replace: true },
-      );
+      setSelectedQid(qid);
       setMobileShowDetail(true);
     },
-    [detailPanelEditing, setSearchParams],
+    [detailPanelEditing, setSelectedQid],
   );
 
   // Desktop unsaved-changes: user confirmed navigation
   const handleConfirmNavigation = useCallback((): void => {
     if (!pendingQid) return;
-    setSearchParams(
-      (prev) => {
-        const next = new URLSearchParams(prev);
-        next.set('q', pendingQid);
-        return next;
-      },
-      { replace: true },
-    );
+    setSelectedQid(pendingQid);
     setPendingQid(null);
-  }, [pendingQid, setSearchParams]);
+  }, [pendingQid, setSelectedQid]);
 
   if (questionIds.length === 0) {
     return (
@@ -185,24 +155,12 @@ const SingleTargetRulesSection: React.FC<Props> = ({
        * pendingBack modal). Both are intentional — they cover different
        * navigation triggers.
        */}
-      <Modal
+      <UnsavedChangesModal
         opened={pendingQid !== null}
-        onClose={() => setPendingQid(null)}
-        title="Unsaved changes"
-        size="sm"
-      >
-        <Text mb="md">
-          You have an unsaved rule edit. Navigating away will discard it.
-        </Text>
-        <Group justify="flex-end" gap="sm">
-          <Button variant="subtle" onClick={() => setPendingQid(null)}>
-            Stay
-          </Button>
-          <Button color="red" onClick={handleConfirmNavigation}>
-            Discard &amp; Continue
-          </Button>
-        </Group>
-      </Modal>
+        message="You have an unsaved rule edit. Navigating away will discard it."
+        onStay={() => setPendingQid(null)}
+        onDiscard={handleConfirmNavigation}
+      />
     </>
   );
 };

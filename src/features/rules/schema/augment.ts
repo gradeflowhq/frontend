@@ -91,20 +91,3 @@ export function augmentRulesSchemaWithQuestionIdEnums(
 
   return updated;
 }
-
-// Example usage:
-
-/*
-import fs from "fs";
-
-const rulesSchema = JSON.parse(fs.readFileSync("src/schemas/rules.json", "utf-8"));
-const questionMap: Record<string, any> = {
-  Q1: { type: "TEXT", description: "Explain..." },
-  Q2: { type: "NUMERIC", description: "Enter a number..." },
-  Q3: { type: "CHOICE", options: ["A", "B"] },
-  Q4: { type: "MULTI_VALUED", config: { delimiter: "," } },
-};
-
-const updated = augmentRulesSchemaWithQuestionIdEnums(rulesSchema, questionMap);
-console.log(JSON.stringify(updated, null, 2));
-*/

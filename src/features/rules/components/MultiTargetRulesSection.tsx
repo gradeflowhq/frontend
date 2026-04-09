@@ -1,8 +1,10 @@
-import { Alert, Button, Group, Modal, Text } from '@mantine/core';
+import { Alert, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import React, { useCallback, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
+import MasterDetailLayout from '@components/common/MasterDetailLayout';
+import { UnsavedChangesModal } from '@components/common/UnsavedChangesModal';
 import {
   useCompatibleRuleKeys,
   useReplaceRubric,
@@ -14,7 +16,6 @@ import { isMultiTargetRule } from '@features/rules/schema';
 
 import GlobalRuleDetailPanel from './GlobalRuleDetailPanel';
 import GlobalRuleMasterList from './GlobalRuleMasterList';
-import { MasterDetailLayout } from './MasterDetailLayout';
 
 import type { QuestionSetOutputQuestionMap, RubricOutput } from '@api/models';
 import type { RuleValue } from '@features/rules/types';
@@ -304,24 +305,12 @@ const MultiTargetRulesSection: React.FC<Props> = ({
         onMobileShowDetailChange={setMobileShowDetail}
       />
 
-      <Modal
+      <UnsavedChangesModal
         opened={guardModalOpen}
-        onClose={handleDismissGuard}
-        title="Unsaved changes"
-        size="sm"
-      >
-        <Text mb="md">
-          You have an unsaved rule edit. Navigating away will discard it.
-        </Text>
-        <Group justify="flex-end" gap="sm">
-          <Button variant="subtle" onClick={handleDismissGuard}>
-            Stay
-          </Button>
-          <Button color="red" onClick={handleConfirmNavigation}>
-            Discard &amp; Continue
-          </Button>
-        </Group>
-      </Modal>
+        message="You have an unsaved rule edit. Navigating away will discard it."
+        onStay={handleDismissGuard}
+        onDiscard={handleConfirmNavigation}
+      />
     </>
   );
 };

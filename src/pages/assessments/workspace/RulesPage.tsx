@@ -2,9 +2,7 @@ import {
   Alert,
   Anchor,
   Badge,
-  Box,
   Button,
-  Card,
   Center,
   Group,
   Modal,
@@ -12,7 +10,6 @@ import {
   Stack,
   Tabs,
   Text,
-  ThemeIcon,
   Title,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
@@ -23,24 +20,30 @@ import {
   IconQuestionMark,
   IconUpload,
 } from '@tabler/icons-react';
-import React from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import React, { lazy, Suspense } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 
 import { useAssessmentContext } from '@app/contexts/AssessmentContext';
+import { ActionOptionCard } from '@components/common/ActionOptionCard';
 import PageShell from '@components/common/PageShell';
 import SectionStatusBadge from '@components/common/SectionStatusBadge';
 import { useGrading } from '@features/grading/api';
 import { useQuestionSet } from '@features/questions/api';
 import { useRubric, useRubricCoverage, useDeleteRubric } from '@features/rubric/api';
+const RubricImportModal = lazy(
+  () => import('@features/rubric/components/RubricImportModal'),
+);
+const RubricUploadModal = lazy(
+  () => import('@features/rubric/components/RubricUploadModal'),
+);
 import { useReplaceRubric } from '@features/rules/api';
 import {
   MultiTargetRulesSection,
   RulesToolbar,
   SingleTargetRulesSection,
 } from '@features/rules/components';
-import RubricImportModal from '@features/rules/components/RubricImportModal';
-import RubricUploadModal from '@features/rules/components/RubricUploadModal';
 import { getRuleTargetQids, isMultiTargetRule } from '@features/rules/schema';
+import { useAutoResetState } from '@hooks/useAutoResetState';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { getErrorMessage } from '@utils/error';
 
@@ -48,14 +51,13 @@ import type { AdjustableSubmission, RubricOutput, QuestionSetOutputQuestionMap }
 import type { RuleValue } from '@features/rules/types';
 
 const RulesPage: React.FC = () => {
-  const { assessmentId } = useParams<{ assessmentId: string }>();
-  const { assessment } = useAssessmentContext();
+  const { assessmentId, assessment } = useAssessmentContext();
   const [searchParams, setSearchParams] = useSearchParams();
 
   useDocumentTitle(`Rules - ${assessment?.name ?? 'Assessment'} - GradeFlow`);
 
   const enabled = Boolean(assessmentId);
-  const safeId = assessmentId ?? '';
+  const safeId = assessmentId;
 
   const {
     data: qsRes,
@@ -167,13 +169,7 @@ const RulesPage: React.FC = () => {
 
   // highlightedRule is set when the user clicks "View global rule" from a
   // question's detail panel. Cleared after MultiTargetRulesSection consumes it.
-  const [highlightedRule, setHighlightedRule] = React.useState<RuleValue | null>(null);
-
-  React.useEffect(() => {
-    if (!highlightedRule) return;
-    const timer = setTimeout(() => setHighlightedRule(null), 2000);
-    return () => clearTimeout(timer);
-  }, [highlightedRule]);
+  const [highlightedRule, setHighlightedRule] = useAutoResetState<RuleValue>(2000);
 
   const handleViewGlobalRule = React.useCallback(
     (qid: string) => {
@@ -194,7 +190,7 @@ const RulesPage: React.FC = () => {
       );
       setHighlightedRule(rule);
     },
-    [coveringRuleByQid, rubric, setSearchParams],
+    [coveringRuleByQid, rubric, setSearchParams, setHighlightedRule],
   );
 
   const deleteRubric = useDeleteRubric(safeId);
@@ -264,27 +260,14 @@ const RulesPage: React.FC = () => {
               questions before you can set up grading rules.
             </Text>
 
-            <Card withBorder p="sm" radius="md" w="100%">
-              <Group gap="sm" align="flex-start" wrap="nowrap">
-                <ThemeIcon variant="light" color="blue" size="md" radius="xl" style={{ flexShrink: 0 }}>
-                  <IconQuestionMark size={14} />
-                </ThemeIcon>
-                <Box>
-                  <Text size="sm" fw={500}>Set up questions first</Text>
-                  <Text size="xs" c="dimmed">
-                    Questions define the structure of your assessment — rules are
-                    built on top of them.{' '}
-                    <Anchor
-                      component={Link}
-                      to={`/assessments/${safeId}/questions`}
-                      size="xs"
-                    >
-                      Go to Questions →
-                    </Anchor>
-                  </Text>
-                </Box>
-              </Group>
-            </Card>
+            <Stack gap="xs" w="100%">
+              <ActionOptionCard
+                icon={<IconQuestionMark size={14} />}
+                iconColor="blue"
+                title="Set up questions first"
+                description={<>Questions define the structure of your assessment — rules are built on top of them.{' '}<Anchor component={Link} to={`/assessments/${safeId}/questions`} size="xs">Go to Questions →</Anchor></>}
+              />
+            </Stack>
           </Stack>
         </Center>
       </PageShell>
@@ -293,7 +276,7 @@ const RulesPage: React.FC = () => {
 
   // ── No rubric yet: offer to create, upload, or import ─────────────────────
 
-  if (!loadingRubric && rubricMissing) {
+  if (!loadingRubric && !loadingQS && rubricMissing) {
     return (
       <PageShell
         title="Rules"
@@ -321,68 +304,26 @@ const RulesPage: React.FC = () => {
             </Text>
 
             <Stack gap="xs" w="100%">
-              <Card withBorder p="sm" radius="md">
-                <Group gap="sm" align="flex-start" wrap="nowrap">
-                  <ThemeIcon variant="light" color="blue" size="md" radius="xl" style={{ flexShrink: 0 }}>
-                    <IconPlus size={14} />
-                  </ThemeIcon>
-                  <Box>
-                    <Text size="sm" fw={500}>Start with an empty rubric</Text>
-                    <Text size="xs" c="dimmed">
-                      Create a blank rubric and define rules question by question.{' '}
-                      <Anchor
-                        component="button"
-                        size="xs"
-                        onClick={handleCreateEmptyRubric}
-                      >
-                        {replaceRubric.isPending ? 'Creating…' : 'Create now →'}
-                      </Anchor>
-                    </Text>
-                  </Box>
-                </Group>
-              </Card>
+              <ActionOptionCard
+                icon={<IconPlus size={14} />}
+                iconColor="blue"
+                title="Start with an empty rubric"
+                description={<>Create a blank rubric and define rules question by question.{' '}<Anchor component="button" size="xs" onClick={handleCreateEmptyRubric}>{replaceRubric.isPending ? 'Creating…' : 'Create now →'}</Anchor></>}
+              />
 
-              <Card withBorder p="sm" radius="md">
-                <Group gap="sm" align="flex-start" wrap="nowrap">
-                  <ThemeIcon variant="light" color="teal" size="md" radius="xl" style={{ flexShrink: 0 }}>
-                    <IconUpload size={14} />
-                  </ThemeIcon>
-                  <Box>
-                    <Text size="sm" fw={500}>Upload a rubric file</Text>
-                    <Text size="xs" c="dimmed">
-                      Load a YAML or JSON rubric file you have already prepared.{' '}
-                      <Anchor
-                        component="button"
-                        size="xs"
-                        onClick={() => setOpenRubricUpload(true)}
-                      >
-                        Upload now →
-                      </Anchor>
-                    </Text>
-                  </Box>
-                </Group>
-              </Card>
+              <ActionOptionCard
+                icon={<IconUpload size={14} />}
+                iconColor="teal"
+                title="Upload a rubric file"
+                description={<>Load a YAML or JSON rubric file you have already prepared.{' '}<Anchor component="button" size="xs" onClick={() => setOpenRubricUpload(true)}>Upload now →</Anchor></>}
+              />
 
-              <Card withBorder p="sm" radius="md">
-                <Group gap="sm" align="flex-start" wrap="nowrap">
-                  <ThemeIcon variant="light" color="violet" size="md" radius="xl" style={{ flexShrink: 0 }}>
-                    <IconFileImport size={14} />
-                  </ThemeIcon>
-                  <Box>
-                    <Text size="sm" fw={500}>Import from another format</Text>
-                    <Text size="xs" c="dimmed">
-                      Import from a supported adapter format (e.g. Examplify).{' '}
-                      <Anchor
-                        component="button"
-                        size="xs"
-                        onClick={() => setOpenRubricImport(true)}
-                      >
-                        Import now →
-                      </Anchor>
-                    </Text>
-                  </Box>
-                </Group>
-              </Card>
+              <ActionOptionCard
+                icon={<IconFileImport size={14} />}
+                iconColor="violet"
+                title="Import from another format"
+                description={<>Import from a supported adapter format (e.g. Examplify).{' '}<Anchor component="button" size="xs" onClick={() => setOpenRubricImport(true)}>Import now →</Anchor></>}
+              />
             </Stack>
 
             {replaceRubric.isError && (
@@ -393,16 +334,20 @@ const RulesPage: React.FC = () => {
           </Stack>
         </Center>
 
-        <RubricUploadModal
-          open={openRubricUpload}
-          assessmentId={safeId}
-          onClose={() => setOpenRubricUpload(false)}
-        />
-        <RubricImportModal
-          open={openRubricImport}
-          assessmentId={safeId}
-          onClose={() => setOpenRubricImport(false)}
-        />
+        <Suspense fallback={null}>
+          <RubricUploadModal
+            open={openRubricUpload}
+            assessmentId={safeId}
+            onClose={() => setOpenRubricUpload(false)}
+          />
+        </Suspense>
+        <Suspense fallback={null}>
+          <RubricImportModal
+            open={openRubricImport}
+            assessmentId={safeId}
+            onClose={() => setOpenRubricImport(false)}
+          />
+        </Suspense>
       </PageShell>
     );
   }
@@ -494,16 +439,20 @@ const RulesPage: React.FC = () => {
           </Tabs>
         )}
 
-        <RubricUploadModal
-          open={openRubricUpload}
-          assessmentId={safeId}
-          onClose={() => setOpenRubricUpload(false)}
-        />
-        <RubricImportModal
-          open={openRubricImport}
-          assessmentId={safeId}
-          onClose={() => setOpenRubricImport(false)}
-        />
+        <Suspense fallback={null}>
+          <RubricUploadModal
+            open={openRubricUpload}
+            assessmentId={safeId}
+            onClose={() => setOpenRubricUpload(false)}
+          />
+        </Suspense>
+        <Suspense fallback={null}>
+          <RubricImportModal
+            open={openRubricImport}
+            assessmentId={safeId}
+            onClose={() => setOpenRubricImport(false)}
+          />
+        </Suspense>
 
         <Modal
           opened={confirmDeleteRubric}

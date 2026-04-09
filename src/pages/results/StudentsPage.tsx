@@ -1,17 +1,18 @@
 import { Alert, Button, Menu, Skeleton, TextInput } from '@mantine/core';
 import { IconChevronDown, IconDownload, IconSearch } from '@tabler/icons-react';
-import React, { useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { lazy, Suspense, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { useAssessmentContext } from '@app/contexts/AssessmentContext';
+import { PATHS } from '@app/routes/paths';
 import PageShell from '@components/common/PageShell';
 import { useGrading } from '@features/grading/api';
-import {
-  GradingStatusBanner,
-  NoGradingResults,
-  ResultsOverviewTable,
-} from '@features/grading/components';
-import ResultsDownloadModal from '@features/grading/components/ResultsDownloadModal';
+import GradingStatusBanner from '@features/grading/components/GradingStatusBanner';
+import NoGradingResults from '@features/grading/components/NoGradingResults';
+import ResultsOverviewTable from '@features/grading/components/ResultsOverviewTable';
+const ResultsDownloadModal = lazy(
+  () => import('@features/grading/components/ResultsDownloadModal'),
+);
 import { useGradingStatus } from '@features/grading/hooks/useGradingStatus';
 import { useQuestionSet } from '@features/questions/api';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
@@ -21,8 +22,7 @@ import { natsort } from '@utils/sort';
 import type { AdjustableSubmission } from '@api/models';
 
 const StudentsPage: React.FC = () => {
-  const { assessmentId = '' } = useParams<{ assessmentId: string }>();
-  const { assessment } = useAssessmentContext();
+  const { assessmentId, assessment } = useAssessmentContext();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [downloadFormat, setDownloadFormat] = useState<string | null>(null);
@@ -50,6 +50,7 @@ const StudentsPage: React.FC = () => {
         <>
           <TextInput
             leftSection={<IconSearch size={14} />}
+            aria-label="Search by student ID"
             placeholder="Search by Student ID"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.currentTarget.value)}
@@ -92,7 +93,7 @@ const StudentsPage: React.FC = () => {
           questionIds={questionIds}
           onView={(studentId) =>
             void navigate(
-              `/assessments/${assessmentId}/results/students/${encodeURIComponent(studentId)}`,
+              PATHS.assessment(assessmentId).results.student(encodeURIComponent(studentId)),
             )
           }
           searchQuery={searchQuery}
@@ -100,12 +101,14 @@ const StudentsPage: React.FC = () => {
       )}
 
       {downloadFormat && (
-        <ResultsDownloadModal
-          open={!!downloadFormat}
-          assessmentId={assessmentId}
-          selectedFormat={downloadFormat}
-          onClose={() => setDownloadFormat(null)}
-        />
+        <Suspense fallback={null}>
+          <ResultsDownloadModal
+            opened={!!downloadFormat}
+            assessmentId={assessmentId}
+            selectedFormat={downloadFormat}
+            onClose={() => setDownloadFormat(null)}
+          />
+        </Suspense>
       )}
     </PageShell>
   );

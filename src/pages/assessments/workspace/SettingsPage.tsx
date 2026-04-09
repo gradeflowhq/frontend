@@ -1,4 +1,5 @@
 import {
+  ActionIcon,
   Alert,
   Box,
   Button,
@@ -10,41 +11,38 @@ import {
   Text,
   Textarea,
   TextInput,
+  Tooltip,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { IconTrash } from '@tabler/icons-react';
-import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { IconCheck, IconCopy, IconTrash } from '@tabler/icons-react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { useAssessmentContext } from '@app/contexts/AssessmentContext';
+import { PATHS } from '@app/routes/paths';
 import PageShell from '@components/common/PageShell';
 import { useUpdateAssessment, useDeleteAssessment } from '@features/assessments/api';
-import { useAssessmentPassphrase } from '@features/encryption/passphraseContext';
+import { useAssessmentPassphrase } from '@features/encryption/PassphraseContext';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
+import { useSyncedField } from '@hooks/useSyncedField';
+import { FORM_MAX_WIDTH } from '@lib/constants';
 import { getErrorMessage } from '@utils/error';
 import { buildPassphraseKey, clearPassphrase } from '@utils/passphrase';
 
 const SettingsPage: React.FC = () => {
-  const { assessmentId = '' } = useParams<{ assessmentId: string }>();
-  const { assessment } = useAssessmentContext();
+  const { assessmentId, assessment } = useAssessmentContext();
   const navigate = useNavigate();
   const { passphrase, setPassphrase, clear } = useAssessmentPassphrase();
 
   useDocumentTitle(`Settings - ${assessment?.name ?? 'Assessment'} - GradeFlow`);
 
-  const [name, setName] = useState(assessment?.name ?? '');
-  const [description, setDescription] = useState(assessment?.description ?? '');
+  const [name, setName] = useSyncedField(assessment?.name ?? '');
+  const [description, setDescription] = useSyncedField(assessment?.description ?? '');
   const [deleteConfirmName, setDeleteConfirmName] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [newPassphrase, setNewPassphrase] = useState('');
-
-  // Sync form when assessment data loads
-  useEffect(() => {
-    if (assessment) {
-      setName(assessment.name ?? '');
-      setDescription(assessment.description ?? '');
-    }
-  }, [assessment]);
+  const [showForgetModal, setShowForgetModal] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const updateMutation = useUpdateAssessment();
   const deleteMutation = useDeleteAssessment();
@@ -64,6 +62,14 @@ const SettingsPage: React.FC = () => {
     notifications.show({ color: 'blue', message: 'Passphrase forgotten' });
   };
 
+  const handleCopyPassphrase = () => {
+    if (!passphrase) return;
+    void navigator.clipboard.writeText(passphrase).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
   const handleStorePassphrase = () => {
     if (!newPassphrase.trim()) return;
     setPassphrase(newPassphrase.trim(), true);
@@ -75,7 +81,7 @@ const SettingsPage: React.FC = () => {
     deleteMutation.mutate(assessmentId, {
       onSuccess: () => {
         notifications.show({ color: 'green', message: 'Assessment deleted' });
-        void navigate('/assessments');
+        void navigate(PATHS.ASSESSMENTS);
       },
       onError: (e) => notifications.show({ color: 'red', message: getErrorMessage(e) || 'Delete failed' }),
     });
@@ -83,7 +89,7 @@ const SettingsPage: React.FC = () => {
 
   return (
     <PageShell title="Assessment Settings">
-      <Stack gap={0} maw={520}>
+      <Stack gap={0} maw={FORM_MAX_WIDTH}>
         {/* General */}
         <Box mb="xl">
           <Text fw={600} mb="sm">General</Text>
@@ -120,8 +126,27 @@ const SettingsPage: React.FC = () => {
           {hasStoredPassphrase ? (
             <Stack gap="sm">
               <Text size="sm" c="dimmed">Student ID passphrase is stored in this browser.</Text>
+              <Group align="flex-end" gap="xs">
+                <PasswordInput
+                  label="Stored passphrase"
+                  value={passphrase ?? ''}
+                  readOnly
+                  style={{ flex: 1 }}
+                />
+                <Tooltip label={copied ? 'Copied!' : 'Copy to clipboard'} withArrow>
+                  <ActionIcon
+                    variant="default"
+                    size="lg"
+                    onClick={handleCopyPassphrase}
+                    aria-label="Copy passphrase"
+                    mb={1}
+                  >
+                    {copied ? <IconCheck size={16} /> : <IconCopy size={16} />}
+                  </ActionIcon>
+                </Tooltip>
+              </Group>
               <Box>
-                <Button variant="outline" color="orange" onClick={handleForgetPassphrase}>
+                <Button variant="outline" color="orange" onClick={() => setShowForgetModal(true)}>
                   Forget stored passphrase
                 </Button>
               </Box>
@@ -164,6 +189,32 @@ const SettingsPage: React.FC = () => {
             Permanently deletes the assessment, all submissions, rules, and results.
           </Text>
         </Box>
+
+        <Modal
+          opened={showForgetModal}
+          onClose={() => setShowForgetModal(false)}
+          title="Forget Passphrase"
+          size="sm"
+        >
+          <Text mb="md">
+            This will remove the stored passphrase from this browser. You will need to re-enter
+            it to decrypt student IDs. Are you sure?
+          </Text>
+          <Group justify="flex-end" gap="sm">
+            <Button variant="subtle" onClick={() => setShowForgetModal(false)}>
+              Cancel
+            </Button>
+            <Button
+              color="orange"
+              onClick={() => {
+                setShowForgetModal(false);
+                handleForgetPassphrase();
+              }}
+            >
+              Forget passphrase
+            </Button>
+          </Group>
+        </Modal>
 
         <Modal
           opened={showDeleteModal}

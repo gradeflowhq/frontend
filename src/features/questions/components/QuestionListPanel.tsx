@@ -1,7 +1,8 @@
 import { Badge, Box, ScrollArea, Stack, Text } from '@mantine/core';
-import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { QUESTION_TYPE_COLORS } from '@features/questions/constants';
+import { useScrollIntoView } from '@hooks/useScrollIntoView';
 
 // ── Props ─────────────────────────────────────────────────────────────────────
 
@@ -22,12 +23,7 @@ const QuestionListPanel: React.FC<Props> = ({
   onSelect,
   searchQuery = '',
 }) => {
-  const selectedRef = useRef<HTMLDivElement | null>(null);
-
-  // Scroll the selected row into view when selection changes.
-  useEffect(() => {
-    selectedRef.current?.scrollIntoView({ block: 'nearest' });
-  }, [selectedQid]);
+  const selectedRef = useScrollIntoView<HTMLDivElement>(selectedQid);
 
   const filteredIds = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();

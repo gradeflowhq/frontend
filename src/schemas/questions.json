@@ -677,9 +677,9 @@
         "title": "Question Types",
         "default": [
           "NUMERIC",
-          "MULTI_VALUED",
           "CHOICE",
-          "TEXT"
+          "TEXT",
+          "MULTI_VALUED"
         ]
       },
       "constraints": {
@@ -1250,9 +1250,9 @@
         "title": "Question Types",
         "default": [
           "NUMERIC",
-          "MULTI_VALUED",
           "CHOICE",
-          "TEXT"
+          "TEXT",
+          "MULTI_VALUED"
         ]
       },
       "constraints": {
@@ -1600,9 +1600,9 @@
         "title": "Question Types",
         "default": [
           "NUMERIC",
-          "MULTI_VALUED",
           "CHOICE",
-          "TEXT"
+          "TEXT",
+          "MULTI_VALUED"
         ]
       },
       "constraints": {
@@ -1882,9 +1882,9 @@
         "title": "Question Types",
         "default": [
           "NUMERIC",
-          "MULTI_VALUED",
           "CHOICE",
-          "TEXT"
+          "TEXT",
+          "MULTI_VALUED"
         ]
       },
       "constraints": {
@@ -2017,9 +2017,9 @@
         "title": "Question Types",
         "default": [
           "NUMERIC",
-          "MULTI_VALUED",
           "CHOICE",
-          "TEXT"
+          "TEXT",
+          "MULTI_VALUED"
         ]
       },
       "constraints": {
@@ -2323,9 +2323,9 @@
         "title": "Question Types",
         "default": [
           "NUMERIC",
-          "MULTI_VALUED",
           "CHOICE",
-          "TEXT"
+          "TEXT",
+          "MULTI_VALUED"
         ]
       },
       "constraints": {
@@ -2370,9 +2370,9 @@
         "title": "Question Types",
         "default": [
           "NUMERIC",
-          "MULTI_VALUED",
           "CHOICE",
-          "TEXT"
+          "TEXT",
+          "MULTI_VALUED"
         ]
       },
       "constraints": {
@@ -2671,9 +2671,9 @@
         "title": "Question Types",
         "default": [
           "NUMERIC",
-          "MULTI_VALUED",
           "CHOICE",
-          "TEXT"
+          "TEXT",
+          "MULTI_VALUED"
         ]
       },
       "constraints": {
@@ -2938,9 +2938,9 @@
         "title": "Question Types",
         "default": [
           "NUMERIC",
-          "MULTI_VALUED",
           "CHOICE",
-          "TEXT"
+          "TEXT",
+          "MULTI_VALUED"
         ]
       },
       "constraints": {

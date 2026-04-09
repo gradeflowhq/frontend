@@ -1,6 +1,11 @@
 import axios from 'axios';
 
+import { API_REQUEST_TIMEOUT_MS } from '@lib/constants';
+
+import { ENV } from '../env';
+
 import type { AxiosInstance, AxiosResponse } from 'axios';
+
 
 export type CanvasUser = {
   id: number;
@@ -83,10 +88,7 @@ export type CanvasClientConfig = {
   timeoutMs?: number;
 };
 
-const DEFAULT_PROXY_BASE =
-  window.__CONFIG__?.CORS_PROXY_URL ??
-  import.meta.env.VITE_CORS_PROXY_URL ??
-  'http://localhost:8080';
+const DEFAULT_PROXY_BASE = ENV.CORS_PROXY_URL;
 
 export const parseCanvasBaseUrl = (value: string): string | null => {
   const normalized = value.trim().replace(/\/+$/, '');
@@ -99,7 +101,7 @@ const buildAxiosClient = ({
   canvasBaseUrl,
   token,
   corsProxyBaseUrl,
-  timeoutMs = 10000,
+  timeoutMs = API_REQUEST_TIMEOUT_MS,
 }: CanvasClientConfig): AxiosInstance => {
   const canvasUrl = parseCanvasBaseUrl(canvasBaseUrl);
   if (!canvasUrl) throw new Error('Canvas base URL is required');

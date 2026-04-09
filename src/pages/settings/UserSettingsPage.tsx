@@ -17,204 +17,188 @@ import {
   IconPlug,
   IconUser,
 } from '@tabler/icons-react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
-import { api } from '@api';
 import { createCanvasClient, parseCanvasBaseUrl } from '@api/canvasClient';
 import PageShell from '@components/common/PageShell';
+import { useMe, useUpdateMe } from '@features/auth/api';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
+import { useSyncedField } from '@hooks/useSyncedField';
+import { FORM_MAX_WIDTH } from '@lib/constants';
 import { useUserSettingsStore } from '@state/userStore';
 import { getErrorMessage } from '@utils/error';
 
-import type { MeResponse } from '@api/models';
 import type { AxiosError } from 'axios';
+
+// ---------------------------------------------------------------------------
+// User Tab — sub-sections
+// ---------------------------------------------------------------------------
+
+const NameSection: React.FC<{ initialValue: string }> = ({ initialValue }) => {
+  const [name, setName] = useSyncedField(initialValue);
+  const [error, setError] = useState('');
+  const updateMe = useUpdateMe();
+
+  const handleSave = async () => {
+    setError('');
+    try {
+      await updateMe.mutateAsync({ name: name || null });
+      notifications.show({ color: 'green', message: 'Name updated' });
+    } catch (e) {
+      setError(getErrorMessage(e) || 'Failed to update name');
+    }
+  };
+
+  return (
+    <Box mb="xl">
+      <Text fw={600} mb="sm">Display Name</Text>
+      <Stack gap="sm">
+        <Text size="sm" c="dimmed">Your name shown across the app.</Text>
+        <TextInput
+          label="Name"
+          placeholder="Your name"
+          value={name}
+          onChange={(e) => setName(e.currentTarget.value)}
+        />
+        {error && <Alert color="red" icon={<IconAlertCircle size={16} />}>{error}</Alert>}
+        <Group justify="flex-end">
+          <Button loading={updateMe.isPending} onClick={() => void handleSave()}>Save name</Button>
+        </Group>
+      </Stack>
+    </Box>
+  );
+};
+
+const EmailSection: React.FC<{ initialValue: string }> = ({ initialValue }) => {
+  const [email, setEmail] = useSyncedField(initialValue);
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const updateMe = useUpdateMe();
+
+  const handleSave = async () => {
+    setError('');
+    try {
+      await updateMe.mutateAsync({ email, current_password: password });
+      setPassword('');
+      notifications.show({ color: 'green', message: 'Email updated' });
+    } catch (e) {
+      setError(getErrorMessage(e) || 'Failed to update email');
+    }
+  };
+
+  return (
+    <Box mb="xl">
+      <Text fw={600} mb="sm">Email Address</Text>
+      <Stack gap="sm">
+        <Text size="sm" c="dimmed">
+          Changing your email requires your current password to verify ownership.
+        </Text>
+        <TextInput
+          label="New email"
+          type="email"
+          placeholder="you@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.currentTarget.value)}
+          required
+        />
+        <PasswordInput
+          label="Current password"
+          placeholder="Required to change email"
+          value={password}
+          onChange={(e) => setPassword(e.currentTarget.value)}
+        />
+        {error && <Alert color="red" icon={<IconAlertCircle size={16} />}>{error}</Alert>}
+        <Group justify="flex-end">
+          <Button
+            loading={updateMe.isPending}
+            disabled={!email.trim() || !password}
+            onClick={() => void handleSave()}
+          >
+            Update email
+          </Button>
+        </Group>
+      </Stack>
+    </Box>
+  );
+};
+
+const PasswordSection: React.FC = () => {
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
+  const updateMe = useUpdateMe();
+
+  const handleSave = async () => {
+    if (newPassword !== confirmPassword) {
+      setError('New passwords do not match');
+      return;
+    }
+    setError('');
+    try {
+      await updateMe.mutateAsync({ current_password: currentPassword, new_password: newPassword });
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      notifications.show({ color: 'green', message: 'Password updated' });
+    } catch (e) {
+      setError(getErrorMessage(e) || 'Failed to update password');
+    }
+  };
+
+  return (
+    <Box>
+      <Text fw={600} mb="sm">Change Password</Text>
+      <Stack gap="sm">
+        <Text size="sm" c="dimmed">Enter your current password to set a new one (min 12 characters).</Text>
+        <PasswordInput
+          label="Current password"
+          placeholder="Current password"
+          value={currentPassword}
+          onChange={(e) => setCurrentPassword(e.currentTarget.value)}
+        />
+        <PasswordInput
+          label="New password"
+          placeholder="At least 12 characters"
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.currentTarget.value)}
+        />
+        <PasswordInput
+          label="Confirm new password"
+          placeholder="Repeat new password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.currentTarget.value)}
+        />
+        {error && <Alert color="red" icon={<IconAlertCircle size={16} />}>{error}</Alert>}
+        <Group justify="flex-end">
+          <Button
+            loading={updateMe.isPending}
+            disabled={!currentPassword || !newPassword || !confirmPassword}
+            onClick={() => void handleSave()}
+          >
+            Change password
+          </Button>
+        </Group>
+      </Stack>
+    </Box>
+  );
+};
 
 // ---------------------------------------------------------------------------
 // User Tab
 // ---------------------------------------------------------------------------
 
 const UserTab: React.FC = () => {
-  const queryClient = useQueryClient();
-  const { data: me } = useQuery({
-    queryKey: ['auth', 'me'],
-    queryFn: async () => (await api.meAuthMeGet()).data as MeResponse,
-    staleTime: 5 * 60 * 1000,
-  });
-
-  // -- Name section --
-  const [name, setName] = useState('');
-  const [nameSaving, setNameSaving] = useState(false);
-  const [nameError, setNameError] = useState('');
-
-  // -- Email section --
-  const [email, setEmail] = useState('');
-  const [emailPassword, setEmailPassword] = useState('');
-  const [emailSaving, setEmailSaving] = useState(false);
-  const [emailError, setEmailError] = useState('');
-
-  // -- Password section --
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [passwordSaving, setPasswordSaving] = useState(false);
-  const [passwordError, setPasswordError] = useState('');
-
-  useEffect(() => {
-    if (me) {
-      setName(me.name ?? '');
-      setEmail(me.email ?? '');
-    }
-  }, [me]);
-
-  const handleSaveName = async () => {
-    setNameError('');
-    setNameSaving(true);
-    try {
-      await api.updateMeAuthMePatch({ name: name || null });
-      await queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
-      notifications.show({ color: 'green', message: 'Name updated' });
-    } catch (e) {
-      setNameError(getErrorMessage(e) || 'Failed to update name');
-    } finally {
-      setNameSaving(false);
-    }
-  };
-
-  const handleSaveEmail = async () => {
-    setEmailError('');
-    setEmailSaving(true);
-    try {
-      await api.updateMeAuthMePatch({ email, current_password: emailPassword });
-      setEmailPassword('');
-      await queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
-      notifications.show({ color: 'green', message: 'Email updated' });
-    } catch (e) {
-      setEmailError(getErrorMessage(e) || 'Failed to update email');
-    } finally {
-      setEmailSaving(false);
-    }
-  };
-
-  const handleSavePassword = async () => {
-    if (newPassword !== confirmPassword) {
-      setPasswordError('New passwords do not match');
-      return;
-    }
-    setPasswordError('');
-    setPasswordSaving(true);
-    try {
-      await api.updateMeAuthMePatch({
-        current_password: currentPassword,
-        new_password: newPassword,
-      });
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-      notifications.show({ color: 'green', message: 'Password updated' });
-    } catch (e) {
-      setPasswordError(getErrorMessage(e) || 'Failed to update password');
-    } finally {
-      setPasswordSaving(false);
-    }
-  };
+  const { data: me } = useMe();
 
   return (
-    <Stack gap={0} maw={520}>
-      {/* Display Name */}
-      <Box mb="xl">
-        <Text fw={600} mb="sm">Display Name</Text>
-        <Stack gap="sm">
-          <Text size="sm" c="dimmed">Your name shown across the app.</Text>
-          <TextInput
-            label="Name"
-            placeholder="Your name"
-            value={name}
-            onChange={(e) => setName(e.currentTarget.value)}
-          />
-          {nameError && <Alert color="red" icon={<IconAlertCircle size={16} />}>{nameError}</Alert>}
-          <Group justify="flex-end">
-            <Button loading={nameSaving} onClick={() => void handleSaveName()}>
-              Save name
-            </Button>
-          </Group>
-        </Stack>
-      </Box>
-
+    <Stack gap={0} maw={FORM_MAX_WIDTH}>
+      <NameSection initialValue={me?.name ?? ''} />
       <Divider mb="xl" />
-
-      {/* Email */}
-      <Box mb="xl">
-        <Text fw={600} mb="sm">Email Address</Text>
-        <Stack gap="sm">
-          <Text size="sm" c="dimmed">
-            Changing your email requires your current password to verify ownership.
-          </Text>
-          <TextInput
-            label="New email"
-            type="email"
-            placeholder="you@example.com"
-            value={email}
-            onChange={(e) => setEmail(e.currentTarget.value)}
-            required
-          />
-          <PasswordInput
-            label="Current password"
-            placeholder="Required to change email"
-            value={emailPassword}
-            onChange={(e) => setEmailPassword(e.currentTarget.value)}
-          />
-          {emailError && <Alert color="red" icon={<IconAlertCircle size={16} />}>{emailError}</Alert>}
-          <Group justify="flex-end">
-            <Button
-              loading={emailSaving}
-              disabled={!email.trim() || !emailPassword}
-              onClick={() => void handleSaveEmail()}
-            >
-              Update email
-            </Button>
-          </Group>
-        </Stack>
-      </Box>
-
+      <EmailSection initialValue={me?.email ?? ''} />
       <Divider mb="xl" />
-
-      {/* Password */}
-      <Box>
-        <Text fw={600} mb="sm">Change Password</Text>
-        <Stack gap="sm">
-          <Text size="sm" c="dimmed">Enter your current password to set a new one (min 12 characters).</Text>
-          <PasswordInput
-            label="Current password"
-            placeholder="Current password"
-            value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.currentTarget.value)}
-          />
-          <PasswordInput
-            label="New password"
-            placeholder="At least 12 characters"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.currentTarget.value)}
-          />
-          <PasswordInput
-            label="Confirm new password"
-            placeholder="Repeat new password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.currentTarget.value)}
-          />
-          {passwordError && <Alert color="red" icon={<IconAlertCircle size={16} />}>{passwordError}</Alert>}
-          <Group justify="flex-end">
-            <Button
-              loading={passwordSaving}
-              disabled={!currentPassword || !newPassword || !confirmPassword}
-              onClick={() => void handleSavePassword()}
-            >
-              Change password
-            </Button>
-          </Group>
-        </Stack>
-      </Box>
+      <PasswordSection />
     </Stack>
   );
 };
@@ -267,7 +251,7 @@ const IntegrationsTab: React.FC = () => {
   };
 
   return (
-    <Box maw={520}>
+    <Box maw={FORM_MAX_WIDTH}>
       <Text fw={600} mb="sm">Canvas Integration</Text>
       <Stack gap="sm">
         <Text size="sm" c="dimmed">

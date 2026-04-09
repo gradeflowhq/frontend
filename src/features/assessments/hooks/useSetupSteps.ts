@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 
 import { useAssessmentContext } from '@app/contexts/AssessmentContext';
+import { PATHS } from '@app/routes/paths';
 import { useQuestionSet } from '@features/questions/api';
 import { useRubric, useRubricCoverage } from '@features/rubric/api';
 import { useSubmissions } from '@features/submissions/api';
@@ -70,13 +71,15 @@ export const useSetupSteps = (assessmentId: string): SetupStepsResult => {
     rubricRes?.status?.is_stale ? 'stale'       :
     covPct >= 1                 ? 'complete'    : 'warning';
 
-  const setupSteps = useMemo<SetupStep[]>(() => [
+  const setupSteps = useMemo<SetupStep[]>(() => {
+    const ap = PATHS.assessment(assessmentId);
+    return [
     {
       label:     'Submissions',
       status:    subsStatus,
       summary:   subsCount > 0 ? `${subsCount} students` : 'No submissions yet',
       updatedAt: assessment?.source_updated_at ?? null,
-      fixLink:   `/assessments/${assessmentId}/submissions`,
+      fixLink:   ap.submissions,
     },
     {
       label:     'Questions',
@@ -85,7 +88,7 @@ export const useSetupSteps = (assessmentId: string): SetupStepsResult => {
         qsStatus === 'locked' ? 'Complete submissions first' :
         questionCount > 0     ? `${questionCount} questions`  : 'Not configured',
       updatedAt: qsRes?.status?.updated_at ?? null,
-      fixLink:   `/assessments/${assessmentId}/questions`,
+      fixLink:   ap.questions,
     },
     {
       label:     'Rules',
@@ -94,9 +97,9 @@ export const useSetupSteps = (assessmentId: string): SetupStepsResult => {
         rulesStatus === 'locked' ? 'Complete questions first'          :
         hasRules                 ? `${covCovered}/${covTotal} covered` : 'No rules configured',
       updatedAt: rubricRes?.status?.updated_at ?? null,
-      fixLink:   `/assessments/${assessmentId}/rules`,
+      fixLink:   ap.rules,
     },
-  ], [
+  ];}, [
     subsStatus, subsCount, assessment,
     qsStatus, questionCount, qsRes,
     rulesStatus, covCovered, covTotal, hasRules, rubricRes,

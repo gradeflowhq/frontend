@@ -1,27 +1,28 @@
 import { Alert, Button, Group, Menu, Modal, Skeleton, Stack, Text, TextInput } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconAdjustments, IconChevronDown, IconSearch, IconTrash, IconUpload } from '@tabler/icons-react';
-import React, { useMemo, useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { lazy, Suspense, useMemo, useState, useEffect } from 'react';
 
 import { useAssessmentContext } from '@app/contexts/AssessmentContext';
 import PageShell from '@components/common/PageShell';
 import { useDeleteSubmissions, useSubmissions, useSourceData } from '@features/submissions';
+import { ListStep, StepIndicator } from '@features/submissions/components';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { getErrorMessage } from '@utils/error';
 
-import { ConfigureStep } from './submissions/ConfigureStep';
-import { ListStep } from './submissions/ListStep';
-import { StepIndicator } from './submissions/StepIndicator';
-import { UploadStep } from './submissions/UploadStep';
-
-import type { Step } from './submissions/StepIndicator';
 import type { RawSubmission } from '@api/models';
+import type { Step } from '@features/submissions/components';
+
+const UploadStep = lazy(
+  () => import('@features/submissions/components/UploadStep').then((m) => ({ default: m.UploadStep })),
+);
+const ConfigureStep = lazy(
+  () => import('@features/submissions/components/ConfigureStep').then((m) => ({ default: m.ConfigureStep })),
+);
 
 const SubmissionsPage: React.FC = () => {
-  const { assessmentId = '' } = useParams<{ assessmentId: string }>();
+  const { assessmentId, assessment } = useAssessmentContext();
   const [step, setStep] = useState<Step | null>(null);
-  const { assessment } = useAssessmentContext();
 
   useDocumentTitle(`Submissions - ${assessment?.name ?? 'Assessment'} - GradeFlow`);
 
@@ -146,19 +147,23 @@ const SubmissionsPage: React.FC = () => {
         )}
 
         {step === 'upload' && (
-          <UploadStep
-            assessmentId={assessmentId}
-            hasExistingSource={hasSource}
-            onNext={() => goToStep('configure')}
-          />
+          <Suspense fallback={<Skeleton height={200} />}>
+            <UploadStep
+              assessmentId={assessmentId}
+              hasExistingSource={hasSource}
+              onNext={() => goToStep('configure')}
+            />
+          </Suspense>
         )}
 
         {step === 'configure' && (
-          <ConfigureStep
-            assessmentId={assessmentId}
-            onSuccess={() => setStep('list')}
-            onBack={() => goToStep('upload')}
-          />
+          <Suspense fallback={<Skeleton height={200} />}>
+            <ConfigureStep
+              assessmentId={assessmentId}
+              onSuccess={() => setStep('list')}
+              onBack={() => goToStep('upload')}
+            />
+          </Suspense>
         )}
 
         {step === 'list' && (

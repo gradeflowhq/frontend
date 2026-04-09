@@ -2,6 +2,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { api } from '@api';
 import { QK } from '@api/queryKeys';
+import {
+  POLLING_INTERVAL_MS,
+  PREVIEW_JOB_TIMEOUT_MS,
+  CACHE_STALE_TIME_GRADING,
+  CACHE_STALE_TIME_JOB,
+} from '@lib/constants';
 
 import type {
   GradingResponse,
@@ -20,7 +26,7 @@ export const useGrading = (assessmentId: string, enabled = true) =>
     queryFn: async () =>
       (await api.getGradingAssessmentsAssessmentIdGradingGet(assessmentId)).data as GradingResponse,
     enabled,
-    staleTime: 30_000,
+    staleTime: CACHE_STALE_TIME_GRADING,
   });
 
 // Read current grading job (points to job status URL)
@@ -31,13 +37,13 @@ export const useGradingJob = (assessmentId: string, enabled = true) =>
       (await api.getGradingJobAssessmentsAssessmentIdGradingJobGet(assessmentId)).data as GradingJob,
     enabled,
     // Keep a short cache; we will drive polling via status below
-    staleTime: 5_000,
+    staleTime: CACHE_STALE_TIME_JOB,
   });
 
 // Poll job status by job_id
 export const useJobStatus = (jobId: string | null | undefined, enabled = true) =>
   useQuery({
-    queryKey: ['jobs', 'status', jobId ?? 'none'],
+    queryKey: QK.grading.jobStatus(jobId ?? 'none'),
     queryFn: async () => {
       if (!jobId) throw new Error('Missing jobId');
       return (await api.getStatusJobsJobIdGet(jobId)).data as JobStatusResponse;
@@ -46,7 +52,7 @@ export const useJobStatus = (jobId: string | null | undefined, enabled = true) =
     // Poll while running/queued; caller can decide when to stop
     refetchInterval: (query) => {
       const status = (query.state.data as JobStatusResponse | undefined)?.status;
-      return status && (status === 'queued' || status === 'running') ? 2000 : false;
+      return status && (status === 'queued' || status === 'running') ? POLLING_INTERVAL_MS : false;
     },
   });
 
@@ -141,8 +147,8 @@ export const usePreviewGrading = (assessmentId: string) =>
 
       // Poll by job_id if available, else finish optimistically
       if (job?.job_id) {
-        // Simple polling loop (2s interval, max ~60s)
-        const deadline = Date.now() + 60_000;
+        // Simple polling loop
+        const deadline = Date.now() + PREVIEW_JOB_TIMEOUT_MS;
          
         while (true) {
           const statusRes = await api.getStatusJobsJobIdGet(job.job_id);
@@ -154,7 +160,7 @@ export const usePreviewGrading = (assessmentId: string) =>
           if (Date.now() > deadline) {
             throw new Error('Preview polling timed out');
           }
-          await new Promise((r) => setTimeout(r, 2000));
+          await new Promise((r) => setTimeout(r, POLLING_INTERVAL_MS));
         }
       }
 

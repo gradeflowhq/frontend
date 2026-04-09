@@ -5,6 +5,7 @@ export const QK = {
   assessments: {
     list: ['assessments', 'list'] as const,
     item: (id: string) => ['assessment', id] as const,
+    members: (id: string) => ['assessments', id, 'members'] as const,
   },
   submissions: {
     list: (assessmentId: string) => ['submissions', assessmentId] as const,
@@ -24,8 +25,13 @@ export const QK = {
     export: (assessmentId: string) => ['grading', assessmentId, 'export'] as const,
     job: (assessmentId: string) => ['grading', assessmentId, 'job'] as const,
     previewJob: (assessmentId: string) => ['grading', assessmentId, 'preview', 'job'] as const,
+    jobStatus: (jobId: string) => ['jobs', 'status', jobId] as const,
+    csv: (assessmentId: string, roundingBase: number) => ['grading', 'csv', assessmentId, roundingBase] as const,
   },
-  registry: {
-    submissionsSavers: ['registry', 'submissionsSavers'] as const,
+  canvas: {
+    courses: (baseUrl: string, token: string) => ['canvas', 'courses', baseUrl, token] as const,
+    courseData: (courseId: string, baseUrl: string, token: string) => ['canvas', 'course-data', courseId, baseUrl, token] as const,
+    progress: (progressUrl: string) => ['canvas', 'progress', progressUrl] as const,
+    me: (baseUrl: string, token: string) => ['canvas', 'me', baseUrl, token] as const,
   },
 };

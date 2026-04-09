@@ -1,5 +1,3 @@
-@import "tailwindcss";
-
 /* Force Mantine RJSF to use full width */
 .rjsf [data-strategy='block'] {
   max-width: 100%;

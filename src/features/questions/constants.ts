@@ -11,6 +11,9 @@ export const QUESTION_TYPE_COLORS: Record<string, string> = {
 /** All supported question type keys. */
 export const QUESTION_TYPES = ['TEXT', 'NUMERIC', 'CHOICE', 'MULTI_VALUED'] as const;
 
+/** Prefix used to mark unparsable answer values. */
+export const UNPARSABLE_MARKER = '__UNPARSABLE__:';
+
 /**
  * Return the JSON schema object for the given question type.
  * Falls back to TextQuestion when the type is unknown.

@@ -30,5 +30,5 @@ export type QuestionDef = ChoiceQuestion | MultiValuedQuestion | TextQuestion | 
 export type QuestionId = string;
 export type QuestionType = 'TEXT' | 'NUMERIC' | 'CHOICE' | 'MULTI_VALUED';
 
-// Examples mapping (used by QuestionsTable)
+// Examples mapping (used by QuestionEditorPanel and others)
 export type ExamplesByQuestion = Record<QuestionId, unknown[]>;

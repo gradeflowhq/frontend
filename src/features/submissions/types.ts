@@ -6,9 +6,6 @@ import type {
 // Re-export API types (single source of truth)
 export type { RawSubmission, SubmissionsResponse };
 
-// Table row view (alias for clarity)
-export type SubmissionsTableRow = RawSubmission;
-
 // CSV preview (used by the Load Wizard)
 export type CsvPreview = {
   headers: string[];
@@ -28,6 +25,6 @@ export type UploadCsvResult = {
 };
 
 // Helper context for encryption/decryption
-export type PassphraseContext = {
+export type SubmissionPassphraseConfig = {
   passphrase: string | null;
 };

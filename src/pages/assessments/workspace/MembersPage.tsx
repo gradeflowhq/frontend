@@ -2,7 +2,6 @@ import { Alert, Badge, Button, Group, Modal, Select, Text, TextInput, Title } fr
 import { notifications } from '@mantine/notifications';
 import { IconPlus } from '@tabler/icons-react';
 import React, { useCallback, useState } from 'react';
-import { useParams } from 'react-router-dom';
 
 import { useAssessmentContext } from '@app/contexts/AssessmentContext';
 import PageShell from '@components/common/PageShell';
@@ -12,15 +11,14 @@ import {
   useSetMemberRole,
   useRemoveMember,
 } from '@features/assessments/api';
-import MembersTable from '@features/assessments/components/MembersTable';
+import { MembersTable } from '@features/assessments/components';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { getErrorMessage } from '@utils/error';
 
 import type { UserResponse, UserResponseRole } from '@api/models';
 
 const MembersPage: React.FC = () => {
-  const { assessmentId = '' } = useParams<{ assessmentId: string }>();
-  const { assessment } = useAssessmentContext();
+  const { assessmentId, assessment } = useAssessmentContext();
 
   useDocumentTitle(`Members - ${assessment?.name ?? 'Assessment'} - GradeFlow`);
 

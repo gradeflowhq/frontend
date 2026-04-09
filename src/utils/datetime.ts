@@ -8,9 +8,9 @@ dayjs.extend(relativeTime);
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-export type DateInput = string | number | Date | dayjs.Dayjs;
+type DateInput = string | number | Date | dayjs.Dayjs;
 
-export type SmartFormatOptions = {
+type SmartFormatOptions = {
   // When to consider a date "recent" and use relative time.
   // Default: 7 days (in ms).
   recentThresholdMs?: number;
@@ -45,11 +45,6 @@ const asDayjs = (v: DateInput, zone?: string) => {
   return zone ? base.tz(zone) : base.local();
 };
 
-export const formatRelative = (v: DateInput, opts?: { zone?: string; withSuffix?: boolean }) => {
-  const d = asDayjs(v, opts?.zone);
-  if (!d) return '—';
-  return opts?.withSuffix === false ? d.fromNow(true) : d.fromNow();
-};
 
 // Pick a date pattern based on whether date is in the same year as “now”
 const pickPattern = (d: dayjs.Dayjs, includeTime?: boolean, sameYearPattern?: string, otherYearPattern?: string) => {
@@ -79,7 +74,7 @@ export const formatAbsolute = (
  *
  * If returnBoth is true, returns { primary, secondary }; otherwise just the primary string.
  */
-export const formatSmart = (
+const formatSmart = (
   v: DateInput,
   options: SmartFormatOptions = {}
 ): string | { primary: string; secondary: string } => {

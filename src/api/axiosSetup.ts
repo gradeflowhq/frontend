@@ -2,12 +2,14 @@ import axios, { type AxiosRequestHeaders, type InternalAxiosRequestConfig } from
 
 import { useAuthStore } from '@state/authStore';
 
+import { ENV } from '../env';
 import { api } from './index';
 
-axios.defaults.baseURL =
-  window.__CONFIG__?.API_URL ??
-  import.meta.env.VITE_API_URL ??
-  'http://localhost:8000';
+axios.defaults.baseURL = ENV.API_URL;
+
+if (import.meta.env.DEV && !ENV.API_URL) {
+  console.warn('[gradeflow] API_URL is not configured. Set VITE_API_URL or window.__CONFIG__.API_URL.');
+}
 
 let isRefreshing = false;
 let queue: Array<(token: string | null) => void> = [];

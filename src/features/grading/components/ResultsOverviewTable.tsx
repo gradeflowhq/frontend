@@ -3,9 +3,10 @@ import { IconAdjustments } from '@tabler/icons-react';
 import { DataTable } from 'mantine-datatable';
 import React, { useMemo, useState } from 'react';
 
-import DecryptedText from '@components/encryption/DecryptedText';
-import { useAssessmentPassphrase } from '@features/encryption/passphraseContext';
+import DecryptedText from '@features/encryption/components/DecryptedText';
+import { useAssessmentPassphrase } from '@features/encryption/PassphraseContext';
 import { useDecryptedIds } from '@features/encryption/useDecryptedIds';
+import { usePagination } from '@hooks/usePagination';
 
 import type { AdjustableSubmission } from '../types';
 import type { DataTableSortStatus } from 'mantine-datatable';
@@ -58,8 +59,6 @@ const ResultsOverviewTable: React.FC<Props> = ({
   searchQuery = '',
 }) => {
   const { passphrase, notifyEncryptedDetected } = useAssessmentPassphrase();
-  const [page, setPage]             = useState(1);
-  const [pageSize, setPageSize]     = useState(initialPageSize);
   const [sortStatus, setSortStatus] = useState<DataTableSortStatus<RowT>>({
     columnAccessor: '_totalPoints',
     direction: 'desc',
@@ -146,7 +145,10 @@ const ResultsOverviewTable: React.FC<Props> = ({
     });
   }, [filtered, sortStatus]);
 
-  React.useEffect(() => { setPage(1); }, [searchQuery, scoreRange, sortStatus]);
+  const { page, setPage, pageSize, setPageSize, paginate } = usePagination(
+    [searchQuery, scoreRange, sortStatus],
+    initialPageSize,
+  );
 
   // ── Columns ──
   const columns = useMemo(() => {
@@ -195,7 +197,7 @@ const ResultsOverviewTable: React.FC<Props> = ({
               <Text size="xs" fw={700}>{qid}</Text>
               <Text size="xs" c="dimmed">{mean.toFixed(1)}/{qMax}</Text>
             </Stack>
-          ) as unknown as string,
+          ),
           render: (row: RowT) => {
             const r = row.result_map?.[qid];
             if (!r) return <Text size="xs">—</Text>;
@@ -237,7 +239,7 @@ const ResultsOverviewTable: React.FC<Props> = ({
             <Text size="xs" fw={700}>Total</Text>
             <Text size="xs" c="dimmed">{totalMean.mean.toFixed(1)}/{totalMean.max}</Text>
           </Stack>
-        ) as unknown as string,
+        ),
         sortable: true,
         render: (row: RowT) => (
           <Stack gap={3} style={{ minWidth: 100 }}>
@@ -266,7 +268,7 @@ const ResultsOverviewTable: React.FC<Props> = ({
     ];
   }, [passphrase, questionIds, onView, isDecrypting, qMean, totalMean]);
 
-  const records = sortedRows.slice((page - 1) * pageSize, page * pageSize);
+  const records = paginate(sortedRows);
   const isFiltered = scoreRange[0] > 0 || scoreRange[1] < 100;
 
   return (
@@ -311,6 +313,7 @@ const ResultsOverviewTable: React.FC<Props> = ({
             <Select
               size="xs"
               w={88}
+              aria-label="Items per page"
               data={PAGE_SIZE_OPTIONS}
               value={String(pageSize)}
               onChange={(v) => { setPageSize(Number(v ?? '10')); setPage(1); }}

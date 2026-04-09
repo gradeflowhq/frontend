@@ -8,7 +8,8 @@ import {
 } from '@tabler/icons-react';
 import React from 'react';
 
-import SectionStatusBadge from '@components/common/SectionStatusBadge';
+import SectionLabel from '@components/common/SectionLabel';
+import UpdatedAtBadge from '@components/common/UpdatedAtBadge';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -121,7 +122,7 @@ const StepItem: React.FC<{
           )}
 
           {!isLocked && step.updatedAt && (
-            <SectionStatusBadge />
+            <UpdatedAtBadge updatedAt={step.updatedAt} />
           )}
         </Group>
       }
@@ -151,22 +152,16 @@ const StepItem: React.FC<{
 
 interface Props {
   steps: SetupStep[];
-  completeCount: number;
   onNavigate: (link: string) => void;
 }
 
-const OverviewSetupTimeline: React.FC<Props> = ({ steps, completeCount, onNavigate }) => (
+const OverviewSetupTimeline: React.FC<Props> = ({ steps, onNavigate }) => {
+  const completeCount = steps.filter((s) => s.status === 'complete').length;
+  return (
   <Card withBorder radius="md" padding="lg">
-    <Text
-      fw={700}
-      size="xs"
-      tt="uppercase"
-      c="dimmed"
-      mb="md"
-      style={{ letterSpacing: '0.06em' }}
-    >
+    <SectionLabel c="dimmed" mb="md">
       Setup — {completeCount} of {steps.length} complete
-    </Text>
+    </SectionLabel>
 
     <Timeline bulletSize={28} lineWidth={2}>
       {steps.map((step, i) => (
@@ -179,6 +174,7 @@ const OverviewSetupTimeline: React.FC<Props> = ({ steps, completeCount, onNaviga
       ))}
     </Timeline>
   </Card>
-);
+  );
+};
 
 export default OverviewSetupTimeline;

@@ -1,18 +1,18 @@
 import { Alert, Card, Title, Anchor, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { useMutation } from '@tanstack/react-query';
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 
-import { api } from '@api';
+import { PATHS } from '@app/routes/paths';
 import HiddenAwareFieldTemplate from '@components/forms/HiddenAwareFieldTemplate';
 import { SchemaForm } from '@components/forms/SchemaForm';
+import { useLogin } from '@features/auth/api';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import othersSchema from '@schemas/others.json';
 import { useAuthStore } from '@state/authStore';
 import { getErrorMessage } from '@utils/error';
 
-import type { BodyIssueTokenAuthTokenPost, TokenPairResponse } from '@api/models';
+import type { BodyIssueTokenAuthTokenPost } from '@api/models';
 import type { JSONSchema7 } from 'json-schema';
 
 const getLoginSchema = (): JSONSchema7 => {
@@ -45,17 +45,7 @@ const LoginPage: React.FC = () => {
   const templates = useMemo(() => ({ FieldTemplate: HiddenAwareFieldTemplate }), []);
   const formContext = useMemo(() => ({ hideKeys }), [hideKeys]);
 
-  const { mutateAsync, isPending, isError, error } = useMutation({
-    mutationKey: ['auth', 'login'],
-    mutationFn: async (payload: BodyIssueTokenAuthTokenPost) => {
-      const res = await api.issueTokenAuthTokenPost(payload);
-      return res.data as TokenPairResponse;
-    },
-    onSuccess: (tokenPair) => {
-      setTokens(tokenPair);
-      notifications.show({ color: 'green', message: 'Login successful' });
-    },
-  });
+  const { mutateAsync, isPending, isError, error } = useLogin();
 
   return (
     <Card withBorder shadow="sm" w={400} p="xl">
@@ -69,7 +59,10 @@ const LoginPage: React.FC = () => {
           isSubmitting={isPending}
           onSubmit={({ formData }) => {
             if (!formData) return;
-            void mutateAsync(formData);
+            void mutateAsync(formData).then((tokenPair) => {
+              setTokens(tokenPair);
+              notifications.show({ color: 'green', message: 'Login successful' });
+            });
           }}
           formProps={{ noHtml5Validate: true }}
         />
@@ -83,7 +76,7 @@ const LoginPage: React.FC = () => {
 
         <Text size="sm" ta="center" mt="md">
           Don&apos;t have an account?{' '}
-          <Anchor component={Link} to="/register">Register</Anchor>
+          <Anchor component={Link} to={PATHS.REGISTER}>Register</Anchor>
         </Text>
     </Card>
   );

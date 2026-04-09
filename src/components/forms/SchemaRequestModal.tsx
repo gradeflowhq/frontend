@@ -30,6 +30,7 @@ export type SchemaRequestModalProps<TForm, TData = unknown> = {
 };
 
 const SchemaRequestModalInner = <TForm, TData = unknown>({
+  open,
   title,
   schema,
   onClose,
@@ -46,7 +47,16 @@ const SchemaRequestModalInner = <TForm, TData = unknown>({
   submitIdleLabel = 'Submit',
   submitLoadingLabel,
   validate,
-}: Omit<SchemaRequestModalProps<TForm, TData>, 'open'>) => {
+}: SchemaRequestModalProps<TForm, TData>) => {
+  React.useEffect(() => {
+    if (open) {
+      setFormData(initialValues?.());
+      setValidationError(null);
+      mutation.reset();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
   const [formData, setFormData] = useState<TForm | undefined>(() => initialValues?.());
   const [validationError, setValidationError] = useState<unknown>(null);
 
@@ -75,7 +85,7 @@ const SchemaRequestModalInner = <TForm, TData = unknown>({
   });
 
   return (
-    <Modal opened onClose={onClose} title={title}>
+    <Modal opened={open} onClose={onClose} title={title}>
       {!schema ? (
         <Alert color="yellow" mt="sm">Schema not available.</Alert>
       ) : (
@@ -119,7 +129,6 @@ const SchemaRequestModalInner = <TForm, TData = unknown>({
 };
 
 const SchemaRequestModal = <TForm,>(props: SchemaRequestModalProps<TForm>) => {
-  if (!props.open) return null;
   return <SchemaRequestModalInner {...props} />;
 };
 

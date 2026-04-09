@@ -93,7 +93,7 @@ export default defineConfig([
 
   // Config files without type-aware parsing
   {
-    files: ['vite.config.ts', 'orval.config.ts'],
+    files: ['vite.config.ts', 'vitest.config.ts', 'orval.config.ts'],
     languageOptions: {
       parserOptions: {
         project: false,

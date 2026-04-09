@@ -12,6 +12,7 @@ type QuestionsHeaderProps = {
   disableDelete?: boolean;
   searchQuery?: string;
   onSearchChange?: (value: string) => void;
+  disabled?: boolean;
 };
 
 const QuestionsHeader: React.FC<QuestionsHeaderProps> = ({
@@ -24,20 +25,23 @@ const QuestionsHeader: React.FC<QuestionsHeaderProps> = ({
   disableDelete,
   searchQuery,
   onSearchChange,
+  disabled,
 }) => {
   return (
     <Group gap="sm">
       {onSearchChange && (
         <TextInput
           leftSection={<IconSearch size={14} />}
+          aria-label="Search questions"
           placeholder="Search questions"
           value={searchQuery ?? ''}
           onChange={(e) => onSearchChange(e.target.value)}
+          disabled={disabled}
         />
       )}
       <Menu position="bottom-end">
         <Menu.Target>
-          <Button size="sm" variant="default" rightSection={<IconChevronDown size={14} />}>
+          <Button size="sm" variant="default" rightSection={<IconChevronDown size={14} />} disabled={disabled}>
             Manage
           </Button>
         </Menu.Target>

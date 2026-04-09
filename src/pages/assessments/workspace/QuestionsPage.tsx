@@ -1,16 +1,13 @@
 import {
   Alert,
   Anchor,
-  Box,
   Button,
-  Card,
   Center,
   Group,
   Modal,
   Skeleton,
   Stack,
   Text,
-  ThemeIcon,
   Title,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
@@ -21,12 +18,15 @@ import {
   IconQuestionMark,
   IconUpload,
 } from '@tabler/icons-react';
-import React, { useCallback, useMemo, useState } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import React, { lazy, Suspense, useCallback, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 import { useAssessmentContext } from '@app/contexts/AssessmentContext';
+import { ActionOptionCard } from '@components/common/ActionOptionCard';
+import MasterDetailLayout from '@components/common/MasterDetailLayout';
 import PageShell from '@components/common/PageShell';
 import SectionStatusBadge from '@components/common/SectionStatusBadge';
+import { UnsavedChangesModal } from '@components/common/UnsavedChangesModal';
 import {
   useDeleteQuestionSet,
   useInferAndParseQuestionSet,
@@ -37,25 +37,26 @@ import {
 import { QuestionsHeader } from '@features/questions/components';
 import QuestionEditorPanel from '@features/questions/components/QuestionEditorPanel';
 import QuestionListPanel from '@features/questions/components/QuestionListPanel';
-import QuestionSetImportModal from '@features/questions/components/QuestionSetImportModal';
-import QuestionSetUploadModal from '@features/questions/components/QuestionSetUploadModal';
+const QuestionSetImportModal = lazy(
+  () => import('@features/questions/components/QuestionSetImportModal'),
+);
+const QuestionSetUploadModal = lazy(
+  () => import('@features/questions/components/QuestionSetUploadModal'),
+);
 import { buildExamplesFromParsed, getQuestionIdsSorted } from '@features/questions/helpers';
-import { MasterDetailLayout } from '@features/rules/components';
 import { useSubmissions } from '@features/submissions/api';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
+import { useUrlSelectedId } from '@hooks/useUrlSelectedId';
 import { getErrorMessage } from '@utils/error';
 
 import type { QuestionSetInput } from '@api/models';
 import type { QuestionDef } from '@features/questions/components/QuestionEditorPanel';
 
 const QuestionsPage: React.FC = () => {
-  const { assessmentId } = useParams<{ assessmentId: string }>();
-  const { assessment } = useAssessmentContext();
-  const [searchParams, setSearchParams] = useSearchParams();
-
+  const { assessmentId, assessment } = useAssessmentContext();
   useDocumentTitle(`Questions - ${assessment?.name ?? 'Assessment'} - GradeFlow`);
 
-  const safeAssessmentId = assessmentId ?? '';
+  const safeAssessmentId = assessmentId;
   const enabled = Boolean(assessmentId);
 
   const [confirmInfer, setConfirmInfer] = useState(false);
@@ -95,6 +96,8 @@ const QuestionsPage: React.FC = () => {
 
   const questionIds = useMemo(() => getQuestionIdsSorted(questionMap), [questionMap]);
 
+  const { selectedId: selectedQid, setSelectedId: setSelectedQid } = useUrlSelectedId(questionIds, 'q');
+
   const questionTypesById = useMemo(() => {
     const m: Record<string, string> = {};
     for (const [qid, def] of Object.entries(questionMap)) {
@@ -103,27 +106,6 @@ const QuestionsPage: React.FC = () => {
     }
     return m;
   }, [questionMap]);
-
-  // URL-driven selection: ?q=questionId
-  const urlQid = searchParams.get('q');
-  const selectedQid = useMemo(() => {
-    if (urlQid && questionIds.includes(urlQid)) return urlQid;
-    return questionIds[0] ?? null;
-  }, [urlQid, questionIds]);
-
-  // Initialise URL param on first render if missing.
-  React.useEffect(() => {
-    if (!urlQid && questionIds.length > 0 && questionIds[0]) {
-      setSearchParams(
-        (prev) => {
-          const next = new URLSearchParams(prev);
-          next.set('q', questionIds[0]!);
-          return next;
-        },
-        { replace: true },
-      );
-    }
-  }, [urlQid, questionIds, setSearchParams]);
 
   // Parsed submissions (examples)
   const {
@@ -154,7 +136,7 @@ const QuestionsPage: React.FC = () => {
   // No-op save to acknowledge staleness and refresh updated_at
   const handleDismissStale = useCallback(() => {
     if (!qsRes?.question_set) return;
-    updateMutation.mutate(qsRes.question_set as unknown as QuestionSetInput, {
+    updateMutation.mutate(qsRes.question_set as QuestionSetInput, {
       onError: () => notifications.show({ color: 'red', message: 'Could not acknowledge staleness' }),
     });
   }, [qsRes, updateMutation]);
@@ -166,32 +148,18 @@ const QuestionsPage: React.FC = () => {
         setPendingQid(qid);
         return;
       }
-      setSearchParams(
-        (prev) => {
-          const next = new URLSearchParams(prev);
-          next.set('q', qid);
-          return next;
-        },
-        { replace: true },
-      );
+      setSelectedQid(qid);
       setMobileShowDetail(true);
     },
-    [detailEditing, setSearchParams],
+    [detailEditing, setSelectedQid],
   );
 
   // Desktop unsaved-changes guard: user confirmed navigation.
   const handleConfirmNavigation = useCallback(() => {
     if (!pendingQid) return;
-    setSearchParams(
-      (prev) => {
-        const next = new URLSearchParams(prev);
-        next.set('q', pendingQid);
-        return next;
-      },
-      { replace: true },
-    );
+    setSelectedQid(pendingQid);
     setPendingQid(null);
-  }, [pendingQid, setSearchParams]);
+  }, [pendingQid, setSelectedQid]);
 
   // Save handler called by QuestionEditorPanel.
   const handleSave = useCallback(
@@ -205,7 +173,7 @@ const QuestionsPage: React.FC = () => {
       };
       await updateMutation.mutateAsync(next, {
         onSuccess: () => notifications.show({ color: 'green', message: 'Question saved' }),
-        onError: () => notifications.show({ color: 'red', message: 'Save failed' }),
+        onError: (err) => notifications.show({ color: 'red', message: getErrorMessage(err) }),
       });
     },
     [selectedQid, questionMap, updateMutation],
@@ -224,6 +192,7 @@ const QuestionsPage: React.FC = () => {
       disableDelete={deleteMutation.isPending}
       searchQuery={searchQuery}
       onSearchChange={(v) => setSearchQuery(v)}
+      disabled={!hasSubmissions}
     />
   );
 
@@ -260,32 +229,14 @@ const QuestionsPage: React.FC = () => {
               You need to upload your submissions before you can set up questions.
             </Text>
 
-            <Card withBorder p="sm" radius="md" w="100%">
-              <Group gap="sm" align="flex-start" wrap="nowrap">
-                <ThemeIcon
-                  variant="light"
-                  color="blue"
-                  size="md"
-                  radius="xl"
-                  style={{ flexShrink: 0 }}
-                >
-                  <IconInbox size={14} />
-                </ThemeIcon>
-                <Box>
-                  <Text size="sm" fw={500}>Upload submissions first</Text>
-                  <Text size="xs" c="dimmed">
-                    Import a CSV from Examplify or any other source.{' '}
-                    <Anchor
-                      component={Link}
-                      to={`/assessments/${safeAssessmentId}/submissions`}
-                      size="xs"
-                    >
-                      Go to Submissions →
-                    </Anchor>
-                  </Text>
-                </Box>
-              </Group>
-            </Card>
+            <Stack gap="xs" w="100%">
+              <ActionOptionCard
+                icon={<IconInbox size={14} />}
+                iconColor="blue"
+                title="Upload submissions first"
+                description={<>Import a CSV from Examplify or any other source.{' '}<Anchor component={Link} to={`/assessments/${safeAssessmentId}/submissions`} size="xs">Go to Submissions →</Anchor></>}
+              />
+            </Stack>
           </Stack>
         </Center>
       </PageShell>
@@ -313,86 +264,26 @@ const QuestionsPage: React.FC = () => {
             </Text>
 
             <Stack gap="xs" w="100%">
-              <Card withBorder p="sm" radius="md">
-                <Group gap="sm" align="flex-start" wrap="nowrap">
-                  <ThemeIcon
-                    variant="light"
-                    color="blue"
-                    size="md"
-                    radius="xl"
-                    style={{ flexShrink: 0 }}
-                  >
-                    <IconBolt size={14} />
-                  </ThemeIcon>
-                  <Box>
-                    <Text size="sm" fw={500}>Infer from submissions</Text>
-                    <Text size="xs" c="dimmed">
-                      Automatically detect questions from your uploaded CSV.{' '}
-                      <Anchor
-                        component="button"
-                        size="xs"
-                        onClick={() => setConfirmInfer(true)}
-                      >
-                        Infer now →
-                      </Anchor>
-                    </Text>
-                  </Box>
-                </Group>
-              </Card>
+              <ActionOptionCard
+                icon={<IconBolt size={14} />}
+                iconColor="blue"
+                title="Infer from submissions"
+                description={<>Automatically detect questions from your uploaded CSV.{' '}<Anchor component="button" size="xs" onClick={() => setConfirmInfer(true)}>Infer now →</Anchor></>}
+              />
 
-              <Card withBorder p="sm" radius="md">
-                <Group gap="sm" align="flex-start" wrap="nowrap">
-                  <ThemeIcon
-                    variant="light"
-                    color="teal"
-                    size="md"
-                    radius="xl"
-                    style={{ flexShrink: 0 }}
-                  >
-                    <IconUpload size={14} />
-                  </ThemeIcon>
-                  <Box>
-                    <Text size="sm" fw={500}>Upload a question set</Text>
-                    <Text size="xs" c="dimmed">
-                      Load a YAML or JSON file defining your questions.{' '}
-                      <Anchor
-                        component="button"
-                        size="xs"
-                        onClick={() => setOpenQsUpload(true)}
-                      >
-                        Upload now →
-                      </Anchor>
-                    </Text>
-                  </Box>
-                </Group>
-              </Card>
+              <ActionOptionCard
+                icon={<IconUpload size={14} />}
+                iconColor="teal"
+                title="Upload a question set"
+                description={<>Load a YAML or JSON file defining your questions.{' '}<Anchor component="button" size="xs" onClick={() => setOpenQsUpload(true)}>Upload now →</Anchor></>}
+              />
 
-              <Card withBorder p="sm" radius="md">
-                <Group gap="sm" align="flex-start" wrap="nowrap">
-                  <ThemeIcon
-                    variant="light"
-                    color="violet"
-                    size="md"
-                    radius="xl"
-                    style={{ flexShrink: 0 }}
-                  >
-                    <IconFileImport size={14} />
-                  </ThemeIcon>
-                  <Box>
-                    <Text size="sm" fw={500}>Import from another format</Text>
-                    <Text size="xs" c="dimmed">
-                      Import from a supported adapter (e.g. Examplify).{' '}
-                      <Anchor
-                        component="button"
-                        size="xs"
-                        onClick={() => setOpenQsImport(true)}
-                      >
-                        Import now →
-                      </Anchor>
-                    </Text>
-                  </Box>
-                </Group>
-              </Card>
+              <ActionOptionCard
+                icon={<IconFileImport size={14} />}
+                iconColor="violet"
+                title="Import from another format"
+                description={<>Import from a supported adapter (e.g. Examplify).{' '}<Anchor component="button" size="xs" onClick={() => setOpenQsImport(true)}>Import now →</Anchor></>}
+              />
             </Stack>
           </Stack>
         </Center>
@@ -403,18 +294,22 @@ const QuestionsPage: React.FC = () => {
           inferMutation={inferMutation}
         />
         {openQsUpload && (
-          <QuestionSetUploadModal
-            open={openQsUpload}
-            assessmentId={safeAssessmentId}
-            onClose={() => setOpenQsUpload(false)}
-          />
+          <Suspense fallback={null}>
+            <QuestionSetUploadModal
+              open={openQsUpload}
+              assessmentId={safeAssessmentId}
+              onClose={() => setOpenQsUpload(false)}
+            />
+          </Suspense>
         )}
         {openQsImport && (
-          <QuestionSetImportModal
-            open={openQsImport}
-            assessmentId={safeAssessmentId}
-            onClose={() => setOpenQsImport(false)}
-          />
+          <Suspense fallback={null}>
+            <QuestionSetImportModal
+              open={openQsImport}
+              assessmentId={safeAssessmentId}
+              onClose={() => setOpenQsImport(false)}
+            />
+          </Suspense>
         )}
       </PageShell>
     );
@@ -529,39 +424,27 @@ const QuestionsPage: React.FC = () => {
         </Modal>
 
         {/* Desktop unsaved-changes guard */}
-        <Modal
+        <UnsavedChangesModal
           opened={pendingQid !== null}
-          onClose={() => setPendingQid(null)}
-          title="Unsaved changes"
-          size="sm"
-        >
-          <Text mb="md">
-            You have unsaved question edits. Navigating away will discard them.
-          </Text>
-          <Group justify="flex-end" gap="sm">
-            <Button variant="subtle" onClick={() => setPendingQid(null)}>
-              Stay
-            </Button>
-            <Button color="red" onClick={handleConfirmNavigation}>
-              Discard &amp; Continue
-            </Button>
-          </Group>
-        </Modal>
+          message="You have unsaved question edits. Navigating away will discard them."
+          onStay={() => setPendingQid(null)}
+          onDiscard={handleConfirmNavigation}
+        />
 
-        {openQsUpload && (
+        <Suspense fallback={null}>
           <QuestionSetUploadModal
             open={openQsUpload}
             assessmentId={safeAssessmentId}
             onClose={() => setOpenQsUpload(false)}
           />
-        )}
-        {openQsImport && (
+        </Suspense>
+        <Suspense fallback={null}>
           <QuestionSetImportModal
             open={openQsImport}
             assessmentId={safeAssessmentId}
             onClose={() => setOpenQsImport(false)}
           />
-        )}
+        </Suspense>
       </Stack>
     </PageShell>
   );
