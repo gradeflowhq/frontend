@@ -5,9 +5,13 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="GradeFlow is an open-source automated assessment grading platform. Define composable grading rules, cluster answers for bulk review, and publish grades directly to Canvas LMS." />
-    <title>gradeflow-frontend</title>
+    <title>GradeFlow</title>
+    <script>
+      // Inline fallback in case config.js 404s (e.g. local dev)
+      window.__CONFIG__ = window.__CONFIG__ || {};
+    </script>
     <!-- Runtime configuration injected by the container entrypoint -->
-    <script src="/config.js"></script>
+    <script src="/config.js" onerror="console.warn('config.js not found, using defaults')"></script>
   </head>
   <body>
     <div id="root"></div>
