@@ -5,16 +5,21 @@ import {
   Divider,
   Group,
   PasswordInput,
+  SegmentedControl,
   Stack,
   Tabs,
   Text,
   TextInput,
+  useMantineColorScheme,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import {
   IconAlertCircle,
   IconCircleCheck,
+  IconMoon,
+  IconPalette,
   IconPlug,
+  IconSun,
   IconUser,
 } from '@tabler/icons-react';
 import React, { useState } from 'react';
@@ -186,6 +191,57 @@ const PasswordSection: React.FC = () => {
 };
 
 // ---------------------------------------------------------------------------
+// Appearance Tab
+// ---------------------------------------------------------------------------
+
+const AppearanceTab: React.FC = () => {
+  const { colorScheme, setColorScheme } = useMantineColorScheme();
+
+  return (
+    <Box maw={FORM_MAX_WIDTH}>
+      <Text fw={600} mb="sm">Color Scheme</Text>
+      <Stack gap="sm">
+        <Text size="sm" c="dimmed">
+          Choose how GradeFlow looks. "Auto" follows your system preference.
+        </Text>
+        <SegmentedControl
+          value={colorScheme}
+          onChange={(v) => setColorScheme(v as 'light' | 'dark' | 'auto')}
+          data={[
+            {
+              value: 'light',
+              label: (
+                <Group gap={6} wrap="nowrap">
+                  <IconSun size={14} />
+                  Light
+                </Group>
+              ),
+            },
+            {
+              value: 'dark',
+              label: (
+                <Group gap={6} wrap="nowrap">
+                  <IconMoon size={14} />
+                  Dark
+                </Group>
+              ),
+            },
+            {
+              value: 'auto',
+              label: (
+                <Group gap={6} wrap="nowrap">
+                  Auto
+                </Group>
+              ),
+            },
+          ]}
+        />
+      </Stack>
+    </Box>
+  );
+};
+
+// ---------------------------------------------------------------------------
 // User Tab
 // ---------------------------------------------------------------------------
 
@@ -312,7 +368,7 @@ const IntegrationsTab: React.FC = () => {
 const UserSettingsPage: React.FC = () => {
   useDocumentTitle('Settings - GradeFlow');
   const [searchParams] = useSearchParams();
-  const initialTab = (searchParams.get('tab') ?? 'user') as 'user' | 'integrations';
+  const initialTab = (searchParams.get('tab') ?? 'user') as 'user' | 'integrations' | 'appearance';
 
   return (
     <PageShell title="Settings">
@@ -324,6 +380,9 @@ const UserSettingsPage: React.FC = () => {
           <Tabs.Tab value="integrations" leftSection={<IconPlug size={16} />}>
             Integrations
           </Tabs.Tab>
+          <Tabs.Tab value="appearance" leftSection={<IconPalette size={16} />}>
+            Appearance
+          </Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="user">
@@ -332,6 +391,10 @@ const UserSettingsPage: React.FC = () => {
 
         <Tabs.Panel value="integrations">
           <IntegrationsTab />
+        </Tabs.Panel>
+
+        <Tabs.Panel value="appearance">
+          <AppearanceTab />
         </Tabs.Panel>
       </Tabs>
     </PageShell>

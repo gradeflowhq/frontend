@@ -29,9 +29,9 @@ type RowT = AdjustableSubmission & {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 const rowColour = (pct: number): string => {
-  if (pct < 40)  return 'var(--mantine-color-red-0)';
-  if (pct < 60)  return 'var(--mantine-color-orange-0)';
-  if (pct >= 80) return 'var(--mantine-color-green-0)';
+  if (pct < 40)  return 'light-dark(var(--mantine-color-red-0), var(--mantine-color-red-light))';
+  if (pct < 60)  return 'light-dark(var(--mantine-color-orange-0), var(--mantine-color-orange-light))';
+  if (pct >= 80) return 'light-dark(var(--mantine-color-green-0), var(--mantine-color-green-light))';
   return 'var(--mantine-color-body)';
 };
 
@@ -41,6 +41,9 @@ const pctBarColour = (pct: number): string => {
   if (pct >= 80) return 'green';
   return 'blue';
 };
+
+const adjustmentHighlightBackground = 'var(--mantine-color-yellow-light)';
+const adjustmentHighlightColor = 'var(--mantine-color-yellow-light-color)';
 
 const MiniBar: React.FC<{ value: number; max: number }> = ({ value, max }) => {
   const pct = max > 0 ? (value / max) * 100 : 0;
@@ -178,7 +181,7 @@ const ResultsOverviewTable: React.FC<Props> = ({
             </Text>
             {row._hasAdjustment && (
               <Tooltip label="Has manual adjustments" withArrow position="right">
-                <IconAdjustments size={13} color="var(--mantine-color-yellow-7)" style={{ flexShrink: 0 }} />
+                <IconAdjustments size={13} color={adjustmentHighlightColor} style={{ flexShrink: 0 }} />
               </Tooltip>
             )}
           </Group>
@@ -212,7 +215,7 @@ const ResultsOverviewTable: React.FC<Props> = ({
 
             return (
               <div style={adjusted ? {
-                background: 'var(--mantine-color-yellow-0)',
+                background: adjustmentHighlightBackground,
                 margin: '-4px', padding: '4px', borderRadius: 4,
               } : undefined}>
                 <Text ff="monospace" size="xs" fw={600}>

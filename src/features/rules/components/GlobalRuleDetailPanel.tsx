@@ -1,5 +1,4 @@
 import {
-  ActionIcon,
   Badge,
   Box,
   Button,
@@ -136,22 +135,21 @@ const GlobalRuleDetailPanel: React.FC<Props> = ({
           </Badge>
         </Group>
 
-        {/* Match QuestionDetailPanel: ActionIcon buttons, no text labels */}
+        {/* Match QuestionDetailPanel: visible labels on header action buttons */}
         {!isEditing && !isPendingNew && (
           <Group gap="xs">
-            <ActionIcon
-              onClick={handleStartEdit}
-              aria-label="Edit rule"
-            >
-              <IconPencil size={14} />
-            </ActionIcon>
-            <ActionIcon
+            <Button size="xs" variant="subtle" leftSection={<IconPencil size={14} />} onClick={handleStartEdit}>
+              Edit
+            </Button>
+            <Button
+              size="xs"
+              variant="subtle"
               color="red"
+              leftSection={<IconTrash size={14} />}
               onClick={() => setDeleteConfirm(true)}
-              aria-label="Delete rule"
             >
-              <IconTrash size={14} />
-            </ActionIcon>
+              Delete
+            </Button>
           </Group>
         )}
       </Group>

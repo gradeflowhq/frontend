@@ -7,6 +7,7 @@ import { useGrading, useGradingJob, useJobStatus } from '@features/grading/api';
 export interface GradingStatusResult {
   gradingInProgress: boolean;
   jobStatus: string | undefined;
+  jobError: string | null | undefined;
   isStale: boolean;
   updatedAt: string | null | undefined;
 }
@@ -26,6 +27,7 @@ export const useGradingStatus = (assessmentId: string): GradingStatusResult => {
   const { data: jobStatusRes } = useJobStatus(jobId, !!jobId);
 
   const jobStatus = jobStatusRes?.status;
+  const jobError = jobStatusRes?.error;
   const gradingInProgress = jobStatus === 'queued' || jobStatus === 'running';
   const isStale = gradingData?.status?.is_stale ?? false;
   const updatedAt = gradingData?.status?.updated_at;
@@ -39,5 +41,5 @@ export const useGradingStatus = (assessmentId: string): GradingStatusResult => {
     }
   }, [jobStatus, assessmentId, qc]);
 
-  return { gradingInProgress, jobStatus, isStale, updatedAt };
+  return { gradingInProgress, jobStatus, jobError, isStale, updatedAt };
 };

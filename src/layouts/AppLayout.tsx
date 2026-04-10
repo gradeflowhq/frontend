@@ -1,5 +1,5 @@
-import { AppShell, Box, Burger, Text } from '@mantine/core';
-import React, { useCallback, useState } from 'react';
+import { AppShell, Box, Burger, Center, Loader, Text } from '@mantine/core';
+import React, { Suspense, useCallback, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 
 import ErrorBoundary from '@components/common/ErrorBoundary';
@@ -47,7 +47,7 @@ const AppLayoutInner: React.FC<{
           }}
         >
           <Burger opened={mobileOpened} onClick={onMobileToggle} size="sm" />
-          <Text fw={800} size="sm" c="black">GradeFlow</Text>
+          <Text fw={800} size="sm">GradeFlow</Text>
         </Box>
 
         <Box
@@ -65,7 +65,13 @@ const AppLayoutInner: React.FC<{
         />
 
         <ErrorBoundary>
-          <Outlet />
+          <Suspense fallback={
+            <Center style={{ minHeight: '60vh' }}>
+              <Loader color="blue" />
+            </Center>
+          }>
+            <Outlet />
+          </Suspense>
         </ErrorBoundary>
       </AppShell.Main>
     </AppShell>

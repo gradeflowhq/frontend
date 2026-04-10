@@ -58,7 +58,7 @@ const BoxPlotStrip: React.FC<BoxPlotStripProps> = ({ min, q1, median, mean, q3, 
         position: 'absolute', top: '50%', left: pct(mean),
         width: 12, height: 12, borderRadius: '50%',
         background: C.mean,
-        border: '2px solid white',
+        border: '2px solid var(--mantine-color-body)',
         transform: 'translate(-50%, -50%)',
         zIndex: 3,
         boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
@@ -79,7 +79,7 @@ const BoxPlotStrip: React.FC<BoxPlotStripProps> = ({ min, q1, median, mean, q3, 
         <Group gap={4}>
           <Box style={{
             width: 11, height: 11, borderRadius: '50%',
-            background: C.mean, border: '2px solid white',
+            background: C.mean, border: '2px solid var(--mantine-color-body)',
             boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
           }} />
           <Text size="xs" fw={600}>Mean</Text>

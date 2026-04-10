@@ -9,7 +9,6 @@ const LandingHowItWorksSection: React.FC = () => (
   <Box
     component="section"
     aria-labelledby="how-it-works-heading"
-    bg="white"
     py={64}
     px="md"
   >
@@ -84,7 +83,7 @@ const LandingHowItWorksSection: React.FC = () => (
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0,
-                  boxShadow: '0 0 0 6px white',
+                  boxShadow: '0 0 0 6px var(--mantine-color-body)',
                 }}
               >
                 <Text c="white" fw={700} size="lg">{step.n}</Text>

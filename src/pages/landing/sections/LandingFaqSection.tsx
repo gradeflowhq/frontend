@@ -11,7 +11,7 @@ const FaqItem: React.FC<{ q: string; a: string }> = ({ q, a }) => {
         border: '1px solid var(--mantine-color-default-border)',
         borderRadius: 8,
         overflow: 'hidden',
-        background: 'white',
+        background: 'var(--mantine-color-body)',
       }}
     >
       <Box
@@ -49,7 +49,7 @@ const LandingFaqSection: React.FC = () => (
     aria-labelledby="faq-heading"
     py={72}
     px="md"
-    bg="gray.0"
+    style={{ background: 'var(--mantine-color-default-hover)' }}
   >
     <Center mb={48}>
       <Stack align="center" gap="xs">

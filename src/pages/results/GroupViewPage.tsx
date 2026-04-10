@@ -20,6 +20,10 @@ import {
   QuestionGroupHeader,
 } from '@features/grading/components/group-view';
 import { buildGroups } from '@features/grading/helpers/grouping';
+import {
+  groupBySemantic,
+  isEmbeddingModelReady,
+} from '@features/grading/helpers/semanticGrouping';
 import { useGradingStatus } from '@features/grading/hooks/useGradingStatus';
 import { useQuestionSet } from '@features/questions/api';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
@@ -30,6 +34,7 @@ import { natsort } from '@utils/sort';
 
 import type { AdjustableSubmission, QuestionSetOutputQuestionMap } from '@api/models';
 import type { BulkAdjustArgs } from '@features/grading/components/group-view';
+import type { SemanticState } from '@features/grading/components/group-view/GroupModeSelector';
 import type { AnswerGroup, ClusterOpts, GroupingMode, NormalizeOpts } from '@features/grading/helpers/grouping';
 import type { RuleValue } from '@features/rules/types';
 
@@ -41,8 +46,9 @@ const DEFAULT_NORMALIZE_OPTS: NormalizeOpts = {
   ignorePunctuation: false,
 };
 
-// Default to 100% (exact match after normalization)
-const DEFAULT_THRESHOLD = 1.0;
+// Exact-match threshold for normalized answer/feedback grouping.
+const DEFAULT_TEXT_THRESHOLD = 1.0;
+const DEFAULT_SEMANTIC_THRESHOLD = 0.85;
 const AQ_PARAM = 'aq';
 
 // ── Page component ────────────────────────────────────────────────────────────
@@ -52,15 +58,19 @@ const GroupViewPage: React.FC = () => {
   const { passphrase, notifyEncryptedDetected } = useAssessmentPassphrase();
 
   const [mode, setMode] = useState<GroupingMode>('answer');
-  const [threshold, setThreshold] = useState(DEFAULT_THRESHOLD);
-  // pendingThreshold is the slider value before the user clicks "Apply"
-  const [pendingThreshold, setPendingThreshold] = useState(DEFAULT_THRESHOLD);
+  const [useSemanticGrouping, setUseSemanticGrouping] = useState(false);
+  const [textThreshold, setTextThreshold] = useState(DEFAULT_TEXT_THRESHOLD);
+  // pending thresholds are the slider values before the user clicks "Apply"
+  const [pendingTextThreshold, setPendingTextThreshold] = useState(DEFAULT_TEXT_THRESHOLD);
+  const [semanticThreshold, setSemanticThreshold] = useState(DEFAULT_SEMANTIC_THRESHOLD);
+  const [pendingSemanticThreshold, setPendingSemanticThreshold] = useState(DEFAULT_SEMANTIC_THRESHOLD);
   const [normalizeOpts, setNormalizeOpts] = useState<NormalizeOpts>(DEFAULT_NORMALIZE_OPTS);
   const [bulkLoadingKey, setBulkLoadingKey] = useState<string | null>(null);
   const [individualLoadingId, setIndividualLoadingId] = useState<string | null>(null);
   const [mobileShowDetail, setMobileShowDetail] = useState(false);
   const [groups, setGroups] = useState<AnswerGroup[]>([]);
   const [isGroupsPending, startGroupsTransition] = useTransition();
+  const [semanticState, setSemanticState] = useState<SemanticState>('idle');
   const [searchQuery, setSearchQuery] = useState('');
 
   const { data: gradingData, isLoading, isError, error } = useGrading(assessmentId, true);
@@ -114,20 +124,76 @@ const GroupViewPage: React.FC = () => {
 
   const coveredQuestionIds = useMemo(() => new Set(Object.keys(byQuestion)), [byQuestion]);
 
+  const threshold = useSemanticGrouping ? semanticThreshold : textThreshold;
+  const pendingThreshold = useSemanticGrouping ? pendingSemanticThreshold : pendingTextThreshold;
+
   const clusterOpts = useMemo<ClusterOpts>(
-    () => ({ threshold, normalizeOpts }),
-    [threshold, normalizeOpts],
+    () => ({ threshold: textThreshold, normalizeOpts }),
+    [textThreshold, normalizeOpts],
   );
+
+  const handlePendingThresholdChange = useCallback(
+    (value: number) => {
+      if (useSemanticGrouping) {
+        setPendingSemanticThreshold(value);
+        return;
+      }
+      setPendingTextThreshold(value);
+    },
+    [useSemanticGrouping],
+  );
+
+  const handleApplyThreshold = useCallback(() => {
+    if (useSemanticGrouping) {
+      setSemanticThreshold(pendingSemanticThreshold);
+      return;
+    }
+    setTextThreshold(pendingTextThreshold);
+  }, [pendingSemanticThreshold, pendingTextThreshold, useSemanticGrouping]);
 
   // Compute groups lazily via useTransition so heavy cluster computation doesn't block the UI.
   // Skip recomputation while a bulk adjustment is in progress — the group key can change mid-loop
   // which would cause the loading indicator to flicker off prematurely.
   useEffect(() => {
+    if (useSemanticGrouping) return;
     if (bulkLoadingKey !== null) return;
     startGroupsTransition(() => {
       setGroups(selectedQid ? buildGroups(submissions, selectedQid, mode, clusterOpts) : []);
     });
-  }, [submissions, selectedQid, mode, clusterOpts, bulkLoadingKey]);
+  }, [submissions, selectedQid, mode, clusterOpts, bulkLoadingKey, useSemanticGrouping]);
+
+  useEffect(() => {
+    if (!useSemanticGrouping) {
+      setSemanticState('idle');
+      return;
+    }
+    if (bulkLoadingKey !== null) return;
+    if (!selectedQid) {
+      setGroups([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    const compute = async () => {
+      setSemanticState(isEmbeddingModelReady() ? 'computing' : 'loading-model');
+      try {
+        const result = await groupBySemantic(submissions, selectedQid, semanticThreshold, mode);
+        if (!cancelled) {
+          setGroups(result);
+          setSemanticState('ready');
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setSemanticState('idle');
+          notifications.show({ color: 'red', message: `Semantic grouping failed: ${getErrorMessage(err as Error)}` });
+        }
+      }
+    };
+
+    void compute();
+    return () => { cancelled = true; };
+  }, [submissions, selectedQid, mode, semanticThreshold, bulkLoadingKey, useSemanticGrouping]);
 
   const headerStats = useMemo(() => {
     if (!selectedQid) return null;
@@ -335,13 +401,16 @@ const GroupViewPage: React.FC = () => {
       <GroupModeSelector
         mode={mode}
         onChange={setMode}
+        useSemanticGrouping={useSemanticGrouping}
+        onUseSemanticGroupingChange={setUseSemanticGrouping}
         threshold={threshold}
         pendingThreshold={pendingThreshold}
-        onPendingThresholdChange={setPendingThreshold}
-        onApplyThreshold={() => setThreshold(pendingThreshold)}
+        onPendingThresholdChange={handlePendingThresholdChange}
+        onApplyThreshold={handleApplyThreshold}
         normalizeOpts={normalizeOpts}
         onNormalizeOptsChange={setNormalizeOpts}
         isGroupsPending={isGroupsPending}
+        semanticState={semanticState}
       />
 
       {selectedQid && (

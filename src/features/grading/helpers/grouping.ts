@@ -80,6 +80,15 @@ const deriveGroupStats = (
   };
 };
 
+export const buildGroupKey = (
+  mode: GroupingMode,
+  label: string,
+  entries: GroupEntry[],
+): string => {
+  const firstStudentId = entries[0]?.studentId ?? 'empty';
+  return `${mode}:${firstStudentId}:${label}`;
+};
+
 // ── Exported entry builder ────────────────────────────────────────────────────
 
 export const buildGroupEntry = (sub: AdjustableSubmission, qid: string): GroupEntry => {
@@ -131,7 +140,7 @@ export const groupByAnswer = (submissions: AdjustableSubmission[], qid: string):
   return [...map.entries()]
     .sort(([, a], [, b]) => b.length - a.length)
     .map(([key, entries]) => ({
-      key,
+      key: buildGroupKey('answer', key, entries),
       label: key,
       mode: 'answer' as GroupingMode,
       entries,
@@ -156,7 +165,7 @@ export const groupByFeedback = (submissions: AdjustableSubmission[], qid: string
   return [...map.entries()]
     .sort(([, a], [, b]) => b.length - a.length)
     .map(([key, entries]) => ({
-      key,
+      key: buildGroupKey('feedback', key, entries),
       label: key,
       mode: 'feedback' as GroupingMode,
       entries,
@@ -204,7 +213,7 @@ const clusterGroupsByText = (
     const mergedAnswers = sortedRaws.length > 1 ? sortedRaws.slice(0, 20) : undefined;
 
     groups.push({
-      key: safeLabel,
+      key: buildGroupKey(mode, safeLabel, clusterEntries),
       label: safeLabel,
       mode,
       entries: clusterEntries,
@@ -249,14 +258,11 @@ export const buildGroups = (
   mode: GroupingMode,
   clusterOpts: ClusterOpts,
 ): AnswerGroup[] => {
-  switch (mode) {
-    case 'answer':
-      return clusterOpts.threshold >= 1.0
-        ? groupByAnswer(submissions, qid)
-        : groupByCluster(submissions, qid, clusterOpts);
-    case 'feedback':
-      return clusterOpts.threshold >= 1.0
-        ? groupByFeedback(submissions, qid)
-        : groupByFeedbackCluster(submissions, qid, clusterOpts);
-  }
+  return mode === 'answer'
+    ? clusterOpts.threshold >= 1.0
+      ? groupByAnswer(submissions, qid)
+      : groupByCluster(submissions, qid, clusterOpts)
+    : clusterOpts.threshold >= 1.0
+      ? groupByFeedback(submissions, qid)
+      : groupByFeedbackCluster(submissions, qid, clusterOpts);
 };

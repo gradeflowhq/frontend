@@ -24,9 +24,9 @@ type Definitions = Record<string, JSONSchema7>;
 type RenderNodeFn = (value: unknown, path: string, options: RenderOptions) => React.ReactNode;
 
 const RuleContainer: React.FC<{ children: React.ReactNode; isRoot?: boolean; flatRoot?: boolean }> = ({ children, isRoot, flatRoot }) => (
-  <Card withBorder={!isRoot || !flatRoot} p={isRoot && flatRoot ? 0 : 'xs'}>
-    {children}
-  </Card>
+  isRoot && flatRoot
+    ? <Box>{children}</Box>
+    : <Card withBorder p="xs">{children}</Card>
 );
 
 const LabeledBlock: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (

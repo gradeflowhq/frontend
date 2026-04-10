@@ -26,7 +26,7 @@ const LandingPage: React.FC = () => {
       <AppShell.Header
         style={{
           backdropFilter: scrolled ? 'blur(10px)' : 'none',
-          backgroundColor: scrolled ? 'rgba(255,255,255,0.88)' : 'white',
+          backgroundColor: scrolled ? 'var(--mantine-color-body)' : 'transparent',
           borderBottom: scrolled
             ? '1px solid var(--mantine-color-default-border)'
             : '1px solid transparent',

@@ -155,7 +155,7 @@ export const usePreviewGrading = (assessmentId: string) =>
           const status = statusRes.data.status;
           if (status === 'completed') break;
           if (status === 'failed') {
-            throw new Error('Preview job failed');
+            throw new Error(statusRes.data.error ?? 'Preview job failed');
           }
           if (Date.now() > deadline) {
             throw new Error('Preview polling timed out');

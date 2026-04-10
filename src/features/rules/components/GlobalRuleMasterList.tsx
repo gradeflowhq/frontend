@@ -65,8 +65,8 @@ const GlobalRuleRow: React.FC<RowProps> = ({ data, isSelected, onSelect }) => {
       style={{
         cursor: 'pointer',
         borderLeft: `4px solid ${dotColor(data.coveredQids.length)}`,
-        borderRight: '1px solid var(--mantine-color-gray-2)',
-        backgroundColor: isSelected ? 'var(--mantine-color-blue-0)' : undefined,
+        borderRight: '1px solid var(--mantine-color-default-border)',
+        backgroundColor: isSelected ? 'var(--mantine-color-blue-light)' : undefined,
         outline: 'none',
         transition: 'background-color 90ms ease',
       }}
@@ -163,8 +163,8 @@ const GlobalRuleMasterList: React.FC<Props> = ({
 
   return (
     <Box style={{ width: '100%', display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Add rule button — full width, flush with panel edges */}
-      <Box style={{ borderBottom: '1px solid var(--mantine-color-gray-2)' }}>
+      {/* Add rule button — full width with spacing before the list */}
+      <Box pb={4}>
         {addableRuleKeys.length === 1 ? (
           <Button
             size="xs"

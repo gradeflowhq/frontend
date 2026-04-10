@@ -60,7 +60,7 @@ const OverviewPage: React.FC = () => {
   } = useSetupSteps(assessmentId);
 
   const { data: gradingData, isLoading: gradingLoading } = useGrading(assessmentId, !!assessmentId);
-  const { gradingInProgress, jobStatus } = useGradingStatus(assessmentId);
+  const { gradingInProgress, jobStatus, jobError } = useGradingStatus(assessmentId);
 
   const runGradingMutation = useRunGrading(assessmentId);
   const cancelGradingMutation = useCancelGrading(assessmentId);
@@ -168,9 +168,16 @@ const OverviewPage: React.FC = () => {
       })();
     } else if (jobStatus === 'failed') {
       setAwaitingNav(false);
-      notifications.show({ color: 'red', message: 'Grading job failed' });
+      notifications.show({
+        color: 'red',
+        message: (
+          <Text size="sm" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+            {jobError ?? 'Grading job failed'}
+          </Text>
+        ),
+      });
     }
-  }, [awaitingNav, jobStatus, navigate, assessmentId, qc]);
+  }, [awaitingNav, jobError, jobStatus, navigate, assessmentId, qc]);
 
   const handleGradeClick = () => {
     // Always open the unified modal — it shows a simple confirmation when

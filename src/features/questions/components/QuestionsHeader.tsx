@@ -47,7 +47,7 @@ const QuestionsHeader: React.FC<QuestionsHeaderProps> = ({
         </Menu.Target>
         <Menu.Dropdown>
           {showInfer && (
-            <Menu.Item leftSection={<IconBolt size={16} />} onClick={onInfer} title="Infer question set from submissions">
+            <Menu.Item leftSection={<IconBolt size={16} />} onClick={onInfer} disabled={disabled} title="Infer question set from submissions">
               Infer from Submissions
             </Menu.Item>
           )}

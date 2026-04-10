@@ -42,6 +42,7 @@ const HistogramWithLines: React.FC<HistogramWithLinesProps> = ({ data, mean, med
   const lineTop       = paddingTop;
   const lineBottom    = height - paddingBottom;
   const close         = Math.abs(meanX - medianX) < 28;
+  const overlayBackdrop = 'var(--mantine-color-body)';
 
   return (
     <div ref={containerRef} style={{ position: 'relative' }}>
@@ -60,21 +61,27 @@ const HistogramWithLines: React.FC<HistogramWithLinesProps> = ({ data, mean, med
           aria-hidden
         >
           <line x1={medianX} x2={medianX} y1={lineTop} y2={lineBottom}
+            stroke={overlayBackdrop} strokeWidth={4} strokeDasharray="5 3" opacity={0.95} />
+          <line x1={medianX} x2={medianX} y1={lineTop} y2={lineBottom}
             stroke={C.median} strokeWidth={2} strokeDasharray="5 3" opacity={0.95} />
+          <line x1={meanX} x2={meanX} y1={lineTop} y2={lineBottom}
+            stroke={overlayBackdrop} strokeWidth={4} strokeDasharray="5 3" opacity={0.95} />
           <line x1={meanX} x2={meanX} y1={lineTop} y2={lineBottom}
             stroke={C.mean} strokeWidth={2} strokeDasharray="5 3" opacity={0.95} />
 
           {close ? (
             <>
               <text x={Math.max(meanX, medianX) + 5} y={lineTop + 11}
-                fontSize={10} fontWeight={700} fill={C.mean}>Mean</text>
+                fontSize={10} fontWeight={700} fill={C.mean} stroke={overlayBackdrop} strokeWidth={3} paintOrder="stroke">Mean</text>
               <text x={Math.max(meanX, medianX) + 5} y={lineTop + 23}
-                fontSize={10} fontWeight={700} fill={C.median}>Med</text>
+                fontSize={10} fontWeight={700} fill={C.median} stroke={overlayBackdrop} strokeWidth={3} paintOrder="stroke">Med</text>
             </>
           ) : (
             <>
-              <text x={meanX + 5}   y={lineTop + 11} fontSize={10} fontWeight={700} fill={C.mean}>Mean</text>
-              <text x={medianX + 5} y={lineTop + 11} fontSize={10} fontWeight={700} fill={C.median}>Med</text>
+              <text x={meanX + 5} y={lineTop + 11}
+                fontSize={10} fontWeight={700} fill={C.mean} stroke={overlayBackdrop} strokeWidth={3} paintOrder="stroke">Mean</text>
+              <text x={medianX + 5} y={lineTop + 11}
+                fontSize={10} fontWeight={700} fill={C.median} stroke={overlayBackdrop} strokeWidth={3} paintOrder="stroke">Med</text>
             </>
           )}
         </svg>

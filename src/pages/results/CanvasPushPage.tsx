@@ -14,6 +14,7 @@ import { useAssessment } from '@features/assessments/api';
 import { CourseSelector, PreviewSection, PushProgressBanner } from '@features/canvas/components';
 import AssignmentPicker from '@features/canvas/components/AssignmentPicker';
 import GradeSettings from '@features/canvas/components/GradeSettings';
+import { NEW_GROUP_VALUE } from '@features/canvas/constants';
 import { pickValue } from '@features/canvas/helpers';
 import { useCanvasData, useCourseData } from '@features/canvas/hooks/useCanvasData';
 import { useCanvasProgress } from '@features/canvas/hooks/useCanvasProgress';
@@ -56,6 +57,8 @@ const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId 
   const [includeComments, setIncludeComments] = useState(true);
   const [previewTab, setPreviewTab] = useState<PreviewTab>('mapped');
   const [openSteps, setOpenSteps] = useState<string[]>(() => ['connection']);
+  const [newGroupName, setNewGroupName] = useState('');
+  const [newGroupWeight, setNewGroupWeight] = useState<number | undefined>(undefined);
 
   const csvGrades = useCsvGrades(assessmentId, roundingBase ?? 0, passphrase ?? '', notifyEncryptedDetected);
   const { data: gradingData } = useGrading(assessmentId, Boolean(assessmentId));
@@ -170,6 +173,10 @@ const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId 
   };
 
   const handleAssignmentGroupChange = (value: string) => {
+    if (value !== NEW_GROUP_VALUE) {
+      setNewGroupName('');
+      setNewGroupWeight(undefined);
+    }
     setConfig({ assignmentGroupId: value, assignmentId: '', assignmentName: assessmentRes?.name ?? '' });
   };
 
@@ -205,11 +212,21 @@ const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId 
         assignmentId,
         assignmentName: name,
         assignmentGroupId,
+        newGroupName: newGroupName.trim() || undefined,
+        newGroupWeight,
         gradeMode,
         includeComments,
         numericPoints,
       },
-      (id, name, points) => setConfig({ assignmentId: id, assignmentName: name, pointsPossible: points })
+      (id, createdName, points, groupId) => {
+        setConfig({
+          assignmentId: id,
+          assignmentName: createdName,
+          pointsPossible: points,
+          ...(groupId ? { assignmentGroupId: groupId } : {}),
+        });
+        void courseData.refetch();
+      }
     );
   };
 
@@ -234,11 +251,16 @@ const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId 
   }, [assignmentId, filteredAssignments, assignmentName]);
 
   const assignmentSummary = useMemo(() => {
-    if (!assignmentGroupId || !selectedGroupName) return null;
-    const parts: string[] = [selectedGroupName];
+    if (!assignmentGroupId) return null;
+    const groupLabel = assignmentGroupId === NEW_GROUP_VALUE
+      ? (newGroupName.trim() || 'New group')
+      : selectedGroupName;
+    if (!groupLabel) return null;
+    if (assignmentGroupId === NEW_GROUP_VALUE) return `${groupLabel} · New assignment`;
+    const parts: string[] = [groupLabel];
     parts.push(selectedAssignmentName ?? (assignmentName || 'New assignment'));
     return parts.join(' · ');
-  }, [assignmentGroupId, selectedGroupName, selectedAssignmentName, assignmentName]);
+  }, [assignmentGroupId, newGroupName, selectedGroupName, selectedAssignmentName, assignmentName]);
 
   // Grade settings accordion summary
   const gradeSettingsSummary = useMemo(() => {
@@ -372,9 +394,13 @@ const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId 
                 assignmentName={assignmentName}
                 assessmentName={assessmentRes?.name}
                 assignmentGroupId={assignmentGroupId}
+                newGroupName={newGroupName}
+                newGroupWeight={newGroupWeight}
                 onAssignmentSelect={handleAssignmentSelect}
                 onAssignmentNameChange={value => setConfig({ assignmentName: value })}
                 onAssignmentGroupChange={handleAssignmentGroupChange}
+                onNewGroupNameChange={setNewGroupName}
+                onNewGroupWeightChange={setNewGroupWeight}
                 onRefresh={async () => {
                   await courseData.refetch();
                 }}

@@ -15,10 +15,11 @@ import {
   IconBolt,
   IconFileImport,
   IconInbox,
+  IconPlus,
   IconQuestionMark,
   IconUpload,
 } from '@tabler/icons-react';
-import React, { lazy, Suspense, useCallback, useMemo, useState } from 'react';
+import React, { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { useAssessmentContext } from '@app/contexts/AssessmentContext';
@@ -28,6 +29,7 @@ import PageShell from '@components/common/PageShell';
 import SectionStatusBadge from '@components/common/SectionStatusBadge';
 import { UnsavedChangesModal } from '@components/common/UnsavedChangesModal';
 import {
+  inferQuestionSetFromSubmissions,
   useDeleteQuestionSet,
   useInferAndParseQuestionSet,
   useParsedSubmissions,
@@ -35,6 +37,7 @@ import {
   useUpdateQuestionSet,
 } from '@features/questions/api';
 import { QuestionsHeader } from '@features/questions/components';
+import AddQuestionModal from '@features/questions/components/AddQuestionModal';
 import QuestionEditorPanel from '@features/questions/components/QuestionEditorPanel';
 import QuestionListPanel from '@features/questions/components/QuestionListPanel';
 const QuestionSetImportModal = lazy(
@@ -43,14 +46,53 @@ const QuestionSetImportModal = lazy(
 const QuestionSetUploadModal = lazy(
   () => import('@features/questions/components/QuestionSetUploadModal'),
 );
-import { buildExamplesFromParsed, getQuestionIdsSorted } from '@features/questions/helpers';
+import {
+  buildExamplesFromParsed,
+  getInvalidQuestionIds,
+  getMissingQuestionIds,
+  getQuestionIdsSorted,
+  getSubmissionQuestionIds,
+  synchronizeQuestionMap,
+} from '@features/questions/helpers';
 import { useSubmissions } from '@features/submissions/api';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { useUrlSelectedId } from '@hooks/useUrlSelectedId';
 import { getErrorMessage } from '@utils/error';
 
-import type { QuestionSetInput } from '@api/models';
+import type { QuestionSetInput, QuestionSetInputQuestionMap } from '@api/models';
 import type { QuestionDef } from '@features/questions/components/QuestionEditorPanel';
+
+const getQuestionStatusMessage = (
+  isStale: boolean,
+  missingQuestionCount: number,
+  invalidQuestionCount: number,
+): string => {
+  const outOfSyncQuestionCount = missingQuestionCount + invalidQuestionCount;
+
+  if (outOfSyncQuestionCount > 0) {
+    const parts = [];
+
+    if (missingQuestionCount > 0) {
+      parts.push(
+        `${missingQuestionCount} new question ID${missingQuestionCount === 1 ? '' : 's'}`,
+      );
+    }
+
+    if (invalidQuestionCount > 0) {
+      parts.push(
+        `${invalidQuestionCount} invalid question ID${invalidQuestionCount === 1 ? '' : 's'}`,
+      );
+    }
+
+    const summary = parts.join(' and ');
+    const verb = outOfSyncQuestionCount === 1 ? 'was' : 'were';
+    return isStale
+      ? `Questions may be out of date — submissions changed and ${summary} ${verb} found.`
+      : `Questions are out of sync with the current submissions. ${summary} ${verb} found.`;
+  }
+
+  return 'Questions may be out of date — submissions have been updated since the last question set was configured.';
+};
 
 const QuestionsPage: React.FC = () => {
   const { assessmentId, assessment } = useAssessmentContext();
@@ -63,7 +105,17 @@ const QuestionsPage: React.FC = () => {
   const [confirmDeleteQs, setConfirmDeleteQs] = useState(false);
   const [openQsUpload, setOpenQsUpload] = useState(false);
   const [openQsImport, setOpenQsImport] = useState(false);
+  const [openAddQuestion, setOpenAddQuestion] = useState(false);
+  const [confirmDeleteQid, setConfirmDeleteQid] = useState<string | null>(null);
+  const [confirmSynchronizeQuestions, setConfirmSynchronizeQuestions] = useState(false);
+  const [dismissedQuestionSyncSignature, setDismissedQuestionSyncSignature] = useState<string | null>(null);
+  const [isSynchronizingQuestions, setIsSynchronizingQuestions] = useState(false);
+  const [statusAction, setStatusAction] = useState<'dismiss' | 'sync' | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [pendingAddedQuestion, setPendingAddedQuestion] = useState<{
+    qid: string;
+    def: QuestionDef;
+  } | null>(null);
 
   const [detailEditing, setDetailEditing] = useState(false);
   const [pendingQid, setPendingQid] = useState<string | null>(null);
@@ -88,13 +140,52 @@ const QuestionsPage: React.FC = () => {
     return err?.response?.status === 404;
   }, [qsError]);
 
-  const questionMap = useMemo(
+  const baseQuestionMap = useMemo(
     () => (qsMissing ? {} : (qsRes?.question_set?.question_map ?? {})),
     [qsMissing, qsRes],
   );
-  const hasQuestionSet = !qsMissing && !!qsRes?.question_set && Object.keys(questionMap).length > 0;
+  const questionMap = useMemo(() => {
+    if (!pendingAddedQuestion || baseQuestionMap[pendingAddedQuestion.qid]) {
+      return baseQuestionMap;
+    }
+
+    return {
+      ...baseQuestionMap,
+      [pendingAddedQuestion.qid]: pendingAddedQuestion.def,
+    };
+  }, [baseQuestionMap, pendingAddedQuestion]);
+
+  useEffect(() => {
+    if (pendingAddedQuestion && baseQuestionMap[pendingAddedQuestion.qid]) {
+      setPendingAddedQuestion(null);
+    }
+  }, [baseQuestionMap, pendingAddedQuestion]);
+
+  // "record exists" = API has a QS object (even with 0 questions)
+  const hasQuestionSetRecord = !qsMissing && !!qsRes?.question_set;
+  // "has questions" = at least one question configured
+  const hasQuestions = hasQuestionSetRecord && Object.keys(questionMap).length > 0;
 
   const questionIds = useMemo(() => getQuestionIdsSorted(questionMap), [questionMap]);
+
+  const submissionQuestionIds = useMemo(
+    () => getSubmissionQuestionIds(subsRes?.raw_submissions),
+    [subsRes],
+  );
+
+  // Available question IDs derived from raw submissions (for the "Add question" dropdown)
+  const submissionQids = useMemo(() => {
+    return submissionQuestionIds.filter((qid) => !questionIds.includes(qid));
+  }, [submissionQuestionIds, questionIds]);
+
+  const invalidQuestionIds = useMemo(
+    () => getInvalidQuestionIds(questionMap, submissionQuestionIds),
+    [questionMap, submissionQuestionIds],
+  );
+  const missingQuestionIds = useMemo(
+    () => getMissingQuestionIds(questionMap, submissionQuestionIds),
+    [questionMap, submissionQuestionIds],
+  );
 
   const { selectedId: selectedQid, setSelectedId: setSelectedQid } = useUrlSelectedId(questionIds, 'q');
 
@@ -113,7 +204,7 @@ const QuestionsPage: React.FC = () => {
     isLoading: loadingParsed,
     isError: errorParsed,
     error: parsedError,
-  } = useParsedSubmissions(safeAssessmentId, hasQuestionSet && enabled);
+  } = useParsedSubmissions(safeAssessmentId, hasQuestionSetRecord && enabled);
 
   const parsedErr = parsedError as { response?: { status?: number } } | undefined;
   const missingSubmissions = errorParsed && parsedErr?.response?.status === 404;
@@ -133,13 +224,146 @@ const QuestionsPage: React.FC = () => {
     [parsedRes],
   );
 
+  const hasInvalidQuestionIds = invalidQuestionIds.length > 0;
+  const hasMissingQuestionIds = missingQuestionIds.length > 0;
+  const hasOutOfSyncQuestions = hasInvalidQuestionIds || hasMissingQuestionIds;
+  const isQuestionSetStale = Boolean(qsRes?.status?.is_stale);
+  const isQuestionActionPending = updateMutation.isPending || isSynchronizingQuestions;
+  const questionSyncSignature = useMemo(
+    () => JSON.stringify({ invalid: invalidQuestionIds, missing: missingQuestionIds }),
+    [invalidQuestionIds, missingQuestionIds],
+  );
+  const showQuestionStatusBadge = isQuestionSetStale || (
+    hasOutOfSyncQuestions && dismissedQuestionSyncSignature !== questionSyncSignature
+  );
+
   // No-op save to acknowledge staleness and refresh updated_at
-  const handleDismissStale = useCallback(() => {
-    if (!qsRes?.question_set) return;
-    updateMutation.mutate(qsRes.question_set as QuestionSetInput, {
-      onError: () => notifications.show({ color: 'red', message: 'Could not acknowledge staleness' }),
+  const handleDismissStatus = useCallback(() => {
+    if (hasOutOfSyncQuestions) {
+      setDismissedQuestionSyncSignature(questionSyncSignature);
+    }
+
+    if (!isQuestionSetStale) {
+      notifications.show({ color: 'green', message: 'Question warning dismissed' });
+      return;
+    }
+
+    if (!hasQuestionSetRecord) return;
+
+    setStatusAction('dismiss');
+    updateMutation.mutate({
+      question_map: baseQuestionMap as QuestionSetInput['question_map'],
+    }, {
+      onSuccess: () => {
+        notifications.show({ color: 'green', message: 'Question warning dismissed' });
+      },
+      onError: () => {
+        if (hasOutOfSyncQuestions) {
+          setDismissedQuestionSyncSignature(null);
+        }
+        notifications.show({ color: 'red', message: 'Could not dismiss warning' });
+      },
+      onSettled: () => setStatusAction(null),
     });
-  }, [qsRes, updateMutation]);
+  }, [
+    baseQuestionMap,
+    hasOutOfSyncQuestions,
+    hasQuestionSetRecord,
+    isQuestionSetStale,
+    questionSyncSignature,
+    updateMutation,
+  ]);
+
+  const handleSynchronizeQuestions = useCallback(async () => {
+    setStatusAction('sync');
+    setIsSynchronizingQuestions(true);
+
+    try {
+      const inferredQuestionSet = await inferQuestionSetFromSubmissions(safeAssessmentId);
+      const nextQuestionMap = synchronizeQuestionMap(
+        questionMap,
+        (inferredQuestionSet.question_set?.question_map ?? {}) as QuestionSetInputQuestionMap,
+      );
+
+      await updateMutation.mutateAsync({
+        question_map: nextQuestionMap as QuestionSetInput['question_map'],
+      });
+
+      const remainingIds = getQuestionIdsSorted(nextQuestionMap);
+      if (selectedQid && invalidQuestionIds.includes(selectedQid)) {
+        setSelectedQid(remainingIds[0] ?? null);
+        setMobileShowDetail(remainingIds.length > 0);
+      }
+
+      setConfirmSynchronizeQuestions(false);
+
+      const changes = [];
+      if (missingQuestionIds.length > 0) {
+        changes.push(
+          missingQuestionIds.length === 1
+            ? `Added question: ${missingQuestionIds[0]}`
+            : `Added questions: ${missingQuestionIds.join(', ')}`,
+        );
+      }
+      if (invalidQuestionIds.length > 0) {
+        changes.push(
+          invalidQuestionIds.length === 1
+            ? `Removed invalid question: ${invalidQuestionIds[0]}`
+            : `Removed invalid questions: ${invalidQuestionIds.join(', ')}`,
+        );
+      }
+
+      notifications.show({
+        color: 'green',
+        message: changes.join('; ') || 'Questions synchronized',
+      });
+      setDismissedQuestionSyncSignature(null);
+    } catch (err) {
+      notifications.show({ color: 'red', message: getErrorMessage(err) });
+    } finally {
+      setIsSynchronizingQuestions(false);
+      setStatusAction(null);
+    }
+  }, [
+    invalidQuestionIds,
+    missingQuestionIds,
+    questionMap,
+    selectedQid,
+    safeAssessmentId,
+    setSelectedQid,
+    updateMutation,
+  ]);
+
+  const questionStatusActions = useMemo(() => {
+    const actions = [];
+
+    if (hasOutOfSyncQuestions) {
+      actions.push({
+        label: 'Synchronize questions',
+        onClick: () => setConfirmSynchronizeQuestions(true),
+        color: 'orange',
+        variant: 'light' as const,
+        disabled: isQuestionActionPending,
+      });
+    }
+
+    if (isQuestionSetStale) {
+      actions.push({
+        label: 'Dismiss',
+        onClick: handleDismissStatus,
+        loading: statusAction === 'dismiss' && isQuestionActionPending,
+        disabled: isQuestionActionPending && statusAction !== 'dismiss',
+      });
+    } else if (hasOutOfSyncQuestions) {
+      actions.push({
+        label: 'Dismiss',
+        onClick: handleDismissStatus,
+        disabled: isQuestionActionPending,
+      });
+    }
+
+    return actions;
+  }, [handleDismissStatus, hasOutOfSyncQuestions, isQuestionActionPending, isQuestionSetStale, statusAction]);
 
   // Question selection — guards against navigating away with unsaved edits.
   const handleSelect = useCallback(
@@ -161,6 +385,26 @@ const QuestionsPage: React.FC = () => {
     setPendingQid(null);
   }, [pendingQid, setSelectedQid]);
 
+  const handleOpenAddQuestion = useCallback(() => {
+    updateMutation.reset();
+    setOpenAddQuestion(true);
+  }, [updateMutation]);
+
+  const handleCloseAddQuestion = useCallback(() => {
+    updateMutation.reset();
+    setOpenAddQuestion(false);
+  }, [updateMutation]);
+
+  const handleCreateEmptyQuestionSet = useCallback(() => {
+    updateMutation.mutate(
+      { question_map: {} as QuestionSetInput['question_map'] },
+      {
+        onSuccess: () => notifications.show({ color: 'green', message: 'Empty question set created' }),
+        onError: () => notifications.show({ color: 'red', message: 'Could not create question set' }),
+      },
+    );
+  }, [updateMutation]);
+
   // Save handler called by QuestionEditorPanel.
   const handleSave = useCallback(
     async (updated: QuestionDef) => {
@@ -179,6 +423,51 @@ const QuestionsPage: React.FC = () => {
     [selectedQid, questionMap, updateMutation],
   );
 
+  // Add a new question (blank slate).
+  const handleAddQuestion = useCallback(
+    (qid: string, type: string) => {
+      const newQuestionDef = { type } as QuestionDef;
+      const next: QuestionSetInput = {
+        question_map: {
+          ...questionMap,
+          [qid]: newQuestionDef,
+        } as QuestionSetInput['question_map'],
+      };
+      updateMutation.mutate(next, {
+        onSuccess: () => {
+          notifications.show({ color: 'green', message: `Question "${qid}" added` });
+          setPendingAddedQuestion({ qid, def: newQuestionDef });
+          handleCloseAddQuestion();
+          setSelectedQid(qid);
+        },
+        onError: (err) => notifications.show({ color: 'red', message: getErrorMessage(err) }),
+      });
+    },
+    [handleCloseAddQuestion, questionMap, updateMutation, setSelectedQid],
+  );
+
+  // Delete a specific question.
+  const handleDeleteQuestion = useCallback(
+    (qid: string) => {
+      const next: QuestionSetInput = {
+        question_map: Object.fromEntries(
+          Object.entries(questionMap).filter(([id]) => id !== qid),
+        ) as QuestionSetInput['question_map'],
+      };
+      updateMutation.mutate(next, {
+        onSuccess: () => {
+          notifications.show({ color: 'green', message: `Question "${qid}" deleted` });
+          setConfirmDeleteQid(null);
+          // Move selection to first remaining question
+          const remaining = questionIds.filter((id) => id !== qid);
+          setSelectedQid(remaining[0] ?? null);
+        },
+        onError: (err) => notifications.show({ color: 'red', message: getErrorMessage(err) }),
+      });
+    },
+    [questionMap, questionIds, updateMutation, setSelectedQid],
+  );
+
   // ── Shared toolbar ──────────────────────────────────────────────────────────
 
   const pageActions = (
@@ -188,10 +477,10 @@ const QuestionsPage: React.FC = () => {
       onUpload={() => setOpenQsUpload(true)}
       onImport={() => setOpenQsImport(true)}
       onDelete={() => setConfirmDeleteQs(true)}
-      showDelete={hasQuestionSet}
+      showDelete={hasQuestionSetRecord}
       disableDelete={deleteMutation.isPending}
-      searchQuery={searchQuery}
-      onSearchChange={(v) => setSearchQuery(v)}
+      searchQuery={hasQuestions ? searchQuery : undefined}
+      onSearchChange={hasQuestions ? (v) => setSearchQuery(v) : undefined}
       disabled={!hasSubmissions}
     />
   );
@@ -243,9 +532,10 @@ const QuestionsPage: React.FC = () => {
     );
   }
 
-  // ── Empty: submissions exist but no question set yet ───────────────────────
+  // ── Empty: no question set yet ─────────────────────────────────────────────
+  // (shown once submissions exist)
 
-  if (qsMissing || !hasQuestionSet) {
+  if (qsMissing || !hasQuestionSetRecord) {
     return (
       <PageShell title="Questions" actions={pageActions} updatedAt={qsRes?.status?.updated_at}>
         {errorQS && !qsMissing && (
@@ -265,11 +555,29 @@ const QuestionsPage: React.FC = () => {
 
             <Stack gap="xs" w="100%">
               <ActionOptionCard
-                icon={<IconBolt size={14} />}
-                iconColor="blue"
-                title="Infer from submissions"
-                description={<>Automatically detect questions from your uploaded CSV.{' '}<Anchor component="button" size="xs" onClick={() => setConfirmInfer(true)}>Infer now →</Anchor></>}
+                icon={<IconPlus size={14} />}
+                iconColor="green"
+                title="Start from scratch"
+                description={<>Create an empty question set and add questions manually.{' '}<Anchor component="button" size="xs" onClick={handleCreateEmptyQuestionSet}>Start now →</Anchor></>}
               />
+
+              {hasSubmissions && (
+                <ActionOptionCard
+                  icon={<IconBolt size={14} />}
+                  iconColor="blue"
+                  title="Infer from submissions"
+                  description={<>Automatically detect questions from your uploaded CSV.{' '}<Anchor component="button" size="xs" onClick={() => setConfirmInfer(true)}>Infer now →</Anchor></>}
+                />
+              )}
+
+              {!hasSubmissions && (
+                <ActionOptionCard
+                  icon={<IconInbox size={14} />}
+                  iconColor="gray"
+                  title="Upload submissions to infer"
+                  description={<>Import a CSV to automatically detect questions.{' '}<Anchor component={Link} to={`/assessments/${safeAssessmentId}/submissions`} size="xs">Go to Submissions →</Anchor></>}
+                />
+              )}
 
               <ActionOptionCard
                 icon={<IconUpload size={14} />}
@@ -324,6 +632,7 @@ const QuestionsPage: React.FC = () => {
       selectedQid={selectedQid}
       onSelect={handleSelect}
       searchQuery={searchQuery}
+      onAddQuestion={handleOpenAddQuestion}
     />
   );
 
@@ -342,11 +651,25 @@ const QuestionsPage: React.FC = () => {
       }
       onSave={handleSave}
       onEditStateChange={setDetailEditing}
+      onDelete={() => setConfirmDeleteQid(selectedQid)}
+      deleting={updateMutation.isPending && confirmDeleteQid === selectedQid}
     />
   ) : (
-    <Text c="dimmed" size="sm">
-      Select a question to view its details.
-    </Text>
+    <Center py="xl">
+      <Stack align="center" gap="sm">
+        <IconQuestionMark size={32} opacity={0.3} />
+        {hasQuestions ? (
+          <Text c="dimmed" size="sm">Select a question to view its details.</Text>
+        ) : (
+          <>
+            <Text c="dimmed" size="sm">No questions yet.</Text>
+            <Button size="xs" leftSection={<IconPlus size={14} />} onClick={handleOpenAddQuestion}>
+              Add your first question
+            </Button>
+          </>
+        )}
+      </Stack>
+    </Center>
   );
 
   return (
@@ -358,9 +681,9 @@ const QuestionsPage: React.FC = () => {
       <Stack gap="md">
         <SectionStatusBadge
           isStale={qsRes?.status?.is_stale}
-          staleMessage="Questions may be out of date — submissions have been updated since the last question set was configured."
-          onDismiss={qsRes?.status?.is_stale ? handleDismissStale : undefined}
-          isDismissing={updateMutation.isPending}
+          show={showQuestionStatusBadge}
+          staleMessage={getQuestionStatusMessage(isQuestionSetStale, missingQuestionIds.length, invalidQuestionIds.length)}
+          actions={questionStatusActions}
         />
 
         {errorQS && !qsMissing && (
@@ -430,6 +753,75 @@ const QuestionsPage: React.FC = () => {
           onStay={() => setPendingQid(null)}
           onDiscard={handleConfirmNavigation}
         />
+
+        <AddQuestionModal
+          opened={openAddQuestion}
+          existingIds={questionIds}
+          submissionQids={submissionQids}
+          isSaving={updateMutation.isPending}
+          error={updateMutation.isError ? updateMutation.error : null}
+          onClose={handleCloseAddQuestion}
+          onAdd={handleAddQuestion}
+        />
+
+        {/* Confirm delete a single question */}
+        <Modal
+          opened={confirmDeleteQid !== null}
+          onClose={() => setConfirmDeleteQid(null)}
+          title="Delete Question"
+          size="sm"
+        >
+          <Text mb="md">
+            Delete question <strong>{confirmDeleteQid}</strong>? This cannot be undone.
+          </Text>
+          <Group justify="flex-end" gap="sm">
+            <Button variant="default" onClick={() => setConfirmDeleteQid(null)}>
+              Cancel
+            </Button>
+            <Button
+              color="red"
+              loading={updateMutation.isPending}
+              onClick={() => confirmDeleteQid && handleDeleteQuestion(confirmDeleteQid)}
+            >
+              Delete
+            </Button>
+          </Group>
+        </Modal>
+
+        <Modal
+          opened={confirmSynchronizeQuestions}
+          onClose={() => setConfirmSynchronizeQuestions(false)}
+          title="Synchronize Questions"
+          size="sm"
+        >
+          <Text mb="sm">
+            This will synchronize the question set with the current submissions by adding newly detected questions and removing question IDs that no longer exist.
+          </Text>
+          {missingQuestionIds.length > 0 && (
+            <>
+              <Text fw={600} mb={4} size="sm">Questions to add</Text>
+              <Text mb="sm" ff="monospace" size="sm">
+                {missingQuestionIds.join(', ')}
+              </Text>
+            </>
+          )}
+          {invalidQuestionIds.length > 0 && (
+            <>
+              <Text fw={600} mb={4} size="sm">Questions to remove</Text>
+              <Text mb="md" ff="monospace" size="sm">
+                {invalidQuestionIds.join(', ')}
+              </Text>
+            </>
+          )}
+          <Group justify="flex-end" gap="sm">
+            <Button variant="default" onClick={() => setConfirmSynchronizeQuestions(false)}>
+              Cancel
+            </Button>
+            <Button color="orange" loading={isSynchronizingQuestions} onClick={() => void handleSynchronizeQuestions()}>
+              Synchronize
+            </Button>
+          </Group>
+        </Modal>
 
         <Suspense fallback={null}>
           <QuestionSetUploadModal

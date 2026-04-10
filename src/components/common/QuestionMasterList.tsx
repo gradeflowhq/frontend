@@ -63,9 +63,9 @@ const QuestionMasterRow: React.FC<RowProps> = ({ data, isSelected, onSelect }) =
         cursor: 'pointer',
         position: 'relative',
         borderLeft: `4px solid ${COVERAGE_COLORS[data.coverageStatus]}`,
-        borderRight: `1px solid var(--mantine-color-gray-2)`,
+        borderRight: `1px solid var(--mantine-color-default-border)`,
         backgroundColor: isSelected
-          ? 'var(--mantine-color-blue-0)'
+          ? 'var(--mantine-color-blue-light)'
           : undefined,
         // borderRadius: '0 6px 6px 0',
         outline: 'none',

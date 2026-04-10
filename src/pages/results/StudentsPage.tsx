@@ -92,9 +92,7 @@ const StudentsPage: React.FC = () => {
           items={items}
           questionIds={questionIds}
           onView={(studentId) =>
-            void navigate(
-              PATHS.assessment(assessmentId).results.student(encodeURIComponent(studentId)),
-            )
+            void navigate(PATHS.assessment(assessmentId).results.student(studentId))
           }
           searchQuery={searchQuery}
         />

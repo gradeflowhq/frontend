@@ -1,6 +1,6 @@
 import {
   Accordion, ActionIcon, Alert, Badge, Button, Checkbox, Divider, Group,
-  Modal, NumberInput, Paper, Popover, Progress, Select, SimpleGrid, Stack, Text, Textarea,
+  Modal, NumberInput, Paper, Popover, Progress, Select, SimpleGrid, Stack, Text, Textarea, Tooltip,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconAlertCircle, IconChevronLeft, IconChevronRight, IconCircleCheck, IconDeviceFloppy, IconFilter, IconPencil, IconTrash } from '@tabler/icons-react';
@@ -201,12 +201,16 @@ const SubmissionDetailInner: React.FC<{ assessmentId: string; encodedStudentId: 
 
   const navActions = (
     <Group gap="xs">
-      <ActionIcon variant="outline" onClick={gotoPrev} disabled={!prevId} aria-label="Previous">
-        <IconChevronLeft size={16} />
-      </ActionIcon>
-      <ActionIcon variant="outline" onClick={gotoNext} disabled={!nextId} aria-label="Next">
-        <IconChevronRight size={16} />
-      </ActionIcon>
+      <Tooltip label="Previous student" withArrow>
+        <ActionIcon variant="outline" onClick={gotoPrev} disabled={!prevId} aria-label="Previous student">
+          <IconChevronLeft size={16} />
+        </ActionIcon>
+      </Tooltip>
+      <Tooltip label="Next student" withArrow>
+        <ActionIcon variant="outline" onClick={gotoNext} disabled={!nextId} aria-label="Next student">
+          <IconChevronRight size={16} />
+        </ActionIcon>
+      </Tooltip>
     </Group>
   );
 
@@ -305,7 +309,7 @@ const SubmissionDetailInner: React.FC<{ assessmentId: string; encodedStudentId: 
           const adjustedExists =
             (res.adjusted_points !== undefined && res.adjusted_points !== null) ||
             (res.adjusted_feedback !== undefined && res.adjusted_feedback !== null);
-          return { background: adjustedExists ? 'var(--mantine-color-yellow-0)' : undefined };
+          return { background: adjustedExists ? 'light-dark(var(--mantine-color-yellow-0), var(--mantine-color-yellow-light))' : undefined };
         }}
         columns={[
           {

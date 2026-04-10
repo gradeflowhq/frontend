@@ -35,6 +35,7 @@ import React, { useCallback, useState } from 'react';
 import { Link, useMatch, useNavigate, useLocation } from 'react-router-dom';
 
 import { PATHS } from '@app/routes/paths';
+import { prefetchRoute } from '@app/routes/prefetch';
 import { useAssessment } from '@features/assessments/api';
 import { useMe, useLogout } from '@features/auth/api';
 import { useGradingJob, useJobStatus } from '@features/grading/api';
@@ -54,11 +55,16 @@ interface NavItemProps {
   to: string;
   expanded: boolean;
   badge?: React.ReactNode;
+  prefetchKey?: Parameters<typeof prefetchRoute>[0];
 }
 
-const SidebarNavItem: React.FC<NavItemProps> = ({ icon, label, to, expanded, badge }) => {
+const SidebarNavItem: React.FC<NavItemProps> = ({ icon, label, to, expanded, badge, prefetchKey }) => {
   const location = useLocation();
   const isActive = location.pathname === to || location.pathname.startsWith(to + '/');
+
+  const handleMouseEnter = React.useCallback(() => {
+    if (prefetchKey) prefetchRoute(prefetchKey);
+  }, [prefetchKey]);
 
   const content = (
     <NavLink
@@ -68,6 +74,7 @@ const SidebarNavItem: React.FC<NavItemProps> = ({ icon, label, to, expanded, bad
       label={expanded ? label : undefined}
       leftSection={icon}
       rightSection={expanded ? badge : undefined}
+      onMouseEnter={handleMouseEnter}
       styles={{
         root: {
           borderRadius: 6,
@@ -254,7 +261,7 @@ const AccountSection: React.FC<{ expanded: boolean }> = ({ expanded }) => {
               border: '1px solid var(--mantine-color-default-border)',
               backgroundColor: 'var(--mantine-color-body)',
             }}
-            styles={{ root: { '&:hover': { backgroundColor: 'var(--mantine-color-gray-0)' } } }}
+            styles={{ root: { '&:hover': { backgroundColor: 'var(--mantine-color-default-hover)' } } }}
           >
             <Group gap="sm" wrap="nowrap">
               {avatarEl}
@@ -323,10 +330,10 @@ const AssessmentSidebarItems: React.FC<{ assessmentId: string; expanded: boolean
       />
 
       <SectionLabel label="Setup" expanded={expanded} />
-      <SidebarNavItem icon={<IconLayoutDashboard size={SIDEBAR_ICON_SIZE} />} label="Overview" to={ap.overview} expanded={expanded} />
-      <SidebarNavItem icon={<IconInbox size={SIDEBAR_ICON_SIZE} />} label="Submissions" to={ap.submissions} expanded={expanded} />
-      <SidebarNavItem icon={<IconQuestionMark size={SIDEBAR_ICON_SIZE} />} label="Questions" to={ap.questions} expanded={expanded} />
-      <SidebarNavItem icon={<IconAdjustments size={SIDEBAR_ICON_SIZE} />} label="Rules" to={ap.rules} expanded={expanded} />
+      <SidebarNavItem icon={<IconLayoutDashboard size={SIDEBAR_ICON_SIZE} />} label="Overview" to={ap.overview} expanded={expanded} prefetchKey="overview" />
+      <SidebarNavItem icon={<IconInbox size={SIDEBAR_ICON_SIZE} />} label="Submissions" to={ap.submissions} expanded={expanded} prefetchKey="submissions" />
+      <SidebarNavItem icon={<IconQuestionMark size={SIDEBAR_ICON_SIZE} />} label="Questions" to={ap.questions} expanded={expanded} prefetchKey="questions" />
+      <SidebarNavItem icon={<IconAdjustments size={SIDEBAR_ICON_SIZE} />} label="Rules" to={ap.rules} expanded={expanded} prefetchKey="rules" />
       <SectionLabel label="Output" expanded={expanded} />
       <SidebarNavSection
         icon={<IconListCheck size={SIDEBAR_ICON_SIZE} />}
@@ -340,32 +347,35 @@ const AssessmentSidebarItems: React.FC<{ assessmentId: string; expanded: boolean
           label="Statistics"
           to={ap.results.statistics}
           expanded={expanded}
+          prefetchKey="statistics"
         />
         <SidebarNavItem
           icon={<IconUsers size={SIDEBAR_ICON_SIZE} />}
           label="Students"
           to={ap.results.students}
           expanded={expanded}
+          prefetchKey="students"
         />
         <SidebarNavItem
           icon={<IconLayersSubtract size={SIDEBAR_ICON_SIZE} />}
           label="Groups"
           to={ap.results.groups}
           expanded={expanded}
+          prefetchKey="groups"
         />
       </SidebarNavSection>
-      <SidebarNavItem icon={<IconSend size={SIDEBAR_ICON_SIZE} />} label="Publish" to={ap.publish} expanded={expanded} />
+      <SidebarNavItem icon={<IconSend size={SIDEBAR_ICON_SIZE} />} label="Publish" to={ap.publish} expanded={expanded} prefetchKey="publish" />
 
       <SectionLabel label="Admin" expanded={expanded} />
-      <SidebarNavItem icon={<IconUsers size={SIDEBAR_ICON_SIZE} />} label="Members" to={ap.members} expanded={expanded} />
-      <SidebarNavItem icon={<IconSettings size={SIDEBAR_ICON_SIZE} />} label="Settings" to={ap.settings} expanded={expanded} />
+      <SidebarNavItem icon={<IconUsers size={SIDEBAR_ICON_SIZE} />} label="Members" to={ap.members} expanded={expanded} prefetchKey="members" />
+      <SidebarNavItem icon={<IconSettings size={SIDEBAR_ICON_SIZE} />} label="Settings" to={ap.settings} expanded={expanded} prefetchKey="settings" />
     </Stack>
   );
 };
 
 const TopLevelSidebarItems: React.FC<{ expanded: boolean }> = ({ expanded }) => (
   <Stack gap={2}>
-    <SidebarNavItem icon={<IconGridDots size={SIDEBAR_ICON_SIZE} />} label="Assessments" to={PATHS.ASSESSMENTS} expanded={expanded} />
+    <SidebarNavItem icon={<IconGridDots size={SIDEBAR_ICON_SIZE} />} label="Assessments" to={PATHS.ASSESSMENTS} expanded={expanded} prefetchKey="assessments" />
   </Stack>
 );
 
@@ -407,7 +417,7 @@ const SidebarNav: React.FC<SidebarNavProps> = ({ expanded, onToggle }) => {
               py={4}
             >
               {expanded && (
-                <Text fw={700} size="md" c="black" style={{ cursor: 'default' }}>GradeFlow</Text>
+                <Text fw={700} size="md" style={{ cursor: 'default' }}>GradeFlow</Text>
               )}
               <Tooltip label={expanded ? 'Collapse sidebar' : 'Expand sidebar'} position="right" withArrow>
                 <UnstyledButton

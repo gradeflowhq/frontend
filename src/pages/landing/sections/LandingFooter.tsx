@@ -3,6 +3,9 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 import { PATHS } from '@app/routes/paths';
+import { useResolvedColorScheme } from '@hooks/useResolvedColorScheme';
+
+import { getLandingCtaBackground } from '../landing-theme';
 
 const CURRENT_YEAR = new Date().getFullYear();
 
@@ -10,15 +13,18 @@ interface LandingFooterProps {
   accessToken: string | null;
 }
 
-const LandingFooter: React.FC<LandingFooterProps> = ({ accessToken }) => (
+const LandingFooter: React.FC<LandingFooterProps> = ({ accessToken }) => {
+  const colorScheme = useResolvedColorScheme();
+  const ctaBackground = getLandingCtaBackground(colorScheme);
+
+  return (
   <>
     {/* ── CTA ──────────────────────────────────────────────────────────── */}
     <Box
       py={80}
       px="md"
       style={{
-        background:
-          'linear-gradient(135deg, var(--mantine-color-blue-6) 0%, var(--mantine-color-cyan-6) 100%)',
+        background: ctaBackground,
       }}
     >
       <Center>
@@ -91,6 +97,7 @@ const LandingFooter: React.FC<LandingFooterProps> = ({ accessToken }) => (
       </Center>
     </Box>
   </>
-);
+  );
+};
 
 export default LandingFooter;

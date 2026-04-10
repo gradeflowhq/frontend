@@ -1,7 +1,6 @@
 import { Center, Loader } from '@mantine/core';
 import React, { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-
 const AssessmentsPage = lazy(() => import('@pages/assessments/list/AssessmentsPage'));
 const MembersPage = lazy(() => import('@pages/assessments/workspace/MembersPage'));
 const OverviewPage = lazy(() => import('@pages/assessments/workspace/OverviewPage'));

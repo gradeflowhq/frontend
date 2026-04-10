@@ -4,28 +4,30 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 import { PATHS } from '@app/routes/paths';
+import { useResolvedColorScheme } from '@hooks/useResolvedColorScheme';
 
 import { trustStats } from '../landing-data';
+import { getLandingHeroBackground, getLandingSourceBadgeStyles } from '../landing-theme';
 
 interface LandingHeroSectionProps {
   accessToken: string | null;
 }
 
-const LandingHeroSection: React.FC<LandingHeroSectionProps> = ({ accessToken }) => (
+const LandingHeroSection: React.FC<LandingHeroSectionProps> = ({ accessToken }) => {
+  const colorScheme = useResolvedColorScheme();
+  const heroBackground = getLandingHeroBackground(colorScheme);
+  const sourceBadgeStyles = getLandingSourceBadgeStyles(colorScheme);
+
+  return (
   <>
     {/* ── Hero ─────────────────────────────────────────────────────────── */}
     <Box
       py={{ base: 64, md: 96 }}
       px="md"
-      style={{
-        background:
-          'linear-gradient(150deg, var(--mantine-color-blue-0) 0%, var(--mantine-color-gray-0) 60%, white 100%)',
-      }}
+      style={{ background: heroBackground }}
     >
       <Center>
         <Stack align="center" gap="lg" style={{ maxWidth: 680, textAlign: 'center' }}>
-
-          {/* Badge row */}
           <Group gap="xs" justify="center">
             <Box
               component="a"
@@ -38,10 +40,10 @@ const LandingHeroSection: React.FC<LandingHeroSectionProps> = ({ accessToken }) 
                 gap: 6,
                 padding: '4px 12px',
                 borderRadius: 99,
-                border: '1px solid var(--mantine-color-default-border)',
-                backgroundColor: 'white',
+                border: `1px solid ${sourceBadgeStyles.borderColor}`,
+                backgroundColor: sourceBadgeStyles.backgroundColor,
+                color: sourceBadgeStyles.color,
                 textDecoration: 'none',
-                color: 'var(--mantine-color-dark-6)',
                 fontSize: 13,
                 fontWeight: 500,
               }}
@@ -55,25 +57,25 @@ const LandingHeroSection: React.FC<LandingHeroSectionProps> = ({ accessToken }) 
           <Title
             order={1}
             style={{
-                fontSize: 'clamp(2rem, 5vw, 3.25rem)',
-                lineHeight: 1.15,
-                letterSpacing: '-0.5px',
+              fontSize: 'clamp(2rem, 5vw, 3.25rem)',
+              lineHeight: 1.15,
+              letterSpacing: '-0.5px',
             }}
-            >
+          >
             Grading at scale,{' '}
             <Text
-                span
-                inherit
-                style={{
+              span
+              inherit
+              style={{
                 background:
-                    'linear-gradient(90deg, var(--mantine-color-blue-6), var(--mantine-color-cyan-5))',
+                  'linear-gradient(90deg, var(--mantine-color-blue-6), var(--mantine-color-cyan-5))',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
-                }}
+              }}
             >
-                without losing the nuance.
+              without losing the nuance.
             </Text>
-            </Title>
+          </Title>
 
           <Text size="lg" c="dimmed" maw={560} mx="auto" lh={1.7}>
             Build composable grading rules that reflect how you actually mark. Cluster similar answers for bulk review. Publish to Canvas instantly.
@@ -98,7 +100,6 @@ const LandingHeroSection: React.FC<LandingHeroSectionProps> = ({ accessToken }) 
               Always free · Self-hostable · Open source
             </Text>
           )}
-
         </Stack>
       </Center>
     </Box>
@@ -110,7 +111,7 @@ const LandingHeroSection: React.FC<LandingHeroSectionProps> = ({ accessToken }) 
       style={{
         borderTop: '1px solid var(--mantine-color-default-border)',
         borderBottom: '1px solid var(--mantine-color-default-border)',
-        backgroundColor: 'white',
+        backgroundColor: 'var(--mantine-color-body)',
       }}
     >
       <SimpleGrid cols={{ base: 2, sm: 4 }} maw={860} mx="auto" spacing="xl">
@@ -123,6 +124,7 @@ const LandingHeroSection: React.FC<LandingHeroSectionProps> = ({ accessToken }) 
       </SimpleGrid>
     </Box>
   </>
-);
+  );
+};
 
 export default LandingHeroSection;

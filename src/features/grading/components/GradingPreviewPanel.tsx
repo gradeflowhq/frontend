@@ -1,4 +1,4 @@
-import { Alert, Skeleton } from '@mantine/core';
+import { Alert, Skeleton, Text } from '@mantine/core';
 import { IconCircleCheck, IconAlertCircle } from '@tabler/icons-react';
 import { DataTable } from 'mantine-datatable';
 import React, { useMemo } from 'react';
@@ -116,7 +116,11 @@ const GradingPreviewPanel: React.FC<Props> = ({
   if (error) {
     return (
       <div>
-        <Alert color="red" title="Error">{getErrorMessage(error)}</Alert>
+        <Alert color="red" title="Error">
+          <Text size="sm" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+            {getErrorMessage(error)}
+          </Text>
+        </Alert>
       </div>
     );
   }

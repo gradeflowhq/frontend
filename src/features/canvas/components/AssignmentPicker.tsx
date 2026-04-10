@@ -1,9 +1,10 @@
 import {
-  Stack, Select, TextInput, Button, Text,
+  Stack, Select, TextInput, NumberInput, Button, Text,
 } from '@mantine/core';
 import React from 'react';
 
 import { type CanvasAssignmentGroup, type CanvasAssignmentSummary } from '@api/canvasClient';
+import { NEW_GROUP_VALUE } from '@features/canvas/constants';
 
 import { InfoRow } from './InfoRow';
 
@@ -15,9 +16,13 @@ export type AssignmentPickerProps = {
   assignmentName: string;
   assessmentName?: string;
   assignmentGroupId: string;
+  newGroupName?: string;
+  newGroupWeight?: number;
   onAssignmentSelect: (value: string) => void;
   onAssignmentNameChange: (value: string) => void;
   onAssignmentGroupChange: (value: string) => void;
+  onNewGroupNameChange?: (value: string) => void;
+  onNewGroupWeightChange?: (value: number | undefined) => void;
   onRefresh: () => void | Promise<void>;
 };
 
@@ -29,13 +34,25 @@ const AssignmentPicker: React.FC<AssignmentPickerProps> = ({
   assignmentName,
   assessmentName,
   assignmentGroupId,
+  newGroupName = '',
+  newGroupWeight,
   onAssignmentSelect,
   onAssignmentNameChange,
   onAssignmentGroupChange,
+  onNewGroupNameChange,
+  onNewGroupWeightChange,
   onRefresh,
 }) => {
-  const showNameInput = assignmentGroupId && (!assignmentId || assignments.length === 0);
-  const assignmentDisabled = loadingCourseData || !assignmentGroupId;
+  const isCreatingGroup = assignmentGroupId === NEW_GROUP_VALUE;
+  // Show name input when: selecting an existing group with no matching assignment,
+  // OR when creating a new group (which always creates a new assignment too).
+  const showNameInput = !!assignmentGroupId && (isCreatingGroup || !assignmentId || assignments.length === 0);
+  const assignmentDisabled = loadingCourseData || !assignmentGroupId || isCreatingGroup;
+
+  const groupSelectData = [
+    ...assignmentGroups.map((g) => ({ value: String(g.id), label: g.name })),
+    { value: NEW_GROUP_VALUE, label: '+ Create new group...' },
+  ];
 
   return (
     <InfoRow
@@ -57,12 +74,35 @@ const AssignmentPicker: React.FC<AssignmentPickerProps> = ({
             disabled={loadingCourseData}
             value={assignmentGroupId || null}
             onChange={(v) => onAssignmentGroupChange(v ?? '')}
-            data={assignmentGroups.map((g) => ({ value: String(g.id), label: g.name }))}
+            data={groupSelectData}
             placeholder="Select a group"
           />
         </Stack>
 
-        {assignmentGroupId && (
+        {isCreatingGroup && (
+          <>
+            <TextInput
+              label="New group name"
+              value={newGroupName}
+              onChange={(e) => onNewGroupNameChange?.(e.currentTarget.value)}
+              placeholder="e.g. Midterm Exams"
+              data-autofocus
+            />
+            <NumberInput
+              label="Group weight (%)"
+              description="Optional. Sets the assignment group weight in Canvas."
+              value={newGroupWeight ?? ''}
+              onChange={(v) => onNewGroupWeightChange?.(v === '' ? undefined : Number(v))}
+              min={0}
+              max={100}
+              step={5}
+              placeholder="e.g. 30"
+              suffix="%"
+            />
+          </>
+        )}
+
+        {assignmentGroupId && !isCreatingGroup && (
           <Stack gap={4}>
             <Text size="sm" fw={500}>Assignment</Text>
             <Select

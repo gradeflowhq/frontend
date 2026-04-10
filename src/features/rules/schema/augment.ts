@@ -33,6 +33,111 @@ function extractRuleCompatibleTypes(ruleDef: JsonObject): string[] {
 }
 
 /**
+ * Converts a PascalCase definition key into a user-friendly label.
+ * E.g. "AssumptionSetQuestionRule" -> "Assumption Set"
+ */
+function friendlyDefLabel(key: string): string {
+  const withoutSuffix = key.replace(/(QuestionRule|MultiQuestionRule|Rule)$/, '');
+  const spaced = withoutSuffix.replace(/([a-z0-9])([A-Z])/g, '$1 $2').trim();
+  return spaced || key;
+}
+
+/**
+ * Adds a `title` field to every definition that is missing one.
+ * This makes RJSF's oneOf selector show human-readable labels instead of
+ * raw definition key names like "AssumptionSetQuestionRule".
+ */
+export function augmentRulesSchemaWithTitles(rulesSchema: JsonObject): JsonObject {
+  const updated = deepClone(rulesSchema);
+  for (const [key, def] of Object.entries(updated)) {
+    if (!def || typeof def !== "object") continue;
+    // Always override with a friendly label — the raw JSON schema titles are
+    // just the definition key names (e.g. "TextMatchQuestionRule") which are
+    // not user-facing. Overriding ensures RJSF oneOf selectors show readable names.
+    (def as Record<string, unknown>).title = friendlyDefLabel(key);
+  }
+  return updated;
+}
+
+/**
+ * Filters `oneOf` arrays in nested rule fields to only include rule definitions
+ * compatible with the given question type. This prevents the RJSF form from
+ * listing incompatible rule types in nested rule selectors.
+ *
+ * Works generically: for every property in every definition, if the property
+ * has a `oneOf` (directly or via `items.oneOf` for array types), filter its
+ * entries by question-type compatibility. This covers both array fields
+ * (e.g. `if_rules`, `then_rules`, `rules`) and single-object fields (e.g. `rule`
+ * inside the `Assumption` definition).
+ *
+ * @param rulesSchema  The (possibly already-augmented) top-level rules schema object.
+ * @param questionType The question type to filter against (e.g. "TEXT", "NUMERIC").
+ */
+export function filterNestedRuleOneOfByQuestionType(
+  rulesSchema: JsonObject,
+  questionType: string | null | undefined
+): JsonObject {
+  if (!questionType) return rulesSchema;
+
+  const updated = deepClone(rulesSchema);
+
+  /**
+   * Returns true if the $ref entry is compatible with the given question type.
+   * Rules with an empty question_types list are considered universal (kept).
+   */
+  const isCompatible = (entry: unknown): boolean => {
+    if (!entry || typeof entry !== "object") return true;
+    const ref = (entry as { $ref?: string }).$ref;
+    if (!ref) return true;
+
+    // Extract definition name from $ref like "#/definitions/TextMatchQuestionRule"
+    // or the flat schema case "#/TextMatchRule"
+    const defName = ref.split('/').pop();
+    if (!defName) return true;
+
+    const refDef = (updated as Record<string, unknown>)[defName];
+    if (!refDef || typeof refDef !== "object") return true;
+
+    const compatibleTypes = extractRuleCompatibleTypes(refDef as JsonObject);
+    if (compatibleTypes.length === 0) return true;
+    return compatibleTypes.includes(questionType);
+  };
+
+  /**
+   * Filters a oneOf array in-place and removes the discriminator (if any)
+   * to prevent RJSF from mis-selecting a schema.
+   */
+  const filterOneOf = (container: Record<string, unknown>): void => {
+    const oneOf = container.oneOf;
+    if (!Array.isArray(oneOf)) return;
+    container.oneOf = oneOf.filter(isCompatible);
+    delete container.discriminator;
+  };
+
+  for (const [, defSchema] of Object.entries(updated)) {
+    if (!defSchema || typeof defSchema !== "object") continue;
+    const props = (defSchema as { properties?: JsonObject }).properties ?? {};
+    if (!props || typeof props !== "object") continue;
+
+    for (const [, fieldSchema] of Object.entries(props as Record<string, unknown>)) {
+      if (!fieldSchema || typeof fieldSchema !== "object") continue;
+      const field = fieldSchema as Record<string, unknown>;
+
+      // Case 1: array field with items.oneOf  (e.g. if_rules, then_rules, rules)
+      const items = field.items;
+      if (items && typeof items === "object") {
+        filterOneOf(items as Record<string, unknown>);
+      }
+
+      // Case 2: single-object field with direct oneOf (e.g. `rule` in Assumption)
+      filterOneOf(field);
+    }
+  }
+
+  return updated;
+}
+
+/**
  * Produces a modified rules schema where each definition that has a 'question_id'
  * property gets its 'enum' set to the list of compatible question IDs.
  *

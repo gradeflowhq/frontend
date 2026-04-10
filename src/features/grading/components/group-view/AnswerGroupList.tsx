@@ -2,6 +2,7 @@ import {
   Accordion,
   ActionIcon,
   Badge,
+  Box,
   Button,
   Group,
   Modal,
@@ -63,6 +64,7 @@ const AnswerGroupList: React.FC<AnswerGroupListProps> = ({
   const [groupPages, setGroupPages] = useState<Record<string, number>>({});
   // Confirm modal for bulk remove
   const [confirmRemoveGroup, setConfirmRemoveGroup] = useState<AnswerGroup | null>(null);
+  const adjustmentRowBackground = 'light-dark(var(--mantine-color-yellow-0), var(--mantine-color-yellow-light))';
 
   const startEdit = (entry: GroupEntry) => {
     setEditingMap((prev) => ({
@@ -221,183 +223,192 @@ const AnswerGroupList: React.FC<AnswerGroupListProps> = ({
             <Accordion.Panel>
               {openItems.includes(group.key) && (
                 <Stack gap="xs">
-                  <DataTable
-                    idAccessor="studentId"
-                    records={pageRecords}
-                    withTableBorder={false}
-                    striped
-                    scrollAreaProps={{ h: 320, type: 'hover' }}
-                    rowStyle={(entry) =>
-                      (entry as GroupEntry).hasManualAdjustment
-                        ? { background: 'var(--mantine-color-yellow-0)' }
-                        : undefined
-                    }
-                    columns={[
-                      {
-                        accessor: 'studentId',
-                        title: 'Student ID',
-                        render: (entry) => (
-                          <DecryptedText
-                            value={(entry as GroupEntry).studentId}
-                            passphrase={passphrase}
-                            size="xs"
-                            mono
-                            onEncryptedDetected={onEncryptedDetected}
-                          />
-                        ),
-                      },
-                      {
-                        accessor: 'rawAnswer',
-                        title: 'Answer',
-                        render: (entry) => (
-                          <AnswerText value={(entry as GroupEntry).rawAnswer} maxLength={120} />
-                        ),
-                      },
-                      {
-                        accessor: 'effectivePoints',
-                        title: 'Points',
-                        render: (entry) => {
-                          const e = entry as GroupEntry;
-                          if (openEdits.has(e.studentId)) {
+                  <Box
+                    style={{
+                      border: '1px solid var(--mantine-color-default-border)',
+                      borderRadius: 'var(--mantine-radius-md)',
+                      overflow: 'hidden',
+                      background: 'var(--mantine-color-body)',
+                    }}
+                  >
+                    <DataTable
+                      idAccessor="studentId"
+                      records={pageRecords}
+                      withTableBorder={false}
+                      striped
+                      scrollAreaProps={{ h: 320, type: 'hover' }}
+                      rowStyle={(entry) =>
+                        (entry as GroupEntry).hasManualAdjustment
+                          ? { background: adjustmentRowBackground }
+                          : undefined
+                      }
+                      columns={[
+                        {
+                          accessor: 'studentId',
+                          title: 'Student ID',
+                          render: (entry) => (
+                            <DecryptedText
+                              value={(entry as GroupEntry).studentId}
+                              passphrase={passphrase}
+                              size="xs"
+                              mono
+                              onEncryptedDetected={onEncryptedDetected}
+                            />
+                          ),
+                        },
+                        {
+                          accessor: 'rawAnswer',
+                          title: 'Answer',
+                          render: (entry) => (
+                            <AnswerText value={(entry as GroupEntry).rawAnswer} maxLength={120} />
+                          ),
+                        },
+                        {
+                          accessor: 'effectivePoints',
+                          title: 'Points',
+                          render: (entry) => {
+                            const e = entry as GroupEntry;
+                            if (openEdits.has(e.studentId)) {
+                              return (
+                                <Group gap="xs" align="center">
+                                  <NumberInput
+                                    size="xs"
+                                    w={80}
+                                    aria-label="Points"
+                                    value={editingMap[e.studentId]?.points ?? ''}
+                                    onChange={(v) =>
+                                      setEditingMap((prev) => ({
+                                        ...prev,
+                                        [e.studentId]: { ...prev[e.studentId]!, points: v },
+                                      }))
+                                    }
+                                    min={0}
+                                    max={e.maxPoints}
+                                    step={0.5}
+                                    placeholder="pts"
+                                  />
+                                  <Text c="dimmed" size="xs">
+                                    / {e.maxPoints}
+                                  </Text>
+                                </Group>
+                              );
+                            }
                             return (
-                              <Group gap="xs" align="center">
-                                <NumberInput
+                              <Stack gap={2}>
+                                <Group gap={4} align="baseline">
+                                  <Text ff="monospace" size="sm">
+                                    {e.effectivePoints.toFixed(2)}
+                                  </Text>
+                                  <Text c="dimmed" size="xs">
+                                    / {e.maxPoints}
+                                  </Text>
+                                </Group>
+                                {e.hasManualAdjustment &&
+                                  e.effectivePoints !== e.originalPoints && (
+                                    <Text size="xs" c="dimmed" ff="monospace">
+                                      orig: {e.originalPoints.toFixed(2)}
+                                    </Text>
+                                  )}
+                              </Stack>
+                            );
+                          },
+                        },
+                        {
+                          accessor: 'effectiveFeedback',
+                          title: 'Feedback',
+                          render: (entry) => {
+                            const e = entry as GroupEntry;
+                            if (openEdits.has(e.studentId)) {
+                              return (
+                                <Textarea
                                   size="xs"
-                                  w={80}
-                                  aria-label="Points"
-                                  value={editingMap[e.studentId]?.points ?? ''}
-                                  onChange={(v) =>
+                                  value={editingMap[e.studentId]?.feedback ?? ''}
+                                  onChange={(ev) => {
+                                    // Read value synchronously before setState to prevent
+                                    // accessing ev.currentTarget after DOM event dispatch.
+                                    const value = ev.currentTarget.value;
                                     setEditingMap((prev) => ({
                                       ...prev,
-                                      [e.studentId]: { ...prev[e.studentId]!, points: v },
-                                    }))
-                                  }
-                                  min={0}
-                                  max={e.maxPoints}
-                                  step={0.5}
-                                  placeholder="pts"
+                                      [e.studentId]: {
+                                        ...(prev[e.studentId] ?? {
+                                          points: e.effectivePoints,
+                                          feedback: '',
+                                        }),
+                                        feedback: value,
+                                      },
+                                    }));
+                                  }}
+                                  autosize
+                                  minRows={1}
+                                  maxRows={4}
+                                  placeholder="Feedback"
                                 />
-                                <Text c="dimmed" size="xs">
-                                  / {e.maxPoints}
-                                </Text>
-                              </Group>
-                            );
-                          }
-                          return (
-                            <Stack gap={2}>
-                              <Group gap={4} align="baseline">
-                                <Text ff="monospace" size="sm">
-                                  {e.effectivePoints.toFixed(2)}
-                                </Text>
-                                <Text c="dimmed" size="xs">
-                                  / {e.maxPoints}
-                                </Text>
-                              </Group>
-                              {e.hasManualAdjustment &&
-                                e.effectivePoints !== e.originalPoints && (
-                                  <Text size="xs" c="dimmed" ff="monospace">
-                                    orig: {e.originalPoints.toFixed(2)}
-                                  </Text>
-                                )}
-                            </Stack>
-                          );
-                        },
-                      },
-                      {
-                        accessor: 'effectiveFeedback',
-                        title: 'Feedback',
-                        render: (entry) => {
-                          const e = entry as GroupEntry;
-                          if (openEdits.has(e.studentId)) {
+                              );
+                            }
                             return (
-                              <Textarea
-                                size="xs"
-                                value={editingMap[e.studentId]?.feedback ?? ''}
-                                onChange={(ev) => {
-                                  // Read value synchronously before setState to prevent
-                                  // accessing ev.currentTarget after DOM event dispatch.
-                                  const value = ev.currentTarget.value;
-                                  setEditingMap((prev) => ({
-                                    ...prev,
-                                    [e.studentId]: {
-                                      ...(prev[e.studentId] ?? {
-                                        points: e.effectivePoints,
-                                        feedback: '',
-                                      }),
-                                      feedback: value,
-                                    },
-                                  }));
-                                }}
-                                autosize
-                                minRows={1}
-                                maxRows={4}
-                                placeholder="Feedback"
-                              />
+                              <Stack gap={4}>
+                                <Text
+                                  size="xs"
+                                  style={{ whiteSpace: 'pre-wrap' }}
+                                  lineClamp={2}
+                                >
+                                  {e.effectiveFeedback ?? (
+                                    <Text component="span" c="dimmed">
+                                      —
+                                    </Text>
+                                  )}
+                                </Text>
+                                {e.hasManualAdjustment &&
+                                  e.effectiveFeedback !== e.originalFeedback && (
+                                    <Badge size="xs" variant="light" color="yellow">
+                                      adjusted
+                                    </Badge>
+                                  )}
+                              </Stack>
                             );
-                          }
-                          return (
-                            <Stack gap={4}>
-                              <Text
+                          },
+                        },
+                        {
+                          accessor: 'actions',
+                          title: '',
+                          render: (entry) => {
+                            const e = entry as GroupEntry;
+                            if (openEdits.has(e.studentId)) {
+                              return (
+                                <Group gap="xs">
+                                  <Button
+                                    size="xs"
+                                    loading={individualLoadingId === e.studentId}
+                                    onClick={() => void saveEdit(e)}
+                                  >
+                                    Save
+                                  </Button>
+                                  <Button
+                                    size="xs"
+                                    variant="default"
+                                    disabled={individualLoadingId === e.studentId}
+                                    onClick={() => cancelEdit(e.studentId)}
+                                  >
+                                    Cancel
+                                  </Button>
+                                </Group>
+                              );
+                            }
+                            return (
+                              <Button
                                 size="xs"
-                                style={{ whiteSpace: 'pre-wrap' }}
-                                lineClamp={2}
+                                variant="subtle"
+                                loading={individualLoadingId === e.studentId}
+                                onClick={() => startEdit(e)}
                               >
-                                {e.effectiveFeedback ?? (
-                                  <Text component="span" c="dimmed">
-                                    —
-                                  </Text>
-                                )}
-                              </Text>
-                              {e.hasManualAdjustment &&
-                                e.effectiveFeedback !== e.originalFeedback && (
-                                  <Badge size="xs" variant="light" color="yellow">
-                                    adjusted
-                                  </Badge>
-                                )}
-                            </Stack>
-                          );
-                        },
-                      },
-                      {
-                        accessor: 'actions',
-                        title: '',
-                        render: (entry) => {
-                          const e = entry as GroupEntry;
-                          if (openEdits.has(e.studentId)) {
-                            return (
-                              <Group gap="xs">
-                                <Button
-                                  size="xs"
-                                  loading={individualLoadingId === e.studentId}
-                                  onClick={() => void saveEdit(e)}
-                                >
-                                  Save
-                                </Button>
-                                <Button
-                                  size="xs"
-                                  variant="default"
-                                  disabled={individualLoadingId === e.studentId}
-                                  onClick={() => cancelEdit(e.studentId)}
-                                >
-                                  Cancel
-                                </Button>
-                              </Group>
+                                Edit
+                              </Button>
                             );
-                          }
-                          return (
-                            <Button
-                              size="xs"
-                              variant="subtle"
-                              loading={individualLoadingId === e.studentId}
-                              onClick={() => startEdit(e)}
-                            >
-                              Edit
-                            </Button>
-                          );
+                          },
                         },
-                      },
-                    ]}
-                  />
+                      ]}
+                    />
+                  </Box>
                   {totalPages > 1 && (
                     <Group justify="space-between" align="center" px="xs">
                       <Text size="xs" c="dimmed">

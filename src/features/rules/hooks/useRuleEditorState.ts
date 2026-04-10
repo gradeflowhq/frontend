@@ -7,9 +7,7 @@ import {
 } from '../api';
 import { HIDE_KEYS_MULTI, HIDE_KEYS_SINGLE } from '../constants';
 import {
-  augmentRulesSchemaWithQuestionIdEnums,
-  injectEnumsFromConstraintsForQuestion,
-  stripEngineKeysFromRulesSchema,
+  prepareRuleDefinitionsForRender,
 } from '../schema';
 
 import type { RuleDefinitions } from '../api';
@@ -92,31 +90,14 @@ export const useRuleEditorState = ({
   );
   const findKeyByType = useFindSchemaKeyByType(defs);
 
-  // 1. Augment with question-id enums
-  const defsWithQidEnums = React.useMemo(() => {
-    if (!questionMap) return defs;
-    return augmentRulesSchemaWithQuestionIdEnums(
-      defs,
-      questionMap as Record<string, Record<string, unknown>>,
-    );
-  }, [defs, questionMap]);
-
-  // 2. Inject per-question constraint enums (single-target only)
-  const injectedDefs = React.useMemo(() => {
-    if (!questionMap || !isSingleTarget || !questionId) return defsWithQidEnums;
-    return injectEnumsFromConstraintsForQuestion(
-      defsWithQidEnums,
-      questionMap as Record<string, Record<string, unknown>>,
+  const finalDefs = React.useMemo(() => {
+    return prepareRuleDefinitionsForRender(defs as Record<string, unknown>, {
+      questionMap: questionMap as Record<string, Record<string, unknown>> | undefined,
       questionId,
-    );
-  }, [defsWithQidEnums, questionMap, isSingleTarget, questionId]);
-
-  // 3. Strip engine-only keys
-  const strippedDefs = React.useMemo(
-    () => stripEngineKeysFromRulesSchema(injectedDefs),
-    [injectedDefs],
-  );
-  const finalDefs = strippedDefs as RuleDefinitions;
+      questionType,
+      isSingleTarget,
+    }) as RuleDefinitions;
+  }, [defs, isSingleTarget, questionId, questionMap, questionType]);
 
   // 4. Resolve the concrete schema key to use
   const concreteKey = React.useMemo(() => {

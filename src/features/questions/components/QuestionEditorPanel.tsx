@@ -1,6 +1,5 @@
 import {
   Accordion,
-  ActionIcon,
   Badge,
   Box,
   Button,
@@ -10,7 +9,7 @@ import {
   Stack,
   Text,
 } from '@mantine/core';
-import { IconPencil } from '@tabler/icons-react';
+import { IconPencil, IconTrash } from '@tabler/icons-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import AnswerText from '@components/common/AnswerText';
@@ -55,6 +54,10 @@ interface Props {
    * Used by the parent to drive the MasterDetailLayout unsaved-changes guard.
    */
   onEditStateChange: (isEditing: boolean) => void;
+  /** Optional delete handler — shows a delete button when provided. */
+  onDelete?: () => void;
+  /** Whether a delete is in-flight. */
+  deleting?: boolean;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -75,6 +78,8 @@ const QuestionEditorPanel: React.FC<Props> = ({
   examplesError,
   onSave,
   onEditStateChange,
+  onDelete,
+  deleting,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   // Initialise draft from the persisted definition.
@@ -171,7 +176,8 @@ const QuestionEditorPanel: React.FC<Props> = ({
                   style={{
                     borderRadius: 'var(--mantine-radius-sm)',
                     border: '1px solid var(--mantine-color-red-3)',
-                    backgroundColor: 'var(--mantine-color-red-0)',
+                    backgroundColor:
+                      'light-dark(var(--mantine-color-red-0), var(--mantine-color-red-light))',
                   }}
                 >
                   <Text ff="monospace" size="xs" c="red">
@@ -202,12 +208,23 @@ const QuestionEditorPanel: React.FC<Props> = ({
               {viewType}
             </Badge>
           </Group>
-          <ActionIcon
-            aria-label="Edit question"
-            onClick={() => setIsEditing(true)}
-          >
-            <IconPencil size={14} />
-          </ActionIcon>
+          <Group gap="xs">
+            <Button size="xs" variant="subtle" leftSection={<IconPencil size={14} />} onClick={() => setIsEditing(true)}>
+              Edit
+            </Button>
+            {onDelete && (
+              <Button
+                size="xs"
+                variant="subtle"
+                color="red"
+                leftSection={<IconTrash size={14} />}
+                onClick={onDelete}
+                loading={deleting}
+              >
+                Delete
+              </Button>
+            )}
+          </Group>
         </Group>
 
         <QuestionConfigPreview value={questionDef as JsonValue} />

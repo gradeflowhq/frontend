@@ -1,5 +1,6 @@
 import {
   ActionIcon,
+  Alert,
   Button,
   Checkbox,
   Collapse,
@@ -11,14 +12,18 @@ import {
   Text,
   Tooltip,
 } from '@mantine/core';
-import { IconSettings } from '@tabler/icons-react';
+import { IconInfoCircle, IconSettings } from '@tabler/icons-react';
 import React, { useState } from 'react';
 
 import type { GroupingMode, NormalizeOpts } from '@features/grading/helpers/grouping';
 
+export type SemanticState = 'idle' | 'loading-model' | 'computing' | 'ready';
+
 interface GroupModeSelectorProps {
   mode: GroupingMode;
   onChange: (mode: GroupingMode) => void;
+  useSemanticGrouping: boolean;
+  onUseSemanticGroupingChange: (value: boolean) => void;
   /** The applied (committed) threshold used for clustering. */
   threshold: number;
   /** The current slider value (before Apply). */
@@ -28,11 +33,14 @@ interface GroupModeSelectorProps {
   normalizeOpts: NormalizeOpts;
   onNormalizeOptsChange: (opts: NormalizeOpts) => void;
   isGroupsPending?: boolean;
+  semanticState?: SemanticState;
 }
 
 const GroupModeSelector: React.FC<GroupModeSelectorProps> = ({
   mode,
   onChange,
+  useSemanticGrouping,
+  onUseSemanticGroupingChange,
   threshold,
   pendingThreshold,
   onPendingThresholdChange,
@@ -40,14 +48,17 @@ const GroupModeSelector: React.FC<GroupModeSelectorProps> = ({
   normalizeOpts,
   onNormalizeOptsChange,
   isGroupsPending = false,
+  semanticState = 'idle',
 }) => {
   const [similarityOpen, setSimilarityOpen] = useState(false);
   const hasUnappliedChange = pendingThreshold !== threshold;
   const isFuzzy = threshold < 1.0;
+  const isSemantic = useSemanticGrouping;
+  const isSemanticLoading = isSemantic && (semanticState === 'loading-model' || semanticState === 'computing');
 
   return (
     <Stack gap="sm">
-      <Group align="center" gap="xs">
+      <Group align="center" gap="xs" wrap="wrap">
         <SegmentedControl
           value={mode}
           onChange={(v) => onChange(v as GroupingMode)}
@@ -58,26 +69,49 @@ const GroupModeSelector: React.FC<GroupModeSelectorProps> = ({
           size="sm"
         />
 
-        {/* Similarity settings toggle — available for both modes */}
+        <Checkbox
+          label="Semantic similarity"
+          checked={useSemanticGrouping}
+          onChange={(event) => onUseSemanticGroupingChange(event.currentTarget.checked)}
+        />
+
         <Tooltip
-          label={isFuzzy ? `Similarity: ${threshold.toFixed(2)}` : 'Similarity settings'}
+          label={isSemantic
+            ? `Semantic threshold: ${threshold.toFixed(2)}`
+            : isFuzzy
+              ? `Similarity: ${threshold.toFixed(2)}`
+              : 'Similarity settings'}
           withArrow
         >
           <ActionIcon
-            variant={isFuzzy || similarityOpen ? 'light' : 'subtle'}
-            color={isFuzzy ? 'blue' : 'gray'}
+            variant={isSemantic || isFuzzy || similarityOpen ? 'light' : 'subtle'}
+            color={isSemantic || isFuzzy ? 'blue' : 'gray'}
             size="md"
             onClick={() => setSimilarityOpen((o) => !o)}
-            aria-label="Similarity settings"
+            aria-label={isSemantic ? 'Semantic similarity settings' : 'Similarity settings'}
           >
             <IconSettings size={16} />
           </ActionIcon>
         </Tooltip>
 
-        { isGroupsPending && <Loader size={20} /> }
+        {(isGroupsPending || isSemanticLoading) && <Loader size={20} />}
       </Group>
 
-      {/* Similarity settings panel (applies to both By Answer and By Feedback) */}
+      {isSemantic && semanticState === 'loading-model' && (
+        <Alert icon={<IconInfoCircle size={16} />} color="blue" variant="light" py="xs">
+          <Text size="sm">
+            Downloading embedding model (~34 MB) — will be cached for future use.
+          </Text>
+        </Alert>
+      )}
+
+      {isSemantic && semanticState === 'computing' && (
+        <Alert icon={<IconInfoCircle size={16} />} color="gray" variant="light" py="xs">
+          <Text size="sm">Computing semantic embeddings for student answers…</Text>
+        </Alert>
+      )}
+
+      {/* Similarity settings panel */}
       <Collapse expanded={similarityOpen}>
         <div style={{
           border: '1px solid var(--mantine-color-default-border)',
@@ -118,35 +152,42 @@ const GroupModeSelector: React.FC<GroupModeSelectorProps> = ({
               ]}
               mb="md"
             />
-            <Group gap="md">
-              <Checkbox
-                label="Ignore case"
-                checked={normalizeOpts.ignoreCase}
-                onChange={(e) =>
-                  onNormalizeOptsChange({ ...normalizeOpts, ignoreCase: e.currentTarget.checked })
-                }
-              />
-              <Checkbox
-                label="Ignore whitespace"
-                checked={normalizeOpts.ignoreWhitespace}
-                onChange={(e) =>
-                  onNormalizeOptsChange({
-                    ...normalizeOpts,
-                    ignoreWhitespace: e.currentTarget.checked,
-                  })
-                }
-              />
-              <Checkbox
-                label="Ignore punctuation"
-                checked={normalizeOpts.ignorePunctuation}
-                onChange={(e) =>
-                  onNormalizeOptsChange({
-                    ...normalizeOpts,
-                    ignorePunctuation: e.currentTarget.checked,
-                  })
-                }
-              />
-            </Group>
+            {!isSemantic && (
+              <Group gap="md">
+                <Checkbox
+                  label="Ignore case"
+                  checked={normalizeOpts.ignoreCase}
+                  onChange={(e) =>
+                    onNormalizeOptsChange({ ...normalizeOpts, ignoreCase: e.currentTarget.checked })
+                  }
+                />
+                <Checkbox
+                  label="Ignore whitespace"
+                  checked={normalizeOpts.ignoreWhitespace}
+                  onChange={(e) =>
+                    onNormalizeOptsChange({
+                      ...normalizeOpts,
+                      ignoreWhitespace: e.currentTarget.checked,
+                    })
+                  }
+                />
+                <Checkbox
+                  label="Ignore punctuation"
+                  checked={normalizeOpts.ignorePunctuation}
+                  onChange={(e) =>
+                    onNormalizeOptsChange({
+                      ...normalizeOpts,
+                      ignorePunctuation: e.currentTarget.checked,
+                    })
+                  }
+                />
+              </Group>
+            )}
+            {isSemantic && (
+              <Text size="xs" c="dimmed">
+                Apply embedding-based similarity to {mode === 'answer' ? 'student answers' : 'feedback comments'}. 0.85 is a good starting point for grouping similar meaning.
+              </Text>
+            )}
           </Stack>
         </div>
       </Collapse>

@@ -43,12 +43,29 @@ import {
   SingleTargetRulesSection,
 } from '@features/rules/components';
 import { getRuleTargetQids, isMultiTargetRule } from '@features/rules/schema';
+import { getInvalidRuleReferences, synchronizeRules } from '@features/rules/synchronization';
 import { useAutoResetState } from '@hooks/useAutoResetState';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { getErrorMessage } from '@utils/error';
 
 import type { AdjustableSubmission, RubricOutput, QuestionSetOutputQuestionMap } from '@api/models';
 import type { RuleValue } from '@features/rules/types';
+
+const getRulesStatusMessage = (isStale: boolean, invalidRuleCount: number): string => {
+  if (invalidRuleCount > 0 && isStale) {
+    return invalidRuleCount === 1
+      ? 'Rules may be out of date — questions changed and 1 rule still references a deleted question.'
+      : `Rules may be out of date — questions changed and ${invalidRuleCount} rules still reference deleted questions.`;
+  }
+
+  if (invalidRuleCount > 0) {
+    return invalidRuleCount === 1
+      ? 'Rules are out of sync with the current question set. 1 rule still references a deleted question.'
+      : `Rules are out of sync with the current question set. ${invalidRuleCount} rules still reference deleted questions.`;
+  }
+
+  return 'Rules may be out of date — questions have changed since the last rubric was configured.';
+};
 
 const RulesPage: React.FC = () => {
   const { assessmentId, assessment } = useAssessmentContext();
@@ -145,6 +162,9 @@ const RulesPage: React.FC = () => {
   const [openRubricUpload, setOpenRubricUpload] = React.useState(false);
   const [openRubricImport, setOpenRubricImport] = React.useState(false);
   const [confirmDeleteRubric, setConfirmDeleteRubric] = React.useState(false);
+  const [confirmSynchronizeRules, setConfirmSynchronizeRules] = React.useState(false);
+  const [dismissedRulesSyncSignature, setDismissedRulesSyncSignature] = React.useState<string | null>(null);
+  const [statusAction, setStatusAction] = React.useState<'dismiss' | 'sync' | null>(null);
   const [searchQuery, setSearchQuery] = React.useState('');
 
   // Tab state — read from URL so deep-links and back/forward work correctly.
@@ -196,14 +216,69 @@ const RulesPage: React.FC = () => {
   const deleteRubric = useDeleteRubric(safeId);
   const replaceRubric = useReplaceRubric(safeId);
 
+  const invalidRuleReferences = React.useMemo(
+    () => getInvalidRuleReferences((rubric?.rules ?? []) as RuleValue[], questionIds),
+    [rubric, questionIds],
+  );
+  const hasInvalidRules = invalidRuleReferences.length > 0;
+  const isRubricStale = Boolean(rubricRes?.status?.is_stale);
+  const rulesSyncSignature = React.useMemo(
+    () => invalidRuleReferences.map((rule) => rule.summary).join('|'),
+    [invalidRuleReferences],
+  );
+  const showRulesStatusBanner = isRubricStale || (
+    hasInvalidRules && dismissedRulesSyncSignature !== rulesSyncSignature
+  );
+
   // No-op save to acknowledge staleness and refresh updated_at
-  const handleDismissStale = React.useCallback(() => {
+  const handleDismissStatus = React.useCallback(() => {
+    if (hasInvalidRules) {
+      setDismissedRulesSyncSignature(rulesSyncSignature);
+    }
+
+    if (!isRubricStale) {
+      notifications.show({ color: 'green', message: 'Rules warning dismissed' });
+      return;
+    }
+
     if (!rubric) return;
+
+    setStatusAction('dismiss');
     replaceRubric.mutate(rubric.rules as RuleValue[], {
-      onError: () =>
-        notifications.show({ color: 'red', message: 'Could not acknowledge staleness' }),
+      onSuccess: () => {
+        notifications.show({ color: 'green', message: 'Rules warning dismissed' });
+      },
+      onError: () => {
+        if (hasInvalidRules) {
+          setDismissedRulesSyncSignature(null);
+        }
+        notifications.show({ color: 'red', message: 'Could not dismiss warning' });
+      },
+      onSettled: () => setStatusAction(null),
     });
-  }, [rubric, replaceRubric]);
+  }, [hasInvalidRules, isRubricStale, replaceRubric, rubric, rulesSyncSignature]);
+
+  const handleSynchronizeRules = React.useCallback(() => {
+    const nextRules = synchronizeRules((rubric?.rules ?? []) as RuleValue[], invalidRuleReferences);
+    setStatusAction('sync');
+    replaceRubric.mutate(nextRules, {
+      onSuccess: () => {
+        setConfirmSynchronizeRules(false);
+        setDismissedRulesSyncSignature(null);
+        notifications.show({
+          color: 'green',
+          message:
+            invalidRuleReferences.length === 1
+              ? `Removed invalid rule: ${invalidRuleReferences[0].summary}`
+              : `Removed invalid rules: ${invalidRuleReferences.map((rule) => rule.summary).join('; ')}`,
+        });
+      },
+      onError: (err) => {
+        notifications.show({ color: 'red', message: getErrorMessage(err) });
+      },
+      onSettled: () => setStatusAction(null),
+    });
+  }, [invalidRuleReferences, replaceRubric, rubric]);
 
   // Create an empty rubric explicitly when the user requests it
   const handleCreateEmptyRubric = React.useCallback(() => {
@@ -218,6 +293,74 @@ const RulesPage: React.FC = () => {
   const hasRules = (rubric?.rules?.length ?? 0) > 0;
   const covTotal = cov?.total ?? 0;
   const covCovered = cov?.covered ?? 0;
+
+  const rulesStatusActions = React.useMemo(() => {
+    const actions = [];
+
+    if (hasInvalidRules) {
+      actions.push({
+        label: 'Synchronize rules',
+        onClick: () => setConfirmSynchronizeRules(true),
+        color: 'orange',
+        variant: 'light' as const,
+        disabled: replaceRubric.isPending,
+      });
+    }
+
+    if (isRubricStale) {
+      actions.push({
+        label: 'Dismiss',
+        onClick: handleDismissStatus,
+        loading: statusAction === 'dismiss' && replaceRubric.isPending,
+        disabled: replaceRubric.isPending && statusAction !== 'dismiss',
+      });
+    } else if (hasInvalidRules) {
+      actions.push({
+        label: 'Dismiss',
+        onClick: handleDismissStatus,
+        disabled: replaceRubric.isPending,
+      });
+    }
+
+    return actions;
+  }, [handleDismissStatus, hasInvalidRules, isRubricStale, replaceRubric.isPending, statusAction]);
+
+  const rulesStatusBanner = (
+    <SectionStatusBadge
+      isStale={rubricRes?.status?.is_stale}
+      show={showRulesStatusBanner}
+      staleMessage={getRulesStatusMessage(isRubricStale, invalidRuleReferences.length)}
+      actions={rulesStatusActions}
+    />
+  );
+
+  const synchronizeRulesModal = (
+    <Modal
+      opened={confirmSynchronizeRules}
+      onClose={() => setConfirmSynchronizeRules(false)}
+      title="Synchronize Rules"
+      size="sm"
+    >
+      <Text mb="sm">
+        This will delete the rules that still reference deleted questions.
+      </Text>
+      <Stack gap="xs" mb="md">
+        {invalidRuleReferences.map((rule) => (
+          <Text key={`${rule.ruleIndex}:${rule.summary}`} ff="monospace" size="sm">
+            {rule.summary}
+          </Text>
+        ))}
+      </Stack>
+      <Group justify="flex-end" gap="sm">
+        <Button variant="default" onClick={() => setConfirmSynchronizeRules(false)}>
+          Cancel
+        </Button>
+        <Button color="orange" loading={replaceRubric.isPending} onClick={handleSynchronizeRules}>
+          Synchronize
+        </Button>
+      </Group>
+    </Modal>
+  );
 
   const renderSkeleton = () => (
     <Stack gap="md">
@@ -249,6 +392,9 @@ const RulesPage: React.FC = () => {
           />
         }
       >
+        <Stack gap="md">
+          {rulesStatusBanner}
+
         <Center py="xl">
           <Stack align="center" gap="md" maw={480} mx="auto">
             <IconAdjustments size={40} opacity={0.3} />
@@ -270,6 +416,9 @@ const RulesPage: React.FC = () => {
             </Stack>
           </Stack>
         </Center>
+
+        {synchronizeRulesModal}
+        </Stack>
       </PageShell>
     );
   }
@@ -380,12 +529,7 @@ const RulesPage: React.FC = () => {
       updatedAt={rubricRes?.status?.updated_at}
     >
       <Stack gap="md">
-        <SectionStatusBadge
-          isStale={rubricRes?.status?.is_stale}
-          staleMessage="Rules may be out of date — questions have changed since the last rubric was configured."
-          onDismiss={rubricRes?.status?.is_stale ? handleDismissStale : undefined}
-          isDismissing={replaceRubric.isPending}
-        />
+        {rulesStatusBanner}
 
         {(loadingQS || loadingRubric || loadingCoverage) && renderSkeleton()}
 
@@ -490,6 +634,8 @@ const RulesPage: React.FC = () => {
             </Alert>
           )}
         </Modal>
+
+        {synchronizeRulesModal}
       </Stack>
     </PageShell>
   );

@@ -1,4 +1,5 @@
-import { Badge, Box, ScrollArea, Stack, Text } from '@mantine/core';
+import { Badge, Box, Button, ScrollArea, Stack, Text } from '@mantine/core';
+import { IconPlus } from '@tabler/icons-react';
 import React, { useCallback, useMemo } from 'react';
 
 import { QUESTION_TYPE_COLORS } from '@features/questions/constants';
@@ -12,6 +13,7 @@ interface Props {
   selectedQid: string | null;
   onSelect: (qid: string) => void;
   searchQuery?: string;
+  onAddQuestion?: () => void;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -22,6 +24,7 @@ const QuestionListPanel: React.FC<Props> = ({
   selectedQid,
   onSelect,
   searchQuery = '',
+  onAddQuestion,
 }) => {
   const selectedRef = useScrollIntoView<HTMLDivElement>(selectedQid);
 
@@ -55,6 +58,19 @@ const QuestionListPanel: React.FC<Props> = ({
 
   return (
     <Box style={{ width: '100%', display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {onAddQuestion && (
+        <Box pb={4}>
+          <Button
+            size="xs"
+            leftSection={<IconPlus size={12} />}
+            fullWidth
+            onClick={onAddQuestion}
+          >
+            Add question
+          </Button>
+        </Box>
+      )}
+
       <ScrollArea style={{ flex: 1 }}>
         <Box role="listbox" aria-label="Questions" onKeyDown={handleListKeyDown} py={4}>
           {filteredIds.length === 0 && (
@@ -86,8 +102,8 @@ const QuestionListPanel: React.FC<Props> = ({
                   borderLeft: `4px solid ${
                     isSelected ? 'var(--mantine-color-blue-5)' : 'transparent'
                   }`,
-                  borderRight: '1px solid var(--mantine-color-gray-2)',
-                  backgroundColor: isSelected ? 'var(--mantine-color-blue-0)' : undefined,
+                  borderRight: '1px solid var(--mantine-color-default-border)',
+                  backgroundColor: isSelected ? 'var(--mantine-color-blue-light)' : undefined,
                   outline: 'none',
                   transition: 'background-color 90ms ease',
                 }}

@@ -65,6 +65,7 @@ export const useValidateAndReplaceRubric = (assessmentId: string) => {
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: QK.rubric.item(assessmentId) });
       await qc.invalidateQueries({ queryKey: QK.rubric.coverage(assessmentId) });
+      await qc.invalidateQueries({ queryKey: QK.assessments.item(assessmentId) });
     },
   });
 };
@@ -85,6 +86,7 @@ export const useReplaceRubric = (assessmentId: string) => {
     onSuccess: async () => {
       await qc.invalidateQueries({ queryKey: QK.rubric.item(assessmentId) });
       await qc.invalidateQueries({ queryKey: QK.rubric.coverage(assessmentId) });
+      await qc.invalidateQueries({ queryKey: QK.assessments.item(assessmentId) });
     },
   });
 };

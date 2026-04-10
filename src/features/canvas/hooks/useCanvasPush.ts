@@ -1,8 +1,8 @@
 import { useState } from 'react';
 
-import { createCanvasClient } from '@api/canvasClient';
+import { createCanvasClient, type CanvasAssignmentSummary } from '@api/canvasClient';
+import { NEW_GROUP_VALUE as NEW_GROUP_SENTINEL } from '@features/canvas/constants';
 
-import type { CanvasAssignmentSummary } from '@api/canvasClient';
 import type { PreparedRow } from '@features/canvas/types';
 import type { AxiosError } from 'axios';
 
@@ -19,6 +19,8 @@ type PushConfig = {
   assignmentId: string;
   assignmentName: string;
   assignmentGroupId: string;
+  newGroupName?: string;
+  newGroupWeight?: number;
   gradeMode: 'points' | 'percent';
   includeComments: boolean;
   numericPoints: number;
@@ -31,7 +33,7 @@ export const useCanvasPush = () => {
     preparedRows: PreparedRow[],
     assignments: CanvasAssignmentSummary[],
     config: PushConfig,
-    onAssignmentCreated: (id: string, name: string, points: number) => void
+    onAssignmentCreated: (id: string, name: string, points: number, groupId?: string) => void
   ) => {
     setPushState({ status: 'idle' });
 
@@ -52,6 +54,25 @@ export const useCanvasPush = () => {
       const client = createCanvasClient({ canvasBaseUrl: config.canvasBaseUrl, token: config.canvasToken });
       let targetAssignmentId = config.assignmentId.trim();
 
+      // Resolve assignment group — create one if requested
+      let resolvedGroupId: number | undefined = config.assignmentGroupId && config.assignmentGroupId !== NEW_GROUP_SENTINEL
+        ? Number(config.assignmentGroupId)
+        : undefined;
+
+      if (config.assignmentGroupId === NEW_GROUP_SENTINEL) {
+        const groupName = config.newGroupName?.trim();
+        if (!groupName) {
+          setPushState({ status: 'error', message: 'Enter a name for the new assignment group.' });
+          return;
+        }
+        const newGroup = await client.createAssignmentGroup(
+          config.courseId,
+          groupName,
+          config.newGroupWeight != null && config.newGroupWeight > 0 ? config.newGroupWeight : undefined
+        );
+        resolvedGroupId = newGroup.data.id;
+      }
+
       // Create or find assignment
       if (!targetAssignmentId) {
         const existing = assignments.find(a => a.name.trim().toLowerCase() === name.toLowerCase());
@@ -62,11 +83,11 @@ export const useCanvasPush = () => {
           const created = await client.createAssignment(config.courseId, {
             name,
             points_possible: config.numericPoints,
-            assignment_group_id: config.assignmentGroupId ? Number(config.assignmentGroupId) : undefined,
+            assignment_group_id: resolvedGroupId,
             grading_type: config.gradeMode === 'percent' ? 'percent' : 'points',
           });
           targetAssignmentId = created.data.id.toString();
-          onAssignmentCreated(targetAssignmentId, name, config.numericPoints);
+          onAssignmentCreated(targetAssignmentId, name, config.numericPoints, resolvedGroupId?.toString());
         }
       }
 

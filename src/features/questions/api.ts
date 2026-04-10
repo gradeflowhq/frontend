@@ -24,6 +24,14 @@ export const useParsedSubmissions = (assessmentId: string, enabled = true) =>
     enabled,
   });
 
+export const inferQuestionSetFromSubmissions = async (assessmentId: string) =>
+  (
+    await api.inferQuestionSetAssessmentsAssessmentIdQuestionSetInferPost(assessmentId, {
+      use_stored_submissions: true,
+      commit: false,
+    })
+  ).data as QuestionSetResponse;
+
 export const useUpdateQuestionSet = (assessmentId: string) => {
   const qc = useQueryClient();
   return useMutation({
@@ -32,7 +40,18 @@ export const useUpdateQuestionSet = (assessmentId: string) => {
       const payload: SetQuestionSetByModelRequest = { question_set: nextQS };
       return (await api.setQuestionSetByModelAssessmentsAssessmentIdQuestionSetPut(assessmentId, payload)).data;
     },
-    onSuccess: async () => {
+    onSuccess: async (_data, nextQS) => {
+      qc.setQueryData<QuestionSetResponse | undefined>(
+        QK.questionSet.item(assessmentId),
+        (current) => {
+          if (!current) return current;
+          return {
+            ...current,
+            question_set: nextQS,
+          };
+        },
+      );
+
       await qc.invalidateQueries({ queryKey: QK.questionSet.item(assessmentId) });
       await qc.invalidateQueries({ queryKey: QK.questionSet.parsed(assessmentId) });
       await qc.invalidateQueries({ queryKey: QK.assessments.item(assessmentId) });

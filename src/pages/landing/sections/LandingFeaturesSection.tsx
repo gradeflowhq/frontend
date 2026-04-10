@@ -3,20 +3,26 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 import { PATHS } from '@app/routes/paths';
+import { useResolvedColorScheme } from '@hooks/useResolvedColorScheme';
 
 import { features } from '../landing-data';
+import { getLandingFeatureIconColors } from '../landing-theme';
 
 interface LandingFeaturesSectionProps {
   accessToken: string | null;
 }
 
-const LandingFeaturesSection: React.FC<LandingFeaturesSectionProps> = ({ accessToken }) => (
+const LandingFeaturesSection: React.FC<LandingFeaturesSectionProps> = ({ accessToken }) => {
+  const colorScheme = useResolvedColorScheme();
+  const iconColors = getLandingFeatureIconColors(colorScheme);
+
+  return (
   <Box
     component="section"
     aria-labelledby="features-heading"
     py={72}
     px="md"
-    bg="gray.0"
+    style={{ background: 'var(--mantine-color-default-hover)' }}
   >
     <Center mb={52}>
       <Stack align="center" gap="xs">
@@ -69,8 +75,8 @@ const LandingFeaturesSection: React.FC<LandingFeaturesSectionProps> = ({ accessT
               width: 48,
               height: 48,
               borderRadius: 10,
-              backgroundColor: 'var(--mantine-color-blue-0)',
-              color: 'var(--mantine-color-blue-6)',
+              backgroundColor: iconColors.background,
+              color: iconColors.color,
             }}
           >
             {feature.icon}
@@ -94,6 +100,7 @@ const LandingFeaturesSection: React.FC<LandingFeaturesSectionProps> = ({ accessT
       </Button>
     </Center>
   </Box>
-);
+  );
+};
 
 export default LandingFeaturesSection;

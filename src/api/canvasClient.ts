@@ -183,6 +183,15 @@ export const createCanvasClient = (config: CanvasClientConfig) => {
       client.get<CanvasAssignmentGroup[]>(`/api/v1/courses/${courseId}/assignment_groups`, {
         params: { per_page: 50 },
       }),
+    createAssignmentGroup: (
+      courseId: string | number,
+      name: string,
+      groupWeight?: number
+    ): Promise<AxiosResponse<CanvasAssignmentGroup>> =>
+      client.post(`/api/v1/courses/${courseId}/assignment_groups`, {
+        name,
+        ...(groupWeight != null ? { group_weight: groupWeight } : {}),
+      }),
     listCourseUsers: (courseId: string | number, page = 1) =>
       client.get<CanvasUserSummary[]>(`/api/v1/courses/${courseId}/users`, {
         params: {

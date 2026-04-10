@@ -242,9 +242,9 @@ const QuestionDetailPanel: React.FC<Props> = ({
           {canAddRule && (
             <Menu position="bottom-end">
               <Menu.Target>
-                <ActionIcon aria-label="Add rule">
-                  <IconPlus size={14} />
-                </ActionIcon>
+                <Button size="xs" variant="subtle" leftSection={<IconPlus size={14} />}>
+                  Add
+                </Button>
               </Menu.Target>
               <Menu.Dropdown>
                 {compatibleKeys.map((key) => (
@@ -261,19 +261,18 @@ const QuestionDetailPanel: React.FC<Props> = ({
 
           {canEditRule && (
             <>
-              <ActionIcon
-                onClick={handleStartEdit}
-                aria-label="Edit rule"
-              >
-                <IconPencil size={14} />
-              </ActionIcon>
-              <ActionIcon
+              <Button size="xs" variant="subtle" leftSection={<IconPencil size={14} />} onClick={handleStartEdit}>
+                Edit
+              </Button>
+              <Button
+                size="xs"
+                variant="subtle"
                 color="red"
+                leftSection={<IconTrash size={14} />}
                 onClick={() => setDeleteConfirm(true)}
-                aria-label="Delete rule"
               >
-                <IconTrash size={14} />
-              </ActionIcon>
+                Delete
+              </Button>
             </>
           )}
         </Group>
