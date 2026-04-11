@@ -2,6 +2,7 @@ import {
   augmentRulesSchemaWithQuestionIdEnums,
   augmentRulesSchemaWithTitles,
   filterNestedRuleOneOfByQuestionType,
+  prependUnselectedPlaceholderToNestedOneOf,
 } from './augment';
 import { injectEnumsFromConstraintsForQuestion } from './constraints';
 import { stripEngineKeysFromRulesSchema } from './strip';
@@ -37,6 +38,8 @@ export function prepareRuleDefinitionsForRender(
   }
 
   prepared = stripEngineKeysFromRulesSchema(prepared);
+
+  prepared = prependUnselectedPlaceholderToNestedOneOf(prepared);
 
   return augmentRulesSchemaWithTitles(prepared);
 }

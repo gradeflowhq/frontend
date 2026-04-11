@@ -2,6 +2,8 @@ import { friendlyRuleLabel } from './lookup';
 
 type JsonObject = Record<string, unknown>;
 
+const UNSELECTED_RULE_TITLE = 'Select a rule\u2026';
+
 function deepClone<T>(obj: T): T {
   return JSON.parse(JSON.stringify(obj));
 }
@@ -184,6 +186,60 @@ export function augmentRulesSchemaWithQuestionIdEnums(
     // Write back updated properties
     (defSchema as { properties?: JsonObject }).properties = props;
     updated[defName] = defSchema;
+  }
+
+  return updated;
+}
+
+/**
+ * Schema for the "unselected" placeholder that RJSF shows as the first oneOf
+ * option.  It is a plain empty object – if the user saves without choosing a
+ * real rule the backend validation rejects it.
+ */
+const UNSELECTED_PLACEHOLDER: JsonObject = Object.freeze({
+  type: 'object',
+  title: UNSELECTED_RULE_TITLE,
+  properties: {},
+  additionalProperties: false,
+});
+
+/**
+ * Prepends an "unselected" placeholder to every nested rule `oneOf` so that
+ * newly created items (e.g. a new Assumption) default to "Select a rule…"
+ * instead of auto-selecting the first real rule type.
+ */
+export function prependUnselectedPlaceholderToNestedOneOf(
+  rulesSchema: JsonObject,
+): JsonObject {
+  const updated = deepClone(rulesSchema);
+
+  const prependPlaceholder = (container: Record<string, unknown>): void => {
+    const oneOf = container.oneOf;
+    if (!Array.isArray(oneOf) || oneOf.length === 0) return;
+    // Avoid double-prepending
+    const first = oneOf[0] as JsonObject | undefined;
+    if (first?.title === UNSELECTED_RULE_TITLE) return;
+    container.oneOf = [{ ...UNSELECTED_PLACEHOLDER }, ...oneOf];
+  };
+
+  for (const [, defSchema] of Object.entries(updated)) {
+    if (!defSchema || typeof defSchema !== 'object') continue;
+    const props = (defSchema as { properties?: JsonObject }).properties ?? {};
+    if (!props || typeof props !== 'object') continue;
+
+    for (const [, fieldSchema] of Object.entries(props as Record<string, unknown>)) {
+      if (!fieldSchema || typeof fieldSchema !== 'object') continue;
+      const field = fieldSchema as Record<string, unknown>;
+
+      // Array field with items.oneOf (e.g. if_rules, then_rules, rules)
+      const items = field.items;
+      if (items && typeof items === 'object') {
+        prependPlaceholder(items as Record<string, unknown>);
+      }
+
+      // Single-object field with direct oneOf (e.g. `rule` in Assumption)
+      prependPlaceholder(field);
+    }
   }
 
   return updated;

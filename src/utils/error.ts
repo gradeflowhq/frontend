@@ -1,8 +1,23 @@
 import type { AxiosError } from 'axios';
 
+type ErrorDetail = { type?: string; loc?: unknown; msg?: unknown; ctx?: Record<string, unknown> };
+
 type ErrorPayload = {
   errors?: unknown;
-  detail?: Array<{ loc?: unknown; msg?: unknown }>;
+  detail?: ErrorDetail[];
+};
+
+/** Map known backend error types to user-friendly messages. */
+const friendlyMessage = (d: ErrorDetail): string | null => {
+  if (d.type === 'union_tag_not_found' && typeof d.msg === 'string') {
+    // Discriminator error — typically means a nested rule was not selected.
+    const path = Array.isArray(d.loc) ? d.loc.slice(1) : [];
+    const ruleIndex = path.findIndex((p) => p === 'rule' || p === 'rules');
+    if (ruleIndex >= 0) {
+      return 'Please select a rule type for all nested rules before saving.';
+    }
+  }
+  return null;
 };
 
 export const getErrorMessages = (error: unknown): string[] => {
@@ -17,9 +32,16 @@ export const getErrorMessages = (error: unknown): string[] => {
 
   // Case 2: FastAPI validation error: { detail: [{ msg: string, ... }] }
   if (data && Array.isArray(data.detail)) {
-    // extract loc and msg
+    const seen = new Set<string>();
     const messages: string[] = data.detail
       .map((d) => {
+        // Try user-friendly message first
+        const friendly = friendlyMessage(d);
+        if (friendly) {
+          if (seen.has(friendly)) return null;
+          seen.add(friendly);
+          return friendly;
+        }
         if (d.msg && typeof d.msg === 'string') {
           if (Array.isArray(d.loc)) {
             const locStr = d.loc.slice(1).join(' > '); // skip 'body'
