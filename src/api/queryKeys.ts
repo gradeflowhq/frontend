@@ -29,9 +29,9 @@ export const QK = {
     csv: (assessmentId: string, roundingBase: number) => ['grading', 'csv', assessmentId, roundingBase] as const,
   },
   canvas: {
-    courses: (baseUrl: string, token: string) => ['canvas', 'courses', baseUrl, token] as const,
-    courseData: (courseId: string, baseUrl: string, token: string) => ['canvas', 'course-data', courseId, baseUrl, token] as const,
+    courses: (baseUrl: string) => ['canvas', 'courses', baseUrl] as const,
+    courseData: (courseId: string, baseUrl: string) => ['canvas', 'course-data', courseId, baseUrl] as const,
     progress: (progressUrl: string) => ['canvas', 'progress', progressUrl] as const,
-    me: (baseUrl: string, token: string) => ['canvas', 'me', baseUrl, token] as const,
+    me: (baseUrl: string) => ['canvas', 'me', baseUrl] as const,
   },
 };

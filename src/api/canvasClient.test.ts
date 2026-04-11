@@ -12,7 +12,20 @@ vi.mock('axios', () => ({
   },
 }));
 
-import { createCanvasClient } from './canvasClient';
+import { createCanvasClient, parseCanvasBaseUrl } from './canvasClient';
+
+describe('parseCanvasBaseUrl', () => {
+  it('accepts valid http and https URLs and trims trailing slashes', () => {
+    expect(parseCanvasBaseUrl('https://canvas.example.com///')).toBe('https://canvas.example.com');
+    expect(parseCanvasBaseUrl('http://local.canvas/')).toBe('http://local.canvas');
+  });
+
+  it('rejects empty values and URLs without an http protocol', () => {
+    expect(parseCanvasBaseUrl('   ')).toBeNull();
+    expect(parseCanvasBaseUrl('canvas.example.com')).toBeNull();
+    expect(parseCanvasBaseUrl('ftp://canvas.example.com')).toBeNull();
+  });
+});
 
 describe('createCanvasClient', () => {
   beforeEach(() => {

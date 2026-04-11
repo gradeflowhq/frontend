@@ -2,10 +2,10 @@ import { useQueryClient } from '@tanstack/react-query';
 import React, { useMemo } from 'react';
 
 import { api } from '@api';
-import { QK } from '@api/queryKeys';
+import { invalidateQuestionSetQueries } from '@api/queryInvalidation';
 import SchemaRequestModal from '@components/forms/SchemaRequestModal';
 import FileOrTextWidget from '@components/forms/widgets/FileOrTextWidget';
-import { buildAdapterImportUiSchema, buildRequestSchema, validateFileInputRequired } from '@lib/formSchemas';
+import { buildAdapterImportUiSchema, buildRequestSchema, validateFileInputRequired } from '@lib/importExportSchemas';
 
 import type { ImportQuestionSetRequest } from '@api/models';
 
@@ -26,9 +26,7 @@ const QuestionSetImportModal: React.FC<Props> = ({ open, assessmentId, onClose }
         (await api.importQuestionSetAssessmentsAssessmentIdQuestionSetImportPut(assessmentId, payload)).data
       }
       onSuccess={async () => {
-        await qc.invalidateQueries({ queryKey: QK.questionSet.item(assessmentId) });
-        await qc.invalidateQueries({ queryKey: QK.questionSet.parsed(assessmentId) });
-        await qc.invalidateQueries({ queryKey: QK.assessments.item(assessmentId) });
+        await invalidateQuestionSetQueries(qc, assessmentId);
       }}
       successMessage="Question set imported"
       errorMessage="Import failed"

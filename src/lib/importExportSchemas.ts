@@ -1,4 +1,4 @@
-import { fileAcceptForConfig, type HasFormatField } from '@lib/uploads';
+import { fileAcceptForConfig, type HasFormatField } from '@lib/fileFormats';
 import requestsSchema from '@schemas/requests.json';
 
 import type { JSONSchema7 } from 'json-schema';
@@ -14,10 +14,9 @@ export const buildRequestSchema = (key: string): Record<string, unknown> | null 
 };
 
 /**
- * Shared `buildUiSchema` callback for "Import" modals that use an `adapter`
- * field (rubric import, question-set import). Returns a uiSchema that hides
- * the `adapter.name`/`adapter.format` sub-fields and uses `FileOrTextWidget`
- * for the `data` field.
+ * Shared `buildUiSchema` callback for import modals that use an `adapter`
+ * field. Hides `adapter.name` and `adapter.format` and configures the `data`
+ * field to accept the right file formats.
  */
 export const buildAdapterImportUiSchema = (formData: unknown): Record<string, unknown> => {
   const accept = fileAcceptForConfig(
@@ -37,9 +36,9 @@ export const buildAdapterImportUiSchema = (formData: unknown): Record<string, un
 };
 
 /**
- * Shared `buildUiSchema` callback for "Upload" modals that use a `serializer`
- * field (rubric upload, question-set upload). Returns a uiSchema that hides
- * the `serializer.format` sub-field and uses `FileOrTextWidget` for `data`.
+ * Shared `buildUiSchema` callback for upload modals that use a `serializer`
+ * field. Hides `serializer.format` and configures `data` with the matching
+ * file accept string.
  */
 export const buildSerializerUploadUiSchema = (formData: unknown): Record<string, unknown> => {
   const accept = fileAcceptForConfig(

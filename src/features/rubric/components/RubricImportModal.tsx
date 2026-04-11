@@ -2,10 +2,10 @@ import { useQueryClient } from '@tanstack/react-query';
 import React, { useMemo } from 'react';
 
 import { api } from '@api';
-import { QK } from '@api/queryKeys';
+import { invalidateRubricQueries } from '@api/queryInvalidation';
 import SchemaRequestModal from '@components/forms/SchemaRequestModal';
 import FileOrTextWidget from '@components/forms/widgets/FileOrTextWidget';
-import { buildAdapterImportUiSchema, buildRequestSchema, validateFileInputRequired } from '@lib/formSchemas';
+import { buildAdapterImportUiSchema, buildRequestSchema, validateFileInputRequired } from '@lib/importExportSchemas';
 
 import type { ImportRubricRequest } from '@api/models';
 
@@ -26,9 +26,7 @@ const RubricImportModal: React.FC<Props> = ({ open, assessmentId, onClose }) => 
         (await api.importRubricAssessmentsAssessmentIdRubricImportPut(assessmentId, payload)).data
       }
       onSuccess={async () => {
-        await qc.invalidateQueries({ queryKey: QK.rubric.item(assessmentId) });
-        await qc.invalidateQueries({ queryKey: QK.rubric.coverage(assessmentId) });
-        await qc.invalidateQueries({ queryKey: QK.assessments.item(assessmentId) });
+        await invalidateRubricQueries(qc, assessmentId);
       }}
       successMessage="Rubric imported"
       errorMessage="Import failed"

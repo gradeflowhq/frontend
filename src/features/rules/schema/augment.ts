@@ -1,3 +1,5 @@
+import { friendlyRuleLabel } from './lookup';
+
 type JsonObject = Record<string, unknown>;
 
 function deepClone<T>(obj: T): T {
@@ -33,16 +35,6 @@ function extractRuleCompatibleTypes(ruleDef: JsonObject): string[] {
 }
 
 /**
- * Converts a PascalCase definition key into a user-friendly label.
- * E.g. "AssumptionSetQuestionRule" -> "Assumption Set"
- */
-function friendlyDefLabel(key: string): string {
-  const withoutSuffix = key.replace(/(QuestionRule|MultiQuestionRule|Rule)$/, '');
-  const spaced = withoutSuffix.replace(/([a-z0-9])([A-Z])/g, '$1 $2').trim();
-  return spaced || key;
-}
-
-/**
  * Adds a `title` field to every definition that is missing one.
  * This makes RJSF's oneOf selector show human-readable labels instead of
  * raw definition key names like "AssumptionSetQuestionRule".
@@ -54,7 +46,7 @@ export function augmentRulesSchemaWithTitles(rulesSchema: JsonObject): JsonObjec
     // Always override with a friendly label — the raw JSON schema titles are
     // just the definition key names (e.g. "TextMatchQuestionRule") which are
     // not user-facing. Overriding ensures RJSF oneOf selectors show readable names.
-    (def as Record<string, unknown>).title = friendlyDefLabel(key);
+    (def as Record<string, unknown>).title = friendlyRuleLabel(key);
   }
   return updated;
 }

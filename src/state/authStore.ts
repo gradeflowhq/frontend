@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 
+import { REFRESH_TOKEN_STORAGE_KEY } from '@lib/storageKeys';
+
 import type { TokenPairResponse } from '@api/models';
 
 type AuthState = {
@@ -11,10 +13,10 @@ type AuthState = {
 
 export const useAuthStore = create<AuthState>((set) => ({
   accessToken: null,
-  refreshToken: localStorage.getItem('refresh_token') || null,
+  refreshToken: localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY) || null,
   setTokens: (tokens) =>
     set(() => {
-      if (tokens?.refresh_token) localStorage.setItem('refresh_token', tokens.refresh_token);
+      if (tokens?.refresh_token) localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, tokens.refresh_token);
       return {
         accessToken: tokens?.access_token ?? null,
         refreshToken: tokens?.refresh_token ?? null,
@@ -22,7 +24,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     }),
   clearTokens: () =>
     set(() => {
-      localStorage.removeItem('refresh_token');
+      localStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY);
       return { accessToken: null, refreshToken: null };
     }),
 }));

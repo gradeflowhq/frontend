@@ -30,6 +30,7 @@ import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { useUrlSelectedId } from '@hooks/useUrlSelectedId';
 import { isEncrypted } from '@utils/crypto';
 import { getErrorMessage } from '@utils/error';
+import { notifyError, notifyErrorMessage, notifySuccess } from '@utils/notifications';
 import { natsort } from '@utils/sort';
 
 import type { AdjustableSubmission, QuestionSetOutputQuestionMap } from '@api/models';
@@ -186,7 +187,7 @@ const GroupViewPage: React.FC = () => {
       } catch (err) {
         if (!cancelled) {
           setSemanticState('idle');
-          notifications.show({ color: 'red', message: `Semantic grouping failed: ${getErrorMessage(err as Error)}` });
+          notifyErrorMessage(`Semantic grouping failed: ${getErrorMessage(err as Error)}`);
         }
       }
     };
@@ -261,10 +262,7 @@ const GroupViewPage: React.FC = () => {
           message: msg,
         });
       } catch (err) {
-        notifications.show({
-          color: 'red',
-          message: getErrorMessage(err),
-        });
+        notifyError(err);
       } finally {
         setBulkLoadingKey(null);
       }
@@ -294,7 +292,7 @@ const GroupViewPage: React.FC = () => {
             : `Removed adjustments for ${result.applied} students`,
         });
       } catch (err) {
-        notifications.show({ color: 'red', message: getErrorMessage(err) });
+        notifyError(err);
       } finally {
         setBulkLoadingKey(null);
       }
@@ -316,9 +314,9 @@ const GroupViewPage: React.FC = () => {
           adjusted_points: points,
           adjusted_feedback: feedback,
         });
-        notifications.show({ color: 'green', message: 'Adjustment saved' });
+        notifySuccess('Adjustment saved');
       } catch (err) {
-        notifications.show({ color: 'red', message: getErrorMessage(err) });
+        notifyError(err);
       } finally {
         setIndividualLoadingId(null);
       }

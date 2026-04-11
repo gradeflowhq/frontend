@@ -1,5 +1,4 @@
 import { Alert, Card, Title, Anchor, Text } from '@mantine/core';
-import { notifications } from '@mantine/notifications';
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -11,6 +10,7 @@ import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import othersSchema from '@schemas/others.json';
 import { useAuthStore } from '@state/authStore';
 import { getErrorMessage } from '@utils/error';
+import { notifySuccess } from '@utils/notifications';
 
 import type { BodyIssueTokenAuthTokenPost } from '@api/models';
 import type { JSONSchema7 } from 'json-schema';
@@ -61,7 +61,7 @@ const LoginPage: React.FC = () => {
             if (!formData) return;
             void mutateAsync(formData).then((tokenPair) => {
               setTokens(tokenPair);
-              notifications.show({ color: 'green', message: 'Login successful' });
+              notifySuccess('Login successful');
             });
           }}
           formProps={{ noHtml5Validate: true }}

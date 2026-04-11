@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useMemo } from 'react';
 
 import { api } from '@api';
-import { QK } from '@api/queryKeys';
+import { invalidateRubricQueries } from '@api/queryInvalidation';
 import rulesSchema from '@schemas/rules.json';
 
 import type { RubricOutput } from './types';
@@ -63,9 +63,7 @@ export const useValidateAndReplaceRubric = (assessmentId: string) => {
       });
     },
     onSuccess: async () => {
-      await qc.invalidateQueries({ queryKey: QK.rubric.item(assessmentId) });
-      await qc.invalidateQueries({ queryKey: QK.rubric.coverage(assessmentId) });
-      await qc.invalidateQueries({ queryKey: QK.assessments.item(assessmentId) });
+      await invalidateRubricQueries(qc, assessmentId);
     },
   });
 };
@@ -84,9 +82,7 @@ export const useReplaceRubric = (assessmentId: string) => {
       });
     },
     onSuccess: async () => {
-      await qc.invalidateQueries({ queryKey: QK.rubric.item(assessmentId) });
-      await qc.invalidateQueries({ queryKey: QK.rubric.coverage(assessmentId) });
-      await qc.invalidateQueries({ queryKey: QK.assessments.item(assessmentId) });
+      await invalidateRubricQueries(qc, assessmentId);
     },
   });
 };

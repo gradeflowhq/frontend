@@ -1,8 +1,8 @@
 import {
   Accordion, ActionIcon, Alert, Badge, Button, Checkbox, Divider, Group,
   Modal, NumberInput, Paper, Popover, Progress, Select, SimpleGrid, Stack, Text, Textarea, Tooltip,
+  useComputedColorScheme,
 } from '@mantine/core';
-import { notifications } from '@mantine/notifications';
 import { IconAlertCircle, IconChevronLeft, IconChevronRight, IconCircleCheck, IconDeviceFloppy, IconFilter, IconPencil, IconTrash } from '@tabler/icons-react';
 import { DataTable } from 'mantine-datatable';
 import React, { useMemo, useState } from 'react';
@@ -18,6 +18,7 @@ import { useGrading, useAdjustGrading } from '@features/grading/api';
 import { friendlyRuleLabel } from '@features/rules/schema';
 import { isEncrypted } from '@utils/crypto';
 import { getErrorMessage } from '@utils/error';
+import { notifyError, notifyErrorMessage, notifySuccess } from '@utils/notifications';
 import { natsort } from '@utils/sort';
 
 
@@ -32,6 +33,7 @@ type EditState = Record<string, { points?: number; feedback?: string }>;
 const SubmissionDetailInner: React.FC<{ assessmentId: string; encodedStudentId: string }> = ({ assessmentId, encodedStudentId }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const colorScheme = useComputedColorScheme('light');
 
   // Preserve the originating tab context (statistics vs students) for back/prev/next navigation
   const isFromStatistics = location.pathname.includes('/results/statistics/');
@@ -127,9 +129,9 @@ const SubmissionDetailInner: React.FC<{ assessmentId: string; encodedStudentId: 
         adjusted_feedback: e.feedback ?? null,
       });
       cancelEdit(qid);
-      notifications.show({ color: 'green', message: 'Adjustment saved' });
+      notifySuccess('Adjustment saved');
     } catch (err) {
-      notifications.show({ color: 'red', message: getErrorMessage(err) });
+      notifyError(err);
     }
   };
 
@@ -309,7 +311,7 @@ const SubmissionDetailInner: React.FC<{ assessmentId: string; encodedStudentId: 
           const adjustedExists =
             (res.adjusted_points !== undefined && res.adjusted_points !== null) ||
             (res.adjusted_feedback !== undefined && res.adjusted_feedback !== null);
-          return { background: adjustedExists ? 'light-dark(var(--mantine-color-yellow-0), var(--mantine-color-yellow-light))' : undefined };
+          return { background: adjustedExists ? (colorScheme === 'dark' ? 'var(--mantine-color-yellow-light)' : 'var(--mantine-color-yellow-0)') : undefined };
         }}
         columns={[
           {
@@ -505,9 +507,9 @@ const SubmissionDetailInner: React.FC<{ assessmentId: string; encodedStudentId: 
                 {
                   onSuccess: () => {
                     setRemoveAdjustQid(null);
-                    notifications.show({ color: 'green', message: 'Adjustment removed' });
+                    notifySuccess('Adjustment removed');
                   },
-                  onError: () => notifications.show({ color: 'red', message: 'Remove failed' }),
+                  onError: () => notifyErrorMessage('Remove failed'),
                 },
               );
             }}

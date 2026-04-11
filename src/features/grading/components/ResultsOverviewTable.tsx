@@ -1,4 +1,4 @@
-import { Badge, Group, Progress, Select, RangeSlider, Stack, Text, Tooltip } from '@mantine/core';
+import { Badge, Group, Progress, Select, RangeSlider, Stack, Text, Tooltip, useComputedColorScheme } from '@mantine/core';
 import { IconAdjustments } from '@tabler/icons-react';
 import { DataTable } from 'mantine-datatable';
 import React, { useMemo, useState } from 'react';
@@ -28,10 +28,10 @@ type RowT = AdjustableSubmission & {
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-const rowColour = (pct: number): string => {
-  if (pct < 40)  return 'light-dark(var(--mantine-color-red-0), var(--mantine-color-red-light))';
-  if (pct < 60)  return 'light-dark(var(--mantine-color-orange-0), var(--mantine-color-orange-light))';
-  if (pct >= 80) return 'light-dark(var(--mantine-color-green-0), var(--mantine-color-green-light))';
+const rowColour = (pct: number, isDark: boolean): string => {
+  if (pct < 40)  return isDark ? 'var(--mantine-color-red-light)' : 'var(--mantine-color-red-0)';
+  if (pct < 60)  return isDark ? 'var(--mantine-color-orange-light)' : 'var(--mantine-color-orange-0)';
+  if (pct >= 80) return isDark ? 'var(--mantine-color-green-light)' : 'var(--mantine-color-green-0)';
   return 'var(--mantine-color-body)';
 };
 
@@ -62,6 +62,7 @@ const ResultsOverviewTable: React.FC<Props> = ({
   searchQuery = '',
 }) => {
   const { passphrase, notifyEncryptedDetected } = useAssessmentPassphrase();
+  const colorScheme = useComputedColorScheme('light');
   const [sortStatus, setSortStatus] = useState<DataTableSortStatus<RowT>>({
     columnAccessor: '_totalPoints',
     direction: 'desc',
@@ -335,7 +336,7 @@ const ResultsOverviewTable: React.FC<Props> = ({
         onPageChange={setPage}
         sortStatus={sortStatus}
         onSortStatusChange={(s) => setSortStatus(s as DataTableSortStatus<RowT>)}
-        rowStyle={(row) => ({ background: rowColour(row._pct) })}
+        rowStyle={(row) => ({ background: rowColour(row._pct, colorScheme === 'dark') })}
         highlightOnHover
         pinFirstColumn
         pinLastColumn

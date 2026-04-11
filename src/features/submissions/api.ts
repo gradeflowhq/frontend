@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { api } from '@api';
+import { invalidateSubmissionQueries } from '@api/queryInvalidation';
 import { QK } from '@api/queryKeys';
 
 import type { SubmissionsImportConfig, SubmissionsResponse } from '@api/models';
@@ -25,11 +26,7 @@ export const useDeleteSubmissions = (assessmentId: string) => {
     mutationKey: ['submissions', assessmentId, 'delete'],
     mutationFn: async () => (await api.deleteSubmissionsAssessmentsAssessmentIdSubmissionsDelete(assessmentId)).data,
     onSuccess: async () => {
-      // Backend delete clears source data, config, and submissions together
-      await qc.invalidateQueries({ queryKey: QK.submissions.list(assessmentId) });
-      await qc.invalidateQueries({ queryKey: QK.submissions.source(assessmentId) });
-      await qc.invalidateQueries({ queryKey: QK.submissions.config(assessmentId) });
-      await qc.invalidateQueries({ queryKey: QK.assessments.item(assessmentId) });
+      await invalidateSubmissionQueries(qc, assessmentId);
     },
   });
 };
@@ -69,9 +66,7 @@ export const useSaveImportConfig = (assessmentId: string) => {
     mutationFn: async (config: SubmissionsImportConfig) =>
       (await api.saveImportConfigAssessmentsAssessmentIdSubmissionsConfigPut(assessmentId, config)).data,
     onSuccess: async () => {
-      await qc.invalidateQueries({ queryKey: QK.submissions.config(assessmentId) });
-      await qc.invalidateQueries({ queryKey: QK.submissions.list(assessmentId) });
-      await qc.invalidateQueries({ queryKey: QK.assessments.item(assessmentId) });
+      await invalidateSubmissionQueries(qc, assessmentId);
     },
   });
 };

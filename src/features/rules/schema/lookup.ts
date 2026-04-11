@@ -7,13 +7,37 @@ export const getRuleDefinitions = (): Record<string, JSONSchema7> => {
   return (defs ?? {}) as Record<string, JSONSchema7>;
 };
 
+const getSchemaStringValue = (schema: unknown): string | null => {
+  if (!schema || typeof schema !== 'object' || Array.isArray(schema)) return null;
+  const value =
+    (schema as { const?: unknown; default?: unknown }).const ??
+    (schema as { default?: unknown }).default;
+  return typeof value === 'string' ? value : null;
+};
+
+const ruleLabelLookup = (() => {
+  const lookup = new Map<string, string>();
+
+  for (const [key, def] of Object.entries(getRuleDefinitions())) {
+    const props = def?.properties as Record<string, unknown> | undefined;
+    const label = getSchemaStringValue(props?.name);
+    if (!label) continue;
+
+    lookup.set(key, label);
+
+    const type = getSchemaStringValue(props?.type);
+    if (type) {
+      lookup.set(type, label);
+    }
+  }
+
+  return lookup;
+})();
+
 export const friendlyRuleLabel = (key: unknown): string => {
   const raw = typeof key === 'string' ? key : key != null ? String(key) : '';
-  if (!raw) return 'Unknown rule';
-
-  const withoutSuffix = raw.replace(/(QuestionRule|MultiQuestionRule|Rule)$/, '');
-  const spaced = withoutSuffix.replace(/([a-z0-9])([A-Z])/g, '$1 $2').trim();
-  return spaced || raw;
+  if (!raw) return '';
+  return ruleLabelLookup.get(raw) ?? '';
 };
 
 export const prettifyKey = (s: string): string =>

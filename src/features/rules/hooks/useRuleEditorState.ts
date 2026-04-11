@@ -131,17 +131,19 @@ export const useRuleEditorState = ({
 
   // 7. Schema + uiSchema for <SchemaForm>
   const { schemaForRender, mergedUiSchema } = React.useMemo(() => {
+    const createHiddenFieldUi = () => ({
+      'ui:widget': 'hidden',
+      'ui:title': '',
+      'ui:options': { label: false, hidden: true },
+    });
+
     const baseUi: Record<string, unknown> = {
       'ui:title': '',
       'ui:options': { label: true },
       'ui:submitButtonOptions': { norender: true },
     };
     hiddenKeys.forEach((k) => {
-      baseUi[k] = {
-        'ui:widget': 'hidden',
-        'ui:title': '',
-        'ui:options': { label: false },
-      };
+      baseUi[k] = createHiddenFieldUi();
     });
     if (!baseSchema) {
       return { schemaForRender: null as JSONSchema7 | null, mergedUiSchema: baseUi };

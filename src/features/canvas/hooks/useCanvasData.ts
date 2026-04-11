@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 
 import { createCanvasClient, parseCanvasBaseUrl } from '@api/canvasClient';
 import { QK } from '@api/queryKeys';
+import { CACHE_STALE_TIME_CANVAS, CACHE_STALE_TIME_CANVAS_ASSIGNMENTS } from '@lib/constants';
 
 import type { CanvasAssignmentGroup, CanvasAssignmentSummary, CanvasUserSummary } from '@api/canvasClient';
 
@@ -10,13 +11,13 @@ export const useCanvasData = (canvasBaseUrl: string, canvasToken: string) => {
   const missingConfig = !parseCanvasBaseUrl(canvasBaseUrl) || !canvasToken;
 
   const coursesQuery = useQuery({
-    queryKey: QK.canvas.courses(canvasBaseUrl, canvasToken),
+    queryKey: QK.canvas.courses(canvasBaseUrl),
     enabled: !missingConfig,
     queryFn: async () => {
       const client = createCanvasClient({ canvasBaseUrl, token: canvasToken });
       return (await client.listAllCourses()) ?? [];
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: CACHE_STALE_TIME_CANVAS,
   });
 
   return {
@@ -37,7 +38,7 @@ export const useCourseData = (courseId: string, canvasBaseUrl: string, canvasTok
     assignments: CanvasAssignmentSummary[];
     roster: CanvasUserSummary[];
   }>({
-    queryKey: QK.canvas.courseData(courseId, canvasBaseUrl, canvasToken),
+    queryKey: QK.canvas.courseData(courseId, canvasBaseUrl),
     enabled: Boolean(courseId && !missingConfig),
     queryFn: async () => {
       const client = createCanvasClient({ canvasBaseUrl, token: canvasToken });
@@ -52,7 +53,7 @@ export const useCourseData = (courseId: string, canvasBaseUrl: string, canvasTok
         roster: users ?? [],
       };
     },
-    staleTime: 60 * 1000,
+    staleTime: CACHE_STALE_TIME_CANVAS_ASSIGNMENTS,
   });
 
   const assignmentGroups = courseDataQuery.data?.assignmentGroups ?? [];

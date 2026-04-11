@@ -1,5 +1,4 @@
 import { Accordion, Alert, Box, Button, Group, Stack, Text } from '@mantine/core';
-import { notifications } from '@mantine/notifications';
 import { IconCheck, IconSettings } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -30,6 +29,7 @@ import { CACHE_STALE_TIME_CANVAS } from '@lib/constants';
 import { useCanvasPushStore } from '@state/canvasStore';
 import { useUserSettingsStore } from '@state/userStore';
 import { getErrorMessage } from '@utils/error';
+import { notifyErrorMessage, notifySuccess } from '@utils/notifications';
 
 const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) => {
   const { passphrase, notifyEncryptedDetected } = useAssessmentPassphrase();
@@ -68,7 +68,7 @@ const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId 
   // Fetch Canvas current user for display in the connection step
   const parsedCanvasUrl = parseCanvasBaseUrl(canvasBaseUrl);
   const { data: canvasUser } = useQuery({
-    queryKey: QK.canvas.me(canvasBaseUrl, canvasToken),
+    queryKey: QK.canvas.me(canvasBaseUrl),
     queryFn: async () => {
       const client = createCanvasClient({ canvasBaseUrl: parsedCanvasUrl!, token: canvasToken });
       const res = await client.getCurrentUser();
@@ -124,10 +124,10 @@ const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId 
 
   useEffect(() => {
     if (pushState.status === 'error') {
-      notifications.show({ color: 'red', message: pushState.message || 'Canvas push failed' });
+      notifyErrorMessage(pushState.message || 'Canvas push failed');
     } else if (pushState.status === 'success' && !pushState.progressUrl) {
       // Canvas returned no progress URL — push completed synchronously
-      notifications.show({ color: 'green', message: pushState.message || 'Push complete' });
+      notifySuccess(pushState.message || 'Push complete');
     }
   }, [pushState]);
 

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 
 import { api } from '@api';
+import { invalidateRubricQueries } from '@api/queryInvalidation';
 import { QK } from '@api/queryKeys';
 
 import type { RubricResponse, CoverageResponse } from '@api/models';
@@ -39,9 +40,7 @@ export const useDeleteRubric = (assessmentId: string) => {
       await api.deleteRubricAssessmentsAssessmentIdRubricDelete(assessmentId);
     },
     onSuccess: async () => {
-      await qc.invalidateQueries({ queryKey: QK.rubric.item(assessmentId) });
-      await qc.invalidateQueries({ queryKey: QK.rubric.coverage(assessmentId) });
-      await qc.invalidateQueries({ queryKey: QK.assessments.item(assessmentId) });
+      await invalidateRubricQueries(qc, assessmentId);
     },
   });
 };

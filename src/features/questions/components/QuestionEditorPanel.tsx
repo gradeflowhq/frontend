@@ -8,6 +8,7 @@ import {
   Skeleton,
   Stack,
   Text,
+  useComputedColorScheme,
 } from '@mantine/core';
 import { IconPencil, IconTrash } from '@tabler/icons-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -82,6 +83,7 @@ const QuestionEditorPanel: React.FC<Props> = ({
   deleting,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
+  const colorScheme = useComputedColorScheme('light');
   // Initialise draft from the persisted definition.
   const [draft, setDraft] = useState<Partial<QuestionDef>>({ ...questionDef });
 
@@ -177,7 +179,7 @@ const QuestionEditorPanel: React.FC<Props> = ({
                     borderRadius: 'var(--mantine-radius-sm)',
                     border: '1px solid var(--mantine-color-red-3)',
                     backgroundColor:
-                      'light-dark(var(--mantine-color-red-0), var(--mantine-color-red-light))',
+                      colorScheme === 'dark' ? 'var(--mantine-color-red-light)' : 'var(--mantine-color-red-0)',
                   }}
                 >
                   <Text ff="monospace" size="xs" c="red">

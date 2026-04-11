@@ -94,7 +94,7 @@ export const useCancelGradingPreview = (assessmentId: string) => {
     mutationFn: async () =>
       api.cancelGradingPreviewJobAssessmentsAssessmentIdGradingPreviewJobDelete(assessmentId),
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: QK.grading.job(assessmentId) });
+      void qc.invalidateQueries({ queryKey: QK.grading.previewJob(assessmentId) });
     },
   });
 };

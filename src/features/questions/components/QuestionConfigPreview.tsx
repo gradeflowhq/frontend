@@ -19,7 +19,7 @@ const LabeledBlock: React.FC<{ label: string; children: React.ReactNode }> = ({ 
 );
 
 const PrimitiveView: React.FC<{ value: string | number | boolean | null }> = ({ value }) => (
-  <Text ff="monospace" size="xs" style={{ wordBreak: 'break-word' }} span>
+  <Text style={{ wordBreak: 'break-word' }} span>
     {value === null ? '\u2014' : String(value)}
   </Text>
 );
@@ -29,12 +29,12 @@ const ArrayView: React.FC<{
   renderNode: (v: JsonValue, path: string) => React.ReactNode;
   path: string;
 }> = ({ value, renderNode, path }) => {
-  if (value.length === 0) return <Text ff="monospace" size="xs" c="dimmed">[]</Text>;
+  if (value.length === 0) return <Text c="dimmed">[]</Text>;
   return (
     <List withPadding mb="xs" listStyleType='none'>
       {value.map((item, idx) => (
         <List.Item key={`${path}[${idx}]`}>
-          <Text ff="monospace" size="xs" c="dimmed" span>{idx + 1}. </Text>
+          <Text c="dimmed" span>{idx + 1}. </Text>
           {renderNode(item, `${path}[${idx}]`)}
         </List.Item>
       ))}
@@ -49,13 +49,13 @@ const CollapsibleConfigBox: React.FC<{
   title?: string;
 }> = ({ obj, path, renderNode, title = 'Configuration' }) => {
   const keys = Object.keys(obj ?? {}).filter((k) => !HIDE_KEYS.has(k));
-  if (keys.length === 0) return <Text size="xs" c="dimmed">{'{}'}</Text>;
+  if (keys.length === 0) return <Text c="dimmed">{'{}'}</Text>;
 
   return (
     <Accordion variant="contained">
       <Accordion.Item value="config">
         <Accordion.Control>
-          <Text size="xs" fw={500}>{title}</Text>
+          <Text fw={500}>{title}</Text>
         </Accordion.Control>
         <Accordion.Panel>
           {keys.map((k) => (
@@ -90,7 +90,7 @@ const renderNode = (value: JsonValue, path: string): React.ReactNode => {
       );
     }
     const keys = Object.keys(obj ?? {}).filter((k) => !HIDE_KEYS.has(k));
-    if (keys.length === 0) return <Text size="xs" c="dimmed">{'{}'}</Text>;
+    if (keys.length === 0) return <Text c="dimmed">{'{}'}</Text>;
     return (
       <>
         {keys.map((k) => (
@@ -102,9 +102,9 @@ const renderNode = (value: JsonValue, path: string): React.ReactNode => {
     );
   }
   try {
-    return <Text ff="monospace" size="xs" style={{ wordBreak: 'break-word' }} span>{JSON.stringify(value)}</Text>;
+    return <Text style={{ wordBreak: 'break-word' }} span>{JSON.stringify(value)}</Text>;
   } catch {
-    return <Text ff="monospace" size="xs" style={{ wordBreak: 'break-word' }} span>{String(value)}</Text>;
+    return <Text style={{ wordBreak: 'break-word' }} span>{String(value)}</Text>;
   }
 };
 
@@ -118,7 +118,7 @@ const QuestionConfigPreview: React.FC<{ value: JsonValue }> = ({ value }) => {
 
   const keys = Object.keys(value ?? {}).filter((k) => !HIDE_KEYS.has(k));
   if (keys.length === 0) {
-    return <Text size="xs" c="dimmed">{'{}'}</Text>;
+    return <Text c="dimmed">{'{}'}</Text>;
   }
 
   const obj = value as JsonObject;

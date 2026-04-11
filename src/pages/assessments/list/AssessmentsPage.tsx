@@ -17,7 +17,6 @@ import {
   Tooltip,
 } from '@mantine/core';
 import { useDebouncedValue } from '@mantine/hooks';
-import { notifications } from '@mantine/notifications';
 import {
   IconDots,
   IconGridDots,
@@ -48,6 +47,7 @@ const AssessmentFormModal = lazy(
 );
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { getErrorMessage } from '@utils/error';
+import { notifyError, notifySuccess } from '@utils/notifications';
 import { compareDateDesc } from '@utils/sort';
 
 import type { AssessmentResponse, AssessmentCreateRequest, AssessmentUpdateRequest } from '@api/models';
@@ -262,7 +262,7 @@ const AssessmentsPage: React.FC = () => {
           onSubmit={async (formData) => {
             const created = await createMutation.mutateAsync(formData as AssessmentCreateRequest);
             setShowCreate(false);
-            notifications.show({ color: 'green', message: 'Assessment created' });
+            notifySuccess('Assessment created');
             void navigate(PATHS.assessment(created.id).overview);
           }}
         />
@@ -281,9 +281,9 @@ const AssessmentsPage: React.FC = () => {
             await updateMutation.mutateAsync({ id: editItem.id, payload: formData as AssessmentUpdateRequest }, {
               onSuccess: () => {
                 setEditItem(null);
-                notifications.show({ color: 'green', message: 'Assessment updated' });
+                notifySuccess('Assessment updated');
               },
-              onError: (err) => notifications.show({ color: 'red', message: getErrorMessage(err) }),
+              onError: (err) => notifyError(err),
             });
           }}
         />
@@ -305,9 +305,9 @@ const AssessmentsPage: React.FC = () => {
               deleteMutation.mutate(deleteTarget.id, {
                 onSuccess: () => {
                   setDeleteTarget(null);
-                  notifications.show({ color: 'green', message: 'Assessment deleted' });
+                  notifySuccess('Assessment deleted');
                 },
-                onError: (err) => notifications.show({ color: 'red', message: getErrorMessage(err) }),
+                onError: (err) => notifyError(err),
               })
             }
           >

@@ -21,6 +21,18 @@ export const CACHE_STALE_TIME_JOB = 5_000;
 /** staleTime for Canvas push-progress queries. */
 export const CACHE_STALE_TIME_CANVAS = 5 * 60 * 1000;
 
+/** staleTime for assessment list/item queries. */
+export const CACHE_STALE_TIME_ASSESSMENTS = 2 * 60 * 1000;
+
+/** staleTime for auth/user queries. */
+export const CACHE_STALE_TIME_AUTH = 5 * 60 * 1000;
+
+/** staleTime for Canvas assignment-level queries. */
+export const CACHE_STALE_TIME_CANVAS_ASSIGNMENTS = 60 * 1000;
+
+/** staleTime for overview dashboard queries. */
+export const CACHE_STALE_TIME_OVERVIEW = 10_000;
+
 // ---------------------------------------------------------------------------
 // API configuration
 // ---------------------------------------------------------------------------

@@ -10,7 +10,6 @@ import {
   Text,
   Title,
 } from '@mantine/core';
-import { notifications } from '@mantine/notifications';
 import {
   IconBolt,
   IconFileImport,
@@ -58,6 +57,7 @@ import { useSubmissions } from '@features/submissions/api';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { useUrlSelectedId } from '@hooks/useUrlSelectedId';
 import { getErrorMessage } from '@utils/error';
+import { notifyError, notifyErrorMessage, notifySuccess } from '@utils/notifications';
 
 import type { QuestionSetInput, QuestionSetInputQuestionMap } from '@api/models';
 import type { QuestionDef } from '@features/questions/components/QuestionEditorPanel';
@@ -244,7 +244,7 @@ const QuestionsPage: React.FC = () => {
     }
 
     if (!isQuestionSetStale) {
-      notifications.show({ color: 'green', message: 'Question warning dismissed' });
+      notifySuccess('Question warning dismissed');
       return;
     }
 
@@ -255,13 +255,13 @@ const QuestionsPage: React.FC = () => {
       question_map: baseQuestionMap as QuestionSetInput['question_map'],
     }, {
       onSuccess: () => {
-        notifications.show({ color: 'green', message: 'Question warning dismissed' });
+        notifySuccess('Question warning dismissed');
       },
       onError: () => {
         if (hasOutOfSyncQuestions) {
           setDismissedQuestionSyncSignature(null);
         }
-        notifications.show({ color: 'red', message: 'Could not dismiss warning' });
+        notifyErrorMessage('Could not dismiss warning');
       },
       onSettled: () => setStatusAction(null),
     });
@@ -313,13 +313,10 @@ const QuestionsPage: React.FC = () => {
         );
       }
 
-      notifications.show({
-        color: 'green',
-        message: changes.join('; ') || 'Questions synchronized',
-      });
+      notifySuccess(changes.join('; ') || 'Questions synchronized');
       setDismissedQuestionSyncSignature(null);
     } catch (err) {
-      notifications.show({ color: 'red', message: getErrorMessage(err) });
+      notifyError(err);
     } finally {
       setIsSynchronizingQuestions(false);
       setStatusAction(null);
@@ -399,8 +396,8 @@ const QuestionsPage: React.FC = () => {
     updateMutation.mutate(
       { question_map: {} as QuestionSetInput['question_map'] },
       {
-        onSuccess: () => notifications.show({ color: 'green', message: 'Empty question set created' }),
-        onError: () => notifications.show({ color: 'red', message: 'Could not create question set' }),
+        onSuccess: () => notifySuccess('Empty question set created'),
+        onError: () => notifyErrorMessage('Could not create question set'),
       },
     );
   }, [updateMutation]);
@@ -416,8 +413,8 @@ const QuestionsPage: React.FC = () => {
         } as QuestionSetInput['question_map'],
       };
       await updateMutation.mutateAsync(next, {
-        onSuccess: () => notifications.show({ color: 'green', message: 'Question saved' }),
-        onError: (err) => notifications.show({ color: 'red', message: getErrorMessage(err) }),
+        onSuccess: () => notifySuccess('Question saved'),
+        onError: (err) => notifyError(err),
       });
     },
     [selectedQid, questionMap, updateMutation],
@@ -435,12 +432,12 @@ const QuestionsPage: React.FC = () => {
       };
       updateMutation.mutate(next, {
         onSuccess: () => {
-          notifications.show({ color: 'green', message: `Question "${qid}" added` });
+          notifySuccess(`Question "${qid}" added`);
           setPendingAddedQuestion({ qid, def: newQuestionDef });
           handleCloseAddQuestion();
           setSelectedQid(qid);
         },
-        onError: (err) => notifications.show({ color: 'red', message: getErrorMessage(err) }),
+        onError: (err) => notifyError(err),
       });
     },
     [handleCloseAddQuestion, questionMap, updateMutation, setSelectedQid],
@@ -456,13 +453,13 @@ const QuestionsPage: React.FC = () => {
       };
       updateMutation.mutate(next, {
         onSuccess: () => {
-          notifications.show({ color: 'green', message: `Question "${qid}" deleted` });
+          notifySuccess(`Question "${qid}" deleted`);
           setConfirmDeleteQid(null);
           // Move selection to first remaining question
           const remaining = questionIds.filter((id) => id !== qid);
           setSelectedQid(remaining[0] ?? null);
         },
-        onError: (err) => notifications.show({ color: 'red', message: getErrorMessage(err) }),
+        onError: (err) => notifyError(err),
       });
     },
     [questionMap, questionIds, updateMutation, setSelectedQid],
@@ -729,10 +726,9 @@ const QuestionsPage: React.FC = () => {
                 deleteMutation.mutate(undefined, {
                   onSuccess: () => {
                     setConfirmDeleteQs(false);
-                    notifications.show({ color: 'green', message: 'Question set deleted' });
+                    notifySuccess('Question set deleted');
                   },
-                  onError: () =>
-                    notifications.show({ color: 'red', message: 'Delete failed' }),
+                  onError: () => notifyErrorMessage('Delete failed'),
                 })
               }
             >
@@ -823,20 +819,24 @@ const QuestionsPage: React.FC = () => {
           </Group>
         </Modal>
 
-        <Suspense fallback={null}>
-          <QuestionSetUploadModal
-            open={openQsUpload}
-            assessmentId={safeAssessmentId}
-            onClose={() => setOpenQsUpload(false)}
-          />
-        </Suspense>
-        <Suspense fallback={null}>
-          <QuestionSetImportModal
-            open={openQsImport}
-            assessmentId={safeAssessmentId}
-            onClose={() => setOpenQsImport(false)}
-          />
-        </Suspense>
+        {openQsUpload && (
+          <Suspense fallback={null}>
+            <QuestionSetUploadModal
+              open={openQsUpload}
+              assessmentId={safeAssessmentId}
+              onClose={() => setOpenQsUpload(false)}
+            />
+          </Suspense>
+        )}
+        {openQsImport && (
+          <Suspense fallback={null}>
+            <QuestionSetImportModal
+              open={openQsImport}
+              assessmentId={safeAssessmentId}
+              onClose={() => setOpenQsImport(false)}
+            />
+          </Suspense>
+        )}
       </Stack>
     </PageShell>
   );
@@ -865,9 +865,9 @@ const InferModal: React.FC<InferModalProps> = ({ opened, onClose, inferMutation 
           inferMutation.mutate(undefined, {
             onSuccess: () => {
               onClose();
-              notifications.show({ color: 'green', message: 'Questions inferred from submissions' });
+              notifySuccess('Questions inferred from submissions');
             },
-            onError: () => notifications.show({ color: 'red', message: 'Inference failed' }),
+            onError: () => notifyErrorMessage('Inference failed'),
           })
         }
       >

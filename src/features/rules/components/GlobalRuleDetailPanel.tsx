@@ -12,12 +12,14 @@ import { IconPencil, IconTrash } from '@tabler/icons-react';
 import React, { useMemo, useState } from 'react';
 
 import { useValidateAndReplaceRubric } from '@features/rules/api';
+import { getRuleDescriptionText } from '@features/rules/helpers';
 import { useRuleEditorState } from '@features/rules/hooks/useRuleEditorState';
-import { friendlyRuleLabel, getRuleTargetQids } from '@features/rules/schema';
+import { getRuleTargetQids } from '@features/rules/schema';
 
 import InlineRulePreview from './InlineRulePreview';
+import RuleConfigAccordion from './RuleConfigAccordion';
+import RuleDescriptionBlock from './RuleDescriptionBlock';
 import RuleEditorForm from './RuleEditorForm';
-import RuleRenderer from './RuleRenderer';
 
 import type { QuestionSetOutputQuestionMap } from '@api/models';
 import type { RuleValue } from '@features/rules/types';
@@ -63,7 +65,8 @@ const GlobalRuleDetailPanel: React.FC<Props> = ({
   const [saveError, setSaveError] = useState<unknown>(null);
 
   const ruleType = String((rule as { type?: unknown }).type ?? '');
-  const ruleLabel = friendlyRuleLabel(ruleType);
+  const ruleLabel = rule.name;
+  const ruleDescription = useMemo(() => getRuleDescriptionText(rule), [rule]);
 
   const coveredQids = useMemo(() => getRuleTargetQids(rule), [rule]);
 
@@ -156,6 +159,8 @@ const GlobalRuleDetailPanel: React.FC<Props> = ({
 
       {/* ── Rule body / editor ── */}
       <Stack gap="xs">
+        {!isEditing && ruleDescription && <RuleDescriptionBlock description={ruleDescription} />}
+
         {isEditing ? (
           <RuleEditorForm
             formKey={`global-rule:${isPendingNew ? 'new' : ruleIndex}:${ruleType}`}
@@ -173,7 +178,7 @@ const GlobalRuleDetailPanel: React.FC<Props> = ({
             error={displayError}
           />
         ) : (
-          <RuleRenderer value={rule} hideRootType flatRoot />
+          <RuleConfigAccordion value={rule} />
         )}
 
         <InlineRulePreview rule={previewRule} assessmentId={assessmentId} />

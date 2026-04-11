@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { api } from '@api';
 import { QK } from '@api/queryKeys';
+import { CACHE_STALE_TIME_ASSESSMENTS } from '@lib/constants';
 
 import type {
   AssessmentsListResponse,
@@ -17,7 +18,7 @@ export const useAssessmentsList = () =>
   useQuery({
     queryKey: QK.assessments.list,
     queryFn: async () => (await api.listAssessmentsAssessmentsGet()).data as AssessmentsListResponse,
-    staleTime: 2 * 60 * 1000,
+    staleTime: CACHE_STALE_TIME_ASSESSMENTS,
   });
 
 export const useAssessment = (id: string, enabled = true, options?: { staleTime?: number }) =>

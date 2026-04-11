@@ -6,6 +6,7 @@ import { QK } from '@api/queryKeys';
 import { parseCsvGrades } from '@features/canvas/helpers';
 import { useDecryptedIds } from '@features/encryption/useDecryptedIds';
 import { tryDecodeExportCsv } from '@features/submissions/helpers';
+import { CACHE_STALE_TIME_CANVAS_ASSIGNMENTS } from '@lib/constants';
 import { isEncrypted } from '@utils/crypto';
 
 import type { GradingDownloadRequest, GradingDownloadResponse } from '@api/models';
@@ -36,7 +37,7 @@ export const useCsvGrades = (assessmentId: string, roundingBase: number, passphr
       if (raw instanceof Uint8Array) return new TextDecoder().decode(raw);
       return typeof raw === 'string' ? raw : String(raw ?? '');
     },
-    staleTime: 60 * 1000,
+    staleTime: CACHE_STALE_TIME_CANVAS_ASSIGNMENTS,
   });
 
   const [decodedCsv, setDecodedCsv] = useState('');

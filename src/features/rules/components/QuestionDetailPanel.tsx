@@ -21,12 +21,14 @@ import {
   useRuleDefinitions,
   useValidateAndReplaceRubric,
 } from '@features/rules/api';
+import { getRuleDescriptionText } from '@features/rules/helpers';
 import { findSchemaKeyByType, friendlyRuleLabel } from '@features/rules/schema';
 import { getErrorMessage } from '@utils/error';
 
 import InlineRuleEditor from './InlineRuleEditor';
 import InlineRulePreview from './InlineRulePreview';
-import RuleRenderer from './RuleRenderer';
+import RuleConfigAccordion from './RuleConfigAccordion';
+import RuleDescriptionBlock from './RuleDescriptionBlock';
 
 import type { RuleValue } from '../types';
 import type { QuestionSetOutputQuestionMap } from '@api/models';
@@ -100,12 +102,7 @@ const QuestionDetailPanel: React.FC<Props> = ({
   }, [defs, singleTargetRuleKeys, questionType]);
 
   // Label for the covering global rule
-  const coveringRuleLabel = useMemo((): string => {
-    if (!coveringRule) return 'a global rule';
-    const ruleType = String((coveringRule as { type?: unknown }).type ?? '');
-    const schemaKey = findSchemaKeyByType(defs, ruleType, false);
-    return friendlyRuleLabel(schemaKey ?? ruleType);
-  }, [coveringRule, defs]);
+  const coveringRuleLabel = coveringRule?.name ?? 'a global rule';
 
   // Question description from question map
   const questionDef = questionMap[qid] as { description?: string | null } | undefined;
@@ -115,20 +112,11 @@ const QuestionDetailPanel: React.FC<Props> = ({
   const isEditing = editState !== null;
 
   // Rule type badge label — view mode uses existing rule, edit/add mode uses selected key
-  const existingRuleType = useMemo((): string | null => {
-    if (!existingRule) return null;
-    const ruleType = String((existingRule as { type?: unknown }).type ?? '');
-    const schemaKey = findSchemaKeyByType(defs, ruleType, true);
-    return friendlyRuleLabel(schemaKey ?? ruleType) || null;
-  }, [existingRule, defs]);
-
-  const editingRuleType = useMemo((): string | null => {
-    if (!editState) return null;
-    if (editState.ruleKey) return friendlyRuleLabel(editState.ruleKey);
-    return null;
-  }, [editState]);
-
-  const displayRuleType = editState ? editingRuleType : existingRuleType;
+  const displayRuleType = editState?.ruleKey
+    ? friendlyRuleLabel(editState.ruleKey)
+    : existingRule?.name ?? null;
+  const coveringRuleDescription = getRuleDescriptionText(coveringRule);
+  const existingRuleDescription = getRuleDescriptionText(existingRule);
 
   // Notify parent when edit mode changes (used by parent to guard navigation)
   React.useEffect(() => {
@@ -280,6 +268,14 @@ const QuestionDetailPanel: React.FC<Props> = ({
 
       {/* ── Rule section ── */}
       <Stack gap="xs">
+        {coveredByGlobal && coveringRuleDescription && (
+          <RuleDescriptionBlock description={coveringRuleDescription} />
+        )}
+
+        {!coveredByGlobal && !isEditing && existingRuleDescription && (
+          <RuleDescriptionBlock description={existingRuleDescription} />
+        )}
+
         {coveredByGlobal ? (
           <Alert
             variant="light"
@@ -314,7 +310,7 @@ const QuestionDetailPanel: React.FC<Props> = ({
             onDraftChange={setLiveDraft}
           />
         ) : existingRule ? (
-          <RuleRenderer value={existingRule} contextQuestionId={qid} hideRootType flatRoot />
+          <RuleConfigAccordion value={existingRule} contextQuestionId={qid} />
         ) : (
           <Text size="sm" c="dimmed">
             No rule for this question yet.

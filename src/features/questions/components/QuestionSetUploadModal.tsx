@@ -2,10 +2,10 @@ import { useQueryClient } from '@tanstack/react-query';
 import React, { useMemo } from 'react';
 
 import { api } from '@api';
-import { QK } from '@api/queryKeys';
+import { invalidateQuestionSetQueries } from '@api/queryInvalidation';
 import SchemaRequestModal from '@components/forms/SchemaRequestModal';
 import FileOrTextWidget from '@components/forms/widgets/FileOrTextWidget';
-import { buildRequestSchema, buildSerializerUploadUiSchema } from '@lib/formSchemas';
+import { buildRequestSchema, buildSerializerUploadUiSchema } from '@lib/importExportSchemas';
 
 import type { LoadQuestionSetRequest } from '@api/models';
 
@@ -32,9 +32,7 @@ const QuestionSetUploadModal: React.FC<Props> = ({ open, assessmentId, onClose }
       successMessage="Question set uploaded"
       errorMessage="Upload failed"
       onSuccess={async () => {
-        await qc.invalidateQueries({ queryKey: QK.questionSet.item(assessmentId) });
-        await qc.invalidateQueries({ queryKey: QK.questionSet.parsed(assessmentId) });
-        await qc.invalidateQueries({ queryKey: QK.assessments.item(assessmentId) });
+        await invalidateQuestionSetQueries(qc, assessmentId);
       }}
       initialValues={() => ({ data: '', serializer: { format: 'yaml' } } as LoadQuestionSetRequest)}
       buildUiSchema={buildSerializerUploadUiSchema}

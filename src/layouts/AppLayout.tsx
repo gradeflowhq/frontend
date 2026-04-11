@@ -4,6 +4,7 @@ import { Outlet } from 'react-router-dom';
 
 import ErrorBoundary from '@components/common/ErrorBoundary';
 import { SIDEBAR_EXPANDED_WIDTH, SIDEBAR_COLLAPSED_WIDTH } from '@lib/constants';
+import { SIDEBAR_PINNED_STORAGE_KEY } from '@lib/storageKeys';
 
 import { SidebarNav } from './SidebarNav';
 
@@ -82,7 +83,7 @@ const AppLayout: React.FC = () => {
   const [mobileOpened, setMobileOpened] = useState(false);
   const [expanded, setExpanded] = useState<boolean>(() => {
     try {
-      const stored = localStorage.getItem('sidebar_pinned');
+      const stored = localStorage.getItem(SIDEBAR_PINNED_STORAGE_KEY);
       return stored === null ? true : stored === 'true';
     } catch {
       return true;
@@ -92,7 +93,7 @@ const AppLayout: React.FC = () => {
     const next = !expanded;
     setExpanded(next);
     try {
-      localStorage.setItem('sidebar_pinned', String(next));
+      localStorage.setItem(SIDEBAR_PINNED_STORAGE_KEY, String(next));
     } catch {
       /* ignore */
     }

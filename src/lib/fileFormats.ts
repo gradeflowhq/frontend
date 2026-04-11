@@ -1,15 +1,13 @@
 /**
- * Generic helpers to compute a browser file input "accept" string from a format.
- * - Strongly typed: accepts any object with an optional "format" field.
- * - Not tied to "serializer" naming; usable for adapters/serializers/etc.
- * - Mapping is data-driven and overridable; no feature-specific hardcoding.
+ * Helpers for deriving browser file input `accept` strings from serializer or
+ * adapter formats.
  */
 
 export type FileFormat = string;
 
 /**
  * Mapping from file format (lowercased) to the accept string.
- * You can extend/override this map at call sites.
+ * Call sites can extend or override this map when needed.
  */
 type AcceptMap = Record<FileFormat, string>;
 
@@ -28,9 +26,6 @@ const DEFAULT_FALLBACK_ACCEPT =
 
 /**
  * Compute accept string from a raw format value (e.g., 'csv', 'yaml').
- * - format is normalized (trim/lowercase)
- * - map is customizable and defaults to DEFAULT_ACCEPT_MAP
- * - fallback is customizable and defaults to DEFAULT_FALLBACK_ACCEPT
  */
 const fileAcceptForFormat = (
   format: unknown,
@@ -42,16 +37,14 @@ const fileAcceptForFormat = (
 };
 
 /**
- * Generic shape for any config that may carry a "format" field.
- * Use this to strongly type your callers (e.g., serializers/adapters).
+ * Generic shape for any config object that may carry a `format` field.
  */
 export interface HasFormatField<F extends FileFormat = FileFormat> {
   format?: F | null;
 }
 
 /**
- * Compute accept string from any config object with an optional "format" field.
- * Keeps the same override points as fileAcceptForFormat.
+ * Compute accept string from any config object with an optional `format` field.
  */
 export const fileAcceptForConfig = <
   T extends HasFormatField = HasFormatField

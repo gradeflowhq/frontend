@@ -14,7 +14,7 @@ import {
   IconX,
 } from '@tabler/icons-react';
 import { useQueryClient } from '@tanstack/react-query';
-import React, { lazy, Suspense, useEffect, useState } from 'react';
+import React, { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { QK } from '@api/queryKeys';
@@ -31,6 +31,7 @@ const RunGradingModal = lazy(
 );
 import { useGradingStatus } from '@features/grading/hooks/useGradingStatus';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
+import { CACHE_STALE_TIME_OVERVIEW } from '@lib/constants';
 import { getErrorMessage } from '@utils/error';
 
 import type { AdjustableSubmission } from '@api/models';
@@ -46,7 +47,7 @@ const OverviewPage: React.FC = () => {
   useDocumentTitle(`Overview - ${assessmentCtx?.name ?? 'Assessment'} - GradeFlow`);
 
   const { data: assessmentData } = useAssessment(assessmentId, !!assessmentId, {
-    staleTime: 10_000,
+    staleTime: CACHE_STALE_TIME_OVERVIEW,
   });
   const assessment = assessmentData ?? assessmentCtx;
 
@@ -68,17 +69,24 @@ const OverviewPage: React.FC = () => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [awaitingNav, setAwaitingNav] = useState(false);
 
-  const submissions = (gradingData?.submissions ?? []) as AdjustableSubmission[];
+  const submissions = useMemo(
+    () => (gradingData?.submissions ?? []) as AdjustableSubmission[],
+    [gradingData?.submissions],
+  );
   const hasGrading = submissions.length > 0;
   const hasGradingJob = jobStatus !== undefined;
 
   // Detect whether any manual adjustments exist across all submissions
-  const hasExistingAdjustments = submissions.some((s) =>
-    Object.values(s.result_map ?? {}).some(
-      (r) =>
-        (r.adjusted_points !== null && r.adjusted_points !== undefined) ||
-        (r.adjusted_feedback !== null && r.adjusted_feedback !== undefined),
-    ),
+  const hasExistingAdjustments = useMemo(
+    () =>
+      submissions.some((s) =>
+        Object.values(s.result_map ?? {}).some(
+          (r) =>
+            (r.adjusted_points !== null && r.adjusted_points !== undefined) ||
+            (r.adjusted_feedback !== null && r.adjusted_feedback !== undefined),
+        ),
+      ),
+    [submissions],
   );
 
   // ── Build warnings list ───────────────────────────────────────────────────
@@ -261,16 +269,18 @@ const OverviewPage: React.FC = () => {
           gradingData={gradingData}
         />
 
-        <Suspense fallback={null}>
-          <RunGradingModal
-            opened={confirmOpen}
-            onClose={() => setConfirmOpen(false)}
-            onConfirm={handleConfirm}
-            warnings={warnings}
-            isLoading={runGradingMutation.isPending}
-            hasExistingAdjustments={hasExistingAdjustments}
-          />
-        </Suspense>
+        {confirmOpen && (
+          <Suspense fallback={null}>
+            <RunGradingModal
+              opened={confirmOpen}
+              onClose={() => setConfirmOpen(false)}
+              onConfirm={handleConfirm}
+              warnings={warnings}
+              isLoading={runGradingMutation.isPending}
+              hasExistingAdjustments={hasExistingAdjustments}
+            />
+          </Suspense>
+        )}
 
       </Stack>
     </PageShell>

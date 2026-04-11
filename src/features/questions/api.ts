@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { api } from '@api';
+import { invalidateQuestionSetQueries } from '@api/queryInvalidation';
 import { QK } from '@api/queryKeys';
 
 import type { QuestionSetResponse, ParseSubmissionsResponse, QuestionSetInput, SetQuestionSetByModelRequest } from '@api/models';
@@ -52,9 +53,7 @@ export const useUpdateQuestionSet = (assessmentId: string) => {
         },
       );
 
-      await qc.invalidateQueries({ queryKey: QK.questionSet.item(assessmentId) });
-      await qc.invalidateQueries({ queryKey: QK.questionSet.parsed(assessmentId) });
-      await qc.invalidateQueries({ queryKey: QK.assessments.item(assessmentId) });
+      await invalidateQuestionSetQueries(qc, assessmentId);
     },
   });
 };
@@ -67,10 +66,8 @@ export const useDeleteQuestionSet = (assessmentId: string) => {
       await api.deleteQuestionSetAssessmentsAssessmentIdQuestionSetDelete(assessmentId);
     },
     onSuccess: async () => {
-      await qc.invalidateQueries({ queryKey: QK.questionSet.item(assessmentId) });
-      await qc.invalidateQueries({ queryKey: QK.questionSet.parsed(assessmentId) });
+      await invalidateQuestionSetQueries(qc, assessmentId);
       await qc.invalidateQueries({ queryKey: QK.rubric.coverage(assessmentId) });
-      await qc.invalidateQueries({ queryKey: QK.assessments.item(assessmentId) });
     },
   });
 };
@@ -91,9 +88,7 @@ export const useInferAndParseQuestionSet = (assessmentId: string) => {
       });
     },
     onSuccess: async () => {
-      await qc.invalidateQueries({ queryKey: QK.questionSet.item(assessmentId) });
-      await qc.invalidateQueries({ queryKey: QK.questionSet.parsed(assessmentId) });
-      await qc.invalidateQueries({ queryKey: QK.assessments.item(assessmentId) });
+      await invalidateQuestionSetQueries(qc, assessmentId);
     },
   });
 };

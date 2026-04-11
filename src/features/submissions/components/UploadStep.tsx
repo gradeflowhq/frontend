@@ -10,7 +10,7 @@ import Papa from 'papaparse';
 import React, { useState, useCallback, useMemo } from 'react';
 
 import { api } from '@api';
-import { QK } from '@api/queryKeys';
+import { invalidateSubmissionQueries } from '@api/queryInvalidation';
 import { buildSourceCsv } from '@features/submissions/helpers';
 import { arraysEqual } from '@features/submissions/questionColumnInference';
 import { getErrorMessage } from '@utils/error';
@@ -200,9 +200,7 @@ export const UploadStep: React.FC<{
         student_id_column: studentIdColumn,
       })).data,
     onSuccess: async () => {
-      await qc.invalidateQueries({ queryKey: QK.submissions.source(assessmentId) });
-      await qc.invalidateQueries({ queryKey: QK.submissions.list(assessmentId) });
-      await qc.invalidateQueries({ queryKey: QK.assessments.item(assessmentId) });
+      await invalidateSubmissionQueries(qc, assessmentId);
       onNext();
     },
   });

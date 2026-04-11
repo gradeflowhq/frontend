@@ -2,10 +2,10 @@ import { useQueryClient } from '@tanstack/react-query';
 import React, { useMemo } from 'react';
 
 import { api } from '@api';
-import { QK } from '@api/queryKeys';
+import { invalidateRubricQueries } from '@api/queryInvalidation';
 import SchemaRequestModal from '@components/forms/SchemaRequestModal';
 import FileOrTextWidget from '@components/forms/widgets/FileOrTextWidget';
-import { buildRequestSchema, buildSerializerUploadUiSchema } from '@lib/formSchemas';
+import { buildRequestSchema, buildSerializerUploadUiSchema } from '@lib/importExportSchemas';
 
 import type { LoadRubricRequest } from '@api/models';
 
@@ -32,9 +32,7 @@ const RubricUploadModal: React.FC<Props> = ({ open, assessmentId, onClose }) => 
       successMessage="Rubric uploaded"
       errorMessage="Upload failed"
       onSuccess={async () => {
-        await qc.invalidateQueries({ queryKey: QK.rubric.item(assessmentId) });
-        await qc.invalidateQueries({ queryKey: QK.rubric.coverage(assessmentId) });
-        await qc.invalidateQueries({ queryKey: QK.assessments.item(assessmentId) });
+        await invalidateRubricQueries(qc, assessmentId);
       }}
       initialValues={() => ({ data: '', serializer: { format: 'yaml' } } as LoadRubricRequest)}
       buildUiSchema={buildSerializerUploadUiSchema}

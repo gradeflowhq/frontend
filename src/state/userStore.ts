@@ -1,5 +1,10 @@
 import { create } from 'zustand';
 
+import {
+  CANVAS_BASE_URL_STORAGE_KEY,
+  CANVAS_TOKEN_STORAGE_KEY,
+} from '@lib/storageKeys';
+
 export type UserSettingsState = {
   canvasBaseUrl: string;
   canvasToken: string;
@@ -11,22 +16,22 @@ export type UserSettingsState = {
 const persist = (key: string, value: string) => localStorage.setItem(key, value);
 
 export const useUserSettingsStore = create<UserSettingsState>((set) => ({
-  canvasBaseUrl: localStorage.getItem('canvas_base_url') ?? '',
-  canvasToken: localStorage.getItem('canvas_token') ?? '',
+  canvasBaseUrl: localStorage.getItem(CANVAS_BASE_URL_STORAGE_KEY) ?? '',
+  canvasToken: localStorage.getItem(CANVAS_TOKEN_STORAGE_KEY) ?? '',
   setCanvasBaseUrl: (canvasBaseUrl) =>
     set(() => {
-      persist('canvas_base_url', canvasBaseUrl);
+      persist(CANVAS_BASE_URL_STORAGE_KEY, canvasBaseUrl);
       return { canvasBaseUrl };
     }),
   setCanvasToken: (canvasToken) =>
     set(() => {
-      persist('canvas_token', canvasToken);
+      persist(CANVAS_TOKEN_STORAGE_KEY, canvasToken);
       return { canvasToken };
     }),
   resetCanvas: () =>
     set(() => {
-      localStorage.removeItem('canvas_base_url');
-      localStorage.removeItem('canvas_token');
+      localStorage.removeItem(CANVAS_BASE_URL_STORAGE_KEY);
+      localStorage.removeItem(CANVAS_TOKEN_STORAGE_KEY);
       return { canvasBaseUrl: '', canvasToken: '' };
     }),
 }));

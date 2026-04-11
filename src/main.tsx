@@ -13,6 +13,7 @@ import './api/axiosSetup';
 import App from './app/App';
 import './index.css';
 import AuthBootstrap from './app/bootstrap/AuthBootstrap';
+import { COLOR_SCHEME_STORAGE_KEY } from './lib/storageKeys';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -22,7 +23,7 @@ const queryClient = new QueryClient({
 });
 
 const theme = createTheme({});
-const colorSchemeManager = localStorageColorSchemeManager({ key: 'gradeflow-color-scheme' });
+const colorSchemeManager = localStorageColorSchemeManager({ key: COLOR_SCHEME_STORAGE_KEY });
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

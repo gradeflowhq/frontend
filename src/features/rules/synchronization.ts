@@ -1,4 +1,4 @@
-import { getRuleTargetQids, prettifyKey } from '@features/rules/schema';
+import { getRuleTargetQids } from '@features/rules/schema';
 import { natsort } from '@utils/sort';
 
 import type { RuleValue } from './types';
@@ -11,10 +11,7 @@ export interface InvalidRuleReference {
   summary: string;
 }
 
-const getRuleLabel = (rule: RuleValue): string => {
-  const rawType = String((rule as { type?: unknown }).type ?? 'unknown_rule');
-  return prettifyKey(rawType.toLowerCase());
-};
+const getRuleLabel = (rule: RuleValue): string => rule.name;
 
 export const getInvalidRuleReferences = (
   rules: readonly RuleValue[],

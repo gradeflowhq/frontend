@@ -10,7 +10,7 @@ import { getErrorMessage } from '@utils/error';
 import type { RuleValue } from '../types';
 import type { JSONSchema7 } from 'json-schema';
 
-export interface RuleEditorFormProps {
+interface RuleEditorFormProps {
   /** Unique key — forces SchemaForm remount when rule/question changes. */
   formKey: string;
   schemaForRender: JSONSchema7 | null;

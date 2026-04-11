@@ -13,6 +13,7 @@ import {
   Text,
   Textarea,
   Tooltip,
+  useComputedColorScheme,
 } from '@mantine/core';
 import { IconEraser, IconGitMerge } from '@tabler/icons-react';
 import { DataTable } from 'mantine-datatable';
@@ -64,7 +65,8 @@ const AnswerGroupList: React.FC<AnswerGroupListProps> = ({
   const [groupPages, setGroupPages] = useState<Record<string, number>>({});
   // Confirm modal for bulk remove
   const [confirmRemoveGroup, setConfirmRemoveGroup] = useState<AnswerGroup | null>(null);
-  const adjustmentRowBackground = 'light-dark(var(--mantine-color-yellow-0), var(--mantine-color-yellow-light))';
+  const colorScheme = useComputedColorScheme('light');
+  const adjustmentRowBackground = colorScheme === 'dark' ? 'var(--mantine-color-yellow-light)' : 'var(--mantine-color-yellow-0)';
 
   const startEdit = (entry: GroupEntry) => {
     setEditingMap((prev) => ({

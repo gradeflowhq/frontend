@@ -12,7 +12,6 @@ import {
   Text,
   Title,
 } from '@mantine/core';
-import { notifications } from '@mantine/notifications';
 import {
   IconAdjustments,
   IconFileImport,
@@ -37,31 +36,30 @@ const RubricUploadModal = lazy(
   () => import('@features/rubric/components/RubricUploadModal'),
 );
 import { useReplaceRubric } from '@features/rules/api';
-import {
-  MultiTargetRulesSection,
-  RulesToolbar,
-  SingleTargetRulesSection,
-} from '@features/rules/components';
+import MultiTargetRulesSection from '@features/rules/components/MultiTargetRulesSection';
+import RulesToolbar from '@features/rules/components/RulesToolbar';
+import SingleTargetRulesSection from '@features/rules/components/SingleTargetRulesSection';
 import { getRuleTargetQids, isMultiTargetRule } from '@features/rules/schema';
 import { getInvalidRuleReferences, synchronizeRules } from '@features/rules/synchronization';
 import { useAutoResetState } from '@hooks/useAutoResetState';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { getErrorMessage } from '@utils/error';
+import { notifyError, notifyErrorMessage, notifySuccess } from '@utils/notifications';
 
-import type { AdjustableSubmission, RubricOutput, QuestionSetOutputQuestionMap, RubricOutputRulesItem } from '@api/models';
+import type { AdjustableSubmission, RubricOutput, RubricOutputRulesItem, QuestionSetOutputQuestionMap } from '@api/models';
 import type { RuleValue } from '@features/rules/types';
 
 const getRulesStatusMessage = (isStale: boolean, invalidRuleCount: number): string => {
+  const ruleCountLabel = invalidRuleCount === 1 ? '1 rule' : `${invalidRuleCount} rules`;
+  const referenceVerb = invalidRuleCount === 1 ? 'references' : 'reference';
+  const deletedQuestionLabel = invalidRuleCount === 1 ? 'a deleted question' : 'deleted questions';
+
   if (invalidRuleCount > 0 && isStale) {
-    return invalidRuleCount === 1
-      ? 'Rules may be out of date — questions changed and 1 rule still references a deleted question.'
-      : `Rules may be out of date — questions changed and ${invalidRuleCount} rules still reference deleted questions.`;
+    return `Rules may be out of date — questions changed and ${ruleCountLabel} still ${referenceVerb} ${deletedQuestionLabel}.`;
   }
 
   if (invalidRuleCount > 0) {
-    return invalidRuleCount === 1
-      ? 'Rules are out of sync with the current question set. 1 rule still references a deleted question.'
-      : `Rules are out of sync with the current question set. ${invalidRuleCount} rules still reference deleted questions.`;
+    return `Rules are out of sync with the current question set. ${ruleCountLabel} still ${referenceVerb} ${deletedQuestionLabel}.`;
   }
 
   return 'Rules may be out of date — questions have changed since the last rubric was configured.';
@@ -83,10 +81,7 @@ const RulesPage: React.FC = () => {
     error: qsError,
   } = useQuestionSet(safeId, enabled);
 
-  const qsNotFound = React.useMemo(() => {
-    const err = qsError as { response?: { status?: number } } | undefined;
-    return err?.response?.status === 404;
-  }, [qsError]);
+  const qsNotFound = (qsError as { response?: { status?: number } } | undefined)?.response?.status === 404;
 
   const {
     data: rubricRes,
@@ -197,7 +192,7 @@ const RulesPage: React.FC = () => {
       // Compute the rule's position among multi-target rules to avoid a
       // flash-to-rule-0 before MultiTargetRulesSection's highlightedRule effect fires.
       const multiRules = (rubric?.rules ?? []).filter(isMultiTargetRule);
-      const ruleIdx = rule ? multiRules.indexOf(rule as RubricOutputRulesItem) : -1;
+      const ruleIdx = rule ? multiRules.indexOf(rule as unknown as RubricOutputRulesItem) : -1;
       setSearchParams(
         (prev) => {
           const next = new URLSearchParams(prev);
@@ -237,7 +232,7 @@ const RulesPage: React.FC = () => {
     }
 
     if (!isRubricStale) {
-      notifications.show({ color: 'green', message: 'Rules warning dismissed' });
+      notifySuccess('Rules warning dismissed');
       return;
     }
 
@@ -246,13 +241,13 @@ const RulesPage: React.FC = () => {
     setStatusAction('dismiss');
     replaceRubric.mutate(rubric.rules as RuleValue[], {
       onSuccess: () => {
-        notifications.show({ color: 'green', message: 'Rules warning dismissed' });
+        notifySuccess('Rules warning dismissed');
       },
       onError: () => {
         if (hasInvalidRules) {
           setDismissedRulesSyncSignature(null);
         }
-        notifications.show({ color: 'red', message: 'Could not dismiss warning' });
+        notifyErrorMessage('Could not dismiss warning');
       },
       onSettled: () => setStatusAction(null),
     });
@@ -265,16 +260,14 @@ const RulesPage: React.FC = () => {
       onSuccess: () => {
         setConfirmSynchronizeRules(false);
         setDismissedRulesSyncSignature(null);
-        notifications.show({
-          color: 'green',
-          message:
-            invalidRuleReferences.length === 1
-              ? `Removed invalid rule: ${invalidRuleReferences[0].summary}`
-              : `Removed invalid rules: ${invalidRuleReferences.map((rule) => rule.summary).join('; ')}`,
-        });
+        notifySuccess(
+          invalidRuleReferences.length === 1
+            ? `Removed invalid rule: ${invalidRuleReferences[0].summary}`
+            : `Removed invalid rules: ${invalidRuleReferences.map((rule) => rule.summary).join('; ')}`,
+        );
       },
       onError: (err) => {
-        notifications.show({ color: 'red', message: getErrorMessage(err) });
+        notifyError(err);
       },
       onSettled: () => setStatusAction(null),
     });
@@ -284,9 +277,9 @@ const RulesPage: React.FC = () => {
   const handleCreateEmptyRubric = React.useCallback(() => {
     replaceRubric.mutate([], {
       onSuccess: () =>
-        notifications.show({ color: 'green', message: 'Empty rubric created' }),
+        notifySuccess('Empty rubric created'),
       onError: () =>
-        notifications.show({ color: 'red', message: 'Could not create rubric' }),
+        notifyErrorMessage('Could not create rubric'),
     });
   }, [replaceRubric]);
 
@@ -483,20 +476,24 @@ const RulesPage: React.FC = () => {
           </Stack>
         </Center>
 
-        <Suspense fallback={null}>
-          <RubricUploadModal
-            open={openRubricUpload}
-            assessmentId={safeId}
-            onClose={() => setOpenRubricUpload(false)}
-          />
-        </Suspense>
-        <Suspense fallback={null}>
-          <RubricImportModal
-            open={openRubricImport}
-            assessmentId={safeId}
-            onClose={() => setOpenRubricImport(false)}
-          />
-        </Suspense>
+        {openRubricUpload && (
+          <Suspense fallback={null}>
+            <RubricUploadModal
+              open={openRubricUpload}
+              assessmentId={safeId}
+              onClose={() => setOpenRubricUpload(false)}
+            />
+          </Suspense>
+        )}
+        {openRubricImport && (
+          <Suspense fallback={null}>
+            <RubricImportModal
+              open={openRubricImport}
+              assessmentId={safeId}
+              onClose={() => setOpenRubricImport(false)}
+            />
+          </Suspense>
+        )}
       </PageShell>
     );
   }
@@ -583,20 +580,24 @@ const RulesPage: React.FC = () => {
           </Tabs>
         )}
 
-        <Suspense fallback={null}>
-          <RubricUploadModal
-            open={openRubricUpload}
-            assessmentId={safeId}
-            onClose={() => setOpenRubricUpload(false)}
-          />
-        </Suspense>
-        <Suspense fallback={null}>
-          <RubricImportModal
-            open={openRubricImport}
-            assessmentId={safeId}
-            onClose={() => setOpenRubricImport(false)}
-          />
-        </Suspense>
+        {openRubricUpload && (
+          <Suspense fallback={null}>
+            <RubricUploadModal
+              open={openRubricUpload}
+              assessmentId={safeId}
+              onClose={() => setOpenRubricUpload(false)}
+            />
+          </Suspense>
+        )}
+        {openRubricImport && (
+          <Suspense fallback={null}>
+            <RubricImportModal
+              open={openRubricImport}
+              assessmentId={safeId}
+              onClose={() => setOpenRubricImport(false)}
+            />
+          </Suspense>
+        )}
 
         <Modal
           opened={confirmDeleteRubric}
@@ -618,10 +619,10 @@ const RulesPage: React.FC = () => {
                 deleteRubric.mutate(undefined, {
                   onSuccess: () => {
                     setConfirmDeleteRubric(false);
-                    notifications.show({ color: 'green', message: 'Rules deleted' });
+                    notifySuccess('Rules deleted');
                   },
                   onError: () =>
-                    notifications.show({ color: 'red', message: 'Delete failed' }),
+                    notifyErrorMessage('Delete failed'),
                 })
               }
             >

@@ -2,9 +2,8 @@ import { Button, Badge, Text, Box, Stack, Group, Accordion, Card, Skeleton } fro
 import { IconPencil, IconTrash } from '@tabler/icons-react';
 import React, { lazy, Suspense } from 'react';
 
-import { HIDE_KEYS_SINGLE } from '../constants';
-import { getRuleDefinitions, isRuleObject } from '../schema';
-import { prettifyKey } from '../schema';
+import { RULE_RENDER_HIDDEN_KEYS } from '../constants';
+import { getRuleDefinitions, isRuleObject, prettifyKey } from '../schema';
 
 const CodeCollapsible = lazy(() => import('./CodeCollapsible'));
 
@@ -23,6 +22,9 @@ type RenderOptions = {
 type Definitions = Record<string, JSONSchema7>;
 type RenderNodeFn = (value: unknown, path: string, options: RenderOptions) => React.ReactNode;
 
+const isHiddenRuleBodyKey = (key: string): boolean =>
+  RULE_RENDER_HIDDEN_KEYS.includes(key as (typeof RULE_RENDER_HIDDEN_KEYS)[number]);
+
 const RuleContainer: React.FC<{ children: React.ReactNode; isRoot?: boolean; flatRoot?: boolean }> = ({ children, isRoot, flatRoot }) => (
   isRoot && flatRoot
     ? <Box>{children}</Box>
@@ -37,7 +39,7 @@ const LabeledBlock: React.FC<{ label: string; children: React.ReactNode }> = ({ 
 );
 
 const PrimitiveView: React.FC<{ value: string | number | boolean | null }> = ({ value }) => (
-  <Text ff="monospace" size="xs" style={{ wordBreak: 'break-word' }} span>
+  <Text style={{ wordBreak: 'break-word' }} span>
     {value === null ? '\u2014' : String(value)}
   </Text>
 );
@@ -68,7 +70,7 @@ const ArrayView: React.FC<{
   path: string;
   options: RenderOptions;
 }> = ({ value, renderNode, path, options }) => {
-  if (value.length === 0) return <Text ff="monospace" size="xs" c="dimmed">[]</Text>;
+  if (value.length === 0) return <Text c="dimmed">[]</Text>;
   return (
     <Stack gap="xs">
       {value.map((item, idx) => (
@@ -84,42 +86,55 @@ const RuleObjectView: React.FC<{
   renderNode: RenderNodeFn;
   options: RenderOptions;
 }> = ({ obj, path, renderNode, options }) => {
-  const { contextQuestionId, showActions, onEdit, onDelete, hideRootType, flatRoot } = options;
-  const typeVal = String(obj?.type ?? '\u2014');
+  const {
+    contextQuestionId,
+    showActions,
+    onEdit,
+    onDelete,
+    hideRootType,
+    flatRoot,
+  } = options;
+  const nameOrType = String(obj?.name ?? obj?.type ?? '\u2014');
   const qidValue = obj?.question_id;
   const isRoot = path === '$';
+  const showTypeBadge = !(isRoot && hideRootType);
+  const showQuestionBadge =
+    typeof qidValue === 'string' && (!contextQuestionId || qidValue !== contextQuestionId);
+  const showActionButtons = !!(showActions && (onEdit || onDelete));
+  const showHeader = showTypeBadge || showQuestionBadge || showActionButtons;
 
   return (
     <RuleContainer isRoot={isRoot} flatRoot={flatRoot}>
-      <Group justify="space-between" mb="xs">
-        <Group gap="xs">
-          {!(isRoot && hideRootType) && (
-            <Badge variant="light" color="gray">{typeVal}</Badge>
-          )}
-          {typeof qidValue === 'string' && (!contextQuestionId || qidValue !== contextQuestionId) && (
-            <Badge variant="light" color="gray" ff="monospace" fw={700}>{qidValue}</Badge>
-          )}
-        </Group>
-        {showActions && (onEdit || onDelete) && (
+      {showHeader && (
+        <Group justify="space-between" mb="xs">
           <Group gap="xs">
-            {onEdit && (
-              <Button size="xs" leftSection={<IconPencil size={14} />} onClick={() => onEdit(obj as unknown as RuleValue)}>
-                Edit
-              </Button>
+            {showTypeBadge && (
+              <Badge variant="light" color="gray">{nameOrType}</Badge>
             )}
-            {onDelete && (
-              <Button size="xs" color="red" leftSection={<IconTrash size={14} />} onClick={() => onDelete(obj as unknown as RuleValue)}>
-                Delete
-              </Button>
+            {showQuestionBadge && (
+              <Badge variant="light" color="gray" fw={700}>{qidValue}</Badge>
             )}
           </Group>
-        )}
-      </Group>
+          {showActionButtons && (
+            <Group gap="xs">
+              {onEdit && (
+                <Button leftSection={<IconPencil size={14} />} onClick={() => onEdit(obj as unknown as RuleValue)}>
+                  Edit
+                </Button>
+              )}
+              {onDelete && (
+                <Button color="red" leftSection={<IconTrash size={14} />} onClick={() => onDelete(obj as unknown as RuleValue)}>
+                  Delete
+                </Button>
+              )}
+            </Group>
+          )}
+        </Group>
+      )}
 
       <Stack gap="xs">
         {Object.keys(obj).map((k) => {
-          if (HIDE_KEYS_SINGLE.includes(k as (typeof HIDE_KEYS_SINGLE)[number])) return null;
-          if (k === 'question_id' && contextQuestionId && obj[k] === contextQuestionId) return null;
+          if (isHiddenRuleBodyKey(k)) return null;
           const v = obj[k];
           const title = prettifyKey(k);
           const childOptions: RenderOptions = { ...options, showActions: false, hideRootType: false };
@@ -142,7 +157,7 @@ const PlainObjectView: React.FC<{
   options: RenderOptions;
 }> = ({ obj, path, defs, renderNode, options }) => {
   const keys = Object.keys(obj ?? {});
-  if (keys.length === 0) return <Text size="xs" c="dimmed">{'{}'}</Text>;
+  if (keys.length === 0) return <Text c="dimmed">{'{}'}</Text>;
 
   const ruleInside = hasRuleDescendant(obj, defs);
 
@@ -152,13 +167,15 @@ const PlainObjectView: React.FC<{
       <Accordion variant="contained">
         <Accordion.Item value="detail">
           <Accordion.Control>
-            <Text size="xs" fw={500}>{title}</Text>
+            <Text fw={500}>{title}</Text>
           </Accordion.Control>
           <Accordion.Panel>
             {keys.map((k) => (
+              isHiddenRuleBodyKey(k) ? null : (
               <LabeledBlock key={`${path}.${k}`} label={prettifyKey(k)}>
                 {renderNode(obj[k], `${path}.${k}`, options)}
               </LabeledBlock>
+              )
             ))}
           </Accordion.Panel>
         </Accordion.Item>
@@ -169,9 +186,11 @@ const PlainObjectView: React.FC<{
   return (
     <Box py="xs">
       {keys.map((k) => (
+        isHiddenRuleBodyKey(k) ? null : (
         <LabeledBlock key={`${path}.${k}`} label={prettifyKey(k)}>
           {renderNode(obj[k], `${path}.${k}`, options)}
         </LabeledBlock>
+        )
       ))}
     </Box>
   );
@@ -221,9 +240,9 @@ const renderNode = (
   }
 
   try {
-    return <Text ff="monospace" size="xs" style={{ wordBreak: 'break-word' }} span>{JSON.stringify(value)}</Text>;
+    return <Text style={{ wordBreak: 'break-word' }} span>{JSON.stringify(value)}</Text>;
   } catch {
-    return <Text ff="monospace" size="xs" style={{ wordBreak: 'break-word' }} span>{String(value)}</Text>;
+    return <Text style={{ wordBreak: 'break-word' }} span>{String(value)}</Text>;
   }
 };
 
@@ -235,7 +254,15 @@ const RuleRenderer: React.FC<{
   onDelete?: (rule: RuleValue) => void;
   hideRootType?: boolean;
   flatRoot?: boolean;
-}> = ({ value, path = '$', contextQuestionId = null, onEdit, onDelete, hideRootType = false, flatRoot = false }) => {
+}> = ({
+  value,
+  path = '$',
+  contextQuestionId = null,
+  onEdit,
+  onDelete,
+  hideRootType = false,
+  flatRoot = false,
+}) => {
   const defs = getRuleDefinitions();
 
   const rootOptions: RenderOptions = {

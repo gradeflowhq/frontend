@@ -1,10 +1,10 @@
 import { Modal, Alert } from '@mantine/core';
-import { notifications } from '@mantine/notifications';
 import { IconAlertCircle } from '@tabler/icons-react';
 import { useMutation, type UseMutationOptions } from '@tanstack/react-query';
 import React, { useMemo, useState } from 'react';
 
 import { getErrorMessage } from '@utils/error';
+import { notifyErrorMessage, notifySuccess } from '@utils/notifications';
 
 import HiddenAwareFieldTemplate from './HiddenAwareFieldTemplate';
 import { SchemaForm, type SchemaFormProps } from './SchemaForm';
@@ -74,12 +74,12 @@ const SchemaRequestModalInner = <TForm, TData = unknown>({
       return await mutationFn(payload);
     },
     onSuccess: async (data) => {
-      if (successMessage) notifications.show({ color: 'green', message: successMessage });
+      if (successMessage) notifySuccess(successMessage);
       await onSuccess?.(data);
       onClose();
     },
     onError: (err) => {
-      if (errorMessage) notifications.show({ color: 'red', message: errorMessage });
+      if (errorMessage) notifyErrorMessage(errorMessage);
       onError?.(err);
     },
   });

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { api } from '@api';
 import { QK } from '@api/queryKeys';
+import { CACHE_STALE_TIME_AUTH } from '@lib/constants';
 
 import type {
   BodyIssueTokenAuthTokenPost,
@@ -17,7 +18,7 @@ export const useMe = (enabled = true) =>
   useQuery({
     queryKey: QK.auth.me,
     queryFn: async () => (await api.meAuthMeGet()).data as MeResponse,
-    staleTime: 5 * 60 * 1000,
+    staleTime: CACHE_STALE_TIME_AUTH,
     enabled,
   });
 
