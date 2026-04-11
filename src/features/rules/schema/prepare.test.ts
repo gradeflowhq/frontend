@@ -45,4 +45,24 @@ describe('prepareRuleDefinitionsForRender', () => {
       expect(def.properties.constraints).toBeUndefined();
     }
   });
+
+  it('strips const and readOnly from the type property to prevent RJSF oneOf deselect/reselect bug', () => {
+    const raw = rulesSchema as Record<string, { properties?: Record<string, { const?: unknown; readOnly?: unknown; default?: unknown }> }>;
+    const prepared = prepareRuleDefinitionsForRender(
+      rulesSchema as Record<string, unknown>,
+    ) as typeof raw;
+
+    for (const [key, def] of Object.entries(prepared)) {
+      const typeProp = def?.properties?.type;
+      if (!typeProp) continue;
+
+      // Only check definitions whose original type property had const/readOnly
+      const rawTypeProp = raw[key]?.properties?.type;
+      if (!rawTypeProp?.const && !rawTypeProp?.readOnly) continue;
+
+      expect(typeProp.const).toBeUndefined();
+      expect(typeProp.readOnly).toBeUndefined();
+      expect(typeProp.default).toBeDefined();
+    }
+  });
 });

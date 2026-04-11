@@ -33,6 +33,19 @@ export function stripEngineKeysFromRulesSchema<T extends Record<string, unknown>
           delete defObj.properties![k];
         }
       });
+
+      // Strip `const` and `readOnly` from the `type` property.
+      // RJSF's sanitizeDataForNewSchema sets properties with `const` or
+      // `readOnly` to undefined during oneOf transitions when oldSchema is
+      // absent (deselect → reselect). Keeping only `default` lets
+      // getDefaultFormState populate the value correctly while the field
+      // stays hidden via HiddenAwareFieldTemplate.
+      const typeProp = defObj.properties['type'];
+      if (typeProp && typeof typeProp === 'object') {
+        const tp = typeProp as Record<string, unknown>;
+        delete tp['const'];
+        delete tp['readOnly'];
+      }
     }
 
     if (Array.isArray(defObj.required)) {
