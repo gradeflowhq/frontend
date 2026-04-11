@@ -81,8 +81,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -158,6 +158,86 @@
       "target"
     ],
     "title": "QuestionConstraint"
+  },
+  "SimilarityQuestionRule": {
+    "properties": {
+      "question_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "CHOICE",
+            "NUMERIC",
+            "MULTI_VALUED"
+          ]
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Question Types",
+        "default": [
+          "TEXT"
+        ],
+        "readOnly": true
+      },
+      "constraints": {
+        "items": {
+          "$ref": "#/definitions/QuestionConstraint"
+        },
+        "type": "array",
+        "title": "Constraints",
+        "default": [],
+        "readOnly": true
+      },
+      "question_id": {
+        "type": "string",
+        "title": "Question Id"
+      },
+      "type": {
+        "type": "string",
+        "const": "SIMILARITY",
+        "title": "Type",
+        "default": "SIMILARITY",
+        "readOnly": true
+      },
+      "name": {
+        "type": "string",
+        "const": "Similarity",
+        "title": "Name",
+        "default": "Similarity",
+        "readOnly": true
+      },
+      "references": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array",
+        "title": "References",
+        "description": "Reference answers for similarity comparison"
+      },
+      "threshold": {
+        "type": "number",
+        "title": "Threshold",
+        "description": "Similarity threshold for passing the rule (0 to 1)",
+        "default": 0.8
+      },
+      "algorithm": {
+        "type": "string",
+        "enum": [
+          "levenshtein",
+          "jaro_winkler",
+          "transformer"
+        ],
+        "title": "Algorithm",
+        "description": "Similarity algorithm to use (options: 'levenshtein', 'jaro_winkler', 'transformer'). 'transformer' uses the BAAI/bge-small-en-v1.5 model and requires the 'ml' extra.",
+        "default": "levenshtein"
+      }
+    },
+    "type": "object",
+    "required": [
+      "question_id",
+      "references"
+    ],
+    "title": "SimilarityQuestionRule"
   },
   "SetQuestionSetByModelRequest": {
     "properties": {
@@ -706,10 +786,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "CHOICE",
           "TEXT",
-          "MULTI_VALUED"
+          "CHOICE",
+          "MULTI_VALUED",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -1066,6 +1146,9 @@
               "$ref": "#/definitions/ProgrammingRule"
             },
             {
+              "$ref": "#/definitions/SimilarityRule"
+            },
+            {
               "$ref": "#/definitions/TextMatchRule"
             },
             {
@@ -1108,6 +1191,7 @@
               "PROGRAMMABLE": "#/definitions/ProgrammableRule",
               "PROGRAMMING": "#/definitions/ProgrammingRule",
               "REGEX": "#/definitions/RegexRule",
+              "SIMILARITY": "#/definitions/SimilarityRule",
               "TEXT_MATCH": "#/definitions/TextMatchRule"
             }
           }
@@ -1152,8 +1236,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -1195,6 +1279,82 @@
       "answers"
     ],
     "title": "TextMatchRule"
+  },
+  "SimilarityRule": {
+    "properties": {
+      "question_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "CHOICE",
+            "NUMERIC",
+            "MULTI_VALUED"
+          ]
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Question Types",
+        "default": [
+          "TEXT"
+        ],
+        "readOnly": true
+      },
+      "constraints": {
+        "items": {
+          "$ref": "#/definitions/QuestionConstraint"
+        },
+        "type": "array",
+        "title": "Constraints",
+        "default": [],
+        "readOnly": true
+      },
+      "type": {
+        "type": "string",
+        "const": "SIMILARITY",
+        "title": "Type",
+        "default": "SIMILARITY",
+        "readOnly": true
+      },
+      "name": {
+        "type": "string",
+        "const": "Similarity",
+        "title": "Name",
+        "default": "Similarity",
+        "readOnly": true
+      },
+      "references": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array",
+        "title": "References",
+        "description": "Reference answers for similarity comparison"
+      },
+      "threshold": {
+        "type": "number",
+        "title": "Threshold",
+        "description": "Similarity threshold for passing the rule (0 to 1)",
+        "default": 0.8
+      },
+      "algorithm": {
+        "type": "string",
+        "enum": [
+          "levenshtein",
+          "jaro_winkler",
+          "transformer"
+        ],
+        "title": "Algorithm",
+        "description": "Similarity algorithm to use (options: 'levenshtein', 'jaro_winkler', 'transformer'). 'transformer' uses the BAAI/bge-small-en-v1.5 model and requires the 'ml' extra.",
+        "default": "levenshtein"
+      }
+    },
+    "type": "object",
+    "required": [
+      "references"
+    ],
+    "title": "SimilarityRule",
+    "description": "A rule that checks for similarity between the student's answer and a reference text."
   },
   "RegexRule": {
     "properties": {
@@ -1358,10 +1518,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "CHOICE",
           "TEXT",
-          "MULTI_VALUED"
+          "CHOICE",
+          "MULTI_VALUED",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -1596,6 +1756,9 @@
               "$ref": "#/definitions/ProgrammingRule"
             },
             {
+              "$ref": "#/definitions/SimilarityRule"
+            },
+            {
               "$ref": "#/definitions/TextMatchRule"
             },
             {
@@ -1638,6 +1801,7 @@
               "PROGRAMMABLE": "#/definitions/ProgrammableRule",
               "PROGRAMMING": "#/definitions/ProgrammingRule",
               "REGEX": "#/definitions/RegexRule",
+              "SIMILARITY": "#/definitions/SimilarityRule",
               "TEXT_MATCH": "#/definitions/TextMatchRule"
             }
           }
@@ -1757,10 +1921,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "CHOICE",
           "TEXT",
-          "MULTI_VALUED"
+          "CHOICE",
+          "MULTI_VALUED",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -1950,8 +2114,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -1992,6 +2156,9 @@
             },
             {
               "$ref": "#/definitions/ProgrammingRule"
+            },
+            {
+              "$ref": "#/definitions/SimilarityRule"
             },
             {
               "$ref": "#/definitions/TextMatchRule"
@@ -2036,6 +2203,7 @@
               "PROGRAMMABLE": "#/definitions/ProgrammableRule",
               "PROGRAMMING": "#/definitions/ProgrammingRule",
               "REGEX": "#/definitions/RegexRule",
+              "SIMILARITY": "#/definitions/SimilarityRule",
               "TEXT_MATCH": "#/definitions/TextMatchRule"
             }
           }
@@ -2079,10 +2247,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "CHOICE",
           "TEXT",
-          "MULTI_VALUED"
+          "CHOICE",
+          "MULTI_VALUED",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -2150,6 +2318,9 @@
               "$ref": "#/definitions/ProgrammingQuestionRule"
             },
             {
+              "$ref": "#/definitions/SimilarityQuestionRule"
+            },
+            {
               "$ref": "#/definitions/TextMatchQuestionRule"
             },
             {
@@ -2193,6 +2364,7 @@
               "PROGRAMMABLE": "#/definitions/ProgrammableQuestionRule",
               "PROGRAMMING": "#/definitions/ProgrammingQuestionRule",
               "REGEX": "#/definitions/RegexQuestionRule",
+              "SIMILARITY": "#/definitions/SimilarityQuestionRule",
               "TEXT_MATCH": "#/definitions/TextMatchQuestionRule"
             }
           }
@@ -2224,10 +2396,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "CHOICE",
           "TEXT",
-          "MULTI_VALUED"
+          "CHOICE",
+          "MULTI_VALUED",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -2436,8 +2608,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -2484,6 +2656,9 @@
               "$ref": "#/definitions/ProgrammingRule"
             },
             {
+              "$ref": "#/definitions/SimilarityRule"
+            },
+            {
               "$ref": "#/definitions/TextMatchRule"
             },
             {
@@ -2526,6 +2701,7 @@
               "PROGRAMMABLE": "#/definitions/ProgrammableRule",
               "PROGRAMMING": "#/definitions/ProgrammingRule",
               "REGEX": "#/definitions/RegexRule",
+              "SIMILARITY": "#/definitions/SimilarityRule",
               "TEXT_MATCH": "#/definitions/TextMatchRule"
             }
           }
@@ -2570,10 +2746,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "CHOICE",
           "TEXT",
-          "MULTI_VALUED"
+          "CHOICE",
+          "MULTI_VALUED",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -2627,10 +2803,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "CHOICE",
           "TEXT",
-          "MULTI_VALUED"
+          "CHOICE",
+          "MULTI_VALUED",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -2720,6 +2896,9 @@
             "$ref": "#/definitions/ProgrammingRule"
           },
           {
+            "$ref": "#/definitions/SimilarityRule"
+          },
+          {
             "$ref": "#/definitions/TextMatchRule"
           },
           {
@@ -2764,6 +2943,7 @@
             "PROGRAMMABLE": "#/definitions/ProgrammableRule",
             "PROGRAMMING": "#/definitions/ProgrammingRule",
             "REGEX": "#/definitions/RegexRule",
+            "SIMILARITY": "#/definitions/SimilarityRule",
             "TEXT_MATCH": "#/definitions/TextMatchRule"
           }
         }
@@ -2938,10 +3118,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "CHOICE",
           "TEXT",
-          "MULTI_VALUED"
+          "CHOICE",
+          "MULTI_VALUED",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -2987,6 +3167,9 @@
               "$ref": "#/definitions/ProgrammingQuestionRule"
             },
             {
+              "$ref": "#/definitions/SimilarityQuestionRule"
+            },
+            {
               "$ref": "#/definitions/TextMatchQuestionRule"
             },
             {
@@ -3030,6 +3213,7 @@
               "PROGRAMMABLE": "#/definitions/ProgrammableQuestionRule",
               "PROGRAMMING": "#/definitions/ProgrammingQuestionRule",
               "REGEX": "#/definitions/RegexQuestionRule",
+              "SIMILARITY": "#/definitions/SimilarityQuestionRule",
               "TEXT_MATCH": "#/definitions/TextMatchQuestionRule"
             }
           }
@@ -3068,6 +3252,9 @@
               "$ref": "#/definitions/ProgrammingQuestionRule"
             },
             {
+              "$ref": "#/definitions/SimilarityQuestionRule"
+            },
+            {
               "$ref": "#/definitions/TextMatchQuestionRule"
             },
             {
@@ -3111,6 +3298,7 @@
               "PROGRAMMABLE": "#/definitions/ProgrammableQuestionRule",
               "PROGRAMMING": "#/definitions/ProgrammingQuestionRule",
               "REGEX": "#/definitions/RegexQuestionRule",
+              "SIMILARITY": "#/definitions/SimilarityQuestionRule",
               "TEXT_MATCH": "#/definitions/TextMatchQuestionRule"
             }
           }
@@ -3139,6 +3327,9 @@
               "$ref": "#/definitions/ProgrammingQuestionRule"
             },
             {
+              "$ref": "#/definitions/SimilarityQuestionRule"
+            },
+            {
               "$ref": "#/definitions/TextMatchQuestionRule"
             },
             {
@@ -3182,6 +3373,7 @@
               "PROGRAMMABLE": "#/definitions/ProgrammableQuestionRule",
               "PROGRAMMING": "#/definitions/ProgrammingQuestionRule",
               "REGEX": "#/definitions/RegexQuestionRule",
+              "SIMILARITY": "#/definitions/SimilarityQuestionRule",
               "TEXT_MATCH": "#/definitions/TextMatchQuestionRule"
             }
           }
@@ -3215,10 +3407,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "CHOICE",
           "TEXT",
-          "MULTI_VALUED"
+          "CHOICE",
+          "MULTI_VALUED",
+          "NUMERIC"
         ],
         "readOnly": true
       },

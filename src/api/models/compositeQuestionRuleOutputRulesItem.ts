@@ -9,6 +9,7 @@ import type { BonusRuleOutput } from './bonusRuleOutput';
 import type { CompositeRuleOutput } from './compositeRuleOutput';
 import type { ProgrammableRuleOutput } from './programmableRuleOutput';
 import type { ProgrammingRuleOutput } from './programmingRuleOutput';
+import type { SimilarityRuleOutput } from './similarityRuleOutput';
 import type { TextMatchRuleOutput } from './textMatchRuleOutput';
 import type { KeywordsRuleOutput } from './keywordsRuleOutput';
 import type { RegexRuleOutput } from './regexRuleOutput';
@@ -19,4 +20,4 @@ import type { MultipleChoiceRuleOutput } from './multipleChoiceRuleOutput';
 import type { NumberEqualRuleOutput } from './numberEqualRuleOutput';
 import type { NumericRangeRuleOutput } from './numericRangeRuleOutput';
 
-export type CompositeQuestionRuleOutputRulesItem = BonusRuleOutput | CompositeRuleOutput | ProgrammableRuleOutput | ProgrammingRuleOutput | TextMatchRuleOutput | KeywordsRuleOutput | RegexRuleOutput | LengthRuleOutput | ManualRuleOutput | MultiValuedRuleOutput | MultipleChoiceRuleOutput | NumberEqualRuleOutput | NumericRangeRuleOutput;
+export type CompositeQuestionRuleOutputRulesItem = BonusRuleOutput | CompositeRuleOutput | ProgrammableRuleOutput | ProgrammingRuleOutput | SimilarityRuleOutput | TextMatchRuleOutput | KeywordsRuleOutput | RegexRuleOutput | LengthRuleOutput | ManualRuleOutput | MultiValuedRuleOutput | MultipleChoiceRuleOutput | NumberEqualRuleOutput | NumericRangeRuleOutput;

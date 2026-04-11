@@ -10,6 +10,7 @@ import type { BonusQuestionRuleInput } from './bonusQuestionRuleInput';
 import type { CompositeQuestionRuleInput } from './compositeQuestionRuleInput';
 import type { ProgrammableQuestionRuleInput } from './programmableQuestionRuleInput';
 import type { ProgrammingQuestionRuleInput } from './programmingQuestionRuleInput';
+import type { SimilarityQuestionRuleInput } from './similarityQuestionRuleInput';
 import type { TextMatchQuestionRuleInput } from './textMatchQuestionRuleInput';
 import type { KeywordsQuestionRuleInput } from './keywordsQuestionRuleInput';
 import type { RegexQuestionRuleInput } from './regexQuestionRuleInput';
@@ -22,4 +23,4 @@ import type { NumericRangeQuestionRuleInput } from './numericRangeQuestionRuleIn
 import type { AssumptionSetMultiQuestionRuleInput } from './assumptionSetMultiQuestionRuleInput';
 import type { ConditionalMultiQuestionRuleInput } from './conditionalMultiQuestionRuleInput';
 
-export type GradingPreviewRequestRuleAnyOf = AssumptionSetQuestionRuleInput | BonusQuestionRuleInput | CompositeQuestionRuleInput | ProgrammableQuestionRuleInput | ProgrammingQuestionRuleInput | TextMatchQuestionRuleInput | KeywordsQuestionRuleInput | RegexQuestionRuleInput | LengthQuestionRuleInput | ManualQuestionRuleInput | MultiValuedQuestionRuleInput | MultipleChoiceQuestionRuleInput | NumberEqualQuestionRuleInput | NumericRangeQuestionRuleInput | AssumptionSetMultiQuestionRuleInput | ConditionalMultiQuestionRuleInput;
+export type GradingPreviewRequestRuleAnyOf = AssumptionSetQuestionRuleInput | BonusQuestionRuleInput | CompositeQuestionRuleInput | ProgrammableQuestionRuleInput | ProgrammingQuestionRuleInput | SimilarityQuestionRuleInput | TextMatchQuestionRuleInput | KeywordsQuestionRuleInput | RegexQuestionRuleInput | LengthQuestionRuleInput | ManualQuestionRuleInput | MultiValuedQuestionRuleInput | MultipleChoiceQuestionRuleInput | NumberEqualQuestionRuleInput | NumericRangeQuestionRuleInput | AssumptionSetMultiQuestionRuleInput | ConditionalMultiQuestionRuleInput;
