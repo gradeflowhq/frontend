@@ -13,6 +13,7 @@ import {
 } from '@features/rules/api';
 import { materializeDraft } from '@features/rules/hooks/useRuleEditorState';
 import { isMultiTargetRule } from '@features/rules/schema';
+import { useNavigationGuard } from '@hooks/useNavigationGuard';
 
 import GlobalRuleDetailPanel from './GlobalRuleDetailPanel';
 import GlobalRuleMasterList from './GlobalRuleMasterList';
@@ -129,6 +130,9 @@ const MultiTargetRulesSection: React.FC<Props> = ({
   // ── Helpers ───────────────────────────────────────────────────────────────
 
   const isCurrentlyEditing = detailEditing || !!pendingNewRule;
+
+  // Block route transitions while editing (e.g. navigating to another page)
+  const routeBlocker = useNavigationGuard(isCurrentlyEditing);
 
   const guardModalOpen = pendingIndex !== null || pendingAddKey !== null;
 
@@ -310,6 +314,14 @@ const MultiTargetRulesSection: React.FC<Props> = ({
         message="You have an unsaved rule edit. Navigating away will discard it."
         onStay={handleDismissGuard}
         onDiscard={handleConfirmNavigation}
+      />
+
+      {/* Route-level guard — blocks navigation to other pages */}
+      <UnsavedChangesModal
+        opened={routeBlocker.state === 'blocked'}
+        message="You have an unsaved rule edit. Leaving this page will discard it."
+        onStay={() => routeBlocker.reset?.()}
+        onDiscard={() => routeBlocker.proceed?.()}
       />
     </>
   );

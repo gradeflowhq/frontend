@@ -1,6 +1,6 @@
 import { Center, Loader } from '@mantine/core';
 import React, { lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 const AssessmentsPage = lazy(() => import('@pages/assessments/list/AssessmentsPage'));
 const MembersPage = lazy(() => import('@pages/assessments/workspace/MembersPage'));
 const OverviewPage = lazy(() => import('@pages/assessments/workspace/OverviewPage'));
@@ -30,61 +30,76 @@ const PageFallback: React.FC = () => (
   </Center>
 );
 
+const router = createBrowserRouter([
+  /* Landing page — accessible to everyone */
+  { path: '/', element: <LandingPage /> },
+
+  /* Public-only routes (redirect if already logged in) */
+  {
+    element: <PublicOnlyRoute />,
+    children: [
+      {
+        element: <PublicLayout />,
+        children: [
+          { path: '/login', element: <LoginPage /> },
+          { path: '/register', element: <RegisterPage /> },
+        ],
+      },
+    ],
+  },
+
+  /* Protected area with sidebar layout */
+  {
+    element: <ProtectedRoute />,
+    children: [
+      {
+        element: <AppLayout />,
+        children: [
+          { path: '/settings', element: <UserSettingsPage /> },
+          { path: '/assessments', element: <AssessmentsPage /> },
+
+          /* Assessment workspace */
+          {
+            path: '/assessments/:assessmentId',
+            element: <AssessmentShell />,
+            children: [
+              { index: true, element: <Navigate to="overview" replace /> },
+              { path: 'overview', element: <OverviewPage /> },
+              { path: 'submissions', element: <SubmissionsPage /> },
+              { path: 'questions', element: <QuestionsPage /> },
+              { path: 'rules', element: <RulesPage /> },
+
+              /* Results — nested under results/ */
+              {
+                path: 'results',
+                children: [
+                  { index: true, element: <Navigate to="statistics" replace /> },
+                  { path: 'statistics', element: <StatisticsPage /> },
+                  { path: 'students', element: <StudentsPage /> },
+                  { path: 'students/:studentId', element: <SubmissionDetailPage /> },
+                  { path: 'groups', element: <GroupViewPage /> },
+                ],
+              },
+
+              { path: 'publish', element: <CanvasPushPage /> },
+              { path: 'members', element: <MembersPage /> },
+              { path: 'settings', element: <SettingsPage /> },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+
+  /* Fallback */
+  { path: '*', element: <Navigate to="/" replace /> },
+]);
+
 const App: React.FC = () => {
   return (
-    <BrowserRouter>
-      <Suspense fallback={<PageFallback />}>
-        <Routes>
-          {/* Landing page — accessible to everyone */}
-          <Route path="/" element={<LandingPage />} />
-
-          {/* Public-only routes (redirect to /assessments if already logged in) */}
-          <Route element={<PublicOnlyRoute />}>
-            <Route element={<PublicLayout />}>
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-            </Route>
-          </Route>
-
-          {/* Protected area with sidebar layout */}
-          <Route element={<ProtectedRoute />}>
-            <Route element={<AppLayout />}>
-              {/* User settings */}
-              <Route path="/settings" element={<UserSettingsPage />} />
-
-              {/* Assessment list */}
-              <Route path="/assessments" element={<AssessmentsPage />} />
-
-              {/* Assessment workspace — all sub-routes share AssessmentShell */}
-              <Route path="/assessments/:assessmentId" element={<AssessmentShell />}>
-                <Route index element={<Navigate to="overview" replace />} />
-                <Route path="overview" element={<OverviewPage />} />
-                <Route path="submissions" element={<SubmissionsPage />} />
-                <Route path="questions" element={<QuestionsPage />} />
-                <Route path="rules" element={<RulesPage />} />
-
-                {/* Results — nested under results/ parent */}
-                <Route path="results">
-                  <Route index element={<Navigate to="statistics" replace />} />
-                  <Route path="statistics" element={<StatisticsPage />} />
-                  <Route path="statistics/:studentId" element={<SubmissionDetailPage />} />
-                  <Route path="students" element={<StudentsPage />} />
-                  <Route path="students/:studentId" element={<SubmissionDetailPage />} />
-                  <Route path="groups" element={<GroupViewPage />} />
-                </Route>
-
-                <Route path="publish" element={<CanvasPushPage />} />
-                <Route path="members" element={<MembersPage />} />
-                <Route path="settings" element={<SettingsPage />} />
-              </Route>
-            </Route>
-          </Route>
-
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Suspense>
-    </BrowserRouter>
+    <Suspense fallback={<PageFallback />}>
+      <RouterProvider router={router} />
+    </Suspense>
   );
 };
 

@@ -4,6 +4,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import MasterDetailLayout from '@components/common/MasterDetailLayout';
 import QuestionMasterList from '@components/common/QuestionMasterList';
 import { UnsavedChangesModal } from '@components/common/UnsavedChangesModal';
+import { useNavigationGuard } from '@hooks/useNavigationGuard';
 import { useUrlSelectedId } from '@hooks/useUrlSelectedId';
 
 import QuestionDetailPanel from './QuestionDetailPanel';
@@ -44,6 +45,9 @@ const SingleTargetRulesSection: React.FC<Props> = ({
   // Controlled mobile-detail visibility — opened by handleSelect, closed by
   // MasterDetailLayout's back button or when selection changes to null.
   const [mobileShowDetail, setMobileShowDetail] = useState(false);
+
+  // Block route transitions while editing (e.g. navigating to another page)
+  const routeBlocker = useNavigationGuard(detailPanelEditing);
 
   const allRules = useMemo<RuleValue[]>(
     () => (rubric?.rules ?? []) as RuleValue[],
@@ -160,6 +164,14 @@ const SingleTargetRulesSection: React.FC<Props> = ({
         message="You have an unsaved rule edit. Navigating away will discard it."
         onStay={() => setPendingQid(null)}
         onDiscard={handleConfirmNavigation}
+      />
+
+      {/* Route-level guard — blocks navigation to other pages */}
+      <UnsavedChangesModal
+        opened={routeBlocker.state === 'blocked'}
+        message="You have an unsaved rule edit. Leaving this page will discard it."
+        onStay={() => routeBlocker.reset?.()}
+        onDiscard={() => routeBlocker.proceed?.()}
       />
     </>
   );

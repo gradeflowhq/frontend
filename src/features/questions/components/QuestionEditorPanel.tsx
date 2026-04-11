@@ -93,9 +93,11 @@ const QuestionEditorPanel: React.FC<Props> = ({
   );
 
   // Report editing state to parent whenever it changes.
+  // Guard on `isEditing` alone (not isDirty) so the unsaved-changes modal
+  // fires immediately when the user enters edit mode — consistent with rules.
   useEffect(() => {
-    onEditStateChange(isEditing && isDirty);
-  }, [isEditing, isDirty, onEditStateChange]);
+    onEditStateChange(isEditing);
+  }, [isEditing, onEditStateChange]);
 
   const currentType = (draft.type as string) ?? (questionDef.type as string) ?? 'TEXT';
   const viewType = (questionDef.type as string) ?? 'TEXT';
