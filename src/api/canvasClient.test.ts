@@ -52,6 +52,16 @@ describe('createCanvasClient', () => {
       token: 'test-token',
     });
 
+    expect(axiosCreateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          Authorization: 'Bearer test-token',
+          'X-Host': 'canvas.example.com',
+        }),
+        timeout: expect.any(Number),
+      }),
+    );
+
     await client.createAssignmentGroup('42', 'Midterm Exams', 30);
 
     expect(postMock).toHaveBeenCalledWith('/api/v1/courses/42/assignment_groups', {

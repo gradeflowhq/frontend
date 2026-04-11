@@ -1,7 +1,7 @@
 import { Box, Center, Stack, Text, Title } from '@mantine/core';
 import React from 'react';
 
-import { faqs } from '../landing-data';
+import { faqs } from '../landingData';
 
 const FaqItem: React.FC<{ q: string; a: string }> = ({ q, a }) => {
   const [open, setOpen] = React.useState(false);

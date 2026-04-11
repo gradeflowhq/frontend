@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import { PATHS } from '@app/routes/paths';
 import { useResolvedColorScheme } from '@hooks/useResolvedColorScheme';
 
-import { getLandingCtaBackground } from '../landing-theme';
+import { getLandingCtaBackground } from '../landingTheme';
 
 const CURRENT_YEAR = new Date().getFullYear();
 

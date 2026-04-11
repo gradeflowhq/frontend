@@ -26,6 +26,7 @@ import {
 } from '@features/grading/helpers/semanticGrouping';
 import { useGradingStatus } from '@features/grading/hooks/useGradingStatus';
 import { useQuestionSet } from '@features/questions/api';
+import { buildQuestionTypesById } from '@features/questions/helpers';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { useUrlSelectedId } from '@hooks/useUrlSelectedId';
 import { isEncrypted } from '@utils/crypto';
@@ -103,13 +104,7 @@ const GroupViewPage: React.FC = () => {
 
   const questionIds = useMemo(() => Object.keys(questionMap).sort(natsort), [questionMap]);
 
-  const questionTypesById = useMemo(() => {
-    const m: Record<string, string> = {};
-    for (const [qid, def] of Object.entries(questionMap)) {
-      m[qid] = (def as { type?: string }).type ?? 'TEXT';
-    }
-    return m;
-  }, [questionMap]);
+  const questionTypesById = useMemo(() => buildQuestionTypesById(questionMap), [questionMap]);
 
   const { selectedId: selectedQid, setSelectedId: setSelectedQid } = useUrlSelectedId(questionIds, AQ_PARAM);
 

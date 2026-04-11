@@ -47,6 +47,7 @@ const QuestionSetUploadModal = lazy(
 );
 import {
   buildExamplesFromParsed,
+  buildQuestionTypesById,
   getInvalidQuestionIds,
   getMissingQuestionIds,
   getQuestionIdsSorted,
@@ -57,7 +58,7 @@ import { useSubmissions } from '@features/submissions/api';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { useNavigationGuard } from '@hooks/useNavigationGuard';
 import { useUrlSelectedId } from '@hooks/useUrlSelectedId';
-import { getErrorMessage } from '@utils/error';
+import { getErrorMessage, isNotFoundError } from '@utils/error';
 import { notifyError, notifyErrorMessage, notifySuccess } from '@utils/notifications';
 
 import type { QuestionSetInput, QuestionSetInputQuestionMap } from '@api/models';
@@ -99,7 +100,6 @@ const QuestionsPage: React.FC = () => {
   const { assessmentId, assessment } = useAssessmentContext();
   useDocumentTitle(`Questions - ${assessment?.name ?? 'Assessment'} - GradeFlow`);
 
-  const safeAssessmentId = assessmentId;
   const enabled = Boolean(assessmentId);
 
   const [confirmInfer, setConfirmInfer] = useState(false);
@@ -128,7 +128,7 @@ const QuestionsPage: React.FC = () => {
   const {
     data: subsRes,
     isLoading: loadingSubmissions,
-  } = useSubmissions(safeAssessmentId);
+  } = useSubmissions(assessmentId);
   const hasSubmissions = (subsRes?.raw_submissions?.length ?? 0) > 0;
 
   // Question set
@@ -137,12 +137,9 @@ const QuestionsPage: React.FC = () => {
     isLoading: loadingQS,
     isError: errorQS,
     error: qsError,
-  } = useQuestionSet(safeAssessmentId, enabled);
+  } = useQuestionSet(assessmentId, enabled);
 
-  const qsMissing = useMemo(() => {
-    const err = qsError as { response?: { status?: number } } | undefined;
-    return err?.response?.status === 404;
-  }, [qsError]);
+  const qsMissing = useMemo(() => isNotFoundError(qsError), [qsError]);
 
   const baseQuestionMap = useMemo(
     () => (qsMissing ? {} : (qsRes?.question_set?.question_map ?? {})),
@@ -193,14 +190,7 @@ const QuestionsPage: React.FC = () => {
 
   const { selectedId: selectedQid, setSelectedId: setSelectedQid } = useUrlSelectedId(questionIds, 'q');
 
-  const questionTypesById = useMemo(() => {
-    const m: Record<string, string> = {};
-    for (const [qid, def] of Object.entries(questionMap)) {
-      const typedDef = def as { type?: string } | undefined;
-      m[qid] = typedDef?.type ?? 'TEXT';
-    }
-    return m;
-  }, [questionMap]);
+  const questionTypesById = useMemo(() => buildQuestionTypesById(questionMap), [questionMap]);
 
   // Parsed submissions (examples)
   const {
@@ -208,19 +198,18 @@ const QuestionsPage: React.FC = () => {
     isLoading: loadingParsed,
     isError: errorParsed,
     error: parsedError,
-  } = useParsedSubmissions(safeAssessmentId, hasQuestionSetRecord && enabled);
+  } = useParsedSubmissions(assessmentId, hasQuestionSetRecord && enabled);
 
-  const parsedErr = parsedError as { response?: { status?: number } } | undefined;
-  const missingSubmissions = errorParsed && parsedErr?.response?.status === 404;
+  const missingSubmissions = errorParsed && isNotFoundError(parsedError);
 
   // Update question set (manual edits)
-  const updateMutation = useUpdateQuestionSet(safeAssessmentId);
+  const updateMutation = useUpdateQuestionSet(assessmentId);
 
   // Delete question set
-  const deleteMutation = useDeleteQuestionSet(safeAssessmentId);
+  const deleteMutation = useDeleteQuestionSet(assessmentId);
 
   // Infer (replace) questions from submissions, then parse
-  const inferMutation = useInferAndParseQuestionSet(safeAssessmentId);
+  const inferMutation = useInferAndParseQuestionSet(assessmentId);
 
   // Examples from parsed submissions
   const examplesByQuestion = useMemo(
@@ -283,7 +272,7 @@ const QuestionsPage: React.FC = () => {
     setIsSynchronizingQuestions(true);
 
     try {
-      const inferredQuestionSet = await inferQuestionSetFromSubmissions(safeAssessmentId);
+      const inferredQuestionSet = await inferQuestionSetFromSubmissions(assessmentId);
       const nextQuestionMap = synchronizeQuestionMap(
         questionMap,
         (inferredQuestionSet.question_set?.question_map ?? {}) as QuestionSetInputQuestionMap,
@@ -330,7 +319,7 @@ const QuestionsPage: React.FC = () => {
     missingQuestionIds,
     questionMap,
     selectedQid,
-    safeAssessmentId,
+    assessmentId,
     setSelectedQid,
     updateMutation,
   ]);
@@ -524,7 +513,7 @@ const QuestionsPage: React.FC = () => {
                 icon={<IconInbox size={14} />}
                 iconColor="blue"
                 title="Upload submissions first"
-                description={<>Import a CSV from Examplify or any other source.{' '}<Anchor component={Link} to={`/assessments/${safeAssessmentId}/submissions`} size="xs">Go to Submissions →</Anchor></>}
+                description={<>Import a CSV from Examplify or any other source.{' '}<Anchor component={Link} to={`/assessments/${assessmentId}/submissions`} size="xs">Go to Submissions →</Anchor></>}
               />
             </Stack>
           </Stack>
@@ -576,7 +565,7 @@ const QuestionsPage: React.FC = () => {
                   icon={<IconInbox size={14} />}
                   iconColor="gray"
                   title="Upload submissions to infer"
-                  description={<>Import a CSV to automatically detect questions.{' '}<Anchor component={Link} to={`/assessments/${safeAssessmentId}/submissions`} size="xs">Go to Submissions →</Anchor></>}
+                  description={<>Import a CSV to automatically detect questions.{' '}<Anchor component={Link} to={`/assessments/${assessmentId}/submissions`} size="xs">Go to Submissions →</Anchor></>}
                 />
               )}
 
@@ -606,7 +595,7 @@ const QuestionsPage: React.FC = () => {
           <Suspense fallback={null}>
             <QuestionSetUploadModal
               open={openQsUpload}
-              assessmentId={safeAssessmentId}
+              assessmentId={assessmentId}
               onClose={() => setOpenQsUpload(false)}
             />
           </Suspense>
@@ -615,7 +604,7 @@ const QuestionsPage: React.FC = () => {
           <Suspense fallback={null}>
             <QuestionSetImportModal
               open={openQsImport}
-              assessmentId={safeAssessmentId}
+              assessmentId={assessmentId}
               onClose={() => setOpenQsImport(false)}
             />
           </Suspense>
@@ -835,7 +824,7 @@ const QuestionsPage: React.FC = () => {
           <Suspense fallback={null}>
             <QuestionSetUploadModal
               open={openQsUpload}
-              assessmentId={safeAssessmentId}
+              assessmentId={assessmentId}
               onClose={() => setOpenQsUpload(false)}
             />
           </Suspense>
@@ -844,7 +833,7 @@ const QuestionsPage: React.FC = () => {
           <Suspense fallback={null}>
             <QuestionSetImportModal
               open={openQsImport}
-              assessmentId={safeAssessmentId}
+              assessmentId={assessmentId}
               onClose={() => setOpenQsImport(false)}
             />
           </Suspense>

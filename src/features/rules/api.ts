@@ -3,7 +3,8 @@ import { useCallback, useMemo } from 'react';
 
 import { api } from '@api';
 import { invalidateRubricQueries } from '@api/queryInvalidation';
-import rulesSchema from '@schemas/rules.json';
+
+import { findSchemaKeyByType, getRuleDefinitions } from './schema/lookup';
 
 import type { RubricOutput } from './types';
 import type { RuleValue, QuestionType } from './types';
@@ -27,10 +28,7 @@ const stringArray = (value: unknown): string[] | undefined => {
  * Memoised access to rules schema definitions (rules.json).
  */
 export const useRuleDefinitions = (): RuleDefinitions => {
-  return useMemo(() => {
-    const defs = (rulesSchema as { definitions?: RuleDefinitions } | RuleDefinitions)?.definitions ?? (rulesSchema as RuleDefinitions);
-    return (defs ?? {}) as RuleDefinitions;
-  }, []);
+  return useMemo(() => getRuleDefinitions(), []);
 };
 
 /**
@@ -119,13 +117,6 @@ export const useCompatibleRuleKeys = (
  */
 export const useFindSchemaKeyByType = (defs: RuleDefinitions) => {
   return useCallback((type: string, requireQuestionId?: boolean): string | null => {
-    for (const k of Object.keys(defs)) {
-      const props = extractProperties(defs[k]);
-      const typeObj = props.type as { const?: unknown; default?: unknown } | undefined;
-      const typeConst = (typeObj?.const ?? typeObj?.default) as string | undefined;
-      const hasQid = !!props.question_id;
-      if (typeConst === type && (requireQuestionId === undefined || requireQuestionId === hasQid)) return k;
-    }
-    return null;
+    return findSchemaKeyByType(defs, type, requireQuestionId);
   }, [defs]);
 };

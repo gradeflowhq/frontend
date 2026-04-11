@@ -1,9 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import type { AdjustableSubmission } from '@api/models';
+import { TRANSFORMERS_CACHE_VERSION_KEY, TRANSFORMERS_CACHE_VERSION } from './semanticGrouping';
 
-const SEMANTIC_CACHE_VERSION_KEY = 'gradeflow:semantic-cache-version';
-const SEMANTIC_CACHE_VERSION = 'remote-only-xenova-minilm-v1';
+import type { AdjustableSubmission } from '@api/models';
 
 const makeStorageMock = (initialEntries: Record<string, string> = {}) => {
   const store = new Map(Object.entries(initialEntries));
@@ -61,8 +60,8 @@ describe('getEmbeddingPipeline', () => {
     expect(loadedPipe).toBe(mockPipe);
     expect(deleteMock).toHaveBeenCalledWith('transformers-cache');
     expect(storageMock.setItem).toHaveBeenCalledWith(
-      SEMANTIC_CACHE_VERSION_KEY,
-      SEMANTIC_CACHE_VERSION,
+      TRANSFORMERS_CACHE_VERSION_KEY,
+      TRANSFORMERS_CACHE_VERSION,
     );
     expect(pipelineMock).toHaveBeenCalledWith(
       'feature-extraction',
@@ -79,7 +78,7 @@ describe('getEmbeddingPipeline', () => {
     const pipelineMock = vi.fn().mockResolvedValue(mockPipe);
     const deleteMock = vi.fn().mockResolvedValue(true);
     const storageMock = makeStorageMock({
-      [SEMANTIC_CACHE_VERSION_KEY]: SEMANTIC_CACHE_VERSION,
+      [TRANSFORMERS_CACHE_VERSION_KEY]: TRANSFORMERS_CACHE_VERSION,
     });
 
     vi.stubGlobal('caches', { delete: deleteMock });
@@ -104,7 +103,7 @@ describe('getEmbeddingPipeline', () => {
     ]);
     const env = { allowLocalModels: true, useBrowserCache: true };
     const storageMock = makeStorageMock({
-      [SEMANTIC_CACHE_VERSION_KEY]: SEMANTIC_CACHE_VERSION,
+      [TRANSFORMERS_CACHE_VERSION_KEY]: TRANSFORMERS_CACHE_VERSION,
     });
     const pipelineMock = vi.fn().mockResolvedValue(
       vi.fn(async (text: string) => ({ data: embeddingByText.get(text) ?? new Float32Array([0, 0]) })),
@@ -139,7 +138,7 @@ describe('getEmbeddingPipeline', () => {
     ]);
     const env = { allowLocalModels: true, useBrowserCache: true };
     const storageMock = makeStorageMock({
-      [SEMANTIC_CACHE_VERSION_KEY]: SEMANTIC_CACHE_VERSION,
+      [TRANSFORMERS_CACHE_VERSION_KEY]: TRANSFORMERS_CACHE_VERSION,
     });
     const pipelineMock = vi.fn().mockResolvedValue(
       vi.fn(async (text: string) => ({ data: embeddingByText.get(text) ?? new Float32Array([0, 0]) })),

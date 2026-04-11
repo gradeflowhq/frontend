@@ -6,6 +6,13 @@ import { ENV } from '../env';
 
 import type { AxiosInstance, AxiosResponse } from 'axios';
 
+/** Maximum items per Canvas API page. */
+const CANVAS_PAGE_SIZE = 100;
+/** Search endpoints use a smaller page size. */
+const CANVAS_SEARCH_PAGE_SIZE = 50;
+/** Safety limit on pagination loops. */
+const MAX_CANVAS_PAGES = 50;
+
 
 export type CanvasUser = {
   id: number;
@@ -131,9 +138,9 @@ export const createCanvasClient = (config: CanvasClientConfig) => {
     while (true) {
       const chunk = await fetchPage(page);
       acc.push(...chunk);
-      if (!chunk.length || chunk.length < 100) break;
+      if (!chunk.length || chunk.length < CANVAS_PAGE_SIZE) break;
       page += 1;
-      if (page > 50) break; // safety guard
+      if (page > MAX_CANVAS_PAGES) break; // safety guard
     }
     return acc;
   };
@@ -144,7 +151,7 @@ export const createCanvasClient = (config: CanvasClientConfig) => {
       client.get<CanvasAssignment>(`/api/v1/courses/${courseId}/assignments/${assignmentId}`),
     findAssignmentByName: async (courseId: string | number, name: string) => {
       const res = await client.get<CanvasAssignment[]>(`/api/v1/courses/${courseId}/assignments`, {
-        params: { search_term: name, per_page: 50 },
+        params: { search_term: name, per_page: CANVAS_SEARCH_PAGE_SIZE },
       });
       const lowered = name.trim().toLowerCase();
       return res.data.find((a) => a.name?.trim().toLowerCase() === lowered) ?? null;
@@ -181,7 +188,7 @@ export const createCanvasClient = (config: CanvasClientConfig) => {
     },
     listAssignmentGroups: (courseId: string | number) =>
       client.get<CanvasAssignmentGroup[]>(`/api/v1/courses/${courseId}/assignment_groups`, {
-        params: { per_page: 50 },
+        params: { per_page: CANVAS_SEARCH_PAGE_SIZE },
       }),
     createAssignmentGroup: (
       courseId: string | number,
@@ -197,7 +204,7 @@ export const createCanvasClient = (config: CanvasClientConfig) => {
         params: {
           enrollment_type: ['student'],
           include: ['login_id', 'integration_id', 'sis_user_id'],
-          per_page: 100,
+          per_page: CANVAS_PAGE_SIZE,
           page,
         },
       }),
@@ -208,7 +215,7 @@ export const createCanvasClient = (config: CanvasClientConfig) => {
             params: {
               enrollment_type: ['student'],
               include: ['login_id', 'integration_id', 'sis_user_id'],
-              per_page: 100,
+              per_page: CANVAS_PAGE_SIZE,
               page,
             },
           })
@@ -216,25 +223,25 @@ export const createCanvasClient = (config: CanvasClientConfig) => {
       ),
     listCourses: (page = 1) =>
       client.get<CanvasCourse[]>(`/api/v1/courses`, {
-        params: { enrollment_state: ['available'], per_page: 100, page },
+        params: { enrollment_state: ['available'], per_page: CANVAS_PAGE_SIZE, page },
       }),
     listAllCourses: async () =>
       fetchAllPages((page) =>
         client
           .get<CanvasCourse[]>(`/api/v1/courses`, {
-            params: { enrollment_state: ['available'], per_page: 100, page },
+            params: { enrollment_state: ['available'], per_page: CANVAS_PAGE_SIZE, page },
           })
           .then((r) => r.data)
       ),
     listAssignments: (courseId: string | number, page = 1) =>
       client.get<CanvasAssignmentSummary[]>(`/api/v1/courses/${courseId}/assignments`, {
-        params: { per_page: 100, order_by: 'name', page },
+        params: { per_page: CANVAS_PAGE_SIZE, order_by: 'name', page },
       }),
     listAllAssignments: async (courseId: string | number) =>
       fetchAllPages((page) =>
         client
           .get<CanvasAssignmentSummary[]>(`/api/v1/courses/${courseId}/assignments`, {
-            params: { per_page: 100, order_by: 'name', page },
+            params: { per_page: CANVAS_PAGE_SIZE, order_by: 'name', page },
           })
           .then((r) => r.data)
       ),

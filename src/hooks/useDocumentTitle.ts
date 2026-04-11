@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 
 export const useDocumentTitle = (title: string) => {
   useEffect(() => {
-    if (title && typeof title === 'string') {
+    if (title) {
       document.title = title;
     }
   }, [title]);

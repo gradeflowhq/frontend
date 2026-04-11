@@ -38,15 +38,13 @@ describe('compareDateDesc', () => {
       { date: '2022-01-01' },
     ];
     const sorted = [...items].sort(compareDateDesc(getDate));
-    expect(sorted[0].date).toBe('2024-01-01');
-    expect(sorted[2].date).toBe('2022-01-01');
+    expect(sorted.map((i) => i.date)).toEqual(['2024-01-01', '2023-01-01', '2022-01-01']);
   });
 
   it('places null dates last', () => {
-    const items = [{ date: null }, { date: '2024-01-01' }];
+    const items = [{ date: null }, { date: '2024-01-01' }, { date: '2022-06-15' }];
     const sorted = [...items].sort(compareDateDesc(getDate));
-    expect(sorted[0].date).toBe('2024-01-01');
-    expect(sorted[1].date).toBeNull();
+    expect(sorted.map((i) => i.date)).toEqual(['2024-01-01', '2022-06-15', null]);
   });
 
   it('returns 0 for two null dates', () => {

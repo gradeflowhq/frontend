@@ -5,7 +5,9 @@
  * the runtime so subsequent page loads are fast.
  */
 
-import { buildGroupEntry, buildGroupKey } from './grouping';
+import { clusterByPairwise } from '@utils/unionFind';
+
+import { answerToString, buildGroupEntry, buildGroupKey } from './grouping';
 
 import type { AnswerGroup, GroupingMode } from './grouping';
 import type { AdjustableSubmission } from '@api/models';
@@ -21,8 +23,10 @@ let pipelinePromise: Promise<FeatureExtractionPipeline> | null = null;
 let modelReady = false;
 
 const TRANSFORMERS_CACHE_NAME = 'transformers-cache';
-const TRANSFORMERS_CACHE_VERSION_KEY = 'gradeflow:semantic-cache-version';
-const TRANSFORMERS_CACHE_VERSION = 'remote-only-xenova-minilm-v1';
+/** @internal Exported for tests. */
+export const TRANSFORMERS_CACHE_VERSION_KEY = 'gradeflow:semantic-cache-version';
+/** @internal Exported for tests. */
+export const TRANSFORMERS_CACHE_VERSION = 'remote-only-xenova-minilm-v1';
 
 const clearTransformersBrowserCache = async (): Promise<void> => {
   if (typeof caches === 'undefined') return;
@@ -103,40 +107,9 @@ const clusterByCosine = (
   embeddings: Float32Array[],
   threshold: number,
 ): Map<number, number[]> => {
-  const n = embeddings.length;
-  const parent = Array.from({ length: n }, (_, i) => i);
-
-  const find = (x: number): number => {
-    if (parent[x] !== x) parent[x] = find(parent[x]!);
-    return parent[x]!;
-  };
-
-  for (let i = 0; i < n; i++) {
-    for (let j = i + 1; j < n; j++) {
-      if (cosineSimilarity(embeddings[i]!, embeddings[j]!) >= threshold) {
-        const ri = find(i);
-        const rj = find(j);
-        if (ri !== rj) parent[ri] = rj;
-      }
-    }
-  }
-
-  const clusters = new Map<number, number[]>();
-  for (let i = 0; i < n; i++) {
-    const root = find(i);
-    const existing = clusters.get(root) ?? [];
-    existing.push(i);
-    clusters.set(root, existing);
-  }
-  return clusters;
-};
-
-// ── Answer text helper ────────────────────────────────────────────────────────
-
-const answerToString = (value: unknown): string => {
-  if (value === null || value === undefined) return '(no answer)';
-  if (Array.isArray(value)) return value.join(', ');
-  return String(value);
+  return clusterByPairwise(embeddings.length, (i, j) =>
+    cosineSimilarity(embeddings[i]!, embeddings[j]!) >= threshold,
+  );
 };
 
 // ── Main export ───────────────────────────────────────────────────────────────

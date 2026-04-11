@@ -20,6 +20,7 @@ describe('queryInvalidation helpers', () => {
     expect(queryClient.invalidateQueries).toHaveBeenNthCalledWith(3, {
       queryKey: QK.assessments.item('assessment-1'),
     });
+    expect(queryClient.invalidateQueries).toHaveBeenCalledTimes(3);
   });
 
   it('invalidates the rubric related query keys for an assessment', async () => {
@@ -38,5 +39,6 @@ describe('queryInvalidation helpers', () => {
     expect(queryClient.invalidateQueries).toHaveBeenNthCalledWith(3, {
       queryKey: QK.assessments.item('assessment-1'),
     });
+    expect(queryClient.invalidateQueries).toHaveBeenCalledTimes(3);
   });
 });

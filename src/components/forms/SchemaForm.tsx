@@ -48,12 +48,10 @@ export const SchemaForm = <T = unknown>({
   widgets,
   formContext,
 }: SchemaFormProps<T>) => {
-  const mergedWidgets = React.useMemo(() => {
-    return {
-      ...(MantineTheme.widgets || {}),
-      ...(widgets || {}),
-    };
-  }, [widgets]);
+  const mergedWidgets = React.useMemo(
+    () => ({ ...MantineTheme.widgets, ...widgets }),
+    [widgets],
+  );
   return (
     <MantineForm
       schema={schema}

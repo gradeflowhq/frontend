@@ -5,8 +5,8 @@ import { Link } from 'react-router-dom';
 import { PATHS } from '@app/routes/paths';
 import { useResolvedColorScheme } from '@hooks/useResolvedColorScheme';
 
-import { features } from '../landing-data';
-import { getLandingFeatureIconColors } from '../landing-theme';
+import { features } from '../landingData';
+import { getLandingFeatureIconColors } from '../landingTheme';
 
 interface LandingFeaturesSectionProps {
   accessToken: string | null;

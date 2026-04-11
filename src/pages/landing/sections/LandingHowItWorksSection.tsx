@@ -1,7 +1,7 @@
 import { Box, Center, Text, Title } from '@mantine/core';
 import React from 'react';
 
-import { howItWorksSteps } from '../landing-data';
+import { howItWorksSteps } from '../landingData';
 
 const hiwCols = howItWorksSteps.length;
 

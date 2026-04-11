@@ -2,6 +2,8 @@
  * Pure string-similarity helpers for group-view clustering.
  */
 
+import { clusterByPairwise } from '@utils/unionFind';
+
 /**
  * Standard Levenshtein edit distance using a two-row rolling array.
  * O(m * n) time, O(min(m, n)) space.
@@ -47,8 +49,6 @@ export const similarity = (a: string, b: string): number => {
  * Groups items into clusters where every pair within a cluster has
  * similarity >= threshold.
  *
- * Uses union-find (path compression + union by rank).
- *
  * @param items     Array of { id: string; normalized: string }
  * @param threshold 0–1; pairs with similarity >= threshold are merged
  * @returns Map from cluster-root's normalized string → array of ids
@@ -60,46 +60,14 @@ export const clusterByThreshold = (
   const n = items.length;
   if (n === 0) return new Map();
 
-  const parent = Array.from({ length: n }, (_, i) => i);
-  const rank = new Array<number>(n).fill(0);
-
-  const find = (x: number): number => {
-    if (parent[x] !== x) parent[x] = find(parent[x]);
-    return parent[x];
-  };
-
-  const union = (x: number, y: number): void => {
-    const rx = find(x);
-    const ry = find(y);
-    if (rx === ry) return;
-    if (rank[rx] < rank[ry]) {
-      parent[rx] = ry;
-    } else if (rank[rx] > rank[ry]) {
-      parent[ry] = rx;
-    } else {
-      parent[ry] = rx;
-      rank[rx]++;
-    }
-  };
-
-  for (let i = 0; i < n; i++) {
-    for (let j = i + 1; j < n; j++) {
-      if (similarity(items[i]!.normalized, items[j]!.normalized) >= threshold) {
-        union(i, j);
-      }
-    }
-  }
+  const clusters = clusterByPairwise(n, (i, j) =>
+    similarity(items[i]!.normalized, items[j]!.normalized) >= threshold,
+  );
 
   const result = new Map<string, string[]>();
-  for (let i = 0; i < n; i++) {
-    const root = find(i);
+  for (const [root, members] of clusters) {
     const key = items[root]!.normalized;
-    const existing = result.get(key);
-    if (existing) {
-      existing.push(items[i]!.id);
-    } else {
-      result.set(key, [items[i]!.id]);
-    }
+    result.set(key, members.map((idx) => items[idx]!.id));
   }
 
   return result;

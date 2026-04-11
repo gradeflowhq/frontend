@@ -5,7 +5,7 @@ import type { JSONSchema7, JSONSchema7Definition } from 'json-schema';
 const requestSchemas = requestsSchema as Record<string, JSONSchema7>;
 
 /** Resolve a $ref like "#/definitions/CsvGradedSubmissionsConfig" from requestsSchema */
-export const resolveRef = (node: JSONSchema7 | JSONSchema7Definition | undefined): JSONSchema7 | undefined => {
+const resolveRef = (node: JSONSchema7 | JSONSchema7Definition | undefined): JSONSchema7 | undefined => {
   if (!node || typeof node !== 'object' || Array.isArray(node)) return undefined;
   if (typeof node.$ref !== 'string') return node;
 
@@ -17,7 +17,7 @@ export const resolveRef = (node: JSONSchema7 | JSONSchema7Definition | undefined
 };
 
 /** Extract serializer oneOf entries and resolve $ref */
-export const getResolvedSerializerOptions = (downloadSchema?: JSONSchema7): JSONSchema7[] => {
+const getResolvedSerializerOptions = (downloadSchema?: JSONSchema7): JSONSchema7[] => {
   if (!downloadSchema || typeof downloadSchema !== 'object') return [];
   const serializerDef = downloadSchema.properties?.serializer as JSONSchema7 | JSONSchema7Definition | undefined;
   if (!serializerDef || typeof serializerDef !== 'object' || Array.isArray(serializerDef)) return [];

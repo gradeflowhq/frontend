@@ -48,7 +48,7 @@ export type ClusterOpts = {
 
 // ── Internal helpers ──────────────────────────────────────────────────────────
 
-const answerToString = (value: unknown): string => {
+export const answerToString = (value: unknown): string => {
   if (value === null || value === undefined) return '(no answer)';
   if (Array.isArray(value)) return value.join(', ');
   return String(value);
@@ -114,9 +114,7 @@ export const buildGroupEntry = (sub: AdjustableSubmission, qid: string): GroupEn
     maxPoints: result.max_points ?? 0,
     effectiveFeedback: result.adjusted_feedback ?? result.feedback ?? null,
     originalFeedback: result.feedback ?? null,
-    hasManualAdjustment:
-      (result.adjusted_points !== null && result.adjusted_points !== undefined) ||
-      (result.adjusted_feedback !== null && result.adjusted_feedback !== undefined),
+    hasManualAdjustment: result.adjusted_points != null || result.adjusted_feedback != null,
   };
 };
 

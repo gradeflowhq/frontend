@@ -91,8 +91,11 @@ describe('clusterByThreshold', () => {
       { id: 'b', normalized: 'cats' },
     ];
     const result = clusterByThreshold(items, 0.5);
+    // Both items should merge into a single cluster
+    expect(result.size).toBe(1);
     const totalIds = [...result.values()].flat();
     expect(totalIds).toHaveLength(2);
+    expect(totalIds.sort()).toEqual(['a', 'b']);
   });
 
   it('each item appears exactly once across all clusters', () => {

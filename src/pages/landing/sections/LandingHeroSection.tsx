@@ -6,8 +6,8 @@ import { Link } from 'react-router-dom';
 import { PATHS } from '@app/routes/paths';
 import { useResolvedColorScheme } from '@hooks/useResolvedColorScheme';
 
-import { trustStats } from '../landing-data';
-import { getLandingHeroBackground, getLandingSourceBadgeStyles } from '../landing-theme';
+import { trustStats } from '../landingData';
+import { getLandingHeroBackground, getLandingSourceBadgeStyles } from '../landingTheme';
 
 interface LandingHeroSectionProps {
   accessToken: string | null;

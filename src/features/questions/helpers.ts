@@ -8,6 +8,18 @@ import type {
 
 type QuestionMapLike = QuestionSetOutputQuestionMap | QuestionSetInputQuestionMap;
 
+/**
+ * Build a `{ [qid]: questionType }` lookup from a question map.
+ * Falls back to `'TEXT'` when a definition has no `type` field.
+ */
+export const buildQuestionTypesById = (qMap: QuestionMapLike): Record<string, string> => {
+  const m: Record<string, string> = {};
+  for (const [qid, def] of Object.entries(qMap ?? {})) {
+    m[qid] = (def as { type?: string } | undefined)?.type ?? 'TEXT';
+  }
+  return m;
+};
+
 const sortQuestionIds = (ids: Iterable<string>): QuestionId[] =>
   [...ids].sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
 

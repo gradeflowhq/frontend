@@ -19,9 +19,9 @@ describe('rule synchronization helpers', () => {
 
     const invalidRules = getInvalidRuleReferences(rules, ['Q1', 'Q2']);
 
-    expect(invalidRules.map((rule) => rule.summary)).toEqual([
-      'Q9 -> Text Match',
-      'Q10 -> Conditional',
+    expect(invalidRules).toEqual([
+      expect.objectContaining({ ruleIndex: 1, missingQuestionIds: ['Q9'], summary: 'Q9 -> Text Match' }),
+      expect.objectContaining({ ruleIndex: 2, missingQuestionIds: ['Q10'], summary: 'Q10 -> Conditional' }),
     ]);
   });
 

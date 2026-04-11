@@ -15,6 +15,10 @@ import { notifySuccess } from '@utils/notifications';
 import type { BodyIssueTokenAuthTokenPost } from '@api/models';
 import type { JSONSchema7 } from 'json-schema';
 
+const HIDE_KEYS = new Set(['grant_type', 'scope', 'client_id', 'client_secret']);
+const TEMPLATES = { FieldTemplate: HiddenAwareFieldTemplate };
+const FORM_CONTEXT = { hideKeys: HIDE_KEYS };
+
 const getLoginSchema = (): JSONSchema7 => {
   const schema = (othersSchema as Record<string, JSONSchema7>)['Body_issue_token_auth_token_post'];
   if (!schema) throw new Error('Body_issue_token_auth_token_post schema not found in others.json');
@@ -25,8 +29,6 @@ const LoginPage: React.FC = () => {
   useDocumentTitle('Login - GradeFlow');
   const setTokens = useAuthStore((s) => s.setTokens);
   const schema = useMemo(() => getLoginSchema(), []);
-
-  const hideKeys = useMemo(() => new Set(['grant_type', 'scope', 'client_id', 'client_secret']), []);
 
   const uiSchema = useMemo(
     () => ({
@@ -42,9 +44,6 @@ const LoginPage: React.FC = () => {
     []
   );
 
-  const templates = useMemo(() => ({ FieldTemplate: HiddenAwareFieldTemplate }), []);
-  const formContext = useMemo(() => ({ hideKeys }), [hideKeys]);
-
   const { mutateAsync, isPending, isError, error } = useLogin();
 
   return (
@@ -54,8 +53,8 @@ const LoginPage: React.FC = () => {
         <SchemaForm<BodyIssueTokenAuthTokenPost>
           schema={schema}
           uiSchema={uiSchema}
-          templates={templates}
-          formContext={formContext}
+          templates={TEMPLATES}
+          formContext={FORM_CONTEXT}
           isSubmitting={isPending}
           onSubmit={({ formData }) => {
             if (!formData) return;

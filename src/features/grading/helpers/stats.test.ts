@@ -56,6 +56,12 @@ describe('computeStats', () => {
     const stats = computeStats([]);
     expect(stats.count).toBe(0);
     expect(stats.mean).toBe(0);
+    expect(stats.stdev).toBe(0);
+    expect(stats.min).toBe(0);
+    expect(stats.max).toBe(0);
+    expect(stats.q1).toBe(0);
+    expect(stats.q2).toBe(0);
+    expect(stats.q3).toBe(0);
   });
 
   it('computes stats for a single value', () => {
@@ -65,6 +71,9 @@ describe('computeStats', () => {
     expect(stats.stdev).toBe(0);
     expect(stats.min).toBe(5);
     expect(stats.max).toBe(5);
+    expect(stats.q1).toBe(5);
+    expect(stats.q2).toBe(5);
+    expect(stats.q3).toBe(5);
   });
 
   it('computes mean correctly', () => {
@@ -81,7 +90,9 @@ describe('computeStats', () => {
 
   it('computes quartiles for sorted values', () => {
     const stats = computeStats([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    expect(stats.q1).toBeCloseTo(3.25);
     expect(stats.q2).toBeCloseTo(5.5);
+    expect(stats.q3).toBeCloseTo(7.75);
   });
 });
 

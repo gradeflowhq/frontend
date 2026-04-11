@@ -1,12 +1,9 @@
 import { friendlyRuleLabel } from './lookup';
+import { deepClone } from './utils';
 
 type JsonObject = Record<string, unknown>;
 
 const UNSELECTED_RULE_TITLE = 'Select a rule\u2026';
-
-function deepClone<T>(obj: T): T {
-  return JSON.parse(JSON.stringify(obj));
-}
 
 /**
  * Extracts a question's type string from its schema/instance.

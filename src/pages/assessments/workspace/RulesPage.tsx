@@ -28,6 +28,7 @@ import PageShell from '@components/common/PageShell';
 import SectionStatusBadge from '@components/common/SectionStatusBadge';
 import { useGrading } from '@features/grading/api';
 import { useQuestionSet } from '@features/questions/api';
+import { buildQuestionTypesById } from '@features/questions/helpers';
 import { useRubric, useRubricCoverage, useDeleteRubric } from '@features/rubric/api';
 const RubricImportModal = lazy(
   () => import('@features/rubric/components/RubricImportModal'),
@@ -43,7 +44,7 @@ import { getRuleTargetQids, isMultiTargetRule } from '@features/rules/schema';
 import { getInvalidRuleReferences, synchronizeRules } from '@features/rules/synchronization';
 import { useAutoResetState } from '@hooks/useAutoResetState';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
-import { getErrorMessage } from '@utils/error';
+import { getErrorMessage, isNotFoundError } from '@utils/error';
 import { notifyError, notifyErrorMessage, notifySuccess } from '@utils/notifications';
 
 import type { AdjustableSubmission, RubricOutput, RubricOutputRulesItem, QuestionSetOutputQuestionMap } from '@api/models';
@@ -72,23 +73,22 @@ const RulesPage: React.FC = () => {
   useDocumentTitle(`Rules - ${assessment?.name ?? 'Assessment'} - GradeFlow`);
 
   const enabled = Boolean(assessmentId);
-  const safeId = assessmentId;
 
   const {
     data: qsRes,
     isLoading: loadingQS,
     isError: errorQS,
     error: qsError,
-  } = useQuestionSet(safeId, enabled);
+  } = useQuestionSet(assessmentId, enabled);
 
-  const qsNotFound = (qsError as { response?: { status?: number } } | undefined)?.response?.status === 404;
+  const qsNotFound = isNotFoundError(qsError);
 
   const {
     data: rubricRes,
     isLoading: loadingRubric,
     isError: errorRubric,
     error: rubricError,
-  } = useRubric(safeId);
+  } = useRubric(assessmentId);
 
   // rubricRes is null when the server returned 404 (no rubric created yet)
   const rubricMissing = rubricRes === null;
@@ -98,7 +98,7 @@ const RulesPage: React.FC = () => {
     isLoading: loadingCoverage,
     isError: errorCoverage,
     error: coverageError,
-  } = useRubricCoverage(safeId);
+  } = useRubricCoverage(assessmentId);
 
   const questionMap: QuestionSetOutputQuestionMap = React.useMemo(() => {
     return qsNotFound ? {} : (qsRes?.question_set?.question_map ?? {});
@@ -114,21 +114,14 @@ const RulesPage: React.FC = () => {
     [questionMap],
   );
 
-  const questionTypesById = React.useMemo(() => {
-    const m: Record<string, string> = {};
-    for (const [qid, def] of Object.entries(questionMap)) {
-      const typedDef = def as { type?: string } | undefined;
-      m[qid] = typedDef?.type ?? 'TEXT';
-    }
-    return m;
-  }, [questionMap]);
+  const questionTypesById = React.useMemo(() => buildQuestionTypesById(questionMap), [questionMap]);
 
   const rubric: RubricOutput = React.useMemo(
     () => rubricRes?.rubric ?? { rules: [] },
     [rubricRes],
   );
 
-  const { data: gradingData } = useGrading(safeId, enabled);
+  const { data: gradingData } = useGrading(assessmentId, enabled);
 
   const gradingItems = React.useMemo(
     () => (gradingData?.submissions ?? []) as AdjustableSubmission[],
@@ -208,8 +201,8 @@ const RulesPage: React.FC = () => {
     [coveringRuleByQid, rubric, setSearchParams, setHighlightedRule],
   );
 
-  const deleteRubric = useDeleteRubric(safeId);
-  const replaceRubric = useReplaceRubric(safeId);
+  const deleteRubric = useDeleteRubric(assessmentId);
+  const replaceRubric = useReplaceRubric(assessmentId);
 
   const invalidRuleReferences = React.useMemo(
     () => getInvalidRuleReferences((rubric?.rules ?? []) as RuleValue[], questionIds),
@@ -404,7 +397,7 @@ const RulesPage: React.FC = () => {
                 icon={<IconQuestionMark size={14} />}
                 iconColor="blue"
                 title="Set up questions first"
-                description={<>Questions define the structure of your assessment — rules are built on top of them.{' '}<Anchor component={Link} to={`/assessments/${safeId}/questions`} size="xs">Go to Questions →</Anchor></>}
+                description={<>Questions define the structure of your assessment — rules are built on top of them.{' '}<Anchor component={Link} to={`/assessments/${assessmentId}/questions`} size="xs">Go to Questions →</Anchor></>}
               />
             </Stack>
           </Stack>
@@ -480,7 +473,7 @@ const RulesPage: React.FC = () => {
           <Suspense fallback={null}>
             <RubricUploadModal
               open={openRubricUpload}
-              assessmentId={safeId}
+              assessmentId={assessmentId}
               onClose={() => setOpenRubricUpload(false)}
             />
           </Suspense>
@@ -489,7 +482,7 @@ const RulesPage: React.FC = () => {
           <Suspense fallback={null}>
             <RubricImportModal
               open={openRubricImport}
-              assessmentId={safeId}
+              assessmentId={assessmentId}
               onClose={() => setOpenRubricImport(false)}
             />
           </Suspense>
@@ -557,7 +550,7 @@ const RulesPage: React.FC = () => {
                 rubric={rubric}
                 questionIds={questionIds}
                 questionTypesById={questionTypesById}
-                assessmentId={safeId}
+                assessmentId={assessmentId}
                 questionMap={questionMap}
                 coveredQuestionIds={coveredQuestionIds}
                 searchQuery={searchQuery}
@@ -571,7 +564,7 @@ const RulesPage: React.FC = () => {
             <Tabs.Panel value="global" pt="md">
               <MultiTargetRulesSection
                 rubric={rubric}
-                assessmentId={safeId}
+                assessmentId={assessmentId}
                 questionMap={questionMap}
                 searchQuery={searchQuery}
                 highlightedRule={highlightedRule}
@@ -584,7 +577,7 @@ const RulesPage: React.FC = () => {
           <Suspense fallback={null}>
             <RubricUploadModal
               open={openRubricUpload}
-              assessmentId={safeId}
+              assessmentId={assessmentId}
               onClose={() => setOpenRubricUpload(false)}
             />
           </Suspense>
@@ -593,7 +586,7 @@ const RulesPage: React.FC = () => {
           <Suspense fallback={null}>
             <RubricImportModal
               open={openRubricImport}
-              assessmentId={safeId}
+              assessmentId={assessmentId}
               onClose={() => setOpenRubricImport(false)}
             />
           </Suspense>

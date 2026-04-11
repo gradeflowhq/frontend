@@ -1,8 +1,6 @@
-type JsonObject = Record<string, unknown>;
+import { deepClone } from './utils';
 
-function deepClone<T>(obj: T): T {
-  return JSON.parse(JSON.stringify(obj));
-}
+type JsonObject = Record<string, unknown>;
 
 function toEnumValues(value: unknown): string[] {
   // Normalize the source into an array of strings suitable for enum.

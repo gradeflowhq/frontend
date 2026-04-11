@@ -5,6 +5,7 @@ import { PATHS } from '@app/routes/paths';
 import { useQuestionSet } from '@features/questions/api';
 import { useRubric, useRubricCoverage } from '@features/rubric/api';
 import { useSubmissions } from '@features/submissions/api';
+import { isNotFoundError } from '@utils/error';
 
 import type { SetupStep, StepStatus } from '../components/OverviewSetupTimeline';
 
@@ -35,8 +36,7 @@ export const useSetupSteps = (assessmentId: string): SetupStepsResult => {
   const { data: rubricRes, isLoading: rubricLoading } = useRubric(assessmentId);
 
   const isQsMissing = useMemo(() => {
-    const err = qsErrorData as { response?: { status?: number } } | undefined;
-    return qsError && (err?.response?.status === 404 || !qsRes?.question_set);
+    return qsError && (isNotFoundError(qsErrorData) || !qsRes?.question_set);
   }, [qsError, qsErrorData, qsRes]);
 
   const questionMap = isQsMissing ? {} : (qsRes?.question_set?.question_map ?? {});

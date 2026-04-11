@@ -128,8 +128,4 @@ const SchemaRequestModalInner = <TForm, TData = unknown>({
   );
 };
 
-const SchemaRequestModal = <TForm,>(props: SchemaRequestModalProps<TForm>) => {
-  return <SchemaRequestModalInner {...props} />;
-};
-
-export default SchemaRequestModal;
+export default SchemaRequestModalInner;
