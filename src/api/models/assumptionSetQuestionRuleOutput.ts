@@ -11,12 +11,14 @@ import type { AssumptionSetQuestionRuleOutputMode } from './assumptionSetQuestio
 import type { AssumptionOutput } from './assumptionOutput';
 
 export interface AssumptionSetQuestionRuleOutput {
-  question_types?: AssumptionSetQuestionRuleOutputQuestionTypesItem[];
-  constraints?: QuestionConstraint[];
+  readonly question_types?: readonly AssumptionSetQuestionRuleOutputQuestionTypesItem[];
+  readonly constraints?: readonly QuestionConstraint[];
   question_id: string;
   /** Mode to select which assumption to use */
   mode?: AssumptionSetQuestionRuleOutputMode;
-  type?: 'ASSUMPTION_SET';
+  readonly type?: 'ASSUMPTION_SET';
+  readonly name?: 'Assumption Set';
   /** List of assumptions in the assumption set */
   assumptions: AssumptionOutput[];
+  readonly description: string;
 }

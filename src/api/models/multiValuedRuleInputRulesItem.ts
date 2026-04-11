@@ -5,18 +5,18 @@
  * Thin FastAPI wrapper over GradeFlow Engine
  * OpenAPI spec version: 0.1.0
  */
-import type { BonusRule } from './bonusRule';
+import type { BonusRuleInput } from './bonusRuleInput';
 import type { CompositeRuleInput } from './compositeRuleInput';
-import type { ProgrammableRule } from './programmableRule';
-import type { ProgrammingRule } from './programmingRule';
-import type { TextMatchRule } from './textMatchRule';
-import type { KeywordsRule } from './keywordsRule';
-import type { RegexRule } from './regexRule';
-import type { LengthRule } from './lengthRule';
-import type { ManualRule } from './manualRule';
+import type { ProgrammableRuleInput } from './programmableRuleInput';
+import type { ProgrammingRuleInput } from './programmingRuleInput';
+import type { TextMatchRuleInput } from './textMatchRuleInput';
+import type { KeywordsRuleInput } from './keywordsRuleInput';
+import type { RegexRuleInput } from './regexRuleInput';
+import type { LengthRuleInput } from './lengthRuleInput';
+import type { ManualRuleInput } from './manualRuleInput';
 import type { MultiValuedRuleInput } from './multiValuedRuleInput';
-import type { MultipleChoiceRule } from './multipleChoiceRule';
-import type { NumberEqualRule } from './numberEqualRule';
-import type { NumericRangeRule } from './numericRangeRule';
+import type { MultipleChoiceRuleInput } from './multipleChoiceRuleInput';
+import type { NumberEqualRuleInput } from './numberEqualRuleInput';
+import type { NumericRangeRuleInput } from './numericRangeRuleInput';
 
-export type MultiValuedRuleInputRulesItem = BonusRule | CompositeRuleInput | ProgrammableRule | ProgrammingRule | TextMatchRule | KeywordsRule | RegexRule | LengthRule | ManualRule | MultiValuedRuleInput | MultipleChoiceRule | NumberEqualRule | NumericRangeRule;
+export type MultiValuedRuleInputRulesItem = BonusRuleInput | CompositeRuleInput | ProgrammableRuleInput | ProgrammingRuleInput | TextMatchRuleInput | KeywordsRuleInput | RegexRuleInput | LengthRuleInput | ManualRuleInput | MultiValuedRuleInput | MultipleChoiceRuleInput | NumberEqualRuleInput | NumericRangeRuleInput;

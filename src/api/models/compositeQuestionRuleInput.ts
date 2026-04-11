@@ -11,10 +11,11 @@ import type { CompositeQuestionRuleInputRulesItem } from './compositeQuestionRul
 import type { CompositeQuestionRuleInputAggregation } from './compositeQuestionRuleInputAggregation';
 
 export interface CompositeQuestionRuleInput {
-  question_types?: CompositeQuestionRuleInputQuestionTypesItem[];
-  constraints?: QuestionConstraint[];
+  readonly question_types?: readonly CompositeQuestionRuleInputQuestionTypesItem[];
+  readonly constraints?: readonly QuestionConstraint[];
   question_id: string;
-  type?: 'COMPOSITE';
+  readonly type?: 'COMPOSITE';
+  readonly name?: 'Composite';
   /**
    * List of rules to apply to the answer
    * @minItems 1

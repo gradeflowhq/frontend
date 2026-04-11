@@ -6,6 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 import * as axios from 'axios';
+import type {
+  AxiosRequestConfig,
+  AxiosResponse
+} from 'axios';
 
 import type {
   AddMemberRequest,
@@ -54,11 +58,6 @@ import type {
   ValidateRubricRequest,
   ValidateRubricResponse
 } from './models';
-import type {
-  AxiosRequestConfig,
-  AxiosResponse
-} from 'axios';
-
 
 export const getGradeFlowAPI = () => {
 /**

@@ -11,11 +11,13 @@ import type { AssumptionSetMultiQuestionRuleOutputMode } from './assumptionSetMu
 import type { MultiQuestionAssumptionOutput } from './multiQuestionAssumptionOutput';
 
 export interface AssumptionSetMultiQuestionRuleOutput {
-  question_types?: AssumptionSetMultiQuestionRuleOutputQuestionTypesItem[];
-  constraints?: QuestionConstraint[];
+  readonly question_types?: readonly AssumptionSetMultiQuestionRuleOutputQuestionTypesItem[];
+  readonly constraints?: readonly QuestionConstraint[];
   /** Mode to select which assumption to use */
   mode?: AssumptionSetMultiQuestionRuleOutputMode;
-  type?: 'ASSUMPTION_SET_MULTI';
+  readonly type?: 'ASSUMPTION_SET_MULTI';
+  readonly name?: 'Assumption Set';
   /** List of assumptions in the assumption set */
   assumptions: MultiQuestionAssumptionOutput[];
+  readonly description: string;
 }

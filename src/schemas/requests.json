@@ -393,7 +393,8 @@
         "default": [
           "NUMERIC",
           "TEXT"
-        ]
+        ],
+        "readOnly": true
       },
       "constraints": {
         "items": {
@@ -401,7 +402,8 @@
         },
         "type": "array",
         "title": "Constraints",
-        "default": []
+        "default": [],
+        "readOnly": true
       },
       "question_id": {
         "type": "string",
@@ -411,7 +413,15 @@
         "type": "string",
         "const": "TEXT_MATCH",
         "title": "Type",
-        "default": "TEXT_MATCH"
+        "default": "TEXT_MATCH",
+        "readOnly": true
+      },
+      "name": {
+        "type": "string",
+        "const": "Text Match",
+        "title": "Name",
+        "default": "Text Match",
+        "readOnly": true
       },
       "answers": {
         "items": {
@@ -476,7 +486,8 @@
         "title": "Question Types",
         "default": [
           "TEXT"
-        ]
+        ],
+        "readOnly": true
       },
       "constraints": {
         "items": {
@@ -484,7 +495,8 @@
         },
         "type": "array",
         "title": "Constraints",
-        "default": []
+        "default": [],
+        "readOnly": true
       },
       "question_id": {
         "type": "string",
@@ -494,7 +506,15 @@
         "type": "string",
         "const": "REGEX",
         "title": "Type",
-        "default": "REGEX"
+        "default": "REGEX",
+        "readOnly": true
+      },
+      "name": {
+        "type": "string",
+        "const": "Regex",
+        "title": "Name",
+        "default": "Regex",
+        "readOnly": true
       },
       "pattern": {
         "type": "string",
@@ -554,7 +574,8 @@
         "title": "Question Types",
         "default": [
           "TEXT"
-        ]
+        ],
+        "readOnly": true
       },
       "constraints": {
         "items": {
@@ -562,7 +583,8 @@
         },
         "type": "array",
         "title": "Constraints",
-        "default": []
+        "default": [],
+        "readOnly": true
       },
       "question_id": {
         "type": "string",
@@ -572,7 +594,15 @@
         "type": "string",
         "const": "PROGRAMMING",
         "title": "Type",
-        "default": "PROGRAMMING"
+        "default": "PROGRAMMING",
+        "readOnly": true
+      },
+      "name": {
+        "type": "string",
+        "const": "Programming",
+        "title": "Name",
+        "default": "Programming",
+        "readOnly": true
       },
       "testcases": {
         "items": {
@@ -689,7 +719,8 @@
           "CHOICE",
           "TEXT",
           "MULTI_VALUED"
-        ]
+        ],
+        "readOnly": true
       },
       "constraints": {
         "items": {
@@ -697,7 +728,8 @@
         },
         "type": "array",
         "title": "Constraints",
-        "default": []
+        "default": [],
+        "readOnly": true
       },
       "question_id": {
         "type": "string",
@@ -707,7 +739,15 @@
         "type": "string",
         "const": "PROGRAMMABLE",
         "title": "Type",
-        "default": "PROGRAMMABLE"
+        "default": "PROGRAMMABLE",
+        "readOnly": true
+      },
+      "name": {
+        "type": "string",
+        "const": "Programmable",
+        "title": "Name",
+        "default": "Programmable",
+        "readOnly": true
       },
       "code": {
         "type": "string",
@@ -749,7 +789,8 @@
         "title": "Question Types",
         "default": [
           "NUMERIC"
-        ]
+        ],
+        "readOnly": true
       },
       "constraints": {
         "items": {
@@ -757,7 +798,8 @@
         },
         "type": "array",
         "title": "Constraints",
-        "default": []
+        "default": [],
+        "readOnly": true
       },
       "question_id": {
         "type": "string",
@@ -767,7 +809,15 @@
         "type": "string",
         "const": "NUMERIC_RANGE",
         "title": "Type",
-        "default": "NUMERIC_RANGE"
+        "default": "NUMERIC_RANGE",
+        "readOnly": true
+      },
+      "name": {
+        "type": "string",
+        "const": "Numeric Range",
+        "title": "Name",
+        "default": "Numeric Range",
+        "readOnly": true
       },
       "min_value": {
         "title": "Min Value",
@@ -809,7 +859,8 @@
         "title": "Question Types",
         "default": [
           "NUMERIC"
-        ]
+        ],
+        "readOnly": true
       },
       "constraints": {
         "items": {
@@ -817,7 +868,8 @@
         },
         "type": "array",
         "title": "Constraints",
-        "default": []
+        "default": [],
+        "readOnly": true
       },
       "question_id": {
         "type": "string",
@@ -827,7 +879,15 @@
         "type": "string",
         "const": "NUMBER_EQUAL",
         "title": "Type",
-        "default": "NUMBER_EQUAL"
+        "default": "NUMBER_EQUAL",
+        "readOnly": true
+      },
+      "name": {
+        "type": "string",
+        "const": "Number Equal",
+        "title": "Name",
+        "default": "Number Equal",
+        "readOnly": true
       },
       "answers": {
         "items": {
@@ -888,7 +948,8 @@
         "title": "Question Types",
         "default": [
           "MULTI_VALUED"
-        ]
+        ],
+        "readOnly": true
       },
       "constraints": {
         "items": {
@@ -896,7 +957,8 @@
         },
         "type": "array",
         "title": "Constraints",
-        "default": []
+        "default": [],
+        "readOnly": true
       },
       "question_id": {
         "type": "string",
@@ -906,7 +968,15 @@
         "type": "string",
         "const": "MULTI_VALUED",
         "title": "Type",
-        "default": "MULTI_VALUED"
+        "default": "MULTI_VALUED",
+        "readOnly": true
+      },
+      "name": {
+        "type": "string",
+        "const": "Multi Valued",
+        "title": "Name",
+        "default": "Multi Valued",
+        "readOnly": true
       },
       "rules": {
         "items": {
@@ -1012,7 +1082,8 @@
         "default": [
           "NUMERIC",
           "TEXT"
-        ]
+        ],
+        "readOnly": true
       },
       "constraints": {
         "items": {
@@ -1020,13 +1091,22 @@
         },
         "type": "array",
         "title": "Constraints",
-        "default": []
+        "default": [],
+        "readOnly": true
       },
       "type": {
         "type": "string",
         "const": "TEXT_MATCH",
         "title": "Type",
-        "default": "TEXT_MATCH"
+        "default": "TEXT_MATCH",
+        "readOnly": true
+      },
+      "name": {
+        "type": "string",
+        "const": "Text Match",
+        "title": "Name",
+        "default": "Text Match",
+        "readOnly": true
       },
       "answers": {
         "items": {
@@ -1061,7 +1141,8 @@
         "title": "Question Types",
         "default": [
           "TEXT"
-        ]
+        ],
+        "readOnly": true
       },
       "constraints": {
         "items": {
@@ -1069,13 +1150,22 @@
         },
         "type": "array",
         "title": "Constraints",
-        "default": []
+        "default": [],
+        "readOnly": true
       },
       "type": {
         "type": "string",
         "const": "REGEX",
         "title": "Type",
-        "default": "REGEX"
+        "default": "REGEX",
+        "readOnly": true
+      },
+      "name": {
+        "type": "string",
+        "const": "Regex",
+        "title": "Name",
+        "default": "Regex",
+        "readOnly": true
       },
       "pattern": {
         "type": "string",
@@ -1110,7 +1200,8 @@
         "title": "Question Types",
         "default": [
           "TEXT"
-        ]
+        ],
+        "readOnly": true
       },
       "constraints": {
         "items": {
@@ -1118,13 +1209,22 @@
         },
         "type": "array",
         "title": "Constraints",
-        "default": []
+        "default": [],
+        "readOnly": true
       },
       "type": {
         "type": "string",
         "const": "PROGRAMMING",
         "title": "Type",
-        "default": "PROGRAMMING"
+        "default": "PROGRAMMING",
+        "readOnly": true
+      },
+      "name": {
+        "type": "string",
+        "const": "Programming",
+        "title": "Name",
+        "default": "Programming",
+        "readOnly": true
       },
       "testcases": {
         "items": {
@@ -1190,7 +1290,8 @@
           "CHOICE",
           "TEXT",
           "MULTI_VALUED"
-        ]
+        ],
+        "readOnly": true
       },
       "constraints": {
         "items": {
@@ -1198,13 +1299,22 @@
         },
         "type": "array",
         "title": "Constraints",
-        "default": []
+        "default": [],
+        "readOnly": true
       },
       "type": {
         "type": "string",
         "const": "PROGRAMMABLE",
         "title": "Type",
-        "default": "PROGRAMMABLE"
+        "default": "PROGRAMMABLE",
+        "readOnly": true
+      },
+      "name": {
+        "type": "string",
+        "const": "Programmable",
+        "title": "Name",
+        "default": "Programmable",
+        "readOnly": true
       },
       "code": {
         "type": "string",
@@ -1243,7 +1353,8 @@
         "title": "Question Types",
         "default": [
           "NUMERIC"
-        ]
+        ],
+        "readOnly": true
       },
       "constraints": {
         "items": {
@@ -1251,13 +1362,22 @@
         },
         "type": "array",
         "title": "Constraints",
-        "default": []
+        "default": [],
+        "readOnly": true
       },
       "type": {
         "type": "string",
         "const": "NUMERIC_RANGE",
         "title": "Type",
-        "default": "NUMERIC_RANGE"
+        "default": "NUMERIC_RANGE",
+        "readOnly": true
+      },
+      "name": {
+        "type": "string",
+        "const": "Numeric Range",
+        "title": "Name",
+        "default": "Numeric Range",
+        "readOnly": true
       },
       "min_value": {
         "title": "Min Value",
@@ -1296,7 +1416,8 @@
         "title": "Question Types",
         "default": [
           "NUMERIC"
-        ]
+        ],
+        "readOnly": true
       },
       "constraints": {
         "items": {
@@ -1304,13 +1425,22 @@
         },
         "type": "array",
         "title": "Constraints",
-        "default": []
+        "default": [],
+        "readOnly": true
       },
       "type": {
         "type": "string",
         "const": "NUMBER_EQUAL",
         "title": "Type",
-        "default": "NUMBER_EQUAL"
+        "default": "NUMBER_EQUAL",
+        "readOnly": true
+      },
+      "name": {
+        "type": "string",
+        "const": "Number Equal",
+        "title": "Name",
+        "default": "Number Equal",
+        "readOnly": true
       },
       "answers": {
         "items": {
@@ -1352,7 +1482,8 @@
         "title": "Question Types",
         "default": [
           "MULTI_VALUED"
-        ]
+        ],
+        "readOnly": true
       },
       "constraints": {
         "items": {
@@ -1360,13 +1491,22 @@
         },
         "type": "array",
         "title": "Constraints",
-        "default": []
+        "default": [],
+        "readOnly": true
       },
       "type": {
         "type": "string",
         "const": "MULTI_VALUED",
         "title": "Type",
-        "default": "MULTI_VALUED"
+        "default": "MULTI_VALUED",
+        "readOnly": true
+      },
+      "name": {
+        "type": "string",
+        "const": "Multi Valued",
+        "title": "Name",
+        "default": "Multi Valued",
+        "readOnly": true
       },
       "rules": {
         "items": {
@@ -1470,7 +1610,8 @@
         "title": "Question Types",
         "default": [
           "CHOICE"
-        ]
+        ],
+        "readOnly": true
       },
       "constraints": {
         "items": {
@@ -1490,7 +1631,15 @@
         "type": "string",
         "const": "MULTIPLE_CHOICE",
         "title": "Type",
-        "default": "MULTIPLE_CHOICE"
+        "default": "MULTIPLE_CHOICE",
+        "readOnly": true
+      },
+      "name": {
+        "type": "string",
+        "const": "Multiple Choice",
+        "title": "Name",
+        "default": "Multiple Choice",
+        "readOnly": true
       },
       "answer": {
         "items": {
@@ -1540,7 +1689,8 @@
           "CHOICE",
           "TEXT",
           "MULTI_VALUED"
-        ]
+        ],
+        "readOnly": true
       },
       "constraints": {
         "items": {
@@ -1548,13 +1698,22 @@
         },
         "type": "array",
         "title": "Constraints",
-        "default": []
+        "default": [],
+        "readOnly": true
       },
       "type": {
         "type": "string",
         "const": "MANUAL",
         "title": "Type",
-        "default": "MANUAL"
+        "default": "MANUAL",
+        "readOnly": true
+      },
+      "name": {
+        "type": "string",
+        "const": "Manual",
+        "title": "Name",
+        "default": "Manual",
+        "readOnly": true
       }
     },
     "type": "object",
@@ -1577,7 +1736,8 @@
         "title": "Question Types",
         "default": [
           "TEXT"
-        ]
+        ],
+        "readOnly": true
       },
       "constraints": {
         "items": {
@@ -1585,13 +1745,22 @@
         },
         "type": "array",
         "title": "Constraints",
-        "default": []
+        "default": [],
+        "readOnly": true
       },
       "type": {
         "type": "string",
         "const": "LENGTH",
         "title": "Type",
-        "default": "LENGTH"
+        "default": "LENGTH",
+        "readOnly": true
+      },
+      "name": {
+        "type": "string",
+        "const": "Length",
+        "title": "Name",
+        "default": "Length",
+        "readOnly": true
       },
       "min_length": {
         "title": "Min Length",
@@ -1640,7 +1809,8 @@
         "title": "Question Types",
         "default": [
           "TEXT"
-        ]
+        ],
+        "readOnly": true
       },
       "constraints": {
         "items": {
@@ -1648,13 +1818,22 @@
         },
         "type": "array",
         "title": "Constraints",
-        "default": []
+        "default": [],
+        "readOnly": true
       },
       "type": {
         "type": "string",
         "const": "KEYWORDS",
         "title": "Type",
-        "default": "KEYWORDS"
+        "default": "KEYWORDS",
+        "readOnly": true
+      },
+      "name": {
+        "type": "string",
+        "const": "Keywords",
+        "title": "Name",
+        "default": "Keywords",
+        "readOnly": true
       },
       "keywords": {
         "items": {
@@ -1701,7 +1880,8 @@
         "default": [
           "NUMERIC",
           "TEXT"
-        ]
+        ],
+        "readOnly": true
       },
       "constraints": {
         "items": {
@@ -1709,13 +1889,22 @@
         },
         "type": "array",
         "title": "Constraints",
-        "default": []
+        "default": [],
+        "readOnly": true
       },
       "type": {
         "type": "string",
         "const": "COMPOSITE",
         "title": "Type",
-        "default": "COMPOSITE"
+        "default": "COMPOSITE",
+        "readOnly": true
+      },
+      "name": {
+        "type": "string",
+        "const": "Composite",
+        "title": "Name",
+        "default": "Composite",
+        "readOnly": true
       },
       "rules": {
         "items": {
@@ -1822,7 +2011,8 @@
           "CHOICE",
           "TEXT",
           "MULTI_VALUED"
-        ]
+        ],
+        "readOnly": true
       },
       "constraints": {
         "items": {
@@ -1830,13 +2020,22 @@
         },
         "type": "array",
         "title": "Constraints",
-        "default": []
+        "default": [],
+        "readOnly": true
       },
       "type": {
         "type": "string",
         "const": "BONUS",
         "title": "Type",
-        "default": "BONUS"
+        "default": "BONUS",
+        "readOnly": true
+      },
+      "name": {
+        "type": "string",
+        "const": "Bonus",
+        "title": "Name",
+        "default": "Bonus",
+        "readOnly": true
       }
     },
     "type": "object",
@@ -1859,7 +2058,8 @@
         "title": "Question Types",
         "default": [
           "CHOICE"
-        ]
+        ],
+        "readOnly": true
       },
       "constraints": {
         "items": {
@@ -1883,7 +2083,15 @@
         "type": "string",
         "const": "MULTIPLE_CHOICE",
         "title": "Type",
-        "default": "MULTIPLE_CHOICE"
+        "default": "MULTIPLE_CHOICE",
+        "readOnly": true
+      },
+      "name": {
+        "type": "string",
+        "const": "Multiple Choice",
+        "title": "Name",
+        "default": "Multiple Choice",
+        "readOnly": true
       },
       "answer": {
         "items": {
@@ -1934,7 +2142,8 @@
           "CHOICE",
           "TEXT",
           "MULTI_VALUED"
-        ]
+        ],
+        "readOnly": true
       },
       "constraints": {
         "items": {
@@ -1942,7 +2151,8 @@
         },
         "type": "array",
         "title": "Constraints",
-        "default": []
+        "default": [],
+        "readOnly": true
       },
       "question_id": {
         "type": "string",
@@ -1952,7 +2162,15 @@
         "type": "string",
         "const": "MANUAL",
         "title": "Type",
-        "default": "MANUAL"
+        "default": "MANUAL",
+        "readOnly": true
+      },
+      "name": {
+        "type": "string",
+        "const": "Manual",
+        "title": "Name",
+        "default": "Manual",
+        "readOnly": true
       }
     },
     "type": "object",
@@ -1978,7 +2196,8 @@
         "title": "Question Types",
         "default": [
           "TEXT"
-        ]
+        ],
+        "readOnly": true
       },
       "constraints": {
         "items": {
@@ -1986,7 +2205,8 @@
         },
         "type": "array",
         "title": "Constraints",
-        "default": []
+        "default": [],
+        "readOnly": true
       },
       "question_id": {
         "type": "string",
@@ -1996,7 +2216,15 @@
         "type": "string",
         "const": "LENGTH",
         "title": "Type",
-        "default": "LENGTH"
+        "default": "LENGTH",
+        "readOnly": true
+      },
+      "name": {
+        "type": "string",
+        "const": "Length",
+        "title": "Name",
+        "default": "Length",
+        "readOnly": true
       },
       "min_length": {
         "title": "Min Length",
@@ -2048,7 +2276,8 @@
         "title": "Question Types",
         "default": [
           "TEXT"
-        ]
+        ],
+        "readOnly": true
       },
       "constraints": {
         "items": {
@@ -2056,7 +2285,8 @@
         },
         "type": "array",
         "title": "Constraints",
-        "default": []
+        "default": [],
+        "readOnly": true
       },
       "question_id": {
         "type": "string",
@@ -2066,7 +2296,15 @@
         "type": "string",
         "const": "KEYWORDS",
         "title": "Type",
-        "default": "KEYWORDS"
+        "default": "KEYWORDS",
+        "readOnly": true
+      },
+      "name": {
+        "type": "string",
+        "const": "Keywords",
+        "title": "Name",
+        "default": "Keywords",
+        "readOnly": true
       },
       "keywords": {
         "items": {
@@ -2116,7 +2354,8 @@
           "CHOICE",
           "TEXT",
           "MULTI_VALUED"
-        ]
+        ],
+        "readOnly": true
       },
       "constraints": {
         "items": {
@@ -2124,13 +2363,22 @@
         },
         "type": "array",
         "title": "Constraints",
-        "default": []
+        "default": [],
+        "readOnly": true
       },
       "type": {
         "type": "string",
         "const": "CONDITIONAL",
         "title": "Type",
-        "default": "CONDITIONAL"
+        "default": "CONDITIONAL",
+        "readOnly": true
+      },
+      "name": {
+        "type": "string",
+        "const": "Conditional",
+        "title": "Name",
+        "default": "Conditional",
+        "readOnly": true
       },
       "if_rules": {
         "items": {
@@ -2381,7 +2629,8 @@
         "default": [
           "NUMERIC",
           "TEXT"
-        ]
+        ],
+        "readOnly": true
       },
       "constraints": {
         "items": {
@@ -2389,7 +2638,8 @@
         },
         "type": "array",
         "title": "Constraints",
-        "default": []
+        "default": [],
+        "readOnly": true
       },
       "question_id": {
         "type": "string",
@@ -2399,7 +2649,15 @@
         "type": "string",
         "const": "COMPOSITE",
         "title": "Type",
-        "default": "COMPOSITE"
+        "default": "COMPOSITE",
+        "readOnly": true
+      },
+      "name": {
+        "type": "string",
+        "const": "Composite",
+        "title": "Name",
+        "default": "Composite",
+        "readOnly": true
       },
       "rules": {
         "items": {
@@ -2507,7 +2765,8 @@
           "CHOICE",
           "TEXT",
           "MULTI_VALUED"
-        ]
+        ],
+        "readOnly": true
       },
       "constraints": {
         "items": {
@@ -2515,7 +2774,8 @@
         },
         "type": "array",
         "title": "Constraints",
-        "default": []
+        "default": [],
+        "readOnly": true
       },
       "question_id": {
         "type": "string",
@@ -2525,7 +2785,15 @@
         "type": "string",
         "const": "BONUS",
         "title": "Type",
-        "default": "BONUS"
+        "default": "BONUS",
+        "readOnly": true
+      },
+      "name": {
+        "type": "string",
+        "const": "Bonus",
+        "title": "Name",
+        "default": "Bonus",
+        "readOnly": true
       }
     },
     "type": "object",
@@ -2554,7 +2822,8 @@
           "CHOICE",
           "TEXT",
           "MULTI_VALUED"
-        ]
+        ],
+        "readOnly": true
       },
       "constraints": {
         "items": {
@@ -2562,7 +2831,8 @@
         },
         "type": "array",
         "title": "Constraints",
-        "default": []
+        "default": [],
+        "readOnly": true
       },
       "question_id": {
         "type": "string",
@@ -2582,7 +2852,15 @@
         "type": "string",
         "const": "ASSUMPTION_SET",
         "title": "Type",
-        "default": "ASSUMPTION_SET"
+        "default": "ASSUMPTION_SET",
+        "readOnly": true
+      },
+      "name": {
+        "type": "string",
+        "const": "Assumption Set",
+        "title": "Name",
+        "default": "Assumption Set",
+        "readOnly": true
       },
       "assumptions": {
         "items": {
@@ -2708,7 +2986,8 @@
           "CHOICE",
           "TEXT",
           "MULTI_VALUED"
-        ]
+        ],
+        "readOnly": true
       },
       "constraints": {
         "items": {
@@ -2716,7 +2995,8 @@
         },
         "type": "array",
         "title": "Constraints",
-        "default": []
+        "default": [],
+        "readOnly": true
       },
       "mode": {
         "type": "string",
@@ -2732,7 +3012,15 @@
         "type": "string",
         "const": "ASSUMPTION_SET_MULTI",
         "title": "Type",
-        "default": "ASSUMPTION_SET_MULTI"
+        "default": "ASSUMPTION_SET_MULTI",
+        "readOnly": true
+      },
+      "name": {
+        "type": "string",
+        "const": "Assumption Set",
+        "title": "Name",
+        "default": "Assumption Set",
+        "readOnly": true
       },
       "assumptions": {
         "items": {
@@ -2895,8 +3183,8 @@
           "string",
           "null"
         ],
-        "minLength": 12,
-        "maxLength": 128
+        "maxLength": 128,
+        "minLength": 12
       }
     },
     "type": "object",
@@ -3458,8 +3746,8 @@
           "integer",
           "null"
         ],
-        "maximum": 20,
-        "minimum": 1
+        "minimum": 1,
+        "maximum": 20
       },
       "selection": {
         "type": "string",

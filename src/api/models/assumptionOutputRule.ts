@@ -5,21 +5,21 @@
  * Thin FastAPI wrapper over GradeFlow Engine
  * OpenAPI spec version: 0.1.0
  */
-import type { BonusRule } from './bonusRule';
+import type { BonusRuleOutput } from './bonusRuleOutput';
 import type { CompositeRuleOutput } from './compositeRuleOutput';
-import type { ProgrammableRule } from './programmableRule';
-import type { ProgrammingRule } from './programmingRule';
-import type { TextMatchRule } from './textMatchRule';
-import type { KeywordsRule } from './keywordsRule';
-import type { RegexRule } from './regexRule';
-import type { LengthRule } from './lengthRule';
-import type { ManualRule } from './manualRule';
+import type { ProgrammableRuleOutput } from './programmableRuleOutput';
+import type { ProgrammingRuleOutput } from './programmingRuleOutput';
+import type { TextMatchRuleOutput } from './textMatchRuleOutput';
+import type { KeywordsRuleOutput } from './keywordsRuleOutput';
+import type { RegexRuleOutput } from './regexRuleOutput';
+import type { LengthRuleOutput } from './lengthRuleOutput';
+import type { ManualRuleOutput } from './manualRuleOutput';
 import type { MultiValuedRuleOutput } from './multiValuedRuleOutput';
-import type { MultipleChoiceRule } from './multipleChoiceRule';
-import type { NumberEqualRule } from './numberEqualRule';
-import type { NumericRangeRule } from './numericRangeRule';
+import type { MultipleChoiceRuleOutput } from './multipleChoiceRuleOutput';
+import type { NumberEqualRuleOutput } from './numberEqualRuleOutput';
+import type { NumericRangeRuleOutput } from './numericRangeRuleOutput';
 
 /**
  * Rule that defines the assumption
  */
-export type AssumptionOutputRule = BonusRule | CompositeRuleOutput | ProgrammableRule | ProgrammingRule | TextMatchRule | KeywordsRule | RegexRule | LengthRule | ManualRule | MultiValuedRuleOutput | MultipleChoiceRule | NumberEqualRule | NumericRangeRule;
+export type AssumptionOutputRule = BonusRuleOutput | CompositeRuleOutput | ProgrammableRuleOutput | ProgrammingRuleOutput | TextMatchRuleOutput | KeywordsRuleOutput | RegexRuleOutput | LengthRuleOutput | ManualRuleOutput | MultiValuedRuleOutput | MultipleChoiceRuleOutput | NumberEqualRuleOutput | NumericRangeRuleOutput;

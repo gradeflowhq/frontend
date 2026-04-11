@@ -13,9 +13,10 @@ import type { ConditionalMultiQuestionRuleInputThenRulesItem } from './condition
 import type { ConditionalMultiQuestionRuleInputElseRulesItem } from './conditionalMultiQuestionRuleInputElseRulesItem';
 
 export interface ConditionalMultiQuestionRuleInput {
-  question_types?: ConditionalMultiQuestionRuleInputQuestionTypesItem[];
-  constraints?: QuestionConstraint[];
-  type?: 'CONDITIONAL';
+  readonly question_types?: readonly ConditionalMultiQuestionRuleInputQuestionTypesItem[];
+  readonly constraints?: readonly QuestionConstraint[];
+  readonly type?: 'CONDITIONAL';
+  readonly name?: 'Conditional';
   /**
    * List of rules to evaluate the 'if' condition
    * @minItems 1

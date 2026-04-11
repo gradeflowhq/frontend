@@ -13,9 +13,10 @@ import type { ConditionalMultiQuestionRuleOutputThenRulesItem } from './conditio
 import type { ConditionalMultiQuestionRuleOutputElseRulesItem } from './conditionalMultiQuestionRuleOutputElseRulesItem';
 
 export interface ConditionalMultiQuestionRuleOutput {
-  question_types?: ConditionalMultiQuestionRuleOutputQuestionTypesItem[];
-  constraints?: QuestionConstraint[];
-  type?: 'CONDITIONAL';
+  readonly question_types?: readonly ConditionalMultiQuestionRuleOutputQuestionTypesItem[];
+  readonly constraints?: readonly QuestionConstraint[];
+  readonly type?: 'CONDITIONAL';
+  readonly name?: 'Conditional';
   /**
    * List of rules to evaluate the 'if' condition
    * @minItems 1
@@ -30,4 +31,5 @@ export interface ConditionalMultiQuestionRuleOutput {
   then_rules: ConditionalMultiQuestionRuleOutputThenRulesItem[];
   /** List of rules to evaluate if 'if' condition is not met */
   else_rules: ConditionalMultiQuestionRuleOutputElseRulesItem[];
+  readonly description: string;
 }

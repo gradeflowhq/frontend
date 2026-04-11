@@ -48,7 +48,7 @@ import { useAutoResetState } from '@hooks/useAutoResetState';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { getErrorMessage } from '@utils/error';
 
-import type { AdjustableSubmission, RubricOutput, QuestionSetOutputQuestionMap } from '@api/models';
+import type { AdjustableSubmission, RubricOutput, QuestionSetOutputQuestionMap, RubricOutputRulesItem } from '@api/models';
 import type { RuleValue } from '@features/rules/types';
 
 const getRulesStatusMessage = (isStale: boolean, invalidRuleCount: number): string => {
@@ -197,7 +197,7 @@ const RulesPage: React.FC = () => {
       // Compute the rule's position among multi-target rules to avoid a
       // flash-to-rule-0 before MultiTargetRulesSection's highlightedRule effect fires.
       const multiRules = (rubric?.rules ?? []).filter(isMultiTargetRule);
-      const ruleIdx = rule ? multiRules.indexOf(rule as RuleValue) : -1;
+      const ruleIdx = rule ? multiRules.indexOf(rule as RubricOutputRulesItem) : -1;
       setSearchParams(
         (prev) => {
           const next = new URLSearchParams(prev);

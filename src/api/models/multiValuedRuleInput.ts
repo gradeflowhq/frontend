@@ -11,9 +11,10 @@ import type { MultiValuedRuleInputRulesItem } from './multiValuedRuleInputRulesI
 import type { MultiValuedRuleInputAggregation } from './multiValuedRuleInputAggregation';
 
 export interface MultiValuedRuleInput {
-  question_types?: MultiValuedRuleInputQuestionTypesItem[];
-  constraints?: QuestionConstraint[];
-  type?: 'MULTI_VALUED';
+  readonly question_types?: readonly MultiValuedRuleInputQuestionTypesItem[];
+  readonly constraints?: readonly QuestionConstraint[];
+  readonly type?: 'MULTI_VALUED';
+  readonly name?: 'Multi Valued';
   /**
    * List of rules to apply to each value in the multi-valued answer
    * @minItems 1

@@ -11,10 +11,11 @@ import type { MultiValuedQuestionRuleOutputRulesItem } from './multiValuedQuesti
 import type { MultiValuedQuestionRuleOutputAggregation } from './multiValuedQuestionRuleOutputAggregation';
 
 export interface MultiValuedQuestionRuleOutput {
-  question_types?: MultiValuedQuestionRuleOutputQuestionTypesItem[];
-  constraints?: QuestionConstraint[];
+  readonly question_types?: readonly MultiValuedQuestionRuleOutputQuestionTypesItem[];
+  readonly constraints?: readonly QuestionConstraint[];
   question_id: string;
-  type?: 'MULTI_VALUED';
+  readonly type?: 'MULTI_VALUED';
+  readonly name?: 'Multi Valued';
   /**
    * List of rules to apply to each value in the multi-valued answer
    * @minItems 1
@@ -22,4 +23,5 @@ export interface MultiValuedQuestionRuleOutput {
   rules: MultiValuedQuestionRuleOutputRulesItem[];
   /** Aggregation method */
   aggregation?: MultiValuedQuestionRuleOutputAggregation;
+  readonly description: string;
 }

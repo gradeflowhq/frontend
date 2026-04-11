@@ -6,18 +6,18 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { AssumptionSetQuestionRuleInput } from './assumptionSetQuestionRuleInput';
-import type { BonusQuestionRule } from './bonusQuestionRule';
+import type { BonusQuestionRuleInput } from './bonusQuestionRuleInput';
 import type { CompositeQuestionRuleInput } from './compositeQuestionRuleInput';
-import type { ProgrammableQuestionRule } from './programmableQuestionRule';
-import type { ProgrammingQuestionRule } from './programmingQuestionRule';
-import type { TextMatchQuestionRule } from './textMatchQuestionRule';
-import type { KeywordsQuestionRule } from './keywordsQuestionRule';
-import type { RegexQuestionRule } from './regexQuestionRule';
-import type { LengthQuestionRule } from './lengthQuestionRule';
-import type { ManualQuestionRule } from './manualQuestionRule';
+import type { ProgrammableQuestionRuleInput } from './programmableQuestionRuleInput';
+import type { ProgrammingQuestionRuleInput } from './programmingQuestionRuleInput';
+import type { TextMatchQuestionRuleInput } from './textMatchQuestionRuleInput';
+import type { KeywordsQuestionRuleInput } from './keywordsQuestionRuleInput';
+import type { RegexQuestionRuleInput } from './regexQuestionRuleInput';
+import type { LengthQuestionRuleInput } from './lengthQuestionRuleInput';
+import type { ManualQuestionRuleInput } from './manualQuestionRuleInput';
 import type { MultiValuedQuestionRuleInput } from './multiValuedQuestionRuleInput';
-import type { MultipleChoiceQuestionRule } from './multipleChoiceQuestionRule';
-import type { NumberEqualQuestionRule } from './numberEqualQuestionRule';
-import type { NumericRangeQuestionRule } from './numericRangeQuestionRule';
+import type { MultipleChoiceQuestionRuleInput } from './multipleChoiceQuestionRuleInput';
+import type { NumberEqualQuestionRuleInput } from './numberEqualQuestionRuleInput';
+import type { NumericRangeQuestionRuleInput } from './numericRangeQuestionRuleInput';
 
-export type ConditionalMultiQuestionRuleInputElseRulesItem = AssumptionSetQuestionRuleInput | BonusQuestionRule | CompositeQuestionRuleInput | ProgrammableQuestionRule | ProgrammingQuestionRule | TextMatchQuestionRule | KeywordsQuestionRule | RegexQuestionRule | LengthQuestionRule | ManualQuestionRule | MultiValuedQuestionRuleInput | MultipleChoiceQuestionRule | NumberEqualQuestionRule | NumericRangeQuestionRule;
+export type ConditionalMultiQuestionRuleInputElseRulesItem = AssumptionSetQuestionRuleInput | BonusQuestionRuleInput | CompositeQuestionRuleInput | ProgrammableQuestionRuleInput | ProgrammingQuestionRuleInput | TextMatchQuestionRuleInput | KeywordsQuestionRuleInput | RegexQuestionRuleInput | LengthQuestionRuleInput | ManualQuestionRuleInput | MultiValuedQuestionRuleInput | MultipleChoiceQuestionRuleInput | NumberEqualQuestionRuleInput | NumericRangeQuestionRuleInput;
