@@ -22,19 +22,19 @@ export const features: FeatureItem[] = [
     icon: React.createElement(IconAdjustments, { size: 28 }),
     title: 'Rich grading rules',
     description:
-      '15+ built-in rule types — text/number equality, regex, keywords, numeric ranges, similarity, length, multiple choice, and more. Handle any question format.',
+      '15+ built-in rule types — text and number equality, regex, keywords, numeric ranges, fuzzy similarity, multiple choice, and more. No code required for any of them.',
   },
   {
     icon: React.createElement(IconGitBranch, { size: 28 }),
     title: 'Assumption and conditional rules',
     description:
-      'Assumption sets pick the interpretation that earns the highest score across multiple questions. Conditional rules branch scoring based on earlier answers.',
+      'Assumption sets award the interpretation that earns the highest score. Conditional rules branch scoring based on earlier answers — no custom code needed.',
   },
   {
     icon: React.createElement(IconCode, { size: 28 }),
     title: 'Programmable rules',
     description:
-      'Write custom Python grading logic for anything the built-in rules cannot express. You can also grade code by defining test cases using the programming rule.',
+      'Write arbitrary Python grading logic for anything the built-in rules can\'t express. The programming rule runs student code against test cases in an isolated sandbox.',
   },
   {
     icon: React.createElement(IconStack2, { size: 28 }),
@@ -52,13 +52,13 @@ export const features: FeatureItem[] = [
     icon: React.createElement(IconEye, { size: 28 }),
     title: 'Live grading preview',
     description:
-      'Test any rule against real student submissions before saving it. The inline preview shows exactly which answers pass or fail — so you iterate in seconds, not after re-running the whole job.',
+      'Test any rule against real submissions before saving. See exactly which answers pass or fail and iterate in seconds.',
   },
   {
     icon: React.createElement(IconChartBar, { size: 28 }),
     title: 'Transparent, auditable results',
     description:
-      'See exactly which rules fired for every submission. Per-student and per-question breakdowns let you verify and adjust any grade. GradeFlow automatically warns you when results are stale after rules or submissions change.',
+      'Per-student and per-question breakdowns show exactly which rules fired and why. GradeFlow flags results as stale whenever submissions or rules change, so you always know what\'s current.',
   },
   {
     icon: React.createElement(IconUsers, { size: 28 }),
@@ -70,15 +70,15 @@ export const features: FeatureItem[] = [
     icon: React.createElement(IconSend, { size: 28 }),
     title: 'Canvas LMS integration',
     description:
-      'Publish final grades directly to Canvas. Choose per-assignment settings, enable rounding, attach comments, and push with a single click.',
+      'Publish final grades directly to Canvas. Configure rounding and comment settings per assignment, and publish grades in bulk. No copy-pasting from spreadsheets.',
   },
 ];
 
 export const trustStats = [
-  { value: '15+', label: 'Rule types' },
-  { value: 'Zero-knowledge', label: 'Client-side encryption' },
-  { value: 'Team roles', label: 'Owner · Editor · Viewer' },
-  { value: 'Canvas LMS', label: 'Native integration' },
+  { value: '15+', label: 'Built-in rule types' },
+  { value: 'Client-side', label: 'Encrypted student IDs' },
+  { value: 'Role-based', label: 'Collaboration' },
+  { value: 'Canvas', label: 'Direct grade publish' },
 ];
 
 export const howItWorksSteps = [
@@ -90,7 +90,7 @@ export const howItWorksSteps = [
   {
     n: '2',
     label: 'Upload submissions',
-    description: 'Import student answers from Examplify or any CSV. GradeFlow auto-detects columns and layout.',
+    description: 'Import student answers from Examplify or any CSV. GradeFlow auto-detects question columns — override anything it gets wrong.',
   },
   {
     n: '3',
@@ -99,13 +99,13 @@ export const howItWorksSteps = [
   },
   {
     n: '4',
-    label: 'Review by answer groups',
+    label: 'Review answers in bulk',
     description: 'Cluster similar answers and bulk-adjust scores. Fine-tune individual submissions as needed.',
   },
   {
     n: '5',
-    label: 'Export or publish',
-    description: 'Download results as CSV, JSON, or YAML — or push grades directly to Canvas.',
+    label: 'Export or publish grades',
+    description: 'Download results as CSV, JSON, or YAML for your own records — or push grades directly to Canvas.',
   },
 ];
 
@@ -115,8 +115,12 @@ export const faqs: { q: string; a: string }[] = [
     a: 'Yes. Export your Examplify results as a CSV and upload it directly. GradeFlow lets you configure which row contains headers, where data starts and ends, and which columns to import as answer data — with auto-detection that you can override.',
   },
   {
+    q: 'What if the automated grading gets something wrong?',
+    a: 'Every result can be manually adjusted — per student or in bulk. GradeFlow tracks which results were auto-graded vs. manually overridden, so your audit trail is always clean.',
+  },
+  {
     q: 'Is student data stored on your servers?',
-    a: 'Student IDs can be encrypted client-side before upload using AES-GCM. The server only ever sees the ciphertext — your passphrase never leaves the browser.',
+    a: 'Student IDs can be encrypted in your browser before they leave your device — the server only ever receives scrambled data. Your encryption key never leaves the browser.',
   },
   {
     q: 'Can multiple instructors work on the same assessment?',
@@ -127,15 +131,15 @@ export const faqs: { q: string; a: string }[] = [
     a: 'The group view clusters student answers by exact match or fuzzy similarity — you control the threshold. You can then set the score and feedback for an entire cluster at once, which is useful when many students gave essentially the same answer with minor wording differences.',
   },
   {
+    q: 'Does GradeFlow integrate with anything other than Canvas?',
+    a: 'Canvas is the first supported LMS. Export via CSV works with any grade book. Let us know if there\'s another LMS you\'d like to see supported.',
+  },
+  {
     q: 'Can I self-host GradeFlow?',
     a: 'Absolutely. GradeFlow is open source (MIT) and ships with Docker. Point it at your own database and you own all your data.',
   },
   {
     q: 'Can I use GradeFlow without the web UI?',
     a: 'Yes. GradeFlow engine ships with a CLI and can also be imported directly as a Python library — useful for scripting, CI pipelines, or integrating grading into your own tooling.',
-  },
-  {
-    q: 'What if the built-in rules are not enough?',
-    a: 'Use the programmable rule to write arbitrary grading logic, or the programming rule to run student code against test cases — all sandboxed server-side.',
   },
 ];

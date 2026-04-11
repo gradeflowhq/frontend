@@ -33,7 +33,7 @@ const LandingFooter: React.FC<LandingFooterProps> = ({ accessToken }) => {
             Ready to get started?
           </Title>
           <Text c="rgba(255,255,255,0.85)" size="md">
-            Set up your first assessment and run automated grading in minutes.
+            Your next exam doesn't have to mean another lost weekend. Set up your first assessment and run automated grading in minutes.
           </Text>
           <Group justify="center" gap="sm">
             {accessToken ? (
