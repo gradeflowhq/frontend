@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   buildExamplesFromParsed,
+  buildQuestionTypesById,
   getInvalidQuestionIds,
   getMissingQuestionIds,
   getQuestionIdsSorted,
@@ -33,6 +34,17 @@ describe('question helpers', () => {
     expect(getSubmissionQuestionIds(rawSubmissions)).toEqual(['Q1', 'Q2', 'Q10']);
   });
 
+  it('returns empty array for undefined submissions', () => {
+    expect(getSubmissionQuestionIds(undefined)).toEqual([]);
+  });
+
+  it('handles submissions with empty raw_answer_map', () => {
+    const rawSubmissions = [
+      { student_id: 's1', raw_answer_map: {} },
+    ] as RawSubmission[];
+    expect(getSubmissionQuestionIds(rawSubmissions)).toEqual([]);
+  });
+
   it('finds invalid and missing questions', () => {
     const questionMap = {
       Q1: { type: 'TEXT' },
@@ -44,6 +56,17 @@ describe('question helpers', () => {
 
     expect(getInvalidQuestionIds(questionMap, submissionQuestionIds)).toEqual(['Q3']);
     expect(getMissingQuestionIds(questionMap, submissionQuestionIds)).toEqual(['Q4']);
+  });
+
+  it('returns empty when question set matches submissions exactly', () => {
+    const questionMap = { Q1: { type: 'TEXT' } } as QuestionSetInputQuestionMap;
+    expect(getInvalidQuestionIds(questionMap, ['Q1'])).toEqual([]);
+    expect(getMissingQuestionIds(questionMap, ['Q1'])).toEqual([]);
+  });
+
+  it('returns empty for empty maps', () => {
+    expect(getInvalidQuestionIds({} as QuestionSetInputQuestionMap, [])).toEqual([]);
+    expect(getMissingQuestionIds({} as QuestionSetInputQuestionMap, [])).toEqual([]);
   });
 
   it('synchronizes question maps by preserving current definitions and adding inferred questions', () => {
@@ -65,6 +88,12 @@ describe('question helpers', () => {
       Q4: { type: 'NUMERIC' },
     });
   });
+
+  it('synchronizes with undefined current map', () => {
+    const inferred = { Q1: { type: 'TEXT' } } as QuestionSetInputQuestionMap;
+    const result = synchronizeQuestionMap(undefined as never, inferred);
+    expect(result).toEqual({ Q1: { type: 'TEXT' } });
+  });
 });
 
 describe('getQuestionIdsSorted', () => {
@@ -79,6 +108,26 @@ describe('getQuestionIdsSorted', () => {
 
   it('handles null/undefined input', () => {
     expect(getQuestionIdsSorted(undefined as never)).toEqual([]);
+  });
+});
+
+describe('buildQuestionTypesById', () => {
+  it('extracts type from each question definition', () => {
+    const qMap = {
+      Q1: { type: 'TEXT' },
+      Q2: { type: 'NUMERIC' },
+    } as QuestionSetInputQuestionMap;
+    expect(buildQuestionTypesById(qMap)).toEqual({ Q1: 'TEXT', Q2: 'NUMERIC' });
+  });
+
+  it('falls back to TEXT when type is missing', () => {
+    const qMap = { Q1: {} } as QuestionSetInputQuestionMap;
+    expect(buildQuestionTypesById(qMap)).toEqual({ Q1: 'TEXT' });
+  });
+
+  it('handles null/undefined input', () => {
+    expect(buildQuestionTypesById(null as never)).toEqual({});
+    expect(buildQuestionTypesById(undefined as never)).toEqual({});
   });
 });
 

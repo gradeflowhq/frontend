@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildRequestSchema, validateFileInputRequired } from '@lib/formSchemas';
+import { buildRequestSchema, validateFileInputRequired } from '@lib/importExportSchemas';
 
 describe('buildRequestSchema', () => {
   it('returns a schema object for a known key', () => {

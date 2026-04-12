@@ -36,8 +36,16 @@ const ruleLabelLookup = (() => {
 
 export const friendlyRuleLabel = (key: unknown): string => {
   const raw = typeof key === 'string' ? key : key != null ? String(key) : '';
-  if (!raw) return '';
-  return ruleLabelLookup.get(raw) ?? '';
+  if (!raw) return 'Unknown rule';
+  const cached = ruleLabelLookup.get(raw);
+  if (cached) return cached;
+  // Fallback: strip known suffixes and split camelCase
+  const stripped = raw
+    .replace(/MultiQuestionRule$/, '')
+    .replace(/QuestionRule$/, '')
+    .replace(/Rule$/, '');
+  if (!stripped) return raw;
+  return stripped.replace(/([a-z])([A-Z])/g, '$1 $2');
 };
 
 export const prettifyKey = (s: string): string =>

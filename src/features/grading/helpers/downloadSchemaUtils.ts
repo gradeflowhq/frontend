@@ -5,7 +5,7 @@ import type { JSONSchema7, JSONSchema7Definition } from 'json-schema';
 const requestSchemas = requestsSchema as Record<string, JSONSchema7>;
 
 /** Resolve a $ref like "#/definitions/CsvGradedSubmissionsConfig" from requestsSchema */
-const resolveRef = (node: JSONSchema7 | JSONSchema7Definition | undefined): JSONSchema7 | undefined => {
+export const resolveRef = (node: JSONSchema7 | JSONSchema7Definition | undefined): JSONSchema7 | undefined => {
   if (!node || typeof node !== 'object' || Array.isArray(node)) return undefined;
   if (typeof node.$ref !== 'string') return node;
 

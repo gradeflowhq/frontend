@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  answerToString,
   buildGroupEntry,
   buildGroupKey,
   buildGroups,
@@ -34,6 +35,26 @@ const makeSub = (
       },
     },
   }) as unknown as AdjustableSubmission;
+
+describe('answerToString', () => {
+  it('returns "(no answer)" for null', () => {
+    expect(answerToString(null)).toBe('(no answer)');
+  });
+
+  it('returns "(no answer)" for undefined', () => {
+    expect(answerToString(undefined)).toBe('(no answer)');
+  });
+
+  it('joins array values with comma', () => {
+    expect(answerToString(['A', 'B', 'C'])).toBe('A, B, C');
+  });
+
+  it('converts primitives to string', () => {
+    expect(answerToString(42)).toBe('42');
+    expect(answerToString(true)).toBe('true');
+    expect(answerToString('hello')).toBe('hello');
+  });
+});
 
 describe('buildGroupEntry', () => {
   it('extracts data from a submission with results', () => {
@@ -173,5 +194,32 @@ describe('buildGroups', () => {
     const groups = buildGroups(subs, 'Q1', 'feedback', defaultOpts);
     expect(groups).toHaveLength(1);
     expect(groups[0].mode).toBe('feedback');
+  });
+
+  it('dispatches to fuzzy feedback clustering below threshold 1.0', () => {
+    const subs = [
+      makeSub('s1', 'A', { feedback: 'Correct answer' }),
+      makeSub('s2', 'B', { feedback: 'Correct answers' }),
+      makeSub('s3', 'C', { feedback: 'Wrong' }),
+    ];
+    const groups = buildGroups(subs, 'Q1', 'feedback', { ...defaultOpts, threshold: 0.5 });
+    // "Correct answer" and "Correct answers" should cluster
+    expect(groups.length).toBeLessThanOrEqual(2);
+    expect(groups.every((g) => g.mode === 'feedback')).toBe(true);
+  });
+
+  it('applies case normalization in fuzzy answer grouping', () => {
+    const subs = [makeSub('s1', 'Cat'), makeSub('s2', 'cat')];
+    const groups = buildGroups(subs, 'Q1', 'answer', {
+      threshold: 0.99,
+      normalizeOpts: { ignoreCase: true, ignoreWhitespace: false, ignorePunctuation: false },
+    });
+    expect(groups).toHaveLength(1);
+    expect(groups[0].entries).toHaveLength(2);
+  });
+
+  it('handles empty submissions array', () => {
+    const groups = buildGroups([], 'Q1', 'answer', defaultOpts);
+    expect(groups).toEqual([]);
   });
 });

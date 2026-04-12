@@ -94,6 +94,12 @@ describe('computeStats', () => {
     expect(stats.q2).toBeCloseTo(5.5);
     expect(stats.q3).toBeCloseTo(7.75);
   });
+
+  it('computes stdev for known distribution', () => {
+    // Values [2, 4, 4, 4, 5, 5, 7, 9] → population stdev = 2
+    const stats = computeStats([2, 4, 4, 4, 5, 5, 7, 9]);
+    expect(stats.stdev).toBeCloseTo(2, 0);
+  });
 });
 
 describe('buildDynamicHistogram', () => {
@@ -121,6 +127,22 @@ describe('buildDynamicHistogram', () => {
     expect(bins.length).toBeGreaterThan(1);
     const total = bins.reduce((s, b) => s + b.count, 0);
     expect(total).toBe(11);
+  });
+
+  it('caps bin count at maxBins', () => {
+    const values = Array.from({ length: 100 }, (_, i) => i);
+    const bins = buildDynamicHistogram(values, { maxBins: 5 });
+    expect(bins.length).toBeLessThanOrEqual(5);
+    const total = bins.reduce((s, b) => s + b.count, 0);
+    expect(total).toBe(100);
+  });
+
+  it('produces bins with Freedman-Diaconis auto-width for varied data', () => {
+    const values = [1, 2, 3, 5, 8, 13, 21, 34, 55, 89];
+    const bins = buildDynamicHistogram(values);
+    expect(bins.length).toBeGreaterThan(0);
+    const total = bins.reduce((s, b) => s + b.count, 0);
+    expect(total).toBe(values.length);
   });
 });
 

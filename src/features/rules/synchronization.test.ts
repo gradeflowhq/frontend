@@ -37,4 +37,48 @@ describe('rule synchronization helpers', () => {
       { type: 'TEXT_MATCH', name: 'Text Match', question_id: 'Q1' },
     ]);
   });
+
+  it('returns empty when all rules are valid', () => {
+    const rules = [
+      { type: 'TEXT_MATCH', name: 'R1', question_id: 'Q1' },
+    ] as unknown as RuleValue[];
+    expect(getInvalidRuleReferences(rules, ['Q1'])).toEqual([]);
+  });
+
+  it('marks all rules invalid when questionIds is empty', () => {
+    const rules = [
+      { type: 'TEXT_MATCH', name: 'R1', question_id: 'Q1' },
+      { type: 'TEXT_MATCH', name: 'R2', question_id: 'Q2' },
+    ] as unknown as RuleValue[];
+    const invalid = getInvalidRuleReferences(rules, []);
+    expect(invalid).toHaveLength(2);
+  });
+
+  it('handles empty rules array', () => {
+    expect(getInvalidRuleReferences([], ['Q1'])).toEqual([]);
+    expect(synchronizeRules([], [])).toEqual([]);
+  });
+
+  it('deduplicates missing IDs and sorts naturally', () => {
+    const rules = [
+      {
+        type: 'MULTI', name: 'Multi',
+        question_ids: ['Q10', 'Q2', 'Q10'],
+      },
+    ] as unknown as RuleValue[];
+    const invalid = getInvalidRuleReferences(rules, []);
+    expect(invalid[0].missingQuestionIds).toEqual(['Q2', 'Q10']);
+  });
+
+  it('synchronizeRules keeps non-contiguous valid rules', () => {
+    const rules = [
+      { type: 'TEXT_MATCH', name: 'R0', question_id: 'Q_BAD' },
+      { type: 'TEXT_MATCH', name: 'R1', question_id: 'Q1' },
+      { type: 'TEXT_MATCH', name: 'R2', question_id: 'Q_BAD2' },
+      { type: 'TEXT_MATCH', name: 'R3', question_id: 'Q2' },
+    ] as unknown as RuleValue[];
+    const invalid = getInvalidRuleReferences(rules, ['Q1', 'Q2']);
+    const synced = synchronizeRules(rules, invalid);
+    expect(synced.map((r) => r.name)).toEqual(['R1', 'R3']);
+  });
 });

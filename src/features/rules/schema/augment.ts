@@ -3,7 +3,7 @@ import { deepClone } from './utils';
 
 type JsonObject = Record<string, unknown>;
 
-const UNSELECTED_RULE_TITLE = 'Select a rule\u2026';
+const UNSELECTED_PLACEHOLDER_TITLE = 'Select\u2026';
 
 /**
  * Extracts a question's type string from its schema/instance.
@@ -223,7 +223,7 @@ export function augmentRulesSchemaWithQuestionIdEnums(
  */
 const UNSELECTED_PLACEHOLDER: JsonObject = Object.freeze({
   type: 'object',
-  title: UNSELECTED_RULE_TITLE,
+  title: UNSELECTED_PLACEHOLDER_TITLE,
   properties: {},
   additionalProperties: false,
 });
@@ -243,7 +243,7 @@ export function prependUnselectedPlaceholderToNestedOneOf(
     if (!Array.isArray(oneOf) || oneOf.length === 0) return;
     // Avoid double-prepending
     const first = oneOf[0] as JsonObject | undefined;
-    if (first?.title === UNSELECTED_RULE_TITLE) return;
+    if (first?.title === UNSELECTED_PLACEHOLDER_TITLE) return;
     container.oneOf = [{ ...UNSELECTED_PLACEHOLDER }, ...oneOf];
   };
 

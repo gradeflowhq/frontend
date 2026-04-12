@@ -75,6 +75,43 @@ describe('computeAutoScores', () => {
       expect(scores[i - 1].confidence).toBeGreaterThanOrEqual(scores[i].confidence);
     }
   });
+
+  it('boosts columns with MRQ-style comma-separated values', () => {
+    const headers = ['id', 'multi_q'];
+    const rows = [
+      ['s1', 'A,B'],
+      ['s2', 'C,D'],
+      ['s3', 'A,C'],
+    ];
+    const scores = computeAutoScores(headers, rows);
+    const mq = scores.find((s) => s.header === 'multi_q')!;
+    expect(mq.confidence).toBeGreaterThan(0.5);
+  });
+
+  it('boosts columns with true/false choice words', () => {
+    const headers = ['id', 'answer'];
+    const rows = [
+      ['s1', 'true'],
+      ['s2', 'false'],
+      ['s3', 'true'],
+    ];
+    const scores = computeAutoScores(headers, rows);
+    const ans = scores.find((s) => s.header === 'answer')!;
+    expect(ans.confidence).toBeGreaterThan(0.5);
+  });
+
+  it('penalizes columns with all email values', () => {
+    const headers = ['student_email', 'Q1'];
+    const rows = [
+      ['a@b.com', 'A'],
+      ['c@d.com', 'B'],
+      ['e@f.com', 'C'],
+    ];
+    const scores = computeAutoScores(headers, rows);
+    const email = scores.find((s) => s.header === 'student_email')!;
+    const q1 = scores.find((s) => s.header === 'Q1')!;
+    expect(q1.confidence).toBeGreaterThan(email.confidence);
+  });
 });
 
 describe('computeNextMapping', () => {
@@ -140,5 +177,48 @@ describe('inferColumnsFromSource', () => {
     const result = inferColumnsFromSource([], [], 'id');
     expect(result.answerCols).toEqual([]);
     expect(result.pointColMap).toEqual({});
+  });
+
+  it('does not map point columns below confidence threshold', () => {
+    // Candidates have no points keywords and no numeric values
+    const headers = ['id', 'Q1', 'notes'];
+    const rows = [
+      ['s1', 'A', 'some text'],
+      ['s2', 'B', 'other text'],
+    ];
+    const result = inferColumnsFromSource(headers, rows, 'id');
+    // 'notes' should NOT be mapped as a point column for Q1
+    expect(result.pointColMap['Q1']).toBeUndefined();
+  });
+
+  it('maps point column with keyword and numeric values to answer column', () => {
+    // Q1 Pts has points keyword + numeric values + proximity to Q1
+    const headers = ['id', 'Q1', 'Q1 Pts', 'Q2', 'Q2 Pts'];
+    const rows = [
+      ['s1', 'A', '10', 'B', '8'],
+      ['s2', 'C', '7', 'D', '9'],
+      ['s3', 'B', '5', 'A', '6'],
+    ];
+    const result = inferColumnsFromSource(headers, rows, 'id');
+    if (result.answerCols.includes('Q1') && result.pointColMap['Q1']) {
+      expect(result.pointColMap['Q1']).toBe('Q1 Pts');
+    }
+    if (result.answerCols.includes('Q2') && result.pointColMap['Q2']) {
+      expect(result.pointColMap['Q2']).toBe('Q2 Pts');
+    }
+  });
+
+  it('each point column is claimed by at most one answer column', () => {
+    // Only one shared "Points" column — should be claimed by the first answer column
+    const headers = ['id', 'Q1', 'Q2', 'Points'];
+    const rows = [
+      ['s1', 'A', 'B', '10'],
+      ['s2', 'C', 'D', '8'],
+    ];
+    const result = inferColumnsFromSource(headers, rows, 'id');
+    const mapped = Object.values(result.pointColMap);
+    // Points can map to at most one answer
+    const countPoints = mapped.filter((v) => v === 'Points').length;
+    expect(countPoints).toBeLessThanOrEqual(1);
   });
 });

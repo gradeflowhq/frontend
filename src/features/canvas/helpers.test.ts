@@ -49,6 +49,33 @@ describe('parseCsvGrades', () => {
     const rows = parseCsvGrades(csv);
     expect(rows[0].roundedTotalPoints).toBe(85.5);
   });
+
+  it('parses percent columns', () => {
+    const csv = 'student_id,total_percent,rounded_total_percent\nalice,92.5,93';
+    const rows = parseCsvGrades(csv);
+    expect(rows[0].totalPercent).toBe(92.5);
+    expect(rows[0].roundedTotalPercent).toBe(93);
+  });
+
+  it('parses remarks column', () => {
+    const csv = 'student_id,total_points,remarks\nalice,85,Great work\nbob,90,';
+    const rows = parseCsvGrades(csv);
+    expect(rows[0].remarks).toBe('Great work');
+    expect(rows[1].remarks).toBe('');
+  });
+
+  it('accepts camelCase studentId header', () => {
+    const csv = 'studentId,total_points\nalice,70';
+    const rows = parseCsvGrades(csv);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].studentId).toBe('alice');
+  });
+
+  it('trims whitespace from student IDs', () => {
+    const csv = 'student_id,total_points\n  alice  ,85';
+    const rows = parseCsvGrades(csv);
+    expect(rows[0].studentId).toBe('alice');
+  });
 });
 
 describe('buildUserIdMap', () => {
@@ -80,6 +107,25 @@ describe('buildUserIdMap', () => {
     const idMap = buildUserIdMap(users as never[]);
     expect(idMap['alice']).toBe('1');
     expect(idMap['bob']).toBe('2');
+  });
+
+  it('skips null/undefined/empty candidates', () => {
+    const users = [
+      { id: 10, login_id: null, sis_user_id: undefined, integration_id: null, email: '', name: null, sortable_name: null, short_name: null },
+    ];
+    const idMap = buildUserIdMap(users as never[]);
+    // Only numeric id should be mapped
+    expect(idMap['10']).toBe('10');
+    expect(Object.keys(idMap)).toHaveLength(1);
+  });
+
+  it('last-write-wins when users share an identifier', () => {
+    const users = [
+      { id: 1, login_id: 'shared@school.edu', sis_user_id: null, integration_id: null, email: null, name: null, sortable_name: null, short_name: null },
+      { id: 2, login_id: 'shared@school.edu', sis_user_id: null, integration_id: null, email: null, name: null, sortable_name: null, short_name: null },
+    ];
+    const idMap = buildUserIdMap(users as never[]);
+    expect(idMap['shared@school.edu']).toBe('2');
   });
 });
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { fileAcceptForConfig } from '@lib/uploads';
+import { fileAcceptForConfig } from '@lib/fileFormats';
 
 describe('fileAcceptForConfig', () => {
   it('returns csv accept string for csv format', () => {
