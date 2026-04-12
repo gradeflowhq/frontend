@@ -34,18 +34,46 @@ function extractRuleCompatibleTypes(ruleDef: JsonObject): string[] {
 }
 
 /**
- * Adds a `title` field to every definition that is missing one.
- * This makes RJSF's oneOf selector show human-readable labels instead of
- * raw definition key names like "AssumptionSetQuestionRule".
+ * A title resolver receives a definition key and its schema, and returns a
+ * human-readable title string or `undefined` to skip.
  */
-export function augmentRulesSchemaWithTitles(rulesSchema: JsonObject): JsonObject {
+export type TitleResolver = (key: string, def: JsonObject) => string | undefined;
+
+/** Resolves titles for rule definitions via the `name` property lookup. */
+export const ruleTitleResolver: TitleResolver = (key) => friendlyRuleLabel(key) || undefined;
+
+/** Resolves titles for parameter definitions via the `dtype` discriminator value. */
+export const parameterTitleResolver: TitleResolver = (_key, def) => {
+  const props = (def as Record<string, unknown>).properties;
+  if (!props || typeof props !== "object") return undefined;
+  const dtype = (props as Record<string, unknown>).dtype;
+  if (!dtype || typeof dtype !== "object") return undefined;
+  const val =
+    (dtype as { const?: unknown }).const ??
+    (dtype as { default?: unknown }).default;
+  return typeof val === "string" ? val : undefined;
+};
+
+/**
+ * Adds human-readable titles to every definition in the schema by running the
+ * provided resolvers in order.  The first resolver that returns a non-undefined
+ * value wins.  This ensures RJSF oneOf selectors show meaningful labels
+ * instead of "Option 1", "Option 2".
+ */
+export function augmentRulesSchemaWithTitles(
+  rulesSchema: JsonObject,
+  resolvers: TitleResolver[],
+): JsonObject {
   const updated = deepClone(rulesSchema);
   for (const [key, def] of Object.entries(updated)) {
     if (!def || typeof def !== "object") continue;
-    // Always override with a friendly label — the raw JSON schema titles are
-    // just the definition key names (e.g. "TextMatchQuestionRule") which are
-    // not user-facing. Overriding ensures RJSF oneOf selectors show readable names.
-    (def as Record<string, unknown>).title = friendlyRuleLabel(key);
+    for (const resolve of resolvers) {
+      const title = resolve(key, def as JsonObject);
+      if (title !== undefined) {
+        (def as Record<string, unknown>).title = title;
+        break;
+      }
+    }
   }
   return updated;
 }

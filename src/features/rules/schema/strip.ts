@@ -2,13 +2,21 @@
 const ENGINE_KEYS = ['question_types', 'constraints'] as const;
 
 /**
- * Strips engine-computed metadata keys from every rule definition in the schema.
- * This removes fields like `question_types` and `constraints` that are set by
- * the engine and should not be editable by the user.
+ * Properties whose `const` and `readOnly` attributes must be stripped.
  *
- * Fields like `type` and `name` are NOT stripped — they stay in the schema
- * (hidden via the field template) so RJSF can use them for discriminator
- * matching and form-data initialisation.
+ * RJSF's `sanitizeDataForNewSchema` sets `const`/`readOnly` properties to
+ * undefined during oneOf transitions (deselect → reselect). Keeping only
+ * `default` lets `getDefaultFormState` populate the value correctly while the
+ * field stays hidden via HiddenAwareFieldTemplate.
+ *
+ * - `type` — the rule discriminator (e.g. "TEXT_MATCH", "PROGRAMMABLE")
+ * - `dtype` — the parameter discriminator (e.g. "Int", "Float", "String")
+ */
+const DISCRIMINATOR_PROPS = ['type', 'dtype'] as const;
+
+/**
+ * Strips engine-computed metadata keys and sanitises discriminator properties
+ * in every definition in the schema.
  */
 export function stripEngineKeysFromRulesSchema<T extends Record<string, unknown>>(
   schema: T,
@@ -34,17 +42,13 @@ export function stripEngineKeysFromRulesSchema<T extends Record<string, unknown>
         }
       });
 
-      // Strip `const` and `readOnly` from the `type` property.
-      // RJSF's sanitizeDataForNewSchema sets properties with `const` or
-      // `readOnly` to undefined during oneOf transitions when oldSchema is
-      // absent (deselect → reselect). Keeping only `default` lets
-      // getDefaultFormState populate the value correctly while the field
-      // stays hidden via HiddenAwareFieldTemplate.
-      const typeProp = defObj.properties['type'];
-      if (typeProp && typeof typeProp === 'object') {
-        const tp = typeProp as Record<string, unknown>;
-        delete tp['const'];
-        delete tp['readOnly'];
+      for (const key of DISCRIMINATOR_PROPS) {
+        const prop = defObj.properties[key];
+        if (prop && typeof prop === 'object') {
+          const p = prop as Record<string, unknown>;
+          delete p['const'];
+          delete p['readOnly'];
+        }
       }
     }
 

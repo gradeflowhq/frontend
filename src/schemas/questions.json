@@ -788,8 +788,8 @@
         "default": [
           "TEXT",
           "CHOICE",
-          "MULTI_VALUED",
-          "NUMERIC"
+          "NUMERIC",
+          "MULTI_VALUED"
         ],
         "readOnly": true
       },
@@ -824,7 +824,45 @@
         "type": "string",
         "title": "Code",
         "description": "Code to evaluate the answer. Required variables: 'output', 'passed'. Optional variable: 'feedback'.",
-        "default": "# 'answer' variable contains the student's answer (can be str, float, list, or set)\n# You must set the following variables:\n# 'output' (float): A number between 0 and 1; max_points multiplier (only used in OUTPUT mode)\n# 'passed' (bool): Whether the answer passed (only used in PASS_FAIL mode)\n# 'feedback' (str, optional): Feedback to provide to the student\n"
+        "default": "# You have access to the following variables:\n# - 'answer' variable contains the student's answer (can be str, float, list, or set)\n# - any additional variables defined in 'parameters' (e.g., 'param1', 'param2', etc.)\n# You must set the following variables:\n# - 'output' (float): A number between 0 and 1 -- max_points multiplier (only used in OUTPUT mode)\n# - 'passed' (bool): Whether the answer passed (only used in PASS_FAIL mode)\n# - 'feedback' (str, optional): Feedback to provide to the student\n# Example code:\npassed = False\noutput = 0.0\nfeedback = str(answer)\n"
+      },
+      "parameters": {
+        "additionalProperties": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/IntParameter"
+            },
+            {
+              "$ref": "#/definitions/FloatParameter"
+            },
+            {
+              "$ref": "#/definitions/StringParameter"
+            },
+            {
+              "$ref": "#/definitions/BooleanParameter"
+            },
+            {
+              "$ref": "#/definitions/ListParameter"
+            },
+            {
+              "$ref": "#/definitions/DictParameter"
+            }
+          ],
+          "discriminator": {
+            "propertyName": "dtype",
+            "mapping": {
+              "Boolean": "#/definitions/BooleanParameter",
+              "Dict": "#/definitions/DictParameter",
+              "Float": "#/definitions/FloatParameter",
+              "Int": "#/definitions/IntParameter",
+              "List": "#/definitions/ListParameter",
+              "String": "#/definitions/StringParameter"
+            }
+          }
+        },
+        "type": "object",
+        "title": "Parameters",
+        "description": "Parameters that can be used in the code."
       },
       "mode": {
         "type": "string",
@@ -842,6 +880,192 @@
       "question_id"
     ],
     "title": "ProgrammableQuestionRule"
+  },
+  "StringParameter": {
+    "properties": {
+      "dtype": {
+        "type": "string",
+        "const": "String",
+        "title": "Dtype",
+        "default": "String",
+        "readOnly": true
+      },
+      "value": {
+        "type": "string",
+        "title": "Value"
+      }
+    },
+    "type": "object",
+    "required": [
+      "value"
+    ],
+    "title": "StringParameter"
+  },
+  "ListParameter": {
+    "properties": {
+      "dtype": {
+        "type": "string",
+        "const": "List",
+        "title": "Dtype",
+        "default": "List",
+        "readOnly": true
+      },
+      "value": {
+        "items": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/IntParameter"
+            },
+            {
+              "$ref": "#/definitions/FloatParameter"
+            },
+            {
+              "$ref": "#/definitions/StringParameter"
+            },
+            {
+              "$ref": "#/definitions/BooleanParameter"
+            },
+            {
+              "$ref": "#/definitions/ListParameter"
+            },
+            {
+              "$ref": "#/definitions/DictParameter"
+            }
+          ],
+          "discriminator": {
+            "propertyName": "dtype",
+            "mapping": {
+              "Boolean": "#/definitions/BooleanParameter",
+              "Dict": "#/definitions/DictParameter",
+              "Float": "#/definitions/FloatParameter",
+              "Int": "#/definitions/IntParameter",
+              "List": "#/definitions/ListParameter",
+              "String": "#/definitions/StringParameter"
+            }
+          }
+        },
+        "type": "array",
+        "title": "Value"
+      }
+    },
+    "type": "object",
+    "required": [
+      "value"
+    ],
+    "title": "ListParameter"
+  },
+  "IntParameter": {
+    "properties": {
+      "dtype": {
+        "type": "string",
+        "const": "Int",
+        "title": "Dtype",
+        "default": "Int",
+        "readOnly": true
+      },
+      "value": {
+        "type": "integer",
+        "title": "Value"
+      }
+    },
+    "type": "object",
+    "required": [
+      "value"
+    ],
+    "title": "IntParameter"
+  },
+  "FloatParameter": {
+    "properties": {
+      "dtype": {
+        "type": "string",
+        "const": "Float",
+        "title": "Dtype",
+        "default": "Float",
+        "readOnly": true
+      },
+      "value": {
+        "type": "number",
+        "title": "Value"
+      }
+    },
+    "type": "object",
+    "required": [
+      "value"
+    ],
+    "title": "FloatParameter"
+  },
+  "DictParameter": {
+    "properties": {
+      "dtype": {
+        "type": "string",
+        "const": "Dict",
+        "title": "Dtype",
+        "default": "Dict",
+        "readOnly": true
+      },
+      "value": {
+        "additionalProperties": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/IntParameter"
+            },
+            {
+              "$ref": "#/definitions/FloatParameter"
+            },
+            {
+              "$ref": "#/definitions/StringParameter"
+            },
+            {
+              "$ref": "#/definitions/BooleanParameter"
+            },
+            {
+              "$ref": "#/definitions/ListParameter"
+            },
+            {
+              "$ref": "#/definitions/DictParameter"
+            }
+          ],
+          "discriminator": {
+            "propertyName": "dtype",
+            "mapping": {
+              "Boolean": "#/definitions/BooleanParameter",
+              "Dict": "#/definitions/DictParameter",
+              "Float": "#/definitions/FloatParameter",
+              "Int": "#/definitions/IntParameter",
+              "List": "#/definitions/ListParameter",
+              "String": "#/definitions/StringParameter"
+            }
+          }
+        },
+        "type": "object",
+        "title": "Value"
+      }
+    },
+    "type": "object",
+    "required": [
+      "value"
+    ],
+    "title": "DictParameter"
+  },
+  "BooleanParameter": {
+    "properties": {
+      "dtype": {
+        "type": "string",
+        "const": "Boolean",
+        "title": "Dtype",
+        "default": "Boolean",
+        "readOnly": true
+      },
+      "value": {
+        "type": "boolean",
+        "title": "Value"
+      }
+    },
+    "type": "object",
+    "required": [
+      "value"
+    ],
+    "title": "BooleanParameter"
   },
   "NumericRangeQuestionRule": {
     "properties": {
@@ -1520,8 +1744,8 @@
         "default": [
           "TEXT",
           "CHOICE",
-          "MULTI_VALUED",
-          "NUMERIC"
+          "NUMERIC",
+          "MULTI_VALUED"
         ],
         "readOnly": true
       },
@@ -1552,7 +1776,45 @@
         "type": "string",
         "title": "Code",
         "description": "Code to evaluate the answer. Required variables: 'output', 'passed'. Optional variable: 'feedback'.",
-        "default": "# 'answer' variable contains the student's answer (can be str, float, list, or set)\n# You must set the following variables:\n# 'output' (float): A number between 0 and 1; max_points multiplier (only used in OUTPUT mode)\n# 'passed' (bool): Whether the answer passed (only used in PASS_FAIL mode)\n# 'feedback' (str, optional): Feedback to provide to the student\n"
+        "default": "# You have access to the following variables:\n# - 'answer' variable contains the student's answer (can be str, float, list, or set)\n# - any additional variables defined in 'parameters' (e.g., 'param1', 'param2', etc.)\n# You must set the following variables:\n# - 'output' (float): A number between 0 and 1 -- max_points multiplier (only used in OUTPUT mode)\n# - 'passed' (bool): Whether the answer passed (only used in PASS_FAIL mode)\n# - 'feedback' (str, optional): Feedback to provide to the student\n# Example code:\npassed = False\noutput = 0.0\nfeedback = str(answer)\n"
+      },
+      "parameters": {
+        "additionalProperties": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/IntParameter"
+            },
+            {
+              "$ref": "#/definitions/FloatParameter"
+            },
+            {
+              "$ref": "#/definitions/StringParameter"
+            },
+            {
+              "$ref": "#/definitions/BooleanParameter"
+            },
+            {
+              "$ref": "#/definitions/ListParameter"
+            },
+            {
+              "$ref": "#/definitions/DictParameter"
+            }
+          ],
+          "discriminator": {
+            "propertyName": "dtype",
+            "mapping": {
+              "Boolean": "#/definitions/BooleanParameter",
+              "Dict": "#/definitions/DictParameter",
+              "Float": "#/definitions/FloatParameter",
+              "Int": "#/definitions/IntParameter",
+              "List": "#/definitions/ListParameter",
+              "String": "#/definitions/StringParameter"
+            }
+          }
+        },
+        "type": "object",
+        "title": "Parameters",
+        "description": "Parameters that can be used in the code."
       },
       "mode": {
         "type": "string",
@@ -1923,8 +2185,8 @@
         "default": [
           "TEXT",
           "CHOICE",
-          "MULTI_VALUED",
-          "NUMERIC"
+          "NUMERIC",
+          "MULTI_VALUED"
         ],
         "readOnly": true
       },
@@ -2249,8 +2511,8 @@
         "default": [
           "TEXT",
           "CHOICE",
-          "MULTI_VALUED",
-          "NUMERIC"
+          "NUMERIC",
+          "MULTI_VALUED"
         ],
         "readOnly": true
       },
@@ -2398,8 +2660,8 @@
         "default": [
           "TEXT",
           "CHOICE",
-          "MULTI_VALUED",
-          "NUMERIC"
+          "NUMERIC",
+          "MULTI_VALUED"
         ],
         "readOnly": true
       },
@@ -2748,8 +3010,8 @@
         "default": [
           "TEXT",
           "CHOICE",
-          "MULTI_VALUED",
-          "NUMERIC"
+          "NUMERIC",
+          "MULTI_VALUED"
         ],
         "readOnly": true
       },
@@ -2805,8 +3067,8 @@
         "default": [
           "TEXT",
           "CHOICE",
-          "MULTI_VALUED",
-          "NUMERIC"
+          "NUMERIC",
+          "MULTI_VALUED"
         ],
         "readOnly": true
       },
@@ -3120,8 +3382,8 @@
         "default": [
           "TEXT",
           "CHOICE",
-          "MULTI_VALUED",
-          "NUMERIC"
+          "NUMERIC",
+          "MULTI_VALUED"
         ],
         "readOnly": true
       },
@@ -3409,8 +3671,8 @@
         "default": [
           "TEXT",
           "CHOICE",
-          "MULTI_VALUED",
-          "NUMERIC"
+          "NUMERIC",
+          "MULTI_VALUED"
         ],
         "readOnly": true
       },

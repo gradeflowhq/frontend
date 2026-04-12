@@ -7,6 +7,7 @@
  */
 import type { ProgrammableQuestionRuleOutputQuestionTypesItem } from './programmableQuestionRuleOutputQuestionTypesItem';
 import type { QuestionConstraint } from './questionConstraint';
+import type { ProgrammableQuestionRuleOutputParameters } from './programmableQuestionRuleOutputParameters';
 import type { ProgrammableQuestionRuleOutputMode } from './programmableQuestionRuleOutputMode';
 
 export interface ProgrammableQuestionRuleOutput {
@@ -17,6 +18,8 @@ export interface ProgrammableQuestionRuleOutput {
   readonly name?: 'Programmable';
   /** Code to evaluate the answer. Required variables: 'output', 'passed'. Optional variable: 'feedback'. */
   code?: string;
+  /** Parameters that can be used in the code. */
+  parameters?: ProgrammableQuestionRuleOutputParameters;
   /** Mode of evaluation: 'PASS_FAIL' uses a boolean 'passed' variable, 'OUTPUT' uses the 'output' variable (0-1) for scoring. */
   mode?: ProgrammableQuestionRuleOutputMode;
   readonly description: string;
