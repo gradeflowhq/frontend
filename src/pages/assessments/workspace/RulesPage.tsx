@@ -26,6 +26,7 @@ import { useAssessmentContext } from '@app/contexts/AssessmentContext';
 import { ActionOptionCard } from '@components/common/ActionOptionCard';
 import PageShell from '@components/common/PageShell';
 import SectionStatusBadge from '@components/common/SectionStatusBadge';
+import { UnsavedChangesModal } from '@components/common/UnsavedChangesModal';
 import { useGrading } from '@features/grading/api';
 import { useQuestionSet } from '@features/questions/api';
 import { buildQuestionTypesById } from '@features/questions/helpers';
@@ -44,6 +45,7 @@ import { getRuleTargetQids, isMultiTargetRule } from '@features/rules/schema';
 import { getInvalidRuleReferences, synchronizeRules } from '@features/rules/synchronization';
 import { useAutoResetState } from '@hooks/useAutoResetState';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
+import { useUnsavedChangesGuard } from '@hooks/useUnsavedChangesGuard';
 import { getErrorMessage, isNotFoundError } from '@utils/error';
 import { notifyError, notifyErrorMessage, notifySuccess } from '@utils/notifications';
 
@@ -155,6 +157,27 @@ const RulesPage: React.FC = () => {
   const [statusAction, setStatusAction] = React.useState<'dismiss' | 'sync' | null>(null);
   const [searchQuery, setSearchQuery] = React.useState('');
 
+  // ── Editing guard ───────────────────────────────────────────────────────
+  // Children report editing state; the guard lives HERE (page level) so that
+  // useBlocker doesn't get stuck when Mantine Tabs unmount the active section.
+  const [childEditing, setChildEditing] = React.useState(false);
+
+  // Child sections register their reset function so the guard can clear their
+  // internal editing state on discard.
+  const childResetRef = React.useRef<(() => void) | null>(null);
+
+  const registerChildReset = React.useCallback((fn: (() => void) | null) => {
+    childResetRef.current = fn;
+  }, []);
+
+  const resetEditing = React.useCallback(() => {
+    setChildEditing(false);
+    childResetRef.current?.();
+  }, []);
+
+  const { guard, modalOpened: guardModalOpen, handleStay, handleDiscard } =
+    useUnsavedChangesGuard(childEditing, resetEditing);
+
   // Tab state — read from URL so deep-links and back/forward work correctly.
   const activeTab = (searchParams.get('tab') ?? 'questions') as 'questions' | 'global';
 
@@ -181,24 +204,24 @@ const RulesPage: React.FC = () => {
 
   const handleViewGlobalRule = React.useCallback(
     (qid: string) => {
-      const rule = coveringRuleByQid[qid] ?? null;
-      // Compute the rule's position among multi-target rules to avoid a
-      // flash-to-rule-0 before MultiTargetRulesSection's highlightedRule effect fires.
-      const multiRules = (rubric?.rules ?? []).filter(isMultiTargetRule);
-      const ruleIdx = rule ? multiRules.indexOf(rule as unknown as RubricOutputRulesItem) : -1;
-      setSearchParams(
-        (prev) => {
-          const next = new URLSearchParams(prev);
-          next.set('tab', 'global');
-          next.delete('q');
-          if (ruleIdx >= 0) next.set('gr', String(ruleIdx));
-          return next;
-        },
-        { replace: true },
-      );
-      setHighlightedRule(rule);
+      guard(() => {
+        const rule = coveringRuleByQid[qid] ?? null;
+        const multiRules = (rubric?.rules ?? []).filter(isMultiTargetRule);
+        const ruleIdx = rule ? multiRules.indexOf(rule as unknown as RubricOutputRulesItem) : -1;
+        setSearchParams(
+          (prev) => {
+            const next = new URLSearchParams(prev);
+            next.set('tab', 'global');
+            next.delete('q');
+            if (ruleIdx >= 0) next.set('gr', String(ruleIdx));
+            return next;
+          },
+          { replace: true },
+        );
+        setHighlightedRule(rule);
+      });
     },
-    [coveringRuleByQid, rubric, setSearchParams, setHighlightedRule],
+    [guard, coveringRuleByQid, rubric, setSearchParams, setHighlightedRule],
   );
 
   const deleteRubric = useDeleteRubric(assessmentId);
@@ -537,7 +560,9 @@ const RulesPage: React.FC = () => {
           <Tabs
             value={activeTab}
             onChange={(v) =>
-              setActiveTab((v ?? 'questions') as 'questions' | 'global')
+              guard(() =>
+                setActiveTab((v ?? 'questions') as 'questions' | 'global'),
+              )
             }
           >
             <Tabs.List>
@@ -558,6 +583,9 @@ const RulesPage: React.FC = () => {
                 onViewGlobalRule={handleViewGlobalRule}
                 gradingItems={gradingItems}
                 totalStudents={totalStudents}
+                guard={guard}
+                onEditStateChange={setChildEditing}
+                registerResetEditing={registerChildReset}
               />
             </Tabs.Panel>
 
@@ -568,6 +596,9 @@ const RulesPage: React.FC = () => {
                 questionMap={questionMap}
                 searchQuery={searchQuery}
                 highlightedRule={highlightedRule}
+                guard={guard}
+                onEditStateChange={setChildEditing}
+                registerResetEditing={registerChildReset}
               />
             </Tabs.Panel>
           </Tabs>
@@ -630,6 +661,13 @@ const RulesPage: React.FC = () => {
         </Modal>
 
         {synchronizeRulesModal}
+
+        <UnsavedChangesModal
+          opened={guardModalOpen}
+          message="You have unsaved changes. Continuing will discard them."
+          onStay={handleStay}
+          onDiscard={handleDiscard}
+        />
       </Stack>
     </PageShell>
   );

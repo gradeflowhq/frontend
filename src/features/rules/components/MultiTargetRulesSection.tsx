@@ -1,10 +1,10 @@
 import { Alert, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import React, { useCallback, useMemo, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
 
 import MasterDetailLayout from '@components/common/MasterDetailLayout';
-import { UnsavedChangesModal } from '@components/common/UnsavedChangesModal';
 import {
   useCompatibleRuleKeys,
   useReplaceRubric,
@@ -13,15 +13,16 @@ import {
 } from '@features/rules/api';
 import { materializeDraft } from '@features/rules/hooks/useRuleEditorState';
 import { isMultiTargetRule } from '@features/rules/schema';
-import { useNavigationGuard } from '@hooks/useNavigationGuard';
+import { useGuardRegistration } from '@hooks/useUnsavedChangesGuard';
 
 import GlobalRuleDetailPanel from './GlobalRuleDetailPanel';
 import GlobalRuleMasterList from './GlobalRuleMasterList';
 
 import type { QuestionSetOutputQuestionMap, RubricOutput } from '@api/models';
 import type { RuleValue } from '@features/rules/types';
+import type { GuardedSectionProps } from '@hooks/useUnsavedChangesGuard';
 
-interface Props {
+interface Props extends GuardedSectionProps {
   rubric: RubricOutput | null;
   assessmentId: string;
   questionMap: QuestionSetOutputQuestionMap;
@@ -37,6 +38,9 @@ const MultiTargetRulesSection: React.FC<Props> = ({
   questionMap,
   searchQuery = '',
   highlightedRule,
+  guard,
+  onEditStateChange,
+  registerResetEditing,
 }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [detailEditing, setDetailEditing] = useState(false);
@@ -46,12 +50,6 @@ const MultiTargetRulesSection: React.FC<Props> = ({
     ruleKey: string;
     draft: RuleValue;
   } | null>(null);
-
-  // Desktop unsaved-changes guard — two flavours:
-  // pendingIndex: user clicked a different rule in the list
-  // pendingAddKey: user clicked "Add rule" from the dropdown
-  const [pendingIndex, setPendingIndex] = useState<number | null>(null);
-  const [pendingAddKey, setPendingAddKey] = useState<string | null>(null);
 
   const defs = useRuleDefinitions();
   const validateAndReplace = useValidateAndReplaceRubric(assessmentId);
@@ -131,10 +129,12 @@ const MultiTargetRulesSection: React.FC<Props> = ({
 
   const isCurrentlyEditing = detailEditing || !!pendingNewRule;
 
-  // Block route transitions while editing (e.g. navigating to another page)
-  const routeBlocker = useNavigationGuard(isCurrentlyEditing);
+  const resetEditing = useCallback(() => {
+    setDetailEditing(false);
+    setPendingNewRule(null);
+  }, []);
 
-  const guardModalOpen = pendingIndex !== null || pendingAddKey !== null;
+  useGuardRegistration(isCurrentlyEditing, onEditStateChange, registerResetEditing, resetEditing);
 
   const commitSelectIndex = useCallback(
     (index: number) => {
@@ -159,41 +159,17 @@ const MultiTargetRulesSection: React.FC<Props> = ({
 
   const handleSelect = useCallback(
     (index: number) => {
-      if (isCurrentlyEditing) {
-        setPendingIndex(index);
-        return;
-      }
-      commitSelectIndex(index);
+      guard(() => commitSelectIndex(index));
     },
-    [isCurrentlyEditing, commitSelectIndex],
+    [guard, commitSelectIndex],
   );
 
   const handleAdd = useCallback(
     (ruleKey: string) => {
-      if (isCurrentlyEditing) {
-        setPendingAddKey(ruleKey);
-        return;
-      }
-      commitAdd(ruleKey);
+      guard(() => commitAdd(ruleKey));
     },
-    [isCurrentlyEditing, commitAdd],
+    [guard, commitAdd],
   );
-
-  // Shared "Discard & Continue" handler for both pending flavours
-  const handleConfirmNavigation = useCallback(() => {
-    if (pendingIndex !== null) {
-      commitSelectIndex(pendingIndex);
-      setPendingIndex(null);
-    } else if (pendingAddKey !== null) {
-      commitAdd(pendingAddKey);
-      setPendingAddKey(null);
-    }
-  }, [pendingIndex, pendingAddKey, commitSelectIndex, commitAdd]);
-
-  const handleDismissGuard = useCallback(() => {
-    setPendingIndex(null);
-    setPendingAddKey(null);
-  }, []);
 
   const handleSavePending = useCallback(
     async (savedRule: RuleValue) => {
@@ -203,13 +179,19 @@ const MultiTargetRulesSection: React.FC<Props> = ({
       await validateAndReplace.mutateAsync(nextRules, {
         onSuccess: () => {
           const newMultiIndex = nextRules.filter(isMultiTargetRule).length - 1;
+          // Flush editing-state changes synchronously so the parent guard
+          // sees isEditing=false before setSelectedIndex triggers a
+          // search-param navigation.
+          flushSync(() => {
+            setDetailEditing(false);
+            setPendingNewRule(null);
+          });
           setSelectedIndex(Math.max(0, newMultiIndex));
-          setPendingNewRule(null);
           notifications.show({ color: 'green', message: 'Rule saved' });
         },
       });
     },
-    [allRules, validateAndReplace, setSelectedIndex],
+    [allRules, validateAndReplace, setSelectedIndex, setDetailEditing],
   );
 
   const handleDelete = useCallback(
@@ -297,33 +279,16 @@ const MultiTargetRulesSection: React.FC<Props> = ({
   );
 
   return (
-    <>
-      <MasterDetailLayout
-        listPanel={listPanel}
-        detailPanel={detailPanel}
-        isDetailEditing={isCurrentlyEditing}
-        listWidth="210px"
-        layoutHeight="calc(100dvh - 100px - 55px)"
-        backLabel="Back to rules"
-        mobileShowDetail={mobileShowDetail}
-        onMobileShowDetailChange={setMobileShowDetail}
-      />
-
-      <UnsavedChangesModal
-        opened={guardModalOpen}
-        message="You have an unsaved rule edit. Navigating away will discard it."
-        onStay={handleDismissGuard}
-        onDiscard={handleConfirmNavigation}
-      />
-
-      {/* Route-level guard — blocks navigation to other pages */}
-      <UnsavedChangesModal
-        opened={routeBlocker.state === 'blocked'}
-        message="You have an unsaved rule edit. Leaving this page will discard it."
-        onStay={() => routeBlocker.reset?.()}
-        onDiscard={() => routeBlocker.proceed?.()}
-      />
-    </>
+    <MasterDetailLayout
+      listPanel={listPanel}
+      detailPanel={detailPanel}
+      isDetailEditing={isCurrentlyEditing}
+      listWidth="210px"
+      layoutHeight="calc(100dvh - 100px - 55px)"
+      backLabel="Back to rules"
+      mobileShowDetail={mobileShowDetail}
+      onMobileShowDetailChange={setMobileShowDetail}
+    />
   );
 };
 

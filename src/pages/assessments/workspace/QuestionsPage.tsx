@@ -56,7 +56,7 @@ import {
 } from '@features/questions/helpers';
 import { useSubmissions } from '@features/submissions/api';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
-import { useNavigationGuard } from '@hooks/useNavigationGuard';
+import { useUnsavedChangesGuard } from '@hooks/useUnsavedChangesGuard';
 import { useUrlSelectedId } from '@hooks/useUrlSelectedId';
 import { getErrorMessage, isNotFoundError } from '@utils/error';
 import { notifyError, notifyErrorMessage, notifySuccess } from '@utils/notifications';
@@ -119,11 +119,15 @@ const QuestionsPage: React.FC = () => {
   } | null>(null);
 
   const [detailEditing, setDetailEditing] = useState(false);
-  const [pendingQid, setPendingQid] = useState<string | null>(null);
   const [mobileShowDetail, setMobileShowDetail] = useState(false);
 
-  // Block route transitions while editing (e.g. navigating to another page)
-  const routeBlocker = useNavigationGuard(detailEditing);
+  const resetEditing = useCallback(() => {
+    setDetailEditing(false);
+  }, []);
+
+  // Unified unsaved-changes guard (route + in-page + browser)
+  const { guard, modalOpened: unsavedModalOpen, handleStay, handleDiscard } =
+    useUnsavedChangesGuard(detailEditing, resetEditing);
 
   const {
     data: subsRes,
@@ -358,22 +362,13 @@ const QuestionsPage: React.FC = () => {
   // Question selection — guards against navigating away with unsaved edits.
   const handleSelect = useCallback(
     (qid: string): void => {
-      if (detailEditing) {
-        setPendingQid(qid);
-        return;
-      }
-      setSelectedQid(qid);
-      setMobileShowDetail(true);
+      guard(() => {
+        setSelectedQid(qid);
+        setMobileShowDetail(true);
+      });
     },
-    [detailEditing, setSelectedQid],
+    [guard, setSelectedQid],
   );
-
-  // Desktop unsaved-changes guard: user confirmed navigation.
-  const handleConfirmNavigation = useCallback(() => {
-    if (!pendingQid) return;
-    setSelectedQid(pendingQid);
-    setPendingQid(null);
-  }, [pendingQid, setSelectedQid]);
 
   const handleOpenAddQuestion = useCallback(() => {
     updateMutation.reset();
@@ -735,20 +730,11 @@ const QuestionsPage: React.FC = () => {
           )}
         </Modal>
 
-        {/* Desktop unsaved-changes guard */}
         <UnsavedChangesModal
-          opened={pendingQid !== null}
-          message="You have unsaved question edits. Navigating away will discard them."
-          onStay={() => setPendingQid(null)}
-          onDiscard={handleConfirmNavigation}
-        />
-
-        {/* Route-level guard — blocks navigation to other pages */}
-        <UnsavedChangesModal
-          opened={routeBlocker.state === 'blocked'}
-          message="You have unsaved question edits. Leaving this page will discard them."
-          onStay={() => routeBlocker.reset?.()}
-          onDiscard={() => routeBlocker.proceed?.()}
+          opened={unsavedModalOpen}
+          message="You have unsaved question edits. Continuing will discard them."
+          onStay={handleStay}
+          onDiscard={handleDiscard}
         />
 
         <AddQuestionModal
