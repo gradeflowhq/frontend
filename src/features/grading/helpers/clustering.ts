@@ -2,7 +2,7 @@
  * Pure string-similarity helpers for group-view clustering.
  */
 
-import { clusterByPairwise } from '@utils/unionFind';
+import { clusterByDBSCAN } from '@utils/dbscan';
 
 /**
  * Standard Levenshtein edit distance using a two-row rolling array.
@@ -60,13 +60,20 @@ export const clusterByThreshold = (
   const n = items.length;
   if (n === 0) return new Map();
 
-  const clusters = clusterByPairwise(n, (i, j) =>
+  const clusters = clusterByDBSCAN(n, (i, j) =>
     similarity(items[i]!.normalized, items[j]!.normalized) >= threshold,
   );
 
   const result = new Map<string, string[]>();
-  for (const [root, members] of clusters) {
-    const key = items[root]!.normalized;
+  for (const [, members] of clusters) {
+    // Key by the most frequent normalized string in the cluster
+    const freqMap = new Map<string, number>();
+    for (const idx of members) {
+      const norm = items[idx]!.normalized;
+      freqMap.set(norm, (freqMap.get(norm) ?? 0) + 1);
+    }
+    const key = [...freqMap.entries()]
+      .sort(([a, fa], [b, fb]) => fb - fa || a.localeCompare(b))[0]![0];
     result.set(key, members.map((idx) => items[idx]!.id));
   }
 

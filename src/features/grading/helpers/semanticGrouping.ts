@@ -5,7 +5,7 @@
  * the runtime so subsequent page loads are fast.
  */
 
-import { clusterByPairwise } from '@utils/unionFind';
+import { clusterByDBSCAN } from '@utils/dbscan';
 
 import { answerToString, buildGroupEntry, buildGroupKey } from './grouping';
 
@@ -102,12 +102,12 @@ const cosineSimilarity = (a: Float32Array, b: Float32Array): number => {
 
 // ── Clustering ────────────────────────────────────────────────────────────────
 
-/** Union-Find clustering that merges pairs whose cosine similarity ≥ threshold. */
+/** DBSCAN clustering that groups embeddings whose cosine similarity ≥ threshold. */
 const clusterByCosine = (
   embeddings: Float32Array[],
   threshold: number,
 ): Map<number, number[]> => {
-  return clusterByPairwise(embeddings.length, (i, j) =>
+  return clusterByDBSCAN(embeddings.length, (i, j) =>
     cosineSimilarity(embeddings[i]!, embeddings[j]!) >= threshold,
   );
 };
