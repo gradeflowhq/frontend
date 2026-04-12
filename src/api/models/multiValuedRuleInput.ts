@@ -14,7 +14,7 @@ export interface MultiValuedRuleInput {
   readonly question_types?: readonly MultiValuedRuleInputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
   readonly type?: 'MULTI_VALUED';
-  readonly name?: 'Multi Valued';
+  readonly display_name?: 'Multi Valued';
   /**
    * List of rules to apply to each value in the multi-valued answer
    * @minItems 1

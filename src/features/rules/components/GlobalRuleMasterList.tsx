@@ -123,7 +123,7 @@ const GlobalRuleMasterList: React.FC<Props> = ({
     const q = searchQuery.trim().toLowerCase();
     // Build base rows with labels
     const baseRows = rules.map((rule, index) => {
-      const label = rule.name;
+      const label = rule.display_name;
       const coveredQids = getRuleTargetQids(rule);
       return { index, label, coveredQids };
     });

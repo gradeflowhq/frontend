@@ -16,7 +16,7 @@ export interface AssumptionSetMultiQuestionRuleOutput {
   /** Mode to select which assumption to use */
   mode?: AssumptionSetMultiQuestionRuleOutputMode;
   readonly type?: 'ASSUMPTION_SET_MULTI';
-  readonly name?: 'Assumption Set';
+  readonly display_name?: 'Assumption Set';
   /** List of assumptions in the assumption set */
   assumptions: MultiQuestionAssumptionOutput[];
   readonly description: string;

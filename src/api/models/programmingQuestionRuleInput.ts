@@ -16,7 +16,7 @@ export interface ProgrammingQuestionRuleInput {
   readonly constraints?: readonly QuestionConstraint[];
   question_id: string;
   readonly type?: 'PROGRAMMING';
-  readonly name?: 'Programming';
+  readonly display_name?: 'Programming';
   /**
    * List of test cases to run against the code
    * @minItems 1

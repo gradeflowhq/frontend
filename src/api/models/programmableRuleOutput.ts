@@ -14,7 +14,7 @@ export interface ProgrammableRuleOutput {
   readonly question_types?: readonly ProgrammableRuleOutputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
   readonly type?: 'PROGRAMMABLE';
-  readonly name?: 'Programmable';
+  readonly display_name?: 'Programmable';
   /** Code to evaluate the answer. Required variables: 'output', 'passed'. Optional variable: 'feedback'. */
   code?: string;
   /** Parameters that can be used in the code. */

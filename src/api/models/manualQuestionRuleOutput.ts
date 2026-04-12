@@ -13,6 +13,6 @@ export interface ManualQuestionRuleOutput {
   readonly constraints?: readonly QuestionConstraint[];
   question_id: string;
   readonly type?: 'MANUAL';
-  readonly name?: 'Manual';
+  readonly display_name?: 'Manual';
   readonly description: string;
 }

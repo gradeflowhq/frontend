@@ -11,7 +11,7 @@ export interface InvalidRuleReference {
   summary: string;
 }
 
-const getRuleLabel = (rule: RuleValue): string => rule.name;
+const getRuleLabel = (rule: RuleValue): string => rule.display_name;
 
 export const getInvalidRuleReferences = (
   rules: readonly RuleValue[],

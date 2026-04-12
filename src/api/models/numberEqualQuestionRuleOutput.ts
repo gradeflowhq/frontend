@@ -15,7 +15,7 @@ export interface NumberEqualQuestionRuleOutput {
   readonly constraints?: readonly QuestionConstraint[];
   question_id: string;
   readonly type?: 'NUMBER_EQUAL';
-  readonly name?: 'Number Equal';
+  readonly display_name?: 'Number Equal';
   /**
    * List of acceptable numeric answers
    * @minItems 1

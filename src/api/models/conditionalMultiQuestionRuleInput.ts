@@ -16,7 +16,7 @@ export interface ConditionalMultiQuestionRuleInput {
   readonly question_types?: readonly ConditionalMultiQuestionRuleInputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
   readonly type?: 'CONDITIONAL';
-  readonly name?: 'Conditional';
+  readonly display_name?: 'Conditional';
   /**
    * List of rules to evaluate the 'if' condition
    * @minItems 1

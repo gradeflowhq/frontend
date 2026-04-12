@@ -12,7 +12,7 @@ export interface TextMatchRuleInput {
   readonly question_types?: readonly TextMatchRuleInputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
   readonly type?: 'TEXT_MATCH';
-  readonly name?: 'Text Match';
+  readonly display_name?: 'Text Match';
   /**
    * List of acceptable exact answers
    * @minItems 1

@@ -15,7 +15,7 @@ export interface ProgrammingRuleOutput {
   readonly question_types?: readonly ProgrammingRuleOutputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
   readonly type?: 'PROGRAMMING';
-  readonly name?: 'Programming';
+  readonly display_name?: 'Programming';
   /**
    * List of test cases to run against the code
    * @minItems 1

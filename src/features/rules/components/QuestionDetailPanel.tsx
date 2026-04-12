@@ -102,7 +102,7 @@ const QuestionDetailPanel: React.FC<Props> = ({
   }, [defs, singleTargetRuleKeys, questionType]);
 
   // Label for the covering global rule
-  const coveringRuleLabel = coveringRule?.name ?? 'a global rule';
+  const coveringRuleLabel = coveringRule?.display_name ?? 'a global rule';
 
   // Question description from question map
   const questionDef = questionMap[qid] as { description?: string | null } | undefined;
@@ -114,7 +114,7 @@ const QuestionDetailPanel: React.FC<Props> = ({
   // Rule type badge label — view mode uses existing rule, edit/add mode uses selected key
   const displayRuleType = editState?.ruleKey
     ? friendlyRuleLabel(editState.ruleKey)
-    : existingRule?.name ?? null;
+    : existingRule?.display_name ?? null;
   const coveringRuleDescription = getRuleDescriptionText(coveringRule);
   const existingRuleDescription = getRuleDescriptionText(existingRule);
 

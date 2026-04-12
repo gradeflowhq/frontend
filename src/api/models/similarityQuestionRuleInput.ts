@@ -14,7 +14,7 @@ export interface SimilarityQuestionRuleInput {
   readonly constraints?: readonly QuestionConstraint[];
   question_id: string;
   readonly type?: 'SIMILARITY';
-  readonly name?: 'Similarity';
+  readonly display_name?: 'Similarity';
   /** Reference answers for similarity comparison */
   references: string[];
   /** Similarity threshold for passing the rule (0 to 1) */

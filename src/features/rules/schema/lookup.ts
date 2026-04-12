@@ -20,7 +20,7 @@ const ruleLabelLookup = (() => {
 
   for (const [key, def] of Object.entries(getRuleDefinitions())) {
     const props = def?.properties as Record<string, unknown> | undefined;
-    const label = getSchemaStringValue(props?.name);
+    const label = getSchemaStringValue(props?.display_name);
     if (!label) continue;
 
     lookup.set(key, label);

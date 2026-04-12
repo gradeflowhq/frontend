@@ -17,7 +17,7 @@ export interface AssumptionSetQuestionRuleOutput {
   /** Mode to select which assumption to use */
   mode?: AssumptionSetQuestionRuleOutputMode;
   readonly type?: 'ASSUMPTION_SET';
-  readonly name?: 'Assumption Set';
+  readonly display_name?: 'Assumption Set';
   /** List of assumptions in the assumption set */
   assumptions: AssumptionOutput[];
   readonly description: string;

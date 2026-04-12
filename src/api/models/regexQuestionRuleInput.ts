@@ -14,7 +14,7 @@ export interface RegexQuestionRuleInput {
   readonly constraints?: readonly QuestionConstraint[];
   question_id: string;
   readonly type?: 'REGEX';
-  readonly name?: 'Regex';
+  readonly display_name?: 'Regex';
   /** Regular expression pattern to match against the answer */
   pattern: string;
   /** Configuration for regex matching behavior */

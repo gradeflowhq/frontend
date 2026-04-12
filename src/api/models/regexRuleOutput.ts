@@ -13,7 +13,7 @@ export interface RegexRuleOutput {
   readonly question_types?: readonly RegexRuleOutputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
   readonly type?: 'REGEX';
-  readonly name?: 'Regex';
+  readonly display_name?: 'Regex';
   /** Regular expression pattern to match against the answer */
   pattern: string;
   /** Configuration for regex matching behavior */

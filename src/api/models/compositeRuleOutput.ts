@@ -14,7 +14,7 @@ export interface CompositeRuleOutput {
   readonly question_types?: readonly CompositeRuleOutputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
   readonly type?: 'COMPOSITE';
-  readonly name?: 'Composite';
+  readonly display_name?: 'Composite';
   /**
    * List of rules to apply to the answer
    * @minItems 1

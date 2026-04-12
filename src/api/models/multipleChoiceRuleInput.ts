@@ -13,7 +13,7 @@ export interface MultipleChoiceRuleInput {
   readonly question_types?: readonly MultipleChoiceRuleInputQuestionTypesItem[];
   constraints?: QuestionConstraint[];
   readonly type?: 'MULTIPLE_CHOICE';
-  readonly name?: 'Multiple Choice';
+  readonly display_name?: 'Multiple Choice';
   /**
    * Set of correct choices
    * @minItems 1

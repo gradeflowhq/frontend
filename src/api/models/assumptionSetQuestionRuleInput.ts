@@ -17,7 +17,7 @@ export interface AssumptionSetQuestionRuleInput {
   /** Mode to select which assumption to use */
   mode?: AssumptionSetQuestionRuleInputMode;
   readonly type?: 'ASSUMPTION_SET';
-  readonly name?: 'Assumption Set';
+  readonly display_name?: 'Assumption Set';
   /** List of assumptions in the assumption set */
   assumptions: AssumptionInput[];
 }

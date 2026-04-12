@@ -15,7 +15,7 @@ export interface MultiValuedQuestionRuleOutput {
   readonly constraints?: readonly QuestionConstraint[];
   question_id: string;
   readonly type?: 'MULTI_VALUED';
-  readonly name?: 'Multi Valued';
+  readonly display_name?: 'Multi Valued';
   /**
    * List of rules to apply to each value in the multi-valued answer
    * @minItems 1

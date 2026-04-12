@@ -65,7 +65,7 @@ const GlobalRuleDetailPanel: React.FC<Props> = ({
   const [saveError, setSaveError] = useState<unknown>(null);
 
   const ruleType = String((rule as { type?: unknown }).type ?? '');
-  const ruleLabel = rule.name;
+  const ruleLabel = rule.display_name;
   const ruleDescription = useMemo(() => getRuleDescriptionText(rule), [rule]);
 
   const coveredQids = useMemo(() => getRuleTargetQids(rule), [rule]);

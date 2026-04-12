@@ -12,6 +12,6 @@ export interface ManualRuleOutput {
   readonly question_types?: readonly ManualRuleOutputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
   readonly type?: 'MANUAL';
-  readonly name?: 'Manual';
+  readonly display_name?: 'Manual';
   readonly description: string;
 }

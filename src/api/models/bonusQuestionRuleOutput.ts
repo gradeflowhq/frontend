@@ -13,6 +13,6 @@ export interface BonusQuestionRuleOutput {
   readonly constraints?: readonly QuestionConstraint[];
   question_id: string;
   readonly type?: 'BONUS';
-  readonly name?: 'Bonus';
+  readonly display_name?: 'Bonus';
   readonly description: string;
 }

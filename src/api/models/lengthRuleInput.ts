@@ -15,7 +15,7 @@ export interface LengthRuleInput {
   readonly question_types?: readonly LengthRuleInputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
   readonly type?: 'LENGTH';
-  readonly name?: 'Length';
+  readonly display_name?: 'Length';
   /** Minimum length of the answer */
   min_length?: LengthRuleInputMinLength;
   /** Maximum length of the answer */

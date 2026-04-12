@@ -13,7 +13,7 @@ export interface KeywordsRuleOutput {
   readonly question_types?: readonly KeywordsRuleOutputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
   readonly type?: 'KEYWORDS';
-  readonly name?: 'Keywords';
+  readonly display_name?: 'Keywords';
   /**
    * List of keywords that must be present in the answer
    * @minItems 1

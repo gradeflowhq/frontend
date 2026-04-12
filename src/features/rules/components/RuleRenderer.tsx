@@ -94,7 +94,7 @@ const RuleObjectView: React.FC<{
     hideRootType,
     flatRoot,
   } = options;
-  const nameOrType = String(obj?.name ?? obj?.type ?? '\u2014');
+  const nameOrType = String(obj?.display_name ?? obj?.type ?? '\u2014');
   const qidValue = obj?.question_id;
   const isRoot = path === '$';
   const showTypeBadge = !(isRoot && hideRootType);

@@ -12,5 +12,5 @@ export interface BonusRuleInput {
   readonly question_types?: readonly BonusRuleInputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
   readonly type?: 'BONUS';
-  readonly name?: 'Bonus';
+  readonly display_name?: 'Bonus';
 }

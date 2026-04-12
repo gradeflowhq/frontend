@@ -14,7 +14,7 @@ export interface NumericRangeRuleOutput {
   readonly question_types?: readonly NumericRangeRuleOutputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
   readonly type?: 'NUMERIC_RANGE';
-  readonly name?: 'Numeric Range';
+  readonly display_name?: 'Numeric Range';
   /** Minimum acceptable value */
   min_value?: NumericRangeRuleOutputMinValue;
   /** Maximum acceptable value */
