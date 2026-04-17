@@ -123,14 +123,33 @@ export function filterNestedRuleOneOfByQuestionType(
   };
 
   /**
-   * Filters a oneOf array in-place and removes the discriminator (if any)
-   * to prevent RJSF from mis-selecting a schema.
+   * Filters a oneOf array in-place and prunes the discriminator mapping
+   * to only include remaining entries.  Keeping the discriminator (rather
+   * than deleting it) lets RJSF's `getOptionMatchingSimpleDiscriminator`
+   * resolve the correct option instantly, avoiding the expensive and
+   * error-prone validation + scoring fallback.
    */
   const filterOneOf = (container: Record<string, unknown>): void => {
     const oneOf = container.oneOf;
     if (!Array.isArray(oneOf)) return;
     container.oneOf = oneOf.filter(isCompatible);
-    delete container.discriminator;
+
+    // Prune discriminator mapping to match the filtered oneOf entries.
+    const disc = container.discriminator as
+      | { propertyName?: string; mapping?: Record<string, string> }
+      | undefined;
+    if (disc?.mapping) {
+      const keptRefs = new Set(
+        (container.oneOf as Array<{ $ref?: string }>).map((e) => e.$ref).filter(Boolean),
+      );
+      const pruned: Record<string, string> = {};
+      for (const [key, ref] of Object.entries(disc.mapping)) {
+        if (keptRefs.has(ref)) {
+          pruned[key] = ref;
+        }
+      }
+      disc.mapping = pruned;
+    }
   };
 
   for (const [, defSchema] of Object.entries(updated)) {

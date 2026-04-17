@@ -114,6 +114,40 @@ describe('filterNestedRuleOneOfByQuestionType', () => {
     expect(refs).not.toContain('#/definitions/NumericRule');
   });
 
+  it('preserves discriminator and prunes mapping after filtering', () => {
+    const schemaWithMapping = {
+      TextRule: { properties: { type: { const: 'TEXT' }, question_types: { default: ['TEXT'] } } },
+      NumRule:  { properties: { type: { const: 'NUM'  }, question_types: { default: ['NUMERIC'] } } },
+      Parent: {
+        properties: {
+          rules: {
+            type: 'array',
+            items: {
+              oneOf: [
+                { $ref: '#/definitions/TextRule' },
+                { $ref: '#/definitions/NumRule' },
+              ],
+              discriminator: {
+                propertyName: 'type',
+                mapping: { TEXT: '#/definitions/TextRule', NUM: '#/definitions/NumRule' },
+              },
+            },
+          },
+        },
+      },
+    };
+    const result = filterNestedRuleOneOfByQuestionType(schemaWithMapping, 'TEXT');
+    const items = ((result.Parent as Record<string, unknown>).properties as Record<string, unknown>)
+      .rules as Record<string, unknown>;
+    const inner = (items as Record<string, unknown>).items as Record<string, unknown>;
+    // discriminator should survive with pruned mapping
+    expect(inner.discriminator).toBeDefined();
+    const disc = inner.discriminator as { propertyName: string; mapping: Record<string, string> };
+    expect(disc.propertyName).toBe('type');
+    expect(disc.mapping).toEqual({ TEXT: '#/definitions/TextRule' });
+    expect(disc.mapping).not.toHaveProperty('NUM');
+  });
+
   it('returns schema unchanged when questionType is null', () => {
     const result = filterNestedRuleOneOfByQuestionType(schema, null);
     expect(result).toEqual(schema);

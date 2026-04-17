@@ -2,12 +2,15 @@
 const ENGINE_KEYS = ['question_types', 'constraints'] as const;
 
 /**
- * Properties whose `const` and `readOnly` attributes must be stripped.
+ * Properties whose `const` attribute must be converted to `enum` and whose
+ * `readOnly` attribute must be stripped.
  *
- * RJSF's `sanitizeDataForNewSchema` sets `const`/`readOnly` properties to
- * undefined during oneOf transitions (deselect → reselect). Keeping only
- * `default` lets `getDefaultFormState` populate the value correctly while the
- * field stays hidden via HiddenAwareFieldTemplate.
+ * Converting `const` → `enum: [value]` rather than deleting it allows
+ * RJSF's `getOptionMatchingSimpleDiscriminator` to identify the correct
+ * oneOf option immediately, bypassing the slow and fragile validation +
+ * scoring fallback.  Stripping `readOnly` lets `getDefaultFormState`
+ * populate the value correctly while the field stays hidden via
+ * HiddenAwareFieldTemplate.
  *
  * - `type` — the rule discriminator (e.g. "TEXT_MATCH", "PROGRAMMABLE")
  * - `dtype` — the parameter discriminator (e.g. "Int", "Float", "String")
@@ -46,7 +49,13 @@ export function stripEngineKeysFromRulesSchema<T extends Record<string, unknown>
         const prop = defObj.properties[key];
         if (prop && typeof prop === 'object') {
           const p = prop as Record<string, unknown>;
-          delete p['const'];
+          // Convert const → enum so getOptionMatchingSimpleDiscriminator can
+          // still match while sanitizeDataForNewSchema no longer treats the
+          // property as an immutable constant.
+          if ('const' in p) {
+            p['enum'] = [p['const']];
+            delete p['const'];
+          }
           delete p['readOnly'];
         }
       }

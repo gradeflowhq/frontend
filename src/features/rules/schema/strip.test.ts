@@ -24,7 +24,7 @@ describe('stripEngineKeysFromRulesSchema', () => {
     expect(props).toHaveProperty('match_values');
   });
 
-  it('strips const and readOnly from discriminator props', () => {
+  it('converts const to enum and strips readOnly from discriminator props', () => {
     const schema = {
       SomeRule: {
         properties: {
@@ -42,10 +42,12 @@ describe('stripEngineKeysFromRulesSchema', () => {
     expect(typeProp).not.toHaveProperty('const');
     expect(typeProp).not.toHaveProperty('readOnly');
     expect(typeProp.default).toBe('SOME');
+    expect(typeProp.enum).toEqual(['SOME']);
 
     expect(dtypeProp).not.toHaveProperty('const');
     expect(dtypeProp).not.toHaveProperty('readOnly');
     expect(dtypeProp.default).toBe('Int');
+    expect(dtypeProp.enum).toEqual(['Int']);
   });
 
   it('removes engine keys from required array', () => {
