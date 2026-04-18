@@ -702,9 +702,9 @@
         "title": "Question Types",
         "default": [
           "MULTI_VALUED",
-          "CHOICE",
           "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "CHOICE"
         ],
         "readOnly": true
       },
@@ -992,9 +992,9 @@
         "title": "Question Types",
         "default": [
           "MULTI_VALUED",
-          "CHOICE",
           "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "CHOICE"
         ],
         "readOnly": true
       },
@@ -1680,9 +1680,9 @@
         "title": "Question Types",
         "default": [
           "MULTI_VALUED",
-          "CHOICE",
           "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "CHOICE"
         ],
         "readOnly": true
       },
@@ -2006,9 +2006,9 @@
         "title": "Question Types",
         "default": [
           "MULTI_VALUED",
-          "CHOICE",
           "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "CHOICE"
         ],
         "readOnly": true
       },
@@ -2193,9 +2193,9 @@
         "title": "Question Types",
         "default": [
           "MULTI_VALUED",
-          "CHOICE",
           "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "CHOICE"
         ],
         "readOnly": true
       },
@@ -2460,9 +2460,9 @@
         "title": "Question Types",
         "default": [
           "MULTI_VALUED",
-          "CHOICE",
           "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "CHOICE"
         ],
         "readOnly": true
       },
@@ -2887,9 +2887,9 @@
         "title": "Question Types",
         "default": [
           "MULTI_VALUED",
-          "CHOICE",
           "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "CHOICE"
         ],
         "readOnly": true
       },
@@ -2944,9 +2944,9 @@
         "title": "Question Types",
         "default": [
           "MULTI_VALUED",
-          "CHOICE",
           "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "CHOICE"
         ],
         "readOnly": true
       },
@@ -3112,9 +3112,9 @@
         "title": "Question Types",
         "default": [
           "MULTI_VALUED",
-          "CHOICE",
           "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "CHOICE"
         ],
         "readOnly": true
       },

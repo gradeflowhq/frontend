@@ -51,29 +51,6 @@
     ],
     "title": "UserResponse"
   },
-  "TokenPairResponse": {
-    "properties": {
-      "access_token": {
-        "type": "string",
-        "title": "Access Token"
-      },
-      "refresh_token": {
-        "type": "string",
-        "title": "Refresh Token"
-      },
-      "token_type": {
-        "type": "string",
-        "title": "Token Type",
-        "default": "bearer"
-      }
-    },
-    "type": "object",
-    "required": [
-      "access_token",
-      "refresh_token"
-    ],
-    "title": "TokenPairResponse"
-  },
   "SubmissionsResponse": {
     "properties": {
       "raw_submissions": {
@@ -765,9 +742,9 @@
         "title": "Question Types",
         "default": [
           "MULTI_VALUED",
-          "CHOICE",
           "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "CHOICE"
         ],
         "readOnly": true
       },
@@ -1640,9 +1617,9 @@
         "title": "Question Types",
         "default": [
           "MULTI_VALUED",
-          "CHOICE",
           "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "CHOICE"
         ],
         "readOnly": true
       },
@@ -2081,9 +2058,9 @@
         "title": "Question Types",
         "default": [
           "MULTI_VALUED",
-          "CHOICE",
           "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "CHOICE"
         ],
         "readOnly": true
       },
@@ -2407,9 +2384,9 @@
         "title": "Question Types",
         "default": [
           "MULTI_VALUED",
-          "CHOICE",
           "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "CHOICE"
         ],
         "readOnly": true
       },
@@ -2538,9 +2515,9 @@
         "title": "Question Types",
         "default": [
           "MULTI_VALUED",
-          "CHOICE",
           "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "CHOICE"
         ],
         "readOnly": true
       },
@@ -2750,9 +2727,9 @@
         "title": "Question Types",
         "default": [
           "MULTI_VALUED",
-          "CHOICE",
           "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "CHOICE"
         ],
         "readOnly": true
       },
@@ -3177,9 +3154,9 @@
         "title": "Question Types",
         "default": [
           "MULTI_VALUED",
-          "CHOICE",
           "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "CHOICE"
         ],
         "readOnly": true
       },
@@ -3234,9 +3211,9 @@
         "title": "Question Types",
         "default": [
           "MULTI_VALUED",
-          "CHOICE",
           "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "CHOICE"
         ],
         "readOnly": true
       },
@@ -3402,9 +3379,9 @@
         "title": "Question Types",
         "default": [
           "MULTI_VALUED",
-          "CHOICE",
           "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "CHOICE"
         ],
         "readOnly": true
       },
@@ -3952,7 +3929,8 @@
       "id",
       "email"
     ],
-    "title": "MeResponse"
+    "title": "MeResponse",
+    "description": "Response for the /users/me endpoint — sourced from the local DB user."
   },
   "JobStatusResponse": {
     "properties": {

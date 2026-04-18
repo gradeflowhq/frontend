@@ -9,4 +9,6 @@
 export interface GradingRunRequest {
   /** When True, clear all manual adjustments on re-graded submissions. */
   remove_adjustments?: boolean;
+  /** When True, a rule result overwrites any pre-existing points/feedback. */
+  override_results?: boolean;
 }

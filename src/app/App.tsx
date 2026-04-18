@@ -8,8 +8,6 @@ const QuestionsPage = lazy(() => import('@pages/assessments/workspace/QuestionsP
 const RulesPage = lazy(() => import('@pages/assessments/workspace/RulesPage'));
 const SettingsPage = lazy(() => import('@pages/assessments/workspace/SettingsPage'));
 const SubmissionsPage = lazy(() => import('@pages/assessments/workspace/SubmissionsPage'));
-const LoginPage = lazy(() => import('@pages/auth/LoginPage'));
-const RegisterPage = lazy(() => import('@pages/auth/RegisterPage'));
 const LandingPage = lazy(() => import('@pages/landing/LandingPage'));
 const CanvasPushPage = lazy(() => import('@pages/results/CanvasPushPage'));
 const GroupViewPage = lazy(() => import('@pages/results/GroupViewPage'));
@@ -20,9 +18,8 @@ const UserSettingsPage = lazy(() => import('@pages/settings/UserSettingsPage'));
 
 import AppLayout from '../layouts/AppLayout';
 import AssessmentShell from '../layouts/AssessmentShell';
-import PublicLayout from '../layouts/PublicLayout';
+import AuthCallback from './routes/AuthCallback';
 import ProtectedRoute from './routes/ProtectedRoute';
-import PublicOnlyRoute from './routes/PublicOnlyRoute';
 
 const PageFallback: React.FC = () => (
   <Center style={{ minHeight: '60vh' }}>
@@ -34,19 +31,8 @@ const router = createBrowserRouter([
   /* Landing page — accessible to everyone */
   { path: '/', element: <LandingPage /> },
 
-  /* Public-only routes (redirect if already logged in) */
-  {
-    element: <PublicOnlyRoute />,
-    children: [
-      {
-        element: <PublicLayout />,
-        children: [
-          { path: '/login', element: <LoginPage /> },
-          { path: '/register', element: <RegisterPage /> },
-        ],
-      },
-    ],
-  },
+  /* OIDC callback — navigates to /assessments once auth completes */
+  { path: '/auth/callback', element: <AuthCallback /> },
 
   /* Protected area with sidebar layout */
   {

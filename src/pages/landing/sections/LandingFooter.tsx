@@ -36,38 +36,15 @@ const LandingFooter: React.FC<LandingFooterProps> = ({ accessToken }) => {
             Your next exam doesn't have to mean another lost weekend. Set up your first assessment and run automated grading in minutes.
           </Text>
           <Group justify="center" gap="sm">
-            {accessToken ? (
-              <Button
-                size="lg"
-                variant="white"
-                color="blue"
-                component={Link}
-                to={PATHS.ASSESSMENTS}
-              >
-                Go to my assessments
-              </Button>
-            ) : (
-              <>
-                <Button
-                  size="lg"
-                  variant="white"
-                  color="blue"
-                  component={Link}
-                  to={PATHS.REGISTER}
-                >
-                  Create account
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  color="white"
-                  component={Link}
-                  to={PATHS.LOGIN}
-                >
-                  Log in
-                </Button>
-              </>
-            )}
+            <Button
+              size="lg"
+              variant="white"
+              color="blue"
+              component={Link}
+              to={PATHS.ASSESSMENTS}
+            >
+              {accessToken ? 'Go to my assessments' : 'Log in'}
+            </Button>
           </Group>
         </Stack>
       </Center>

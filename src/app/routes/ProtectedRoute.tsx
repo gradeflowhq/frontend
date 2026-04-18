@@ -1,13 +1,25 @@
+import { Center, Loader } from '@mantine/core';
 import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
-
-import { useAuthStore } from '@state/authStore';
-
-import { PATHS } from './paths';
+import { useAuth } from 'react-oidc-context';
+import { Outlet } from 'react-router-dom';
 
 const ProtectedRoute: React.FC = () => {
-  const accessToken = useAuthStore((s) => s.accessToken);
-  return accessToken ? <Outlet /> : <Navigate to={PATHS.LOGIN} replace />;
+  const { isAuthenticated, isLoading, signinRedirect } = useAuth();
+
+  if (isLoading) {
+    return (
+      <Center style={{ minHeight: '100vh' }}>
+        <Loader color="blue" />
+      </Center>
+    );
+  }
+
+  if (!isAuthenticated) {
+    void signinRedirect();
+    return null;
+  }
+
+  return <Outlet />;
 };
 
 export default ProtectedRoute;

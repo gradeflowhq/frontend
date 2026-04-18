@@ -8,11 +8,7 @@ import { useResolvedColorScheme } from '@hooks/useResolvedColorScheme';
 import { features } from '../landingData';
 import { getLandingFeatureIconColors } from '../landingTheme';
 
-interface LandingFeaturesSectionProps {
-  accessToken: string | null;
-}
-
-const LandingFeaturesSection: React.FC<LandingFeaturesSectionProps> = ({ accessToken }) => {
+const LandingFeaturesSection: React.FC = () => {
   const colorScheme = useResolvedColorScheme();
   const iconColors = getLandingFeatureIconColors(colorScheme);
 
@@ -94,7 +90,7 @@ const LandingFeaturesSection: React.FC<LandingFeaturesSectionProps> = ({ accessT
         size="md"
         variant="light"
         component={Link}
-        to={accessToken ? PATHS.ASSESSMENTS : PATHS.REGISTER}
+        to={PATHS.ASSESSMENTS}
       >
         Start grading →
       </Button>

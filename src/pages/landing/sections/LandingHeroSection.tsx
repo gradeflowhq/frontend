@@ -82,17 +82,9 @@ const LandingHeroSection: React.FC<LandingHeroSectionProps> = ({ accessToken }) 
           </Text>
 
           <Group justify="center" gap="sm" mt="xs">
-            {accessToken ? (
-              <Button size="lg" component={Link} to={PATHS.ASSESSMENTS}>
-                Go to my assessments
-              </Button>
-            ) : (
-              <>
-                <Button size="lg" component={Link} to={PATHS.REGISTER}>
-                  Start grading
-                </Button>
-              </>
-            )}
+            <Button size="lg" component={Link} to={PATHS.ASSESSMENTS}>
+              {accessToken ? 'Go to my assessments' : 'Start grading'}
+            </Button>
           </Group>
 
           {!accessToken && (

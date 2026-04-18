@@ -6,8 +6,7 @@
  */
 export const PATHS = {
   HOME:     '/',
-  LOGIN:    '/login',
-  REGISTER: '/register',
+  AUTH_CALLBACK: '/auth/callback',
   ASSESSMENTS: '/assessments',
   SETTINGS: '/settings',
   SETTINGS_INTEGRATIONS: '/settings?tab=integrations',

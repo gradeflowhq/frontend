@@ -7,6 +7,9 @@
  */
 import type { MeResponseName } from './meResponseName';
 
+/**
+ * Response for the /users/me endpoint — sourced from the local DB user.
+ */
 export interface MeResponse {
   id: string;
   email: string;

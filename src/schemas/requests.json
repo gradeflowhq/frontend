@@ -800,9 +800,9 @@
         "title": "Question Types",
         "default": [
           "MULTI_VALUED",
-          "CHOICE",
           "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "CHOICE"
         ],
         "readOnly": true
       },
@@ -1675,9 +1675,9 @@
         "title": "Question Types",
         "default": [
           "MULTI_VALUED",
-          "CHOICE",
           "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "CHOICE"
         ],
         "readOnly": true
       },
@@ -2116,9 +2116,9 @@
         "title": "Question Types",
         "default": [
           "MULTI_VALUED",
-          "CHOICE",
           "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "CHOICE"
         ],
         "readOnly": true
       },
@@ -2442,9 +2442,9 @@
         "title": "Question Types",
         "default": [
           "MULTI_VALUED",
-          "CHOICE",
           "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "CHOICE"
         ],
         "readOnly": true
       },
@@ -2573,9 +2573,9 @@
         "title": "Question Types",
         "default": [
           "MULTI_VALUED",
-          "CHOICE",
           "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "CHOICE"
         ],
         "readOnly": true
       },
@@ -2785,9 +2785,9 @@
         "title": "Question Types",
         "default": [
           "MULTI_VALUED",
-          "CHOICE",
           "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "CHOICE"
         ],
         "readOnly": true
       },
@@ -3212,9 +3212,9 @@
         "title": "Question Types",
         "default": [
           "MULTI_VALUED",
-          "CHOICE",
           "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "CHOICE"
         ],
         "readOnly": true
       },
@@ -3269,9 +3269,9 @@
         "title": "Question Types",
         "default": [
           "MULTI_VALUED",
-          "CHOICE",
           "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "CHOICE"
         ],
         "readOnly": true
       },
@@ -3437,9 +3437,9 @@
         "title": "Question Types",
         "default": [
           "MULTI_VALUED",
-          "CHOICE",
           "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "CHOICE"
         ],
         "readOnly": true
       },
@@ -3610,73 +3610,6 @@
     ],
     "title": "UploadSourceDataRequest"
   },
-  "UpdateMeRequest": {
-    "properties": {
-      "name": {
-        "title": "Name",
-        "type": [
-          "string",
-          "null"
-        ],
-        "maxLength": 255
-      },
-      "email": {
-        "title": "Email",
-        "type": [
-          "string",
-          "null"
-        ],
-        "format": "email"
-      },
-      "current_password": {
-        "title": "Current Password",
-        "type": [
-          "string",
-          "null"
-        ]
-      },
-      "new_password": {
-        "title": "New Password",
-        "type": [
-          "string",
-          "null"
-        ],
-        "maxLength": 128,
-        "minLength": 12
-      }
-    },
-    "type": "object",
-    "title": "UpdateMeRequest"
-  },
-  "SignupRequest": {
-    "properties": {
-      "email": {
-        "type": "string",
-        "format": "email",
-        "title": "Email"
-      },
-      "name": {
-        "title": "Name",
-        "type": [
-          "string",
-          "null"
-        ],
-        "maxLength": 255
-      },
-      "password": {
-        "type": "string",
-        "maxLength": 128,
-        "minLength": 12,
-        "title": "Password"
-      }
-    },
-    "type": "object",
-    "required": [
-      "email",
-      "password"
-    ],
-    "title": "SignupRequest"
-  },
   "SetRubricByModelRequest": {
     "properties": {
       "rubric": {
@@ -3718,19 +3651,6 @@
       "question_set"
     ],
     "title": "SetQuestionSetByModelRequest"
-  },
-  "RefreshRequest": {
-    "properties": {
-      "refresh_token": {
-        "type": "string",
-        "title": "Refresh Token"
-      }
-    },
-    "type": "object",
-    "required": [
-      "refresh_token"
-    ],
-    "title": "RefreshRequest"
   },
   "ParseSubmissionsRequest": {
     "properties": {
@@ -4097,6 +4017,12 @@
         "title": "Remove Adjustments",
         "description": "When True, clear all manual adjustments on re-graded submissions.",
         "default": false
+      },
+      "override_results": {
+        "type": "boolean",
+        "title": "Override Results",
+        "description": "When True, a rule result overwrites any pre-existing points/feedback.",
+        "default": true
       }
     },
     "type": "object",

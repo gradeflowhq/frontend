@@ -1,10 +1,10 @@
 import { AppShell } from '@mantine/core';
 import { useWindowScroll } from '@mantine/hooks';
 import React from 'react';
+import { useAuth } from 'react-oidc-context';
 
 import PublicNavbar from '@components/common/PublicNavbar';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
-import { useAuthStore } from '@state/authStore';
 
 import LandingFaqSection from './sections/LandingFaqSection';
 import LandingFeaturesSection from './sections/LandingFeaturesSection';
@@ -18,8 +18,8 @@ const LandingPage: React.FC = () => {
   const [scroll] = useWindowScroll();
   const scrolled = scroll.y > 20;
 
-
-  const accessToken = useAuthStore((s) => s.accessToken);
+  const { isAuthenticated } = useAuth();
+  const accessToken = isAuthenticated ? 'authenticated' : null;
 
   return (
     <AppShell header={{ height: 60 }} withBorder={false}>
@@ -39,7 +39,7 @@ const LandingPage: React.FC = () => {
 
       <AppShell.Main>
         <LandingHeroSection accessToken={accessToken} />
-        <LandingFeaturesSection accessToken={accessToken} />
+        <LandingFeaturesSection />
         <LandingHowItWorksSection />
         <LandingFaqSection />
         <LandingFooter accessToken={accessToken} />

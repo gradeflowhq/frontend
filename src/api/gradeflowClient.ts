@@ -14,7 +14,6 @@ import type {
   AssessmentUpdateRequest,
   AssessmentUsersResponse,
   AssessmentsListResponse,
-  BodyIssueTokenAuthTokenPost,
   BulkGradeAdjustmentRequest,
   BulkGradeAdjustmentResponse,
   CoverageRequest,
@@ -39,17 +38,13 @@ import type {
   ParseSubmissionsRequest,
   ParseSubmissionsResponse,
   QuestionSetResponse,
-  RefreshRequest,
   RubricResponse,
   SetQuestionSetByModelRequest,
   SetRoleRequest,
   SetRubricByModelRequest,
-  SignupRequest,
   SourceDataResponse,
   SubmissionsImportConfig,
   SubmissionsResponse,
-  TokenPairResponse,
-  UpdateMeRequest,
   UploadSourceDataRequest,
   ValidateRubricRequest,
   ValidateRubricResponse
@@ -583,93 +578,6 @@ const cancelGradingPreviewJobAssessmentsAssessmentIdGradingPreviewJobDelete = <T
   }
 
 /**
- * @summary Signup
- */
-const signupAuthSignupPost = <TData = AxiosResponse<TokenPairResponse>>(
-    signupRequest: SignupRequest, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.post(
-      `/auth/signup`,
-      signupRequest,options
-    );
-  }
-
-/**
- * OAuth2 Password flow. Use your email as the username.
- * @summary Obtain access/refresh tokens
- */
-const issueTokenAuthTokenPost = <TData = AxiosResponse<TokenPairResponse>>(
-    bodyIssueTokenAuthTokenPost: BodyIssueTokenAuthTokenPost, options?: AxiosRequestConfig
- ): Promise<TData> => {const formUrlEncoded = new URLSearchParams();
-if(bodyIssueTokenAuthTokenPost.grant_type !== undefined && bodyIssueTokenAuthTokenPost.grant_type !== null) {
- formUrlEncoded.append(`grant_type`, bodyIssueTokenAuthTokenPost.grant_type)
- }
-formUrlEncoded.append(`username`, bodyIssueTokenAuthTokenPost.username)
-formUrlEncoded.append(`password`, bodyIssueTokenAuthTokenPost.password)
-if(bodyIssueTokenAuthTokenPost.scope !== undefined) {
- formUrlEncoded.append(`scope`, bodyIssueTokenAuthTokenPost.scope)
- }
-if(bodyIssueTokenAuthTokenPost.client_id !== undefined && bodyIssueTokenAuthTokenPost.client_id !== null) {
- formUrlEncoded.append(`client_id`, bodyIssueTokenAuthTokenPost.client_id)
- }
-if(bodyIssueTokenAuthTokenPost.client_secret !== undefined && bodyIssueTokenAuthTokenPost.client_secret !== null) {
- formUrlEncoded.append(`client_secret`, bodyIssueTokenAuthTokenPost.client_secret)
- }
-
-    return axios.default.post(
-      `/auth/token`,
-      formUrlEncoded,options
-    );
-  }
-
-/**
- * @summary Refresh
- */
-const refreshAuthRefreshPost = <TData = AxiosResponse<TokenPairResponse>>(
-    refreshRequest: RefreshRequest, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.post(
-      `/auth/refresh`,
-      refreshRequest,options
-    );
-  }
-
-/**
- * @summary Logout
- */
-const logoutAuthLogoutPost = <TData = AxiosResponse<void>>(
-     options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.post(
-      `/auth/logout`,undefined,options
-    );
-  }
-
-/**
- * @summary Me
- */
-const meAuthMeGet = <TData = AxiosResponse<MeResponse>>(
-     options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.get(
-      `/auth/me`,options
-    );
-  }
-
-/**
- * Update name, email, and/or password for the authenticated user. Changing email or password requires current_password to be supplied.
- * @summary Update current user profile
- */
-const updateMeAuthMePatch = <TData = AxiosResponse<MeResponse>>(
-    updateMeRequest: UpdateMeRequest, options?: AxiosRequestConfig
- ): Promise<TData> => {
-    return axios.default.patch(
-      `/auth/me`,
-      updateMeRequest,options
-    );
-  }
-
-/**
  * @summary List Members
  */
 const listMembersAssessmentsAssessmentIdMembersGet = <TData = AxiosResponse<AssessmentUsersResponse>>(
@@ -743,7 +651,18 @@ const callbackJobsCallbackTokenPost = <TData = AxiosResponse<void>>(
     );
   }
 
-return {healthHealthGet,questionSetSerializersRegistrySerializersQuestionSetsGet,rubricSerializersRegistrySerializersRubricsGet,submissionsSerializersRegistrySerializersSubmissionsGet,rawSubmissionsAdaptersRegistryAdaptersRawSubmissionsGet,questionSetAdaptersRegistryAdaptersQuestionSetsGet,rubricAdaptersRegistryAdaptersRubricsGet,listAssessmentsAssessmentsGet,createAssessmentAssessmentsPost,getAssessmentAssessmentsAssessmentIdGet,updateAssessmentAssessmentsAssessmentIdPatch,deleteAssessmentAssessmentsAssessmentIdDelete,uploadSourceDataAssessmentsAssessmentIdSubmissionsSourcePut,getSourceDataAssessmentsAssessmentIdSubmissionsSourceGet,saveImportConfigAssessmentsAssessmentIdSubmissionsConfigPut,getImportConfigAssessmentsAssessmentIdSubmissionsConfigGet,getSubmissionsAssessmentsAssessmentIdSubmissionsGet,deleteSubmissionsAssessmentsAssessmentIdSubmissionsDelete,getQuestionSetAssessmentsAssessmentIdQuestionSetGet,setQuestionSetByModelAssessmentsAssessmentIdQuestionSetPut,deleteQuestionSetAssessmentsAssessmentIdQuestionSetDelete,setQuestionSetByDataAssessmentsAssessmentIdQuestionSetUploadPut,importQuestionSetAssessmentsAssessmentIdQuestionSetImportPut,inferQuestionSetAssessmentsAssessmentIdQuestionSetInferPost,parseSubmissionsAssessmentsAssessmentIdQuestionSetParsePost,getRubricAssessmentsAssessmentIdRubricGet,setRubricByModelAssessmentsAssessmentIdRubricPut,deleteRubricAssessmentsAssessmentIdRubricDelete,setRubricByDataAssessmentsAssessmentIdRubricUploadPut,importRubricAssessmentsAssessmentIdRubricImportPut,validateRubricAssessmentsAssessmentIdRubricValidatePost,rubricCoverageAssessmentsAssessmentIdRubricCoveragePost,getGradingAssessmentsAssessmentIdGradingGet,runGradingAssessmentsAssessmentIdGradingPost,deleteGradingAssessmentsAssessmentIdGradingDelete,getGradingJobAssessmentsAssessmentIdGradingJobGet,cancelGradingJobAssessmentsAssessmentIdGradingJobDelete,adjustGradingAssessmentsAssessmentIdGradingAdjustPost,bulkAdjustGradingAssessmentsAssessmentIdGradingBulkAdjustPost,downloadGradingAssessmentsAssessmentIdGradingDownloadPost,runGradingPreviewAssessmentsAssessmentIdGradingPreviewPost,getGradingPreviewAssessmentsAssessmentIdGradingPreviewGet,getGradingPreviewJobAssessmentsAssessmentIdGradingPreviewJobGet,cancelGradingPreviewJobAssessmentsAssessmentIdGradingPreviewJobDelete,signupAuthSignupPost,issueTokenAuthTokenPost,refreshAuthRefreshPost,logoutAuthLogoutPost,meAuthMeGet,updateMeAuthMePatch,listMembersAssessmentsAssessmentIdMembersGet,addMemberAssessmentsAssessmentIdMembersPost,setMemberRoleAssessmentsAssessmentIdMembersUserIdPatch,removeMemberAssessmentsAssessmentIdMembersUserIdDelete,getStatusJobsJobIdGet,callbackJobsCallbackTokenPost}};
+/**
+ * @summary Me
+ */
+const meUsersMeGet = <TData = AxiosResponse<MeResponse>>(
+     options?: AxiosRequestConfig
+ ): Promise<TData> => {
+    return axios.default.get(
+      `/users/me`,options
+    );
+  }
+
+return {healthHealthGet,questionSetSerializersRegistrySerializersQuestionSetsGet,rubricSerializersRegistrySerializersRubricsGet,submissionsSerializersRegistrySerializersSubmissionsGet,rawSubmissionsAdaptersRegistryAdaptersRawSubmissionsGet,questionSetAdaptersRegistryAdaptersQuestionSetsGet,rubricAdaptersRegistryAdaptersRubricsGet,listAssessmentsAssessmentsGet,createAssessmentAssessmentsPost,getAssessmentAssessmentsAssessmentIdGet,updateAssessmentAssessmentsAssessmentIdPatch,deleteAssessmentAssessmentsAssessmentIdDelete,uploadSourceDataAssessmentsAssessmentIdSubmissionsSourcePut,getSourceDataAssessmentsAssessmentIdSubmissionsSourceGet,saveImportConfigAssessmentsAssessmentIdSubmissionsConfigPut,getImportConfigAssessmentsAssessmentIdSubmissionsConfigGet,getSubmissionsAssessmentsAssessmentIdSubmissionsGet,deleteSubmissionsAssessmentsAssessmentIdSubmissionsDelete,getQuestionSetAssessmentsAssessmentIdQuestionSetGet,setQuestionSetByModelAssessmentsAssessmentIdQuestionSetPut,deleteQuestionSetAssessmentsAssessmentIdQuestionSetDelete,setQuestionSetByDataAssessmentsAssessmentIdQuestionSetUploadPut,importQuestionSetAssessmentsAssessmentIdQuestionSetImportPut,inferQuestionSetAssessmentsAssessmentIdQuestionSetInferPost,parseSubmissionsAssessmentsAssessmentIdQuestionSetParsePost,getRubricAssessmentsAssessmentIdRubricGet,setRubricByModelAssessmentsAssessmentIdRubricPut,deleteRubricAssessmentsAssessmentIdRubricDelete,setRubricByDataAssessmentsAssessmentIdRubricUploadPut,importRubricAssessmentsAssessmentIdRubricImportPut,validateRubricAssessmentsAssessmentIdRubricValidatePost,rubricCoverageAssessmentsAssessmentIdRubricCoveragePost,getGradingAssessmentsAssessmentIdGradingGet,runGradingAssessmentsAssessmentIdGradingPost,deleteGradingAssessmentsAssessmentIdGradingDelete,getGradingJobAssessmentsAssessmentIdGradingJobGet,cancelGradingJobAssessmentsAssessmentIdGradingJobDelete,adjustGradingAssessmentsAssessmentIdGradingAdjustPost,bulkAdjustGradingAssessmentsAssessmentIdGradingBulkAdjustPost,downloadGradingAssessmentsAssessmentIdGradingDownloadPost,runGradingPreviewAssessmentsAssessmentIdGradingPreviewPost,getGradingPreviewAssessmentsAssessmentIdGradingPreviewGet,getGradingPreviewJobAssessmentsAssessmentIdGradingPreviewJobGet,cancelGradingPreviewJobAssessmentsAssessmentIdGradingPreviewJobDelete,listMembersAssessmentsAssessmentIdMembersGet,addMemberAssessmentsAssessmentIdMembersPost,setMemberRoleAssessmentsAssessmentIdMembersUserIdPatch,removeMemberAssessmentsAssessmentIdMembersUserIdDelete,getStatusJobsJobIdGet,callbackJobsCallbackTokenPost,meUsersMeGet}};
 export type HealthHealthGetResult = AxiosResponse<HealthHealthGet200>
 export type QuestionSetSerializersRegistrySerializersQuestionSetsGetResult = AxiosResponse<string[]>
 export type RubricSerializersRegistrySerializersRubricsGetResult = AxiosResponse<string[]>
@@ -788,15 +707,10 @@ export type RunGradingPreviewAssessmentsAssessmentIdGradingPreviewPostResult = A
 export type GetGradingPreviewAssessmentsAssessmentIdGradingPreviewGetResult = AxiosResponse<GradingResponse>
 export type GetGradingPreviewJobAssessmentsAssessmentIdGradingPreviewJobGetResult = AxiosResponse<GradingJob>
 export type CancelGradingPreviewJobAssessmentsAssessmentIdGradingPreviewJobDeleteResult = AxiosResponse<void>
-export type SignupAuthSignupPostResult = AxiosResponse<TokenPairResponse>
-export type IssueTokenAuthTokenPostResult = AxiosResponse<TokenPairResponse>
-export type RefreshAuthRefreshPostResult = AxiosResponse<TokenPairResponse>
-export type LogoutAuthLogoutPostResult = AxiosResponse<void>
-export type MeAuthMeGetResult = AxiosResponse<MeResponse>
-export type UpdateMeAuthMePatchResult = AxiosResponse<MeResponse>
 export type ListMembersAssessmentsAssessmentIdMembersGetResult = AxiosResponse<AssessmentUsersResponse>
 export type AddMemberAssessmentsAssessmentIdMembersPostResult = AxiosResponse<MembershipResponse>
 export type SetMemberRoleAssessmentsAssessmentIdMembersUserIdPatchResult = AxiosResponse<MembershipResponse>
 export type RemoveMemberAssessmentsAssessmentIdMembersUserIdDeleteResult = AxiosResponse<void>
 export type GetStatusJobsJobIdGetResult = AxiosResponse<JobStatusResponse>
 export type CallbackJobsCallbackTokenPostResult = AxiosResponse<void>
+export type MeUsersMeGetResult = AxiosResponse<MeResponse>

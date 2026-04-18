@@ -12,7 +12,6 @@ import {
   Tooltip,
   UnstyledButton,
 } from '@mantine/core';
-import { notifications } from '@mantine/notifications';
 import {
   IconAdjustments,
   IconArrowLeft,
@@ -32,15 +31,15 @@ import {
   IconUsers,
 } from '@tabler/icons-react';
 import React, { useCallback, useState } from 'react';
-import { Link, useMatch, useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from 'react-oidc-context';
+import { Link, useMatch, useLocation } from 'react-router-dom';
 
 import { PATHS } from '@app/routes/paths';
 import { prefetchRoute } from '@app/routes/prefetch';
 import { useAssessment } from '@features/assessments/api';
-import { useMe, useLogout } from '@features/auth/api';
+import { useMe } from '@features/auth/api';
 import { useGradingJob, useJobStatus } from '@features/grading/api';
 import { SIDEBAR_EXPANDED_WIDTH, SIDEBAR_COLLAPSED_WIDTH } from '@lib/constants';
-import { useAuthStore } from '@state/authStore';
 
 interface SidebarNavProps {
   expanded: boolean;
@@ -192,24 +191,20 @@ const SectionLabel: React.FC<{ label: string; expanded: boolean }> = ({ label, e
 };
 
 const AccountSection: React.FC<{ expanded: boolean }> = ({ expanded }) => {
-  const clearTokens = useAuthStore((s) => s.clearTokens);
-  const navigate = useNavigate();
-
   const { data } = useMe();
-  const logoutMutation = useLogout();
+  const { removeUser, signoutRedirect } = useAuth();
 
   const username = data?.name ?? data?.email ?? 'Account';
   const initial = username.charAt(0).toUpperCase();
 
   const handleLogout = useCallback(() => {
-    void logoutMutation.mutateAsync(undefined, {
-      onSuccess: () => notifications.show({ color: 'green', message: 'Logged out' }),
-      onError: () => notifications.show({ color: 'red', message: 'Logout failed' }),
-    }).finally(() => {
-      clearTokens();
-      void navigate(PATHS.LOGIN);
+    // signoutRedirect reads the stored id_token for the id_token_hint param.
+    // Calling removeUser first would clear it and break post-logout redirect.
+    void signoutRedirect().catch((err: unknown) => {
+      console.error('Signout redirect failed, clearing local session', err);
+      void removeUser();
     });
-  }, [logoutMutation, clearTokens, navigate]);
+  }, [removeUser, signoutRedirect]);
 
   const avatarEl = (
     <Avatar size="sm" radius="xl" color="blue">

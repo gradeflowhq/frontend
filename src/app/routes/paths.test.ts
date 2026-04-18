@@ -5,8 +5,7 @@ import { PATHS } from '@app/routes/paths';
 describe('PATHS', () => {
   it('has correct static routes', () => {
     expect(PATHS.HOME).toBe('/');
-    expect(PATHS.LOGIN).toBe('/login');
-    expect(PATHS.REGISTER).toBe('/register');
+    expect(PATHS.AUTH_CALLBACK).toBe('/auth/callback');
     expect(PATHS.ASSESSMENTS).toBe('/assessments');
     expect(PATHS.SETTINGS).toBe('/settings');
   });

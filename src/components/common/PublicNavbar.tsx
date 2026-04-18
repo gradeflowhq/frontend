@@ -13,8 +13,7 @@ const PublicNavbar: React.FC = () => {
         <Text fw={800} size="xl" c={colorScheme === 'dark' ? 'white' : 'black'}>GradeFlow</Text>
       </Anchor>
       <Group gap="sm">
-        <Button component={Link} to={PATHS.LOGIN} variant="default" size="sm">Log in</Button>
-        <Button component={Link} to={PATHS.REGISTER} size="sm">Register</Button>
+        <Button component={Link} to={PATHS.ASSESSMENTS} size="sm">Log in</Button>
       </Group>
     </Group>
   );

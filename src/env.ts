@@ -22,4 +22,20 @@ export const ENV = {
     nonEmpty(window.__CONFIG__?.CORS_PROXY_URL) ??
     nonEmpty(import.meta.env.VITE_CORS_PROXY_URL) ??
     'http://localhost:8080',
+
+  ZITADEL_AUTHORITY:
+    nonEmpty(window.__CONFIG__?.ZITADEL_AUTHORITY) ??
+    nonEmpty(import.meta.env.VITE_ZITADEL_AUTHORITY) ??
+    'http://localhost:8080',
+
+  ZITADEL_CLIENT_ID:
+    nonEmpty(window.__CONFIG__?.ZITADEL_CLIENT_ID) ??
+    nonEmpty(import.meta.env.VITE_ZITADEL_CLIENT_ID) ??
+    '',
+
+  /** When set, scopes the Zitadel login to a single org so users type username only. */
+  ZITADEL_ORG_DOMAIN:
+    nonEmpty(window.__CONFIG__?.ZITADEL_ORG_DOMAIN) ??
+    nonEmpty(import.meta.env.VITE_ZITADEL_ORG_DOMAIN) ??
+    '',
 } as const;

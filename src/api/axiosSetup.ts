@@ -1,9 +1,7 @@
 import axios, { type AxiosRequestHeaders, type InternalAxiosRequestConfig } from 'axios';
 
-import { useAuthStore } from '@state/authStore';
-
+import { userManager } from '../auth/oidc';
 import { ENV } from '../env';
-import { api } from './index';
 
 axios.defaults.baseURL = ENV.API_URL;
 
@@ -11,75 +9,55 @@ if (import.meta.env.DEV && !ENV.API_URL) {
   console.warn('[gradeflow] API_URL is not configured. Set VITE_API_URL or window.__CONFIG__.API_URL.');
 }
 
-let isRefreshing = false;
-let queue: Array<(token: string | null) => void> = [];
-
-const processQueue = (newAccess: string | null) => {
-  queue.forEach((fn) => fn(newAccess));
-  queue = [];
-};
-
-axios.interceptors.request.use((config) => {
-  const accessToken = useAuthStore.getState().accessToken;
-  if (accessToken) {
+axios.interceptors.request.use(async (config) => {
+  const user = await userManager.getUser();
+  if (user?.access_token && !user.expired) {
     const headers: AxiosRequestHeaders = (config.headers ?? {}) as AxiosRequestHeaders;
     if (!headers.Authorization) {
-      headers.Authorization = `Bearer ${accessToken}`;
+      headers.Authorization = `Bearer ${user.access_token}`;
       config.headers = headers;
     }
   }
   return config;
 });
 
+let renewalPromise: Promise<string | null> | null = null;
+
 axios.interceptors.response.use(
   (res) => res,
-  (error) => {
+  async (error) => {
     const status = error?.response?.status;
     const originalRequest = error.config as (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined;
 
-    // Non-401 or already retried: propagate
     if (status !== 401 || !originalRequest || originalRequest._retry) {
       return Promise.reject(error);
     }
 
     originalRequest._retry = true;
 
-    return new Promise((resolve, reject) => {
-      // Queue the request until refresh settles
-      queue.push((newAccess) => {
-        if (!newAccess) {
-          originalRequest._retry = false;
-          reject(error);
-          return;
-        }
-        const headers: AxiosRequestHeaders = (originalRequest.headers ?? {}) as AxiosRequestHeaders;
-        headers.Authorization = `Bearer ${newAccess}`;
-        originalRequest.headers = headers;
-        resolve(axios(originalRequest));
-      });
+    // Coalesce concurrent 401 renewals into a single signinSilent call.
+    // All queued requests wait on the same promise and retry with the new token.
+    if (!renewalPromise) {
+      renewalPromise = userManager
+        .signinSilent()
+        .then((user) => user?.access_token ?? null)
+        .catch(() => null)
+        .finally(() => { renewalPromise = null; });
+    }
 
-      if (isRefreshing) return;
+    const newToken = await renewalPromise;
+    if (newToken) {
+      const headers: AxiosRequestHeaders = (originalRequest.headers ?? {}) as AxiosRequestHeaders;
+      headers.Authorization = `Bearer ${newToken}`;
+      originalRequest.headers = headers;
+      return axios(originalRequest);
+    }
 
-      isRefreshing = true;
-      const executeRefresh = async () => {
-        try {
-          const { refreshToken } = useAuthStore.getState();
-          if (!refreshToken) throw new Error('No refresh token');
-
-          const res = await api.refreshAuthRefreshPost({ refresh_token: refreshToken });
-          const tokenPair = res.data;
-          useAuthStore.getState().setTokens(tokenPair);
-          processQueue(tokenPair.access_token ?? null);
-        } catch {
-          useAuthStore.getState().clearTokens();
-          processQueue(null);
-          reject(error);
-        } finally {
-          isRefreshing = false;
-        }
-      };
-
-      void executeRefresh();
-    });
+    // Silent renewal failed — clear local auth state and redirect to
+    // the landing page instead of calling signinRedirect which would
+    // cause an infinite redirect loop when the token is persistently rejected.
+    await userManager.removeUser();
+    window.location.replace('/');
+    return Promise.reject(error);
   }
 );

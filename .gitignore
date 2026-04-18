@@ -25,3 +25,6 @@ dist-ssr
 
 # Pytest
 .pytest_cache
+
+# Environment variables
+.env
