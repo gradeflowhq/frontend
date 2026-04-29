@@ -1,8 +1,8 @@
-import { Tabs, Badge, Text, Stack } from '@mantine/core';
+import { Tabs, Badge, Text, Stack, Spoiler } from '@mantine/core';
 import { DataTable } from 'mantine-datatable';
 import React, { useState } from 'react';
 
-import { formatNumericValue, truncateText } from '@utils/format';
+import { formatNumericValue } from '@utils/format';
 
 import { InfoRow, LoadingBadge } from './InfoRow';
 import { type PreparedRow, type PreviewTab } from '../types';
@@ -75,9 +75,13 @@ const PreviewSection: React.FC<PreviewSectionProps> = ({
       accessor: 'comments',
       title: 'Comments',
       render: (row: PreparedRow) => (
-        <Text size="xs" style={{ whiteSpace: 'pre-wrap' }}>
-          {truncateText(row.comments ?? '', 130) || '\u2014'}
-        </Text>
+        row.comments ? (
+          <Spoiler maxHeight={56} showLabel="Show more" hideLabel="Show less">
+            <Text size="xs" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+              {row.comments}
+            </Text>
+          </Spoiler>
+        ) : '\u2014'
       ),
     },
   ];
@@ -107,6 +111,7 @@ const PreviewSection: React.FC<PreviewSectionProps> = ({
         recordsPerPage={PAGE_SIZE}
         page={activePage}
         onPageChange={setPage}
+        noRecordsText={previewTab === 'mapped' ? 'No mapped students yet.' : 'No unmatched students.'}
         striped
         highlightOnHover
         pinFirstColumn

@@ -74,8 +74,10 @@ const AssignmentPicker: React.FC<AssignmentPickerProps> = ({
             disabled={loadingCourseData}
             value={assignmentGroupId || null}
             onChange={(v) => onAssignmentGroupChange(v ?? '')}
+            searchable
             data={groupSelectData}
             placeholder="Select a group"
+            nothingFoundMessage="No matching groups"
           />
         </Stack>
 
@@ -109,10 +111,12 @@ const AssignmentPicker: React.FC<AssignmentPickerProps> = ({
               value={assignmentId || ''}
               onChange={(v) => onAssignmentSelect(v ?? '')}
               disabled={assignmentDisabled}
+              searchable
               data={[
                 { value: '', label: 'Create new assignment...' },
                 ...assignments.map((a) => ({ value: String(a.id), label: a.name })),
               ]}
+              nothingFoundMessage="No matching assignments"
             />
           </Stack>
         )}

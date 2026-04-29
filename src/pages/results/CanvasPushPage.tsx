@@ -53,7 +53,6 @@ const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId 
     progressUrl,
     setConfig,
   } = useCanvasPushStore(assessmentId);
-
   const [includeComments, setIncludeComments] = useState(true);
   const [previewTab, setPreviewTab] = useState<PreviewTab>('mapped');
   const [openSteps, setOpenSteps] = useState<string[]>(() => ['connection']);
@@ -64,6 +63,21 @@ const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId 
   const { data: gradingData } = useGrading(assessmentId, Boolean(assessmentId));
   const canvasData = useCanvasData(canvasBaseUrl, canvasToken);
   const courseData = useCourseData(courseId, canvasBaseUrl, canvasToken);
+  const courseDetailsMessage = useMemo(() => {
+    if (!courseId || courseData.isLoading) return null;
+
+    const parts: string[] = [`${courseData.roster.length} students loaded`];
+
+    if (courseData.assignmentGroups.length) {
+      parts.push(`${courseData.assignmentGroups.length} assignment groups`);
+    }
+
+    if (courseData.assignments.length) {
+      parts.push(`${courseData.assignments.length} assignments`);
+    }
+
+    return parts.join(' · ');
+  }, [courseId, courseData.isLoading, courseData.roster.length, courseData.assignmentGroups.length, courseData.assignments.length]);
 
   // Fetch Canvas current user for display in the connection step
   const parsedCanvasUrl = parseCanvasBaseUrl(canvasBaseUrl);
@@ -233,7 +247,12 @@ const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId 
   const isLoadingData = csvGrades.isLoading;
   const hasActiveJob = progressQuery.data &&
     (progressQuery.data.workflow_state === 'queued' || progressQuery.data.workflow_state === 'running');
-  const disablePush = canvasData.missingConfig || !courseId || !csvGrades.rows.length || !!hasActiveJob;
+  const disablePush =
+    canvasData.missingConfig ||
+    !courseId ||
+    !csvGrades.rows.length ||
+    !!hasActiveJob ||
+    !!(courseId && courseData.isLoading);
 
   const isConnected = !canvasData.missingConfig && !canvasData.isError;
   const courseLabel = courseId
@@ -365,6 +384,8 @@ const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId 
                 courseId={courseId}
                 courses={canvasData.courses}
                 loadingCourses={canvasData.isLoading}
+                loadingCourseDetails={Boolean(courseId) && courseData.isLoading}
+                courseDetailsMessage={courseDetailsMessage}
                 missingCanvasConfig={canvasData.missingConfig}
                 onCourseChange={handleCourseChange}
                 onRefresh={async () => {

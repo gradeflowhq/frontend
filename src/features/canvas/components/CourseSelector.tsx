@@ -9,6 +9,8 @@ type CourseSelectorProps = {
   courseId: string;
   courses: CanvasCourse[];
   loadingCourses: boolean;
+  loadingCourseDetails?: boolean;
+  courseDetailsMessage?: string | null;
   missingCanvasConfig: boolean;
   onCourseChange: (value: string) => void;
   onRefresh: () => void | Promise<void>;
@@ -18,6 +20,8 @@ const CourseSelector: React.FC<CourseSelectorProps> = ({
   courseId,
   courses,
   loadingCourses,
+  loadingCourseDetails = false,
+  courseDetailsMessage,
   missingCanvasConfig,
   onCourseChange,
   onRefresh,
@@ -41,12 +45,19 @@ const CourseSelector: React.FC<CourseSelectorProps> = ({
         disabled={loadingCourses || missingCanvasConfig || !courses.length}
         value={courseId || null}
         onChange={(v) => onCourseChange(v ?? '')}
+        searchable
         data={courses.map((c) => ({
           value: String(c.id),
           label: `${c.name}${c.course_code ? ` (${c.course_code})` : ''}`,
         }))}
         placeholder="Select a course"
+        nothingFoundMessage="No matching courses"
       />
+      {courseId && (loadingCourseDetails || courseDetailsMessage) && (
+        <Text size="sm" c="dimmed">
+          {loadingCourseDetails ? 'Loading students and assignments for this course…' : courseDetailsMessage}
+        </Text>
+      )}
       {!courses.length && !loadingCourses && !missingCanvasConfig && (
         <Text size="sm" c="dimmed">No courses found. Check your Canvas access.</Text>
       )}
