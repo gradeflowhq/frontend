@@ -1,7 +1,8 @@
 import { AppShell, Box, Burger, Center, Loader, Text } from '@mantine/core';
-import React, { Suspense, useCallback, useState } from 'react';
+import React, { Suspense, useCallback, useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 
+import { prefetchAllOnIdle } from '@app/routes/prefetch';
 import ErrorBoundary from '@components/common/ErrorBoundary';
 import { SIDEBAR_EXPANDED_WIDTH, SIDEBAR_COLLAPSED_WIDTH } from '@lib/constants';
 import { SIDEBAR_PINNED_STORAGE_KEY } from '@lib/storageKeys';
@@ -98,6 +99,10 @@ const AppLayout: React.FC = () => {
       /* ignore */
     }
   }, [expanded]);
+
+  useEffect(() => {
+    prefetchAllOnIdle();
+  }, []);
 
   return (
     <AppLayoutInner

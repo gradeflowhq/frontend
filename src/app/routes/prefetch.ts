@@ -36,10 +36,20 @@ const prefetchers: Record<RouteKey, PrefetchFn> = {
   userSettings: () => void import('@pages/settings/UserSettingsPage'),
 };
 
-export const prefetchRoute = (key: RouteKey): void => {
-  try {
-    prefetchers[key]?.();
-  } catch {
-    // silently ignore prefetch errors – they should not affect UX
+/**
+ * Eagerly prefetch all registered route chunks during idle time so that
+ * navigations to never-visited pages are instant.
+ */
+export const prefetchAllOnIdle = (): void => {
+  const run = () => {
+    Object.values(prefetchers).forEach((fn) => {
+      try { fn(); } catch { /* ignore */ }
+    });
+  };
+
+  if (typeof requestIdleCallback === 'function') {
+    requestIdleCallback(run);
+  } else {
+    setTimeout(run, 2000);
   }
 };
