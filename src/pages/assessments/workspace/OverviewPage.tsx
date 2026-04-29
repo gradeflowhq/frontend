@@ -6,10 +6,10 @@ import {
   Stack,
   Text,
   Title,
+  Loader,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import {
-  IconLoader,
   IconPlayerPlay,
   IconX,
 } from '@tabler/icons-react';
@@ -241,7 +241,7 @@ const OverviewPage: React.FC = () => {
       <Stack gap="md">
 
         {gradingInProgress && (
-          <Alert icon={<IconLoader size={16} />} color="blue" radius="md">
+          <Alert icon={<Loader size={16} />} color="blue" radius="md">
             <Group justify="space-between" align="center">
               <Text size="sm">Grading job {activeJobStatus}.</Text>
               <Button

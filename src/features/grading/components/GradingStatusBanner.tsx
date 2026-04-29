@@ -1,5 +1,5 @@
-import { Alert, Box, Text } from '@mantine/core';
-import { IconAlertCircle, IconLoader } from '@tabler/icons-react';
+import { Alert, Box, Loader, Text } from '@mantine/core';
+import { IconAlertCircle } from '@tabler/icons-react';
 import React from 'react';
 
 import SectionStatusBadge from '@components/common/SectionStatusBadge';
@@ -47,7 +47,7 @@ const GradingStatusBanner: React.FC<GradingStatusBannerProps> = ({ assessmentId 
   if (gradingInProgress) {
     const statusLabel = jobStatus === 'queued' ? 'queued' : 'running';
     return (
-      <Alert icon={<IconLoader size={16} />} color="blue" mb="md">
+      <Alert icon={<Loader size={16} />} color="blue" mb="md">
         Grading job {statusLabel}. Showing previous results. This page will update automatically.
       </Alert>
     );

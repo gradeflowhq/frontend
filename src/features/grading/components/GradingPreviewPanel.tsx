@@ -1,5 +1,5 @@
-import { Alert, Skeleton, Stack, Text } from '@mantine/core';
-import { IconCircleCheck, IconAlertCircle, IconLoader } from '@tabler/icons-react';
+import { Alert, Loader, Skeleton, Stack, Text } from '@mantine/core';
+import { IconCircleCheck, IconAlertCircle } from '@tabler/icons-react';
 import { DataTable } from 'mantine-datatable';
 import React, { useMemo } from 'react';
 
@@ -112,7 +112,7 @@ const GradingPreviewPanel: React.FC<Props> = ({
     const statusLabel = status === 'queued' ? 'queued' : 'running';
     return (
       <Stack gap="sm">
-        <Alert icon={<IconLoader size={16} />} color="blue">
+        <Alert icon={<Loader size={16} />} color="blue">
           Preview job {statusLabel}.
         </Alert>
         <Skeleton height={200} />
