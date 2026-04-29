@@ -31,6 +31,9 @@ import { useGrading } from '@features/grading/api';
 import { useQuestionSet } from '@features/questions/api';
 import { buildQuestionTypesById } from '@features/questions/helpers';
 import { useRubric, useRubricCoverage, useDeleteRubric } from '@features/rubric/api';
+const RubricExportModal = lazy(
+  () => import('@features/rubric/components/RubricExportModal'),
+);
 const RubricImportModal = lazy(
   () => import('@features/rubric/components/RubricImportModal'),
 );
@@ -151,6 +154,7 @@ const RulesPage: React.FC = () => {
 
   const [openRubricUpload, setOpenRubricUpload] = React.useState(false);
   const [openRubricImport, setOpenRubricImport] = React.useState(false);
+  const [openRubricExport, setOpenRubricExport] = React.useState(false);
   const [confirmDeleteRubric, setConfirmDeleteRubric] = React.useState(false);
   const [confirmSynchronizeRules, setConfirmSynchronizeRules] = React.useState(false);
   const [dismissedRulesSyncSignature, setDismissedRulesSyncSignature] = React.useState<string | null>(null);
@@ -392,6 +396,7 @@ const RulesPage: React.FC = () => {
           <RulesToolbar
             onUpload={() => setOpenRubricUpload(true)}
             onImport={() => setOpenRubricImport(true)}
+            onExport={rubricRes?.rubric ? () => setOpenRubricExport(true) : undefined}
             onDelete={() => setConfirmDeleteRubric(true)}
             disableDelete={deleteRubric.isPending}
             hasRules={hasRules}
@@ -427,6 +432,15 @@ const RulesPage: React.FC = () => {
         </Center>
 
         {synchronizeRulesModal}
+        {openRubricExport && (
+          <Suspense fallback={null}>
+            <RubricExportModal
+              open={openRubricExport}
+              assessmentId={assessmentId}
+              onClose={() => setOpenRubricExport(false)}
+            />
+          </Suspense>
+        )}
         </Stack>
       </PageShell>
     );
@@ -442,6 +456,7 @@ const RulesPage: React.FC = () => {
           <RulesToolbar
             onUpload={() => setOpenRubricUpload(true)}
             onImport={() => setOpenRubricImport(true)}
+            onExport={undefined}
             onDelete={() => setConfirmDeleteRubric(true)}
             disableDelete={deleteRubric.isPending}
             hasRules={false}
@@ -473,7 +488,7 @@ const RulesPage: React.FC = () => {
                 icon={<IconUpload size={14} />}
                 iconColor="teal"
                 title="Upload a rubric file"
-                description={<>Load a YAML or JSON rubric file you have already prepared.{' '}<Anchor component="button" size="xs" onClick={() => setOpenRubricUpload(true)}>Upload now →</Anchor></>}
+                description={<>Load a YAML rubric file you have already prepared.{' '}<Anchor component="button" size="xs" onClick={() => setOpenRubricUpload(true)}>Upload now →</Anchor></>}
               />
 
               <ActionOptionCard
@@ -510,6 +525,15 @@ const RulesPage: React.FC = () => {
             />
           </Suspense>
         )}
+        {openRubricExport && (
+          <Suspense fallback={null}>
+            <RubricExportModal
+              open={openRubricExport}
+              assessmentId={assessmentId}
+              onClose={() => setOpenRubricExport(false)}
+            />
+          </Suspense>
+        )}
       </PageShell>
     );
   }
@@ -532,6 +556,7 @@ const RulesPage: React.FC = () => {
         <RulesToolbar
           onUpload={() => setOpenRubricUpload(true)}
           onImport={() => setOpenRubricImport(true)}
+          onExport={rubricRes?.rubric ? () => setOpenRubricExport(true) : undefined}
           onDelete={() => setConfirmDeleteRubric(true)}
           disableDelete={deleteRubric.isPending}
           hasRules={hasRules}
@@ -619,6 +644,15 @@ const RulesPage: React.FC = () => {
               open={openRubricImport}
               assessmentId={assessmentId}
               onClose={() => setOpenRubricImport(false)}
+            />
+          </Suspense>
+        )}
+        {openRubricExport && (
+          <Suspense fallback={null}>
+            <RubricExportModal
+              open={openRubricExport}
+              assessmentId={assessmentId}
+              onClose={() => setOpenRubricExport(false)}
             />
           </Suspense>
         )}

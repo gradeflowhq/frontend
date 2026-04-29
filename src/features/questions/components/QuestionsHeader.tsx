@@ -1,5 +1,5 @@
 import { Group, TextInput, Menu, Button } from '@mantine/core';
-import { IconBolt, IconChevronDown, IconSearch, IconTrash, IconUpload } from '@tabler/icons-react';
+import { IconBolt, IconChevronDown, IconDownload, IconSearch, IconTrash, IconUpload } from '@tabler/icons-react';
 import React from 'react';
 
 type QuestionsHeaderProps = {
@@ -7,6 +7,7 @@ type QuestionsHeaderProps = {
   showInfer: boolean;
   onUpload?: () => void;
   onImport?: () => void;
+  onExport?: () => void;
   onDelete?: () => void;
   showDelete?: boolean;
   disableDelete?: boolean;
@@ -20,6 +21,7 @@ const QuestionsHeader: React.FC<QuestionsHeaderProps> = ({
   showInfer,
   onUpload,
   onImport,
+  onExport,
   onDelete,
   showDelete,
   disableDelete,
@@ -56,6 +58,9 @@ const QuestionsHeader: React.FC<QuestionsHeaderProps> = ({
           </Menu.Item>
           <Menu.Item leftSection={<IconUpload size={16} />} onClick={onImport} title="Import Question Set">
             Import
+          </Menu.Item>
+          <Menu.Item leftSection={<IconDownload size={16} />} onClick={onExport} disabled={!onExport || disabled} title="Export Question Set">
+            Export
           </Menu.Item>
           {showDelete && (
             <>

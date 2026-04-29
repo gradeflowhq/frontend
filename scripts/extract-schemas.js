@@ -29,7 +29,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-const OPENAPI_URL = 'http://127.0.0.1:8000/openapi.json';
+const OPENAPI_URL = process.env.OPENAPI_URL || 'http://127.0.0.1:8000/openapi.json';
 
 const OUT_DIR = path.join(process.cwd(), 'src', 'schemas');
 const OUT_FILES = {

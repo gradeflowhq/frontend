@@ -39,6 +39,9 @@ import { QuestionsHeader } from '@features/questions/components';
 import AddQuestionModal from '@features/questions/components/AddQuestionModal';
 import QuestionEditorPanel from '@features/questions/components/QuestionEditorPanel';
 import QuestionListPanel from '@features/questions/components/QuestionListPanel';
+const QuestionSetExportModal = lazy(
+  () => import('@features/questions/components/QuestionSetExportModal'),
+);
 const QuestionSetImportModal = lazy(
   () => import('@features/questions/components/QuestionSetImportModal'),
 );
@@ -106,6 +109,7 @@ const QuestionsPage: React.FC = () => {
   const [confirmDeleteQs, setConfirmDeleteQs] = useState(false);
   const [openQsUpload, setOpenQsUpload] = useState(false);
   const [openQsImport, setOpenQsImport] = useState(false);
+  const [openQsExport, setOpenQsExport] = useState(false);
   const [openAddQuestion, setOpenAddQuestion] = useState(false);
   const [confirmDeleteQid, setConfirmDeleteQid] = useState<string | null>(null);
   const [confirmSynchronizeQuestions, setConfirmSynchronizeQuestions] = useState(false);
@@ -461,6 +465,7 @@ const QuestionsPage: React.FC = () => {
       showInfer={hasSubmissions}
       onUpload={() => setOpenQsUpload(true)}
       onImport={() => setOpenQsImport(true)}
+      onExport={hasQuestionSetRecord ? () => setOpenQsExport(true) : undefined}
       onDelete={() => setConfirmDeleteQs(true)}
       showDelete={hasQuestionSetRecord}
       disableDelete={deleteMutation.isPending}
@@ -568,7 +573,7 @@ const QuestionsPage: React.FC = () => {
                 icon={<IconUpload size={14} />}
                 iconColor="teal"
                 title="Upload a question set"
-                description={<>Load a YAML or JSON file defining your questions.{' '}<Anchor component="button" size="xs" onClick={() => setOpenQsUpload(true)}>Upload now →</Anchor></>}
+                description={<>Load a YAML file defining your questions.{' '}<Anchor component="button" size="xs" onClick={() => setOpenQsUpload(true)}>Upload now →</Anchor></>}
               />
 
               <ActionOptionCard
@@ -601,6 +606,15 @@ const QuestionsPage: React.FC = () => {
               open={openQsImport}
               assessmentId={assessmentId}
               onClose={() => setOpenQsImport(false)}
+            />
+          </Suspense>
+        )}
+        {openQsExport && (
+          <Suspense fallback={null}>
+            <QuestionSetExportModal
+              open={openQsExport}
+              assessmentId={assessmentId}
+              onClose={() => setOpenQsExport(false)}
             />
           </Suspense>
         )}
@@ -821,6 +835,15 @@ const QuestionsPage: React.FC = () => {
               open={openQsImport}
               assessmentId={assessmentId}
               onClose={() => setOpenQsImport(false)}
+            />
+          </Suspense>
+        )}
+        {openQsExport && (
+          <Suspense fallback={null}>
+            <QuestionSetExportModal
+              open={openQsExport}
+              assessmentId={assessmentId}
+              onClose={() => setOpenQsExport(false)}
             />
           </Suspense>
         )}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildRequestSchema, validateFileInputRequired } from '@lib/importExportSchemas';
+import { buildRequestSchema, buildSerializerRequestUiSchema, validateFileInputRequired } from '@lib/importExportSchemas';
 
 describe('buildRequestSchema', () => {
   it('returns a schema object for a known key', () => {
@@ -37,5 +37,18 @@ describe('validateFileInputRequired', () => {
 
   it('does not throw for non-empty Blob', () => {
     expect(() => validateFileInputRequired({ data: new Blob(['data']) })).not.toThrow();
+  });
+});
+
+describe('buildSerializerRequestUiSchema', () => {
+  it('hides serializer format while leaving serializer-driven forms schema-based', () => {
+    expect(buildSerializerRequestUiSchema()).toEqual({
+      'ui:title': '',
+      serializer: {
+        'ui:title': '',
+        'ui:options': { label: false },
+        format: { 'ui:widget': 'hidden', 'ui:title': '', 'ui:options': { label: false } },
+      },
+    });
   });
 });

@@ -1,10 +1,11 @@
 import { Group, TextInput, Menu, Button } from '@mantine/core';
-import { IconChevronDown, IconSearch, IconTrash, IconUpload } from '@tabler/icons-react';
+import { IconChevronDown, IconDownload, IconSearch, IconTrash, IconUpload } from '@tabler/icons-react';
 import React from 'react';
 
 type RulesToolbarProps = {
   onUpload?: () => void;
   onImport?: () => void;
+  onExport?: () => void;
   onDelete?: () => void;
   disableDelete?: boolean;
   hasRules?: boolean;
@@ -16,6 +17,7 @@ type RulesToolbarProps = {
 const RulesToolbar: React.FC<RulesToolbarProps> = ({
   onUpload,
   onImport,
+  onExport,
   onDelete,
   disableDelete,
   hasRules,
@@ -47,6 +49,9 @@ const RulesToolbar: React.FC<RulesToolbarProps> = ({
           </Menu.Item>
           <Menu.Item leftSection={<IconUpload size={16} />} onClick={disabled ? undefined : onImport} disabled={disabled}>
             Import
+          </Menu.Item>
+          <Menu.Item leftSection={<IconDownload size={16} />} onClick={disabled ? undefined : onExport} disabled={disabled || !onExport}>
+            Export
           </Menu.Item>
           <Menu.Divider />
           <Menu.Item

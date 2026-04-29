@@ -337,8 +337,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -741,9 +741,9 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
-          "NUMERIC",
           "TEXT",
+          "NUMERIC",
+          "MULTI_VALUED",
           "CHOICE"
         ],
         "readOnly": true
@@ -1334,8 +1334,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -1616,9 +1616,9 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
-          "NUMERIC",
           "TEXT",
+          "NUMERIC",
+          "MULTI_VALUED",
           "CHOICE"
         ],
         "readOnly": true
@@ -2057,9 +2057,9 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
-          "NUMERIC",
           "TEXT",
+          "NUMERIC",
+          "MULTI_VALUED",
           "CHOICE"
         ],
         "readOnly": true
@@ -2250,8 +2250,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -2383,9 +2383,9 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
-          "NUMERIC",
           "TEXT",
+          "NUMERIC",
+          "MULTI_VALUED",
           "CHOICE"
         ],
         "readOnly": true
@@ -2514,9 +2514,9 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
-          "NUMERIC",
           "TEXT",
+          "NUMERIC",
+          "MULTI_VALUED",
           "CHOICE"
         ],
         "readOnly": true
@@ -2726,9 +2726,9 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
-          "NUMERIC",
           "TEXT",
+          "NUMERIC",
+          "MULTI_VALUED",
           "CHOICE"
         ],
         "readOnly": true
@@ -3015,8 +3015,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -3153,9 +3153,9 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
-          "NUMERIC",
           "TEXT",
+          "NUMERIC",
+          "MULTI_VALUED",
           "CHOICE"
         ],
         "readOnly": true
@@ -3210,9 +3210,9 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
-          "NUMERIC",
           "TEXT",
+          "NUMERIC",
+          "MULTI_VALUED",
           "CHOICE"
         ],
         "readOnly": true
@@ -3378,9 +3378,9 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
-          "NUMERIC",
           "TEXT",
+          "NUMERIC",
+          "MULTI_VALUED",
           "CHOICE"
         ],
         "readOnly": true
@@ -4140,6 +4140,64 @@
       "media_type"
     ],
     "title": "GradingDownloadResponse"
+  },
+  "ExportRubricResponse": {
+    "properties": {
+      "filename": {
+        "type": "string",
+        "title": "Filename"
+      },
+      "data": {
+        "type": "string",
+        "contentMediaType": "application/octet-stream",
+        "title": "Data"
+      },
+      "extension": {
+        "type": "string",
+        "title": "Extension"
+      },
+      "media_type": {
+        "type": "string",
+        "title": "Media Type"
+      }
+    },
+    "type": "object",
+    "required": [
+      "filename",
+      "data",
+      "extension",
+      "media_type"
+    ],
+    "title": "ExportRubricResponse"
+  },
+  "ExportQuestionSetResponse": {
+    "properties": {
+      "filename": {
+        "type": "string",
+        "title": "Filename"
+      },
+      "data": {
+        "type": "string",
+        "contentMediaType": "application/octet-stream",
+        "title": "Data"
+      },
+      "extension": {
+        "type": "string",
+        "title": "Extension"
+      },
+      "media_type": {
+        "type": "string",
+        "title": "Media Type"
+      }
+    },
+    "type": "object",
+    "required": [
+      "filename",
+      "data",
+      "extension",
+      "media_type"
+    ],
+    "title": "ExportQuestionSetResponse"
   },
   "CoverageResponse": {
     "properties": {

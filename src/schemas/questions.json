@@ -81,8 +81,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -786,9 +786,9 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
-          "NUMERIC",
           "TEXT",
+          "NUMERIC",
+          "MULTI_VALUED",
           "CHOICE"
         ],
         "readOnly": true
@@ -1460,8 +1460,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -1742,9 +1742,9 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
-          "NUMERIC",
           "TEXT",
+          "NUMERIC",
+          "MULTI_VALUED",
           "CHOICE"
         ],
         "readOnly": true
@@ -2183,9 +2183,9 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
-          "NUMERIC",
           "TEXT",
+          "NUMERIC",
+          "MULTI_VALUED",
           "CHOICE"
         ],
         "readOnly": true
@@ -2376,8 +2376,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -2509,9 +2509,9 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
-          "NUMERIC",
           "TEXT",
+          "NUMERIC",
+          "MULTI_VALUED",
           "CHOICE"
         ],
         "readOnly": true
@@ -2658,9 +2658,9 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
-          "NUMERIC",
           "TEXT",
+          "NUMERIC",
+          "MULTI_VALUED",
           "CHOICE"
         ],
         "readOnly": true
@@ -2870,8 +2870,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -3008,9 +3008,9 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
-          "NUMERIC",
           "TEXT",
+          "NUMERIC",
+          "MULTI_VALUED",
           "CHOICE"
         ],
         "readOnly": true
@@ -3065,9 +3065,9 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
-          "NUMERIC",
           "TEXT",
+          "NUMERIC",
+          "MULTI_VALUED",
           "CHOICE"
         ],
         "readOnly": true
@@ -3364,6 +3364,47 @@
     "type": "object",
     "title": "ExamplifyParseConfig"
   },
+  "ExportQuestionSetResponse": {
+    "properties": {
+      "filename": {
+        "type": "string",
+        "title": "Filename"
+      },
+      "data": {
+        "type": "string",
+        "contentMediaType": "application/octet-stream",
+        "title": "Data"
+      },
+      "extension": {
+        "type": "string",
+        "title": "Extension"
+      },
+      "media_type": {
+        "type": "string",
+        "title": "Media Type"
+      }
+    },
+    "type": "object",
+    "required": [
+      "filename",
+      "data",
+      "extension",
+      "media_type"
+    ],
+    "title": "ExportQuestionSetResponse"
+  },
+  "ExportQuestionSetRequest": {
+    "properties": {
+      "serializer": {
+        "$ref": "#/definitions/YamlQuestionSetConfig"
+      }
+    },
+    "type": "object",
+    "required": [
+      "serializer"
+    ],
+    "title": "ExportQuestionSetRequest"
+  },
   "ConditionalMultiQuestionRule": {
     "properties": {
       "question_types": {
@@ -3380,9 +3421,9 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
-          "NUMERIC",
           "TEXT",
+          "NUMERIC",
+          "MULTI_VALUED",
           "CHOICE"
         ],
         "readOnly": true
@@ -3669,9 +3710,9 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
-          "NUMERIC",
           "TEXT",
+          "NUMERIC",
+          "MULTI_VALUED",
           "CHOICE"
         ],
         "readOnly": true

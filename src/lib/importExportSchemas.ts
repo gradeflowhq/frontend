@@ -58,6 +58,17 @@ export const buildSerializerUploadUiSchema = (formData: unknown): Record<string,
   };
 };
 
+export const buildSerializerRequestUiSchema = (): Record<string, unknown> => {
+  return {
+    'ui:title': '',
+    serializer: {
+      'ui:title': '',
+      'ui:options': { label: false },
+      format: { 'ui:widget': 'hidden', 'ui:title': '', 'ui:options': { label: false } },
+    },
+  };
+};
+
 /**
  * Shared `validate` callback for import modals that require a non-empty file
  * or text input in the `data` field.
