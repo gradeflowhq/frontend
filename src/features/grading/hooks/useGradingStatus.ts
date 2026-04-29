@@ -3,11 +3,15 @@ import { useEffect } from 'react';
 
 import { QK } from '@api/queryKeys';
 import { useGrading, useGradingJob, useJobStatus } from '@features/grading/api';
+import { isNotFoundError } from '@utils/error';
+
+import type { JobStatusResponse } from '@api/models';
 
 export interface GradingStatusResult {
   gradingInProgress: boolean;
-  jobStatus: string | undefined;
+  jobStatus: JobStatusResponse['status'] | undefined;
   jobError: string | null | undefined;
+  statusError?: unknown;
   isStale: boolean;
   updatedAt: string | null | undefined;
 }
@@ -21,16 +25,30 @@ export const useGradingStatus = (assessmentId: string): GradingStatusResult => {
   const qc = useQueryClient();
 
   const { data: gradingData } = useGrading(assessmentId, true);
-  const { data: gradingJob } = useGradingJob(assessmentId, true);
+  const {
+    data: gradingJob,
+    error: gradingJobError,
+    isError: isGradingJobError,
+  } = useGradingJob(assessmentId, true);
 
   const jobId = gradingJob?.job_id ?? null;
-  const { data: jobStatusRes } = useJobStatus(jobId, !!jobId);
+  const {
+    data: jobStatusRes,
+    error: jobStatusError,
+    isError: isJobStatusError,
+  } = useJobStatus(jobId, !!jobId);
 
   const jobStatus = jobStatusRes?.status;
   const jobError = jobStatusRes?.error;
   const gradingInProgress = jobStatus === 'queued' || jobStatus === 'running';
   const isStale = gradingData?.status?.is_stale ?? false;
   const updatedAt = gradingData?.status?.updated_at;
+  let statusError: unknown;
+  if (isJobStatusError) {
+    statusError = jobStatusError;
+  } else if (isGradingJobError && !isNotFoundError(gradingJobError)) {
+    statusError = gradingJobError;
+  }
 
   // Auto-invalidate grading results when the job transitions to completed so
   // pages always show fresh data without managing this effect themselves.
@@ -41,5 +59,5 @@ export const useGradingStatus = (assessmentId: string): GradingStatusResult => {
     }
   }, [jobStatus, assessmentId, qc]);
 
-  return { gradingInProgress, jobStatus, jobError, isStale, updatedAt };
+  return { gradingInProgress, jobStatus, jobError, statusError, isStale, updatedAt };
 };

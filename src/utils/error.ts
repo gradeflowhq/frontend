@@ -3,9 +3,39 @@ import type { AxiosError } from 'axios';
 type ErrorDetail = { type?: string; loc?: unknown; msg?: unknown; ctx?: Record<string, unknown> };
 
 type ErrorPayload = {
+  code?: unknown;
+  message?: unknown;
   errors?: unknown;
-  detail?: ErrorDetail[];
+  detail?: unknown;
 };
+
+type ErrorLike = {
+  code?: unknown;
+  message?: unknown;
+  request?: unknown;
+  response?: {
+    status?: number;
+    data?: ErrorPayload;
+  };
+};
+
+export type ApiErrorKind =
+  | 'server_down'
+  | 'internal_server_error'
+  | 'specific'
+  | 'unexpected';
+
+export type ApiErrorInfo = {
+  kind: ApiErrorKind;
+  title: string;
+  message: string;
+  messages: string[];
+  status?: number;
+  code?: string;
+};
+
+const SERVER_DOWN_MESSAGE =
+  'Cannot reach the GradeFlow API. Check that the backend is running and try again.';
 
 /**
  * Return `true` when the given error represents an HTTP 404 (Not Found) response.
@@ -29,21 +59,32 @@ const friendlyMessage = (d: ErrorDetail): string | null => {
   return null;
 };
 
-export const getErrorMessages = (error: unknown): string[] => {
-  // AxiosError with backend payload
-  const axErr = error as AxiosError<ErrorPayload>;
-  const data = axErr?.response?.data;
+const isErrorDetail = (value: unknown): value is ErrorDetail =>
+  typeof value === 'object' && value !== null;
+
+const compactMessages = (messages: (string | null | undefined)[]): string[] =>
+  messages
+    .map((message) => message?.trim())
+    .filter((message): message is string => Boolean(message));
+
+const getBackendMessages = (data: ErrorPayload | undefined): string[] => {
+  if (!data) return [];
 
   // Case 1: { errors: string[] }
-  if (data && Array.isArray(data.errors)) {
-    return data.errors.filter((e: unknown) => typeof e === 'string');
+  if (Array.isArray(data.errors)) {
+    const messages = compactMessages(
+      data.errors.map((e: unknown) => (typeof e === 'string' ? e : null)),
+    );
+    if (messages.length > 0) return messages;
   }
 
   // Case 2: FastAPI validation error: { detail: [{ msg: string, ... }] }
-  if (data && Array.isArray(data.detail)) {
+  if (Array.isArray(data.detail)) {
     const seen = new Set<string>();
-    const messages: string[] = data.detail
-      .map((d) => {
+    const messages = compactMessages(
+      data.detail.map((d) => {
+        if (!isErrorDetail(d)) return null;
+
         // Try user-friendly message first
         const friendly = friendlyMessage(d);
         if (friendly) {
@@ -59,29 +100,96 @@ export const getErrorMessages = (error: unknown): string[] => {
           return d.msg;
         }
         return null;
-      })
-      .filter((m): m is string => typeof m === 'string');
-    if (messages.length > 0) {
-      return messages;
-    }
+      }),
+    );
+    if (messages.length > 0) return messages;
   }
 
-  // Case 3: AxiosError message
-  if (axErr?.message) {
-    return [axErr.message];
+  // Case 3: structured backend summary: { message: string }
+  if (typeof data.message === 'string' && data.message.trim()) {
+    return [data.message.trim()];
   }
 
-  // Case 4: Generic Error instance
+  return [];
+};
+
+const getBackendCode = (data: ErrorPayload | undefined): string | undefined =>
+  typeof data?.code === 'string' && data.code.trim() ? data.code.trim() : undefined;
+
+const getResponseTitle = (status: number | undefined, code: string | undefined): string => {
+  if (status === 500) return 'Internal server error';
+  if (status === 401) return 'Authentication required';
+  if (status === 403) return 'Permission denied';
+  if (status === 404) return 'Not found';
+  if (code === 'VALIDATION_ERROR') return 'Validation error';
+  return 'Request failed';
+};
+
+export const getErrorInfo = (error: unknown): ApiErrorInfo => {
+  const axErr = error as AxiosError<ErrorPayload>;
+  const err = error as ErrorLike | undefined;
+  const response = err?.response ?? axErr?.response;
+
+  if (response) {
+    const status = response.status;
+    const data = response.data;
+    const code = getBackendCode(data);
+    const messages = getBackendMessages(data);
+    const fallback =
+      status === 500
+        ? 'Internal server error.'
+        : `Request failed${status ? ` (${status})` : ''}.`;
+    const finalMessages = messages.length > 0 ? messages : [fallback];
+    return {
+      kind: status === 500 ? 'internal_server_error' : 'specific',
+      title: getResponseTitle(status, code),
+      message: finalMessages.join('\n'),
+      messages: finalMessages,
+      status,
+      code,
+    };
+  }
+
+  const message = typeof err?.message === 'string' ? err.message : '';
+  const code = typeof err?.code === 'string' ? err.code : undefined;
+  const looksLikeNetworkError =
+    code === 'ERR_NETWORK' ||
+    message === 'Network Error' ||
+    Boolean(err?.request && !err.response);
+
+  if (looksLikeNetworkError) {
+    return {
+      kind: 'server_down',
+      title: 'Backend unavailable',
+      message: SERVER_DOWN_MESSAGE,
+      messages: [SERVER_DOWN_MESSAGE],
+      code,
+    };
+  }
+
   if (error instanceof Error && error.message) {
-    return [error.message];
+    return {
+      kind: 'unexpected',
+      title: 'Unexpected error',
+      message: error.message,
+      messages: [error.message],
+    };
   }
 
-  // Fallback
-  return ['An unexpected error occurred'];
+  return {
+    kind: 'unexpected',
+    title: 'Unexpected error',
+    message: 'An unexpected error occurred',
+    messages: ['An unexpected error occurred'],
+  };
+};
+
+export const getErrorMessages = (error: unknown): string[] => {
+  return getErrorInfo(error).messages;
 };
 
 /**
  * Convenience function that returns a single error string (messages joined with a newline).
  */
 export const getErrorMessage = (error: unknown): string =>
-  getErrorMessages(error).join('\n');
+  getErrorInfo(error).message;

@@ -1,21 +1,54 @@
-import { Alert, Box } from '@mantine/core';
-import { IconLoader } from '@tabler/icons-react';
+import { Alert, Box, Text } from '@mantine/core';
+import { IconAlertCircle, IconLoader } from '@tabler/icons-react';
 import React from 'react';
 
 import SectionStatusBadge from '@components/common/SectionStatusBadge';
 import { useGradingStatus } from '@features/grading/hooks/useGradingStatus';
+import { getErrorMessage } from '@utils/error';
 
 interface GradingStatusBannerProps {
   assessmentId: string;
 }
 
 const GradingStatusBanner: React.FC<GradingStatusBannerProps> = ({ assessmentId }) => {
-  const { gradingInProgress, isStale } = useGradingStatus(assessmentId);
+  const { gradingInProgress, isStale, jobStatus, jobError, statusError } =
+    useGradingStatus(assessmentId);
+
+  if (statusError) {
+    return (
+      <Alert
+        icon={<IconAlertCircle size={16} />}
+        color="red"
+        title="Grading status unavailable"
+        mb="md"
+      >
+        <Text size="sm" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+          {getErrorMessage(statusError)}
+        </Text>
+      </Alert>
+    );
+  }
+
+  if (jobStatus === 'failed') {
+    return (
+      <Alert
+        icon={<IconAlertCircle size={16} />}
+        color="red"
+        title="Grading failed"
+        mb="md"
+      >
+        <Text size="sm" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+          {jobError ?? 'Grading job failed.'}
+        </Text>
+      </Alert>
+    );
+  }
 
   if (gradingInProgress) {
+    const statusLabel = jobStatus === 'queued' ? 'queued' : 'running';
     return (
       <Alert icon={<IconLoader size={16} />} color="blue" mb="md">
-        Grading in progress… Showing previous results. This page will update automatically.
+        Grading job {statusLabel}. Showing previous results. This page will update automatically.
       </Alert>
     );
   }

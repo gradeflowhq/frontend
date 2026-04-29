@@ -61,7 +61,7 @@ const OverviewPage: React.FC = () => {
   } = useSetupSteps(assessmentId);
 
   const { data: gradingData, isLoading: gradingLoading } = useGrading(assessmentId, !!assessmentId);
-  const { gradingInProgress, jobStatus, jobError } = useGradingStatus(assessmentId);
+  const { gradingInProgress, jobStatus, jobError, statusError } = useGradingStatus(assessmentId);
 
   const runGradingMutation = useRunGrading(assessmentId);
   const cancelGradingMutation = useCancelGrading(assessmentId);
@@ -199,6 +199,7 @@ const OverviewPage: React.FC = () => {
   };
 
   const isRunning = gradingInProgress || runGradingMutation.isPending || awaitingNav;
+  const activeJobStatus = jobStatus === 'queued' ? 'queued' : 'running';
 
   // ── Loading ───────────────────────────────────────────────────────────────
 
@@ -242,7 +243,7 @@ const OverviewPage: React.FC = () => {
         {gradingInProgress && (
           <Alert icon={<IconLoader size={16} />} color="blue" radius="md">
             <Group justify="space-between" align="center">
-              <Text size="sm">Grading in progress...</Text>
+              <Text size="sm">Grading job {activeJobStatus}.</Text>
               <Button
                 size="xs"
                 color="red"
@@ -256,6 +257,14 @@ const OverviewPage: React.FC = () => {
           </Alert>
         )}
 
+        {statusError !== undefined && (
+          <Alert color="red" radius="md">
+            <Text size="sm" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+              {getErrorMessage(statusError)}
+            </Text>
+          </Alert>
+        )}
+
         <OverviewSetupTimeline
           steps={setupSteps}
           onNavigate={(link) => void navigate(link)}
@@ -265,6 +274,7 @@ const OverviewPage: React.FC = () => {
           assessmentId={assessmentId}
           hasGrading={hasGrading}
           hasGradingJob={hasGradingJob}
+          jobStatus={jobStatus}
           submissions={submissions}
           gradingData={gradingData}
         />

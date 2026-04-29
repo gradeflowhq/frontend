@@ -9,12 +9,17 @@ import { buildTotals, computeStats } from '@features/grading/helpers';
 
 import StatCard from './StatCard';
 
-import type { AdjustableSubmission, GradingResponse } from '@api/models';
+import type {
+  AdjustableSubmission,
+  GradingResponse,
+  JobStatusResponse,
+} from '@api/models';
 
 interface Props {
   assessmentId: string;
   hasGrading: boolean;
   hasGradingJob: boolean;
+  jobStatus?: JobStatusResponse['status'];
   submissions: AdjustableSubmission[];
   gradingData: GradingResponse | null | undefined;
 }
@@ -23,6 +28,7 @@ const GradingResultsCard: React.FC<Props> = ({
   assessmentId,
   hasGrading,
   hasGradingJob,
+  jobStatus,
   submissions,
   gradingData,
 }) => {
@@ -46,7 +52,9 @@ const GradingResultsCard: React.FC<Props> = ({
           </SectionLabel>
           <Group gap="xs" mt={2} align="center">
             <Text size="sm">
-              {hasGrading ? `${submissions.length} students graded` : 'Job queued'}
+              {hasGrading
+                ? `${submissions.length} students graded`
+                : `Job ${jobStatus ?? 'queued'}`}
             </Text>
             {gradingData?.status?.is_stale && (
               <Badge size="xs" variant="light" color="yellow">

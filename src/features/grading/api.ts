@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useState } from 'react';
 
 import { api } from '@api';
 import { QK } from '@api/queryKeys';
@@ -18,6 +19,8 @@ import type {
   GradingJob,
   JobStatusResponse,
 } from '@api/models';
+
+export type GradingJobStatus = JobStatusResponse['status'];
 
 // Base results query (always returns last computed results)
 export const useGrading = (assessmentId: string, enabled = true) =>
@@ -129,30 +132,26 @@ export const useBulkAdjustGrading = (assessmentId: string) => {
 };
 
 // Preview: start job, poll preview job until completion/failure, then fetch snapshot
-export const usePreviewGrading = (assessmentId: string) =>
-  useMutation({
+export const usePreviewGrading = (assessmentId: string) => {
+  const [previewStatus, setPreviewStatus] = useState<GradingJobStatus | null>(null);
+  const mutation = useMutation({
     mutationKey: ['grading', assessmentId, 'preview'],
     mutationFn: async (payload: GradingPreviewRequest) => {
-      // Kick off preview job
-      await api.runGradingPreviewAssessmentsAssessmentIdGradingPreviewPost(assessmentId, payload);
-
-      // Poll job status via preview job endpoint
-      // Step 1: get latest preview job
-      let job: GradingJob | null = null;
+      setPreviewStatus('queued');
       try {
-        job = (await api.getGradingPreviewJobAssessmentsAssessmentIdGradingPreviewJobGet(assessmentId)).data as GradingJob;
-      } catch {
-        // If job info isn't available yet, loop once to allow backend to catch up
-      }
+        const job = (
+          await api.runGradingPreviewAssessmentsAssessmentIdGradingPreviewPost(
+            assessmentId,
+            payload,
+          )
+        ).data as GradingJob;
 
-      // Poll by job_id if available, else finish optimistically
-      if (job?.job_id) {
-        // Simple polling loop
         const deadline = Date.now() + PREVIEW_JOB_TIMEOUT_MS;
-         
+
         while (true) {
           const statusRes = await api.getStatusJobsJobIdGet(job.job_id);
           const status = statusRes.data.status;
+          setPreviewStatus(status);
           if (status === 'completed') break;
           if (status === 'failed') {
             throw new Error(statusRes.data.error ?? 'Preview job failed');
@@ -162,10 +161,22 @@ export const usePreviewGrading = (assessmentId: string) =>
           }
           await new Promise((r) => setTimeout(r, POLLING_INTERVAL_MS));
         }
-      }
 
-      // Fetch preview snapshot for UI
-      const res = await api.getGradingPreviewAssessmentsAssessmentIdGradingPreviewGet(assessmentId);
-      return res.data as GradingResponse;
+        const res = await api.getGradingPreviewAssessmentsAssessmentIdGradingPreviewGet(
+          assessmentId,
+        );
+        return res.data as GradingResponse;
+      } catch (error) {
+        setPreviewStatus(null);
+        throw error;
+      }
     },
   });
+
+  const reset = useCallback(() => {
+    setPreviewStatus(null);
+    mutation.reset();
+  }, [mutation]);
+
+  return { ...mutation, previewStatus, reset };
+};

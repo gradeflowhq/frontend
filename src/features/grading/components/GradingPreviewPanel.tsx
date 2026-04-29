@@ -1,5 +1,5 @@
-import { Alert, Skeleton, Text } from '@mantine/core';
-import { IconCircleCheck, IconAlertCircle } from '@tabler/icons-react';
+import { Alert, Skeleton, Stack, Text } from '@mantine/core';
+import { IconCircleCheck, IconAlertCircle, IconLoader } from '@tabler/icons-react';
 import { DataTable } from 'mantine-datatable';
 import React, { useMemo } from 'react';
 
@@ -10,12 +10,14 @@ import { usePagination } from '@hooks/usePagination';
 import { getErrorMessage } from '@utils/error';
 import { natsort } from '@utils/sort';
 
+import type { JobStatusResponse } from '@api/models';
 import type { AdjustableSubmission, AdjustableQuestionResult } from '@features/grading/types';
 
 type Props = {
   items: AdjustableSubmission[];
   loading?: boolean;
   error?: unknown;
+  status?: JobStatusResponse['status'] | null;
   initialPageSize?: number;
 };
 
@@ -23,6 +25,7 @@ const GradingPreviewPanel: React.FC<Props> = ({
   items,
   loading,
   error,
+  status,
   initialPageSize = 5,
 }) => {
   const { passphrase } = useAssessmentPassphrase();
@@ -106,10 +109,14 @@ const GradingPreviewPanel: React.FC<Props> = ({
   const { page, setPage, pageSize, setPageSize, paginate } = usePagination([], initialPageSize);
 
   if (loading) {
+    const statusLabel = status === 'queued' ? 'queued' : 'running';
     return (
-      <div>
+      <Stack gap="sm">
+        <Alert icon={<IconLoader size={16} />} color="blue">
+          Preview job {statusLabel}.
+        </Alert>
         <Skeleton height={200} />
-      </div>
+      </Stack>
     );
   }
 
