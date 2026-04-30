@@ -11,7 +11,7 @@ import type { MultipleChoiceRuleInputMode } from './multipleChoiceRuleInputMode'
 
 export interface MultipleChoiceRuleInput {
   readonly question_types?: readonly MultipleChoiceRuleInputQuestionTypesItem[];
-  constraints?: QuestionConstraint[];
+  readonly constraints?: readonly QuestionConstraint[];
   readonly type?: 'MULTIPLE_CHOICE';
   readonly display_name?: 'Multiple Choice';
   /**

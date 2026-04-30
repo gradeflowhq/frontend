@@ -395,8 +395,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "TEXT"
         ],
         "readOnly": true
       },
@@ -799,10 +799,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "TEXT",
           "NUMERIC",
           "MULTI_VALUED",
-          "CHOICE"
+          "CHOICE",
+          "TEXT"
         ],
         "readOnly": true
       },
@@ -1392,8 +1392,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "TEXT"
         ],
         "readOnly": true
       },
@@ -1674,10 +1674,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "TEXT",
           "NUMERIC",
           "MULTI_VALUED",
-          "CHOICE"
+          "CHOICE",
+          "TEXT"
         ],
         "readOnly": true
       },
@@ -2055,7 +2055,8 @@
             "source": "options",
             "target": "answer"
           }
-        ]
+        ],
+        "readOnly": true
       },
       "type": {
         "type": "string",
@@ -2115,10 +2116,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "TEXT",
           "NUMERIC",
           "MULTI_VALUED",
-          "CHOICE"
+          "CHOICE",
+          "TEXT"
         ],
         "readOnly": true
       },
@@ -2308,8 +2309,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "TEXT"
         ],
         "readOnly": true
       },
@@ -2441,10 +2442,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "TEXT",
           "NUMERIC",
           "MULTI_VALUED",
-          "CHOICE"
+          "CHOICE",
+          "TEXT"
         ],
         "readOnly": true
       },
@@ -2507,7 +2508,8 @@
             "source": "options",
             "target": "answer"
           }
-        ]
+        ],
+        "readOnly": true
       },
       "question_id": {
         "type": "string",
@@ -2572,10 +2574,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "TEXT",
           "NUMERIC",
           "MULTI_VALUED",
-          "CHOICE"
+          "CHOICE",
+          "TEXT"
         ],
         "readOnly": true
       },
@@ -2784,10 +2786,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "TEXT",
           "NUMERIC",
           "MULTI_VALUED",
-          "CHOICE"
+          "CHOICE",
+          "TEXT"
         ],
         "readOnly": true
       },
@@ -3073,8 +3075,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "TEXT"
         ],
         "readOnly": true
       },
@@ -3211,10 +3213,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "TEXT",
           "NUMERIC",
           "MULTI_VALUED",
-          "CHOICE"
+          "CHOICE",
+          "TEXT"
         ],
         "readOnly": true
       },
@@ -3268,10 +3270,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "TEXT",
           "NUMERIC",
           "MULTI_VALUED",
-          "CHOICE"
+          "CHOICE",
+          "TEXT"
         ],
         "readOnly": true
       },
@@ -3436,10 +3438,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "TEXT",
           "NUMERIC",
           "MULTI_VALUED",
-          "CHOICE"
+          "CHOICE",
+          "TEXT"
         ],
         "readOnly": true
       },
@@ -4134,8 +4136,8 @@
           "integer",
           "null"
         ],
-        "maximum": 20,
-        "minimum": 1
+        "minimum": 1,
+        "maximum": 20
       },
       "selection": {
         "type": "string",
