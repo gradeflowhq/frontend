@@ -241,9 +241,12 @@ const OverviewPage: React.FC = () => {
       <Stack gap="md">
 
         {gradingInProgress && (
-          <Alert icon={<Loader size={16} />} color="blue" radius="md">
+          <Alert color="blue" radius="md">
             <Group justify="space-between" align="center">
-              <Text size="sm">Grading job {activeJobStatus}.</Text>
+              <Group gap="xs" align="center">
+                <Loader size={16} />
+                <Text size="sm">Grading job {activeJobStatus}.</Text>
+              </Group>
               <Button
                 size="xs"
                 color="red"

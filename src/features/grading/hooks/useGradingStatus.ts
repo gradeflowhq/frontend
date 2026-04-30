@@ -3,7 +3,6 @@ import { useEffect } from 'react';
 
 import { QK } from '@api/queryKeys';
 import { useGrading, useGradingJob, useJobStatus } from '@features/grading/api';
-import { isNotFoundError } from '@utils/error';
 
 import type { JobStatusResponse } from '@api/models';
 
@@ -46,8 +45,8 @@ export const useGradingStatus = (assessmentId: string): GradingStatusResult => {
   let statusError: unknown;
   if (isJobStatusError) {
     statusError = jobStatusError;
-  } else if (isGradingJobError && !isNotFoundError(gradingJobError)) {
-    statusError = gradingJobError;
+  } else if (isGradingJobError) {
+    statusError = gradingJobError;  // 404s are already caught — any remaining error is real
   }
 
   // Auto-invalidate grading results when the job transitions to completed so

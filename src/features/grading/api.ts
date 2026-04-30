@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
 import { useCallback, useState } from 'react';
 
 import { api } from '@api';
@@ -26,8 +27,16 @@ export type GradingJobStatus = JobStatusResponse['status'];
 export const useGrading = (assessmentId: string, enabled = true) =>
   useQuery({
     queryKey: QK.grading.item(assessmentId),
-    queryFn: async () =>
-      (await api.getGradingAssessmentsAssessmentIdGradingGet(assessmentId)).data as GradingResponse,
+    queryFn: async () => {
+      try {
+        return (await api.getGradingAssessmentsAssessmentIdGradingGet(assessmentId)).data as GradingResponse;
+      } catch (e: unknown) {
+        if (axios.isAxiosError(e) && e.response?.status === 404) {
+          return null;
+        }
+        throw e;
+      }
+    },
     enabled,
     staleTime: CACHE_STALE_TIME_GRADING,
   });
@@ -36,8 +45,16 @@ export const useGrading = (assessmentId: string, enabled = true) =>
 export const useGradingJob = (assessmentId: string, enabled = true) =>
   useQuery({
     queryKey: QK.grading.job(assessmentId),
-    queryFn: async () =>
-      (await api.getGradingJobAssessmentsAssessmentIdGradingJobGet(assessmentId)).data as GradingJob,
+    queryFn: async () => {
+      try {
+        return (await api.getGradingJobAssessmentsAssessmentIdGradingJobGet(assessmentId)).data as GradingJob;
+      } catch (e: unknown) {
+        if (axios.isAxiosError(e) && e.response?.status === 404) {
+          return null;
+        }
+        throw e;
+      }
+    },
     enabled,
     // Keep a short cache; we will drive polling via status below
     staleTime: CACHE_STALE_TIME_JOB,
@@ -49,7 +66,14 @@ export const useJobStatus = (jobId: string | null | undefined, enabled = true) =
     queryKey: QK.grading.jobStatus(jobId ?? 'none'),
     queryFn: async () => {
       if (!jobId) throw new Error('Missing jobId');
-      return (await api.getStatusJobsJobIdGet(jobId)).data as JobStatusResponse;
+      try {
+        return (await api.getStatusJobsJobIdGet(jobId)).data as JobStatusResponse;
+      } catch (e: unknown) {
+        if (axios.isAxiosError(e) && e.response?.status === 404) {
+          return null;
+        }
+        throw e;
+      }
     },
     enabled: enabled && !!jobId,
     // Poll while running/queued; caller can decide when to stop
