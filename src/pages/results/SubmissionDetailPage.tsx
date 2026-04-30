@@ -1,5 +1,6 @@
 import {
-  ActionIcon, Alert, Badge, Box, Button, Checkbox, Collapse, Divider, Group,
+  ActionIcon, Alert, Badge, Box, Button, Center, Checkbox, Collapse, Divider, Group,
+  Loader,
   Modal, NumberInput, Paper, Popover, Progress, SegmentedControl, Select,
   SimpleGrid, Stack, Text, Textarea, Tooltip, UnstyledButton,
 } from '@mantine/core';
@@ -476,9 +477,9 @@ const SubmissionDetailInner: React.FC<{ assessmentId: string; encodedStudentId: 
 
   // ── Loading / error states ──────────────────────────────────────────────────
 
-  if (isLoading) return <Alert color="blue">Loading submission...</Alert>;
-  if (isError) return <Alert color="red">{getErrorMessage(error)}</Alert>;
-  if (!current) return <Alert color="yellow">Submission not found.</Alert>;
+  if (isLoading) return <Center style={{ minHeight: '60vh' }}><Loader /></Center>;
+  if (isError) return <Box p="lg"><Alert color="red">{getErrorMessage(error)}</Alert></Box>;
+  if (!current) return <Box p="lg"><Alert color="yellow">Submission not found.</Alert></Box>;
 
   // ── Computed totals ─────────────────────────────────────────────────────────
 

@@ -11,6 +11,7 @@ type RouteKey =
   | 'assessments'
   | 'overview'
   | 'submissions'
+  | 'submissionDetail'
   | 'questions'
   | 'rules'
   | 'statistics'
@@ -29,6 +30,7 @@ const prefetchers: Record<RouteKey, PrefetchFn> = {
   rules: () => void import('@pages/assessments/workspace/RulesPage'),
   statistics: () => void import('@pages/results/StatisticsPage'),
   students: () => void import('@pages/results/StudentsPage'),
+  submissionDetail: () => void import('@pages/results/SubmissionDetailPage'),
   groups: () => void import('@pages/results/GroupViewPage'),
   publish: () => void import('@pages/results/CanvasPushPage'),
   members: () => void import('@pages/assessments/workspace/MembersPage'),
