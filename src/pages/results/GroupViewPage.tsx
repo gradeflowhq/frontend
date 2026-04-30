@@ -387,6 +387,7 @@ const GroupViewPage: React.FC = () => {
         <QuestionGroupHeader
           qid={selectedQid}
           questionType={questionTypesById[selectedQid] ?? 'TEXT'}
+          questionDescription={(questionMap[selectedQid] as { description?: string | null } | undefined)?.description}
           {...headerStats}
         />
       )}

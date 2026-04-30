@@ -5,8 +5,8 @@ const RuleDescriptionBlock: React.FC<{
   description: string;
 }> = ({ description }) => (
   <Stack gap={2} mb="xs">
-    <Text c="dimmed">
-      Description
+    <Text c="dimmed" size="sm" fw={500}>
+      Rule
     </Text>
     <Text component="div" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
       {description}

@@ -1,5 +1,4 @@
 import {
-  ActionIcon,
   Alert,
   Badge,
   Box,
@@ -7,12 +6,11 @@ import {
   Group,
   Menu,
   Modal,
-  Popover,
   Stack,
   Text,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { IconCircleCheck, IconInfoCircle, IconPencil, IconPlus, IconTrash } from '@tabler/icons-react';
+import { IconCircleCheck, IconPencil, IconPlus, IconTrash } from '@tabler/icons-react';
 import React, { useMemo, useState } from 'react';
 
 import {
@@ -203,24 +201,6 @@ const QuestionDetailPanel: React.FC<Props> = ({
             </Badge>
           )}
 
-          {description && (
-            <Popover withinPortal position="bottom-start" withArrow shadow="md">
-              <Popover.Target>
-                <ActionIcon
-                  size="xs"
-                  variant="subtle"
-                  color="gray"
-                  aria-label="Question description"
-                >
-                  <IconInfoCircle size={14} />
-                </ActionIcon>
-              </Popover.Target>
-              <Popover.Dropdown style={{ maxWidth: 320 }}>
-                <Text size="sm">{description}</Text>
-              </Popover.Dropdown>
-            </Popover>
-          )}
-
           {isCovered && (
             <IconCircleCheck size={24} color="var(--mantine-color-green-6)" />
           )}
@@ -268,12 +248,19 @@ const QuestionDetailPanel: React.FC<Props> = ({
 
       {/* ── Rule section ── */}
       <Stack gap="xs">
-        {coveredByGlobal && coveringRuleDescription && (
-          <RuleDescriptionBlock description={coveringRuleDescription} />
+        {description && (
+          <Stack gap={2} mb="xs">
+            <Text c="dimmed" size="sm" fw={500}>Question</Text>
+            <Text component="div" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+              {description}
+            </Text>
+          </Stack>
         )}
 
-        {!coveredByGlobal && !isEditing && existingRuleDescription && (
-          <RuleDescriptionBlock description={existingRuleDescription} />
+        {!isEditing && (coveredByGlobal ? coveringRuleDescription : existingRuleDescription) && (
+          <RuleDescriptionBlock
+            description={(coveredByGlobal ? coveringRuleDescription : existingRuleDescription)!}
+          />
         )}
 
         {coveredByGlobal ? (
