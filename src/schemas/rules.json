@@ -702,9 +702,9 @@
         "title": "Question Types",
         "default": [
           "NUMERIC",
-          "MULTI_VALUED",
+          "TEXT",
           "CHOICE",
-          "TEXT"
+          "MULTI_VALUED"
         ],
         "readOnly": true
       },
@@ -992,9 +992,9 @@
         "title": "Question Types",
         "default": [
           "NUMERIC",
-          "MULTI_VALUED",
+          "TEXT",
           "CHOICE",
-          "TEXT"
+          "MULTI_VALUED"
         ],
         "readOnly": true
       },
@@ -1437,11 +1437,13 @@
         "type": "string",
         "enum": [
           "ALL",
+          "CONTAIN",
+          "NOT_CONTAIN",
           "ANY",
           "PARTIAL"
         ],
         "title": "Mode",
-        "description": "Mode of choice matching: 'ALL' requires all correct choices to be selected, 'ANY' requires at least one, 'PARTIAL' gives credit for each correct choice selected minus each incorrect choice selected.",
+        "description": "Mode of choice matching: 'ALL' requires all specified choices to be selected, 'CONTAIN' requires all specified choices to be selected but allows extra choices, 'NOT_CONTAIN' requires none of the specified choices to be selected, 'ANY' requires at least one of the specified choices to be selected, 'PARTIAL' gives credit for each specified choice selected minus each unspecified choice selected.",
         "default": "ALL"
       }
     },
@@ -1518,11 +1520,13 @@
         "type": "string",
         "enum": [
           "ALL",
+          "CONTAIN",
+          "NOT_CONTAIN",
           "ANY",
           "PARTIAL"
         ],
         "title": "Mode",
-        "description": "Mode of choice matching: 'ALL' requires all correct choices to be selected, 'ANY' requires at least one, 'PARTIAL' gives credit for each correct choice selected minus each incorrect choice selected.",
+        "description": "Mode of choice matching: 'ALL' requires all specified choices to be selected, 'CONTAIN' requires all specified choices to be selected but allows extra choices, 'NOT_CONTAIN' requires none of the specified choices to be selected, 'ANY' requires at least one of the specified choices to be selected, 'PARTIAL' gives credit for each specified choice selected minus each unspecified choice selected.",
         "default": "ALL"
       }
     },
@@ -1682,9 +1686,9 @@
         "title": "Question Types",
         "default": [
           "NUMERIC",
-          "MULTI_VALUED",
+          "TEXT",
           "CHOICE",
-          "TEXT"
+          "MULTI_VALUED"
         ],
         "readOnly": true
       },
@@ -2008,9 +2012,9 @@
         "title": "Question Types",
         "default": [
           "NUMERIC",
-          "MULTI_VALUED",
+          "TEXT",
           "CHOICE",
-          "TEXT"
+          "MULTI_VALUED"
         ],
         "readOnly": true
       },
@@ -2195,9 +2199,9 @@
         "title": "Question Types",
         "default": [
           "NUMERIC",
-          "MULTI_VALUED",
+          "TEXT",
           "CHOICE",
-          "TEXT"
+          "MULTI_VALUED"
         ],
         "readOnly": true
       },
@@ -2462,9 +2466,9 @@
         "title": "Question Types",
         "default": [
           "NUMERIC",
-          "MULTI_VALUED",
+          "TEXT",
           "CHOICE",
-          "TEXT"
+          "MULTI_VALUED"
         ],
         "readOnly": true
       },
@@ -2889,9 +2893,9 @@
         "title": "Question Types",
         "default": [
           "NUMERIC",
-          "MULTI_VALUED",
+          "TEXT",
           "CHOICE",
-          "TEXT"
+          "MULTI_VALUED"
         ],
         "readOnly": true
       },
@@ -2946,9 +2950,9 @@
         "title": "Question Types",
         "default": [
           "NUMERIC",
-          "MULTI_VALUED",
+          "TEXT",
           "CHOICE",
-          "TEXT"
+          "MULTI_VALUED"
         ],
         "readOnly": true
       },
@@ -3114,9 +3118,9 @@
         "title": "Question Types",
         "default": [
           "NUMERIC",
-          "MULTI_VALUED",
+          "TEXT",
           "CHOICE",
-          "TEXT"
+          "MULTI_VALUED"
         ],
         "readOnly": true
       },

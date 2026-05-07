@@ -7,7 +7,7 @@
  */
 
 /**
- * Mode of choice matching: 'ALL' requires all correct choices to be selected, 'ANY' requires at least one, 'PARTIAL' gives credit for each correct choice selected minus each incorrect choice selected.
+ * Mode of choice matching: 'ALL' requires all specified choices to be selected, 'CONTAIN' requires all specified choices to be selected but allows extra choices, 'NOT_CONTAIN' requires none of the specified choices to be selected, 'ANY' requires at least one of the specified choices to be selected, 'PARTIAL' gives credit for each specified choice selected minus each unspecified choice selected.
  */
 export type MultipleChoiceQuestionRuleOutputMode = typeof MultipleChoiceQuestionRuleOutputMode[keyof typeof MultipleChoiceQuestionRuleOutputMode];
 
@@ -15,6 +15,8 @@ export type MultipleChoiceQuestionRuleOutputMode = typeof MultipleChoiceQuestion
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const MultipleChoiceQuestionRuleOutputMode = {
   ALL: 'ALL',
+  CONTAIN: 'CONTAIN',
+  NOT_CONTAIN: 'NOT_CONTAIN',
   ANY: 'ANY',
   PARTIAL: 'PARTIAL',
 } as const;
