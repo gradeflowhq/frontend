@@ -3,7 +3,6 @@ import {
 } from '@mantine/core';
 import React, { useCallback, useMemo } from 'react';
 
-import { computeQuestionPassRate } from '@features/grading/helpers';
 import { useScrollIntoView } from '@hooks/useScrollIntoView';
 
 import type { RuleValue } from '../../features/rules/types';
@@ -16,7 +15,6 @@ type CoverageStatus = 'covered' | 'global' | 'uncovered';
 interface QuestionMasterRowData {
   qid: string;
   coverageStatus: CoverageStatus;
-  passRate: number | null;
 }
 
 // ── Coverage dot ─────────────────────────────────────────────────────────────
@@ -24,7 +22,7 @@ interface QuestionMasterRowData {
 const COVERAGE_COLORS: Record<CoverageStatus, string> = {
   covered: 'var(--mantine-color-green-6)',
   global: 'var(--mantine-color-blue-4)',
-  uncovered: 'var(--mantine-color-red-5)',
+  uncovered: 'transparent',
 };
 
 // ── Row ───────────────────────────────────────────────────────────────────────
@@ -83,11 +81,6 @@ const QuestionMasterRow: React.FC<RowProps> = ({ data, isSelected, onSelect }) =
       >
         {data.qid}
       </Text>
-      {data.passRate !== null && (
-        <Text size="xs" c="dimmed" ff="monospace">
-          {Math.round(data.passRate * 100)}% pass
-        </Text>
-      )}
     </Stack>
   </Group>
 </Box>
@@ -146,15 +139,9 @@ const QuestionMasterList: React.FC<Props> = ({
           ? 'covered'
           : 'uncovered';
 
-        const passRate =
-          gradingItems && totalStudents > 0
-            ? computeQuestionPassRate(gradingItems, qid, totalStudents)
-            : null;
-
         return {
           qid,
           coverageStatus,
-          passRate,
         };
       });
   }, [
