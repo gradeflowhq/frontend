@@ -18,6 +18,13 @@ describe('QK', () => {
       expect(QK.assessments.item('a1')).toEqual(['assessment', 'a1']);
     });
 
+    it('metadata keys include id and metadata key', () => {
+      expect(QK.assessments.metadata('a1')).toEqual(['assessment', 'a1', 'metadata']);
+      expect(QK.assessments.metadataValue('a1', 'publish')).toEqual([
+        'assessment', 'a1', 'metadata', 'publish',
+      ]);
+    });
+
     it('members key includes id', () => {
       expect(QK.assessments.members('a1')).toEqual(['assessments', 'a1', 'members']);
     });

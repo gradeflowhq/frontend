@@ -8,22 +8,22 @@ import { InfoRow } from './InfoRow';
 export type GradeSettingsProps = {
   enableRounding: boolean;
   roundingBase: number;
-  includeComments: boolean;
+  includeQuestionRemarks: boolean;
   gradeMode: 'points' | 'percent';
   onEnableRoundingChange: (value: boolean) => void;
   onRoundingBaseChange: (value: number) => void;
-  onIncludeCommentsChange: (value: boolean) => void;
+  onIncludeQuestionRemarksChange: (value: boolean) => void;
   onGradeModeChange: (value: 'points' | 'percent') => void;
 };
 
 const GradeSettings: React.FC<GradeSettingsProps> = ({
   enableRounding,
   roundingBase,
-  includeComments,
+  includeQuestionRemarks,
   gradeMode,
   onEnableRoundingChange,
   onRoundingBaseChange,
-  onIncludeCommentsChange,
+  onIncludeQuestionRemarksChange,
   onGradeModeChange,
 }) => (
   <InfoRow>
@@ -61,8 +61,8 @@ const GradeSettings: React.FC<GradeSettingsProps> = ({
 
       <Checkbox
         label="Include per-question remarks"
-        checked={includeComments}
-        onChange={(e) => onIncludeCommentsChange(e.currentTarget.checked)}
+        checked={includeQuestionRemarks}
+        onChange={(e) => onIncludeQuestionRemarksChange(e.currentTarget.checked)}
       />
     </Stack>
   </InfoRow>

@@ -5,6 +5,8 @@ export const QK = {
   assessments: {
     list: ['assessments', 'list'] as const,
     item: (id: string) => ['assessment', id] as const,
+    metadata: (id: string) => ['assessment', id, 'metadata'] as const,
+    metadataValue: (id: string, key: string) => ['assessment', id, 'metadata', key] as const,
     members: (id: string) => ['assessments', id, 'members'] as const,
   },
   submissions: {

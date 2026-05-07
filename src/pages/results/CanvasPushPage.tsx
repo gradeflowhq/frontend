@@ -1,4 +1,4 @@
-import { Accordion, Alert, Box, Button, Group, Stack, Text } from '@mantine/core';
+import { Accordion, Alert, Box, Button, Center, Group, Loader, Stack, Text } from '@mantine/core';
 import { IconCheck, IconSettings } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -17,6 +17,7 @@ import { NEW_GROUP_VALUE } from '@features/canvas/constants';
 import { pickValue } from '@features/canvas/helpers';
 import { useCanvasData, useCourseData } from '@features/canvas/hooks/useCanvasData';
 import { useCanvasProgress } from '@features/canvas/hooks/useCanvasProgress';
+import { useCanvasPublishConfig } from '@features/canvas/hooks/useCanvasPublishConfig';
 import { useCanvasPush } from '@features/canvas/hooks/useCanvasPush';
 import { useCsvGrades } from '@features/canvas/hooks/useCsvGrades';
 import { usePreparedRows } from '@features/canvas/hooks/usePreparedRows';
@@ -26,7 +27,6 @@ import { useGrading } from '@features/grading/api';
 import { GradingStatusBanner, NoGradingResults } from '@features/grading/components';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { CACHE_STALE_TIME_CANVAS } from '@lib/constants';
-import { useCanvasPushStore } from '@state/canvasStore';
 import { useUserSettingsStore } from '@state/userStore';
 import { getErrorMessage } from '@utils/error';
 import { notifyErrorMessage, notifySuccess } from '@utils/notifications';
@@ -46,18 +46,22 @@ const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId 
     assignmentId,
     assignmentName,
     assignmentGroupId,
+    newGroupName,
+    newGroupWeight,
     pointsPossible,
     enableRounding,
     roundingBase,
     gradeMode,
+    includeQuestionRemarks,
     progressUrl,
     setConfig,
-  } = useCanvasPushStore(assessmentId);
-  const [includeComments, setIncludeComments] = useState(true);
+    isLoading: loadingPublishConfig,
+    isReady: publishConfigReady,
+    isError: publishConfigError,
+    error: publishConfigLoadError,
+  } = useCanvasPublishConfig(assessmentId);
   const [previewTab, setPreviewTab] = useState<PreviewTab>('mapped');
   const [openSteps, setOpenSteps] = useState<string[]>(() => ['connection']);
-  const [newGroupName, setNewGroupName] = useState('');
-  const [newGroupWeight, setNewGroupWeight] = useState<number | undefined>(undefined);
 
   const csvGrades = useCsvGrades(assessmentId, roundingBase ?? 0, passphrase ?? '', notifyEncryptedDetected);
   const { data: gradingData } = useGrading(assessmentId, Boolean(assessmentId));
@@ -107,10 +111,11 @@ const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId 
   }, [csvGrades.rows, enableRounding]);
 
   const numericPoints = useMemo(() => {
+    if (gradeMode === 'percent') return 100;
     const parsed = Number(pointsPossible);
     if (Number.isFinite(parsed) && parsed > 0) return parsed;
     if (csvTotalMax > 0) return csvTotalMax;
-    return gradeMode === 'percent' ? 100 : 0;
+    return 0;
   }, [pointsPossible, csvTotalMax, gradeMode]);
 
   const { preparedRows, mappedRows, unmappedRows } = usePreparedRows(
@@ -118,7 +123,7 @@ const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId 
     csvGrades.decryptedIds,
     courseData.roster,
     enableRounding,
-    includeComments
+    includeQuestionRemarks
   );
 
   const { pushState, push, setPushState } = useCanvasPush();
@@ -131,10 +136,11 @@ const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId 
   );
 
   useEffect(() => {
+    if (!publishConfigReady) return;
     if (pushState.status === 'success' && pushState.progressUrl && pushState.progressUrl !== progressUrl) {
       setConfig({ progressUrl: pushState.progressUrl });
     }
-  }, [pushState, progressUrl, setConfig]);
+  }, [publishConfigReady, pushState, progressUrl, setConfig]);
 
   useEffect(() => {
     if (pushState.status === 'error') {
@@ -155,48 +161,32 @@ const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId 
     return courseData.assignments.filter(a => Number(a.assignment_group_id) === groupId);
   }, [courseData.assignments, assignmentGroupId]);
 
-  useEffect(() => {
-    if (assignmentId && assignmentGroupId && !courseData.isLoading && courseData.assignments.length > 0) {
-      const assignmentExists = filteredAssignments.some(a => a.id.toString() === assignmentId);
-      if (!assignmentExists) {
-        setConfig({ assignmentId: '', assignmentName: assessmentRes?.name ?? '' });
-      }
-    }
-  }, [assignmentId, assignmentGroupId, filteredAssignments, courseData.isLoading, courseData.assignments.length, assessmentRes?.name, setConfig]);
-
-  useEffect(() => {
-    if (!assignmentName && assessmentRes?.name) {
-      setConfig({ assignmentName: assessmentRes.name });
-    }
-  }, [assignmentName, assessmentRes?.name, setConfig]);
-
-  // Only react to gradeMode/csvTotalMax changes; pointsPossible excluded from deps
-  // to prevent auto-derived value from overwriting user-selected assignment points.
-  useEffect(() => {
-    const nextPoints = gradeMode === 'percent' ? 100 : csvTotalMax;
-    if (Number.isFinite(nextPoints) && nextPoints > 0) {
-      setConfig({ pointsPossible: nextPoints });
-    }
-  }, [gradeMode, csvTotalMax, setConfig]);
-
   const handleCourseChange = (value: string) => {
     if (value === courseId) return;
     setPushState({ status: 'idle' });
     setPreviewTab('mapped');
-    setConfig({ courseId: value, assignmentId: '', assignmentName: assessmentRes?.name ?? '', assignmentGroupId: '' });
+    setConfig({
+      courseId: value,
+      assignmentId: '',
+      assignmentName: '',
+      assignmentGroupId: '',
+      newGroupName: '',
+      newGroupWeight: undefined,
+    });
   };
 
   const handleAssignmentGroupChange = (value: string) => {
-    if (value !== NEW_GROUP_VALUE) {
-      setNewGroupName('');
-      setNewGroupWeight(undefined);
-    }
-    setConfig({ assignmentGroupId: value, assignmentId: '', assignmentName: assessmentRes?.name ?? '' });
+    setConfig({
+      assignmentGroupId: value,
+      assignmentId: '',
+      assignmentName: '',
+      ...(value !== NEW_GROUP_VALUE ? { newGroupName: '', newGroupWeight: undefined } : {}),
+    });
   };
 
   const handleAssignmentSelect = (value: string) => {
     if (!value) {
-      setConfig({ assignmentId: '', assignmentName: assessmentRes?.name ?? '' });
+      setConfig({ assignmentId: '', assignmentName: '' });
       return;
     }
     const found = filteredAssignments.find(a => a.id.toString() === value);
@@ -229,7 +219,7 @@ const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId 
         newGroupName: newGroupName.trim() || undefined,
         newGroupWeight,
         gradeMode,
-        includeComments,
+        includeComments: includeQuestionRemarks,
         numericPoints,
       },
       (id, createdName, points, groupId) => {
@@ -237,6 +227,8 @@ const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId 
           assignmentId: id,
           assignmentName: createdName,
           pointsPossible: points,
+          newGroupName: '',
+          newGroupWeight: undefined,
           ...(groupId ? { assignmentGroupId: groupId } : {}),
         });
         void courseData.refetch();
@@ -252,6 +244,7 @@ const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId 
     !courseId ||
     !csvGrades.rows.length ||
     !!hasActiveJob ||
+    !publishConfigReady ||
     !!(courseId && courseData.isLoading);
 
   const isConnected = !canvasData.missingConfig && !canvasData.isError;
@@ -268,6 +261,7 @@ const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId 
     if (!assignmentId) return null;
     return filteredAssignments.find(a => a.id.toString() === assignmentId)?.name ?? assignmentName ?? null;
   }, [assignmentId, filteredAssignments, assignmentName]);
+  const effectiveAssignmentName = assignmentName || assessmentRes?.name || '';
 
   const assignmentSummary = useMemo(() => {
     if (!assignmentGroupId) return null;
@@ -277,9 +271,9 @@ const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId 
     if (!groupLabel) return null;
     if (assignmentGroupId === NEW_GROUP_VALUE) return `${groupLabel} · New assignment`;
     const parts: string[] = [groupLabel];
-    parts.push(selectedAssignmentName ?? (assignmentName || 'New assignment'));
+    parts.push(selectedAssignmentName ?? (effectiveAssignmentName || 'New assignment'));
     return parts.join(' · ');
-  }, [assignmentGroupId, newGroupName, selectedGroupName, selectedAssignmentName, assignmentName]);
+  }, [assignmentGroupId, newGroupName, selectedGroupName, selectedAssignmentName, effectiveAssignmentName]);
 
   // Grade settings accordion summary
   const gradeSettingsSummary = useMemo(() => {
@@ -287,11 +281,28 @@ const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId 
     const parts: string[] = [];
     parts.push(gradeMode === 'percent' ? 'Percentage' : 'Points');
     if (enableRounding) parts.push(`Round to ${roundingBase}`);
-    parts.push(includeComments ? 'With comments' : 'No comments');
+    parts.push(includeQuestionRemarks ? 'With comments' : 'No comments');
     return parts.join(' · ');
-  }, [courseId, gradeMode, enableRounding, roundingBase, includeComments]);
+  }, [courseId, gradeMode, enableRounding, roundingBase, includeQuestionRemarks]);
 
-        
+  if (loadingPublishConfig) {
+    return (
+      <PageShell title="Push to Canvas">
+        <Center py="xl">
+          <Loader size="sm" />
+        </Center>
+      </PageShell>
+    );
+  }
+
+  if (publishConfigError) {
+    return (
+      <PageShell title="Push to Canvas">
+        <Alert color="red">{getErrorMessage(publishConfigLoadError)}</Alert>
+      </PageShell>
+    );
+  }
+
   if (gradingData?.submissions.length === 0) {
     return (
       <PageShell title="Push to Canvas">
@@ -420,8 +431,8 @@ const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId 
                 onAssignmentSelect={handleAssignmentSelect}
                 onAssignmentNameChange={value => setConfig({ assignmentName: value })}
                 onAssignmentGroupChange={handleAssignmentGroupChange}
-                onNewGroupNameChange={setNewGroupName}
-                onNewGroupWeightChange={setNewGroupWeight}
+                onNewGroupNameChange={value => setConfig({ newGroupName: value })}
+                onNewGroupWeightChange={value => setConfig({ newGroupWeight: value })}
                 onRefresh={async () => {
                   await courseData.refetch();
                 }}
@@ -444,11 +455,11 @@ const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId 
               <GradeSettings
                 enableRounding={enableRounding}
                 roundingBase={roundingBase ?? 0}
-                includeComments={includeComments}
+                includeQuestionRemarks={includeQuestionRemarks}
                 gradeMode={gradeMode}
                 onEnableRoundingChange={value => setConfig({ enableRounding: value })}
                 onRoundingBaseChange={value => setConfig({ roundingBase: value })}
-                onIncludeCommentsChange={setIncludeComments}
+                onIncludeQuestionRemarksChange={value => setConfig({ includeQuestionRemarks: value })}
                 onGradeModeChange={value => setConfig({ gradeMode: value })}
               />
             </Accordion.Panel>
