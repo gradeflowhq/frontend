@@ -286,6 +286,9 @@
             },
             {
               "$ref": "#/definitions/ConditionalMultiQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/ProgrammableMultiQuestionRule"
             }
           ],
           "discriminator": {
@@ -304,6 +307,7 @@
               "NUMBER_EQUAL": "#/definitions/NumberEqualQuestionRule",
               "NUMERIC_RANGE": "#/definitions/NumericRangeQuestionRule",
               "PROGRAMMABLE": "#/definitions/ProgrammableQuestionRule",
+              "PROGRAMMABLE_MULTI": "#/definitions/ProgrammableMultiQuestionRule",
               "PROGRAMMING": "#/definitions/ProgrammingQuestionRule",
               "REGEX": "#/definitions/RegexQuestionRule",
               "SIMILARITY": "#/definitions/SimilarityQuestionRule",
@@ -725,7 +729,7 @@
     ],
     "title": "ProgrammingTestCase"
   },
-  "ProgrammableQuestionRule": {
+  "ProgrammableMultiQuestionRule": {
     "properties": {
       "question_types": {
         "items": {
@@ -741,9 +745,9 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "CHOICE",
           "NUMERIC",
           "TEXT",
-          "CHOICE",
           "MULTI_VALUED"
         ],
         "readOnly": true
@@ -757,15 +761,11 @@
         "default": [],
         "readOnly": true
       },
-      "question_id": {
-        "type": "string",
-        "title": "Question Id"
-      },
       "type": {
         "type": "string",
-        "const": "PROGRAMMABLE",
+        "const": "PROGRAMMABLE_MULTI",
         "title": "Type",
-        "default": "PROGRAMMABLE",
+        "default": "PROGRAMMABLE_MULTI",
         "readOnly": true
       },
       "display_name": {
@@ -775,11 +775,20 @@
         "default": "Programmable",
         "readOnly": true
       },
+      "target_question_ids": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array",
+        "minItems": 1,
+        "title": "Target Question Ids",
+        "description": "List of question IDs this rule targets."
+      },
       "code": {
         "type": "string",
         "title": "Code",
-        "description": "Code to evaluate the answer. Required variables: 'output', 'passed'. Optional variable: 'feedback'.",
-        "default": "# You have access to the following variables:\n# - 'answer' variable contains the student's answer (can be str, float, list, or set)\n# - any additional variables defined in 'parameters' (e.g., 'param1', 'param2', etc.)\n# You must set the following variables:\n# - 'output' (float): A number between 0 and 1 -- max_points multiplier (only used in OUTPUT mode)\n# - 'passed' (bool): Whether the answer passed (only used in PASS_FAIL mode)\n# - 'feedback' (str, optional): Feedback to provide to the student\n# Example code:\npassed = False\noutput = 0.0\nfeedback = str(answer)\n"
+        "description": "Code to evaluate the answer_map. Required variable: 'results' (dict mapping question_id -> dict with 'output', 'passed', and optionally 'feedback').",
+        "default": "# You have access to the following variables:\n# - 'answer_map' dict mapping question_id -> student's answer for each target question\n# - any additional variables defined in 'parameters' (e.g., 'param1', 'param2', etc.)\n# You must set the following variable:\n# - 'results' (dict): A dict mapping question_id -> dict with keys:\n#     - 'output' (float): A number between 0 and 1 -- max_points multiplier (OUTPUT mode)\n#     - 'passed' (bool): Whether the answer passed (only used in PASS_FAIL mode)\n#     - 'feedback' (str, optional): Feedback to provide to the student\n# Example code:\nresults = {}\nfor qid, answer in answer_map.items():\n    results[qid] = {\n        'output': 0.0,\n        'passed': False,\n        'feedback': str(answer),\n    }\n"
       },
       "parameters": {
         "additionalProperties": {
@@ -826,15 +835,15 @@
           "OUTPUT"
         ],
         "title": "Mode",
-        "description": "Mode of evaluation: 'PASS_FAIL' uses a boolean 'passed' variable, 'OUTPUT' uses the 'output' variable (0-1) for scoring.",
+        "description": "Mode of evaluation: 'PASS_FAIL' uses 'passed' per question, 'OUTPUT' uses 'output' (0-1) per question for scoring.",
         "default": "PASS_FAIL"
       }
     },
     "type": "object",
     "required": [
-      "question_id"
+      "target_question_ids"
     ],
-    "title": "ProgrammableQuestionRule"
+    "title": "ProgrammableMultiQuestionRule"
   },
   "StringParameter": {
     "properties": {
@@ -1021,6 +1030,117 @@
       "value"
     ],
     "title": "BooleanParameter"
+  },
+  "ProgrammableQuestionRule": {
+    "properties": {
+      "question_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "CHOICE",
+            "NUMERIC",
+            "MULTI_VALUED"
+          ]
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Question Types",
+        "default": [
+          "CHOICE",
+          "NUMERIC",
+          "TEXT",
+          "MULTI_VALUED"
+        ],
+        "readOnly": true
+      },
+      "constraints": {
+        "items": {
+          "$ref": "#/definitions/QuestionConstraint"
+        },
+        "type": "array",
+        "title": "Constraints",
+        "default": [],
+        "readOnly": true
+      },
+      "question_id": {
+        "type": "string",
+        "title": "Question Id"
+      },
+      "type": {
+        "type": "string",
+        "const": "PROGRAMMABLE",
+        "title": "Type",
+        "default": "PROGRAMMABLE",
+        "readOnly": true
+      },
+      "display_name": {
+        "type": "string",
+        "const": "Programmable",
+        "title": "Display Name",
+        "default": "Programmable",
+        "readOnly": true
+      },
+      "code": {
+        "type": "string",
+        "title": "Code",
+        "description": "Code to evaluate the answer. Required variables: 'output', 'passed'. Optional variable: 'feedback'.",
+        "default": "# You have access to the following variables:\n# - 'answer' variable contains the student's answer (can be str, float, list, or set)\n# - any additional variables defined in 'parameters' (e.g., 'param1', 'param2', etc.)\n# You must set the following variables:\n# - 'output' (float): A number between 0 and 1 -- max_points multiplier (only used in OUTPUT mode)\n# - 'passed' (bool): Whether the answer passed (only used in PASS_FAIL mode)\n# - 'feedback' (str, optional): Feedback to provide to the student\n# Example code:\npassed = False\noutput = 0.0\nfeedback = str(answer)\n"
+      },
+      "parameters": {
+        "additionalProperties": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/IntParameter"
+            },
+            {
+              "$ref": "#/definitions/FloatParameter"
+            },
+            {
+              "$ref": "#/definitions/StringParameter"
+            },
+            {
+              "$ref": "#/definitions/BooleanParameter"
+            },
+            {
+              "$ref": "#/definitions/ListParameter"
+            },
+            {
+              "$ref": "#/definitions/DictParameter"
+            }
+          ],
+          "discriminator": {
+            "propertyName": "dtype",
+            "mapping": {
+              "Boolean": "#/definitions/BooleanParameter",
+              "Dict": "#/definitions/DictParameter",
+              "Float": "#/definitions/FloatParameter",
+              "Int": "#/definitions/IntParameter",
+              "List": "#/definitions/ListParameter",
+              "String": "#/definitions/StringParameter"
+            }
+          }
+        },
+        "type": "object",
+        "title": "Parameters",
+        "description": "Parameters that can be used in the code."
+      },
+      "mode": {
+        "type": "string",
+        "enum": [
+          "PASS_FAIL",
+          "OUTPUT"
+        ],
+        "title": "Mode",
+        "description": "Mode of evaluation: 'PASS_FAIL' uses a boolean 'passed' variable, 'OUTPUT' uses the 'output' variable (0-1) for scoring.",
+        "default": "PASS_FAIL"
+      }
+    },
+    "type": "object",
+    "required": [
+      "question_id"
+    ],
+    "title": "ProgrammableQuestionRule"
   },
   "NumericRangeQuestionRule": {
     "properties": {
@@ -1616,9 +1736,9 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "CHOICE",
           "NUMERIC",
           "TEXT",
-          "CHOICE",
           "MULTI_VALUED"
         ],
         "readOnly": true
@@ -2060,9 +2180,9 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "CHOICE",
           "NUMERIC",
           "TEXT",
-          "CHOICE",
           "MULTI_VALUED"
         ],
         "readOnly": true
@@ -2386,9 +2506,9 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "CHOICE",
           "NUMERIC",
           "TEXT",
-          "CHOICE",
           "MULTI_VALUED"
         ],
         "readOnly": true
@@ -2520,9 +2640,9 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "CHOICE",
           "NUMERIC",
           "TEXT",
-          "CHOICE",
           "MULTI_VALUED"
         ],
         "readOnly": true
@@ -2732,9 +2852,9 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "CHOICE",
           "NUMERIC",
           "TEXT",
-          "CHOICE",
           "MULTI_VALUED"
         ],
         "readOnly": true
@@ -3159,9 +3279,9 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "CHOICE",
           "NUMERIC",
           "TEXT",
-          "CHOICE",
           "MULTI_VALUED"
         ],
         "readOnly": true
@@ -3216,9 +3336,9 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "CHOICE",
           "NUMERIC",
           "TEXT",
-          "CHOICE",
           "MULTI_VALUED"
         ],
         "readOnly": true
@@ -3384,9 +3504,9 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "CHOICE",
           "NUMERIC",
           "TEXT",
-          "CHOICE",
           "MULTI_VALUED"
         ],
         "readOnly": true
@@ -4452,5 +4572,36 @@
       "items"
     ],
     "title": "AssessmentUsersResponse"
+  },
+  "AssessmentMetadataValueResponse": {
+    "properties": {
+      "key": {
+        "type": "string",
+        "title": "Key"
+      },
+      "value": {
+        "$ref": "#/definitions/JsonValue"
+      }
+    },
+    "type": "object",
+    "required": [
+      "key",
+      "value"
+    ],
+    "title": "AssessmentMetadataValueResponse"
+  },
+  "JsonValue": {},
+  "AssessmentMetadataResponse": {
+    "properties": {
+      "metadata": {
+        "additionalProperties": {
+          "$ref": "#/definitions/JsonValue"
+        },
+        "type": "object",
+        "title": "Metadata"
+      }
+    },
+    "type": "object",
+    "title": "AssessmentMetadataResponse"
   }
 }
