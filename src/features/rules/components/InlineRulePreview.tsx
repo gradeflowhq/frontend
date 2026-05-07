@@ -9,6 +9,7 @@ import type { RuleValue } from '@features/rules/types';
 
 interface Props {
   rule: RuleValue;
+  getRule?: () => RuleValue | null;
   assessmentId: string;
 }
 
@@ -18,7 +19,7 @@ const DEFAULT_PREVIEW_PARAMS: GradingPreviewParams = {
   seed: null,
 };
 
-const InlineRulePreview: React.FC<Props> = ({ rule, assessmentId }) => {
+const InlineRulePreview: React.FC<Props> = ({ rule, getRule, assessmentId }) => {
   const [previewParams, setPreviewParams] = useState<GradingPreviewParams>(DEFAULT_PREVIEW_PARAMS);
   const previewMutation = usePreviewGrading(assessmentId);
   const cancelPreviewMutation = useCancelGradingPreview(assessmentId);
@@ -28,15 +29,16 @@ const InlineRulePreview: React.FC<Props> = ({ rule, assessmentId }) => {
 
   const handleRun = useCallback(async (): Promise<void> => {
     setWasCancelled(false);
+    const currentRule = getRule?.() ?? rule;
     await previewMutation.mutateAsync({
-      rule: rule ?? null,
+      rule: currentRule ?? null,
       config: {
         limit: previewParams.limit,
         selection: previewParams.selection,
         seed: previewParams.seed ?? null,
       },
     });
-  }, [previewMutation, previewParams, rule]);
+  }, [getRule, previewMutation, previewParams, rule]);
 
   const handleParamsChange = useCallback((next: GradingPreviewParams): void => {
     setPreviewParams(next);

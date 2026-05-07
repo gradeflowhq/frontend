@@ -7,6 +7,7 @@ import {
   ScrollArea,
   Stack,
   Text,
+  Tooltip,
 } from '@mantine/core';
 import { IconPlus } from '@tabler/icons-react';
 import React, { useCallback, useMemo } from 'react';
@@ -32,6 +33,8 @@ const dotColor = (count: number) =>
     ? 'var(--mantine-color-green-6)'
     : 'var(--mantine-color-red-5)';
 
+const MAX_VISIBLE_QID_BADGES = 8;
+
 // ── Row ───────────────────────────────────────────────────────────────────────
 
 interface RowProps {
@@ -42,6 +45,7 @@ interface RowProps {
 
 const GlobalRuleRow: React.FC<RowProps> = ({ data, isSelected, onSelect }) => {
   const handleClick = useCallback(() => onSelect(data.index), [data.index, onSelect]);
+  const hiddenQids = data.coveredQids.slice(MAX_VISIBLE_QID_BADGES);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -82,11 +86,18 @@ const GlobalRuleRow: React.FC<RowProps> = ({ data, isSelected, onSelect }) => {
         </Text>
         {data.coveredQids.length > 0 ? (
           <Group gap={4} wrap="wrap">
-            {data.coveredQids.map((qid) => (
+            {data.coveredQids.slice(0, MAX_VISIBLE_QID_BADGES).map((qid) => (
               <Badge key={qid} variant="outline" color="gray" ff="monospace" size="xs">
                 {qid}
               </Badge>
             ))}
+            {hiddenQids.length > 0 && (
+              <Tooltip label={hiddenQids.join(', ')} multiline maw={360} withArrow>
+                <Text size="xs" c="dimmed" ff="monospace" title={hiddenQids.join(', ')}>
+                  +{hiddenQids.length}
+                </Text>
+              </Tooltip>
+            )}
           </Group>
         ) : (
           <Text size="xs" c="dimmed" ff="monospace">

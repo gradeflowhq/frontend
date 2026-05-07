@@ -55,9 +55,9 @@ function buildUiSchema(): Record<string, unknown> {
 
 const noop = () => {};
 
-function renderForm(
+function buildFormProps(
   overrides: Partial<React.ComponentProps<typeof RuleEditorForm>> = {},
-) {
+): React.ComponentProps<typeof RuleEditorForm> {
   const defaults: React.ComponentProps<typeof RuleEditorForm> = {
     formKey: 'test-form',
     schemaForRender: null,
@@ -69,9 +69,16 @@ function renderForm(
     onCancel: noop,
   };
 
+  return { ...defaults, ...overrides };
+}
+
+function renderForm(
+  overrides: Partial<React.ComponentProps<typeof RuleEditorForm>> = {},
+) {
+  const props = buildFormProps(overrides);
   return render(
     <MantineProvider>
-      <RuleEditorForm {...defaults} {...overrides} />
+      <RuleEditorForm {...props} />
     </MantineProvider>,
   );
 }
@@ -175,6 +182,77 @@ describe('RuleEditorForm', () => {
     });
     await user.click(screen.getByRole('button', { name: /save/i }));
     expect(onSave).toHaveBeenCalledWith(draft);
+  });
+
+  it('saves the latest form data even when the parent has not re-rendered', async () => {
+    const user = userEvent.setup();
+    const onSave = vi.fn();
+    const defs = buildProcessedDefs();
+    const schema = buildSchema(defs, 'ProgrammingRule');
+    renderForm({
+      schemaForRender: schema,
+      mergedUiSchema: buildUiSchema(),
+      draft: {
+        type: 'PROGRAMMING',
+        question_id: 'q1',
+        testcases: [{ expression: 'init', expected: '' }],
+        language: 'python',
+        show_evaluated_expected: true,
+        mode: 'ALL',
+      } as unknown as RuleValue,
+      onSave,
+    });
+
+    const expressionInput = await screen.findByDisplayValue('init');
+    await user.click(expressionInput);
+    await user.type(expressionInput, 'x');
+    await user.click(screen.getByRole('button', { name: /save/i }));
+
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        testcases: [expect.objectContaining({ expression: 'initx' })],
+      }),
+    );
+  });
+
+  it('keeps edited branch data visible across parent re-renders', async () => {
+    const user = userEvent.setup();
+    const defs = buildProcessedDefs();
+    const schema = buildSchema(defs, 'ProgrammingRule');
+    const props = buildFormProps({
+      schemaForRender: schema,
+      mergedUiSchema: buildUiSchema(),
+      draft: {
+        type: 'PROGRAMMING',
+        question_id: 'q1',
+        testcases: [{ expression: 'init', expected: '' }],
+        language: 'python',
+        show_evaluated_expected: true,
+        mode: 'ALL',
+      } as unknown as RuleValue,
+    });
+
+    const view = render(
+      <MantineProvider>
+        <RuleEditorForm {...props} />
+      </MantineProvider>,
+    );
+
+    const expressionInput = await screen.findByDisplayValue('init');
+    await user.click(expressionInput);
+    await user.type(expressionInput, 'x');
+
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('initx')).toBeInTheDocument();
+    });
+
+    view.rerender(
+      <MantineProvider>
+        <RuleEditorForm {...props} error={new Error('Parent re-render')} />
+      </MantineProvider>,
+    );
+
+    expect(screen.getByDisplayValue('initx')).toBeInTheDocument();
   });
 });
 

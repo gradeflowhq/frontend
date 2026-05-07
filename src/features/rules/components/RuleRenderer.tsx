@@ -17,6 +17,7 @@ type RenderOptions = {
   onDelete?: (rule: RuleValue) => void;
   hideRootType?: boolean;
   flatRoot?: boolean;
+  ruleDescendantCache?: WeakMap<object, boolean>;
 };
 
 type Definitions = Record<string, JSONSchema7>;
@@ -57,11 +58,27 @@ const labelFromPath = (path: string): string => {
   return key ? prettifyKey(key) : 'Details';
 };
 
-const hasRuleDescendant = (value: unknown, defs: Definitions): boolean => {
+const hasRuleDescendant = (
+  value: unknown,
+  defs: Definitions,
+  cache: WeakMap<object, boolean>,
+): boolean => {
   if (!value || typeof value !== 'object') return false;
-  if (isRuleObject(value, defs)) return true;
-  if (Array.isArray(value)) return value.some((v) => hasRuleDescendant(v, defs));
-  return Object.values(value as Record<string, unknown>).some((v) => hasRuleDescendant(v, defs));
+
+  const cached = cache.get(value);
+  if (cached !== undefined) return cached;
+
+  if (isRuleObject(value, defs)) {
+    cache.set(value, true);
+    return true;
+  }
+  const hasDescendant = Array.isArray(value)
+    ? value.some((v) => hasRuleDescendant(v, defs, cache))
+    : Object.values(value as Record<string, unknown>).some((v) =>
+      hasRuleDescendant(v, defs, cache),
+    );
+  cache.set(value, hasDescendant);
+  return hasDescendant;
 };
 
 const ArrayView: React.FC<{
@@ -159,7 +176,8 @@ const PlainObjectView: React.FC<{
   const keys = Object.keys(obj ?? {});
   if (keys.length === 0) return <Text c="dimmed">{'{}'}</Text>;
 
-  const ruleInside = hasRuleDescendant(obj, defs);
+  const cache = options.ruleDescendantCache ?? new WeakMap<object, boolean>();
+  const ruleInside = hasRuleDescendant(obj, defs, cache);
 
   if (!ruleInside) {
     const title = labelFromPath(path);
@@ -272,6 +290,7 @@ const RuleRenderer: React.FC<{
     onDelete,
     hideRootType,
     flatRoot,
+    ruleDescendantCache: new WeakMap<object, boolean>(),
   };
 
   return <>{renderNode(value, path, defs, rootOptions)}</>;

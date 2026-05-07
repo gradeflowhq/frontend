@@ -13,13 +13,12 @@ import React, { useMemo, useState } from 'react';
 
 import { useValidateAndReplaceRubric } from '@features/rules/api';
 import { getRuleDescriptionText } from '@features/rules/helpers';
-import { useRuleEditorState } from '@features/rules/hooks/useRuleEditorState';
 import { getRuleTargetQids } from '@features/rules/schema';
 
 import InlineRulePreview from './InlineRulePreview';
 import RuleConfigAccordion from './RuleConfigAccordion';
 import RuleDescriptionBlock from './RuleDescriptionBlock';
-import RuleEditorForm from './RuleEditorForm';
+import RuleEditor from './RuleEditor';
 
 import type { QuestionSetOutputQuestionMap } from '@api/models';
 import type { RuleValue } from '@features/rules/types';
@@ -63,6 +62,7 @@ const GlobalRuleDetailPanel: React.FC<Props> = ({
   // lives in the parent component (MultiTargetRulesSection) and its error
   // state is not accessible here.
   const [saveError, setSaveError] = useState<unknown>(null);
+  const draftReaderRef = React.useRef<(() => RuleValue | null) | null>(null);
 
   const ruleType = String((rule as { type?: unknown }).type ?? '');
   const ruleLabel = rule.display_name;
@@ -70,29 +70,32 @@ const GlobalRuleDetailPanel: React.FC<Props> = ({
 
   const coveredQids = useMemo(() => getRuleTargetQids(rule), [rule]);
 
-  const editorState = useRuleEditorState({
-    selectedRuleKey: null,
-    initialRule: rule,
-    questionId: null,
-    questionType: null,
-    questionMap,
-  });
-
   React.useEffect(() => {
     onEditStateChange?.(isEditing);
   }, [isEditing, onEditStateChange]);
 
-  const handleStartEdit = () => setIsEditing(true);
+  const handleStartEdit = () => {
+    setSaveError(null);
+    setIsEditing(true);
+  };
 
   const handleCancelEdit = () => {
     if (isPendingNew) {
       onCancelPending?.();
     } else {
-      editorState.setDraft(rule);
+      draftReaderRef.current = null;
       setSaveError(null);
       setIsEditing(false);
     }
   };
+
+  const handleDraftEdit = React.useCallback(() => {
+    setSaveError(null);
+  }, []);
+
+  const handleDraftReaderChange = React.useCallback((reader: (() => RuleValue | null) | null) => {
+    draftReaderRef.current = reader;
+  }, []);
 
   const handleSave = async (next: RuleValue) => {
     setSaveError(null);
@@ -121,7 +124,10 @@ const GlobalRuleDetailPanel: React.FC<Props> = ({
     ? saveError
     : (validateAndReplace.isError ? validateAndReplace.error : null);
 
-  const previewRule = isEditing ? (editorState.draft ?? rule) : rule;
+  const getPreviewRule = React.useCallback(
+    () => (isEditing ? (draftReaderRef.current?.() ?? rule) : rule),
+    [isEditing, rule],
+  );
 
   return (
     <Box style={{ flex: 1, minWidth: 0 }}>
@@ -162,16 +168,15 @@ const GlobalRuleDetailPanel: React.FC<Props> = ({
         {!isEditing && ruleDescription && <RuleDescriptionBlock description={ruleDescription} />}
 
         {isEditing ? (
-          <RuleEditorForm
-            formKey={`global-rule:${isPendingNew ? 'new' : ruleIndex}:${ruleType}`}
-            schemaForRender={editorState.schemaForRender}
-            mergedUiSchema={editorState.mergedUiSchema}
-            hiddenKeys={editorState.hiddenKeys}
-            draft={editorState.draft}
-            onDraftChange={(next) => {
-              editorState.setDraft(next);
-              setSaveError(null);
-            }}
+          <RuleEditor
+            formKeyBase={`global-rule:${isPendingNew ? 'new' : ruleIndex}:${ruleType}`}
+            selectedRuleKey={null}
+            initialRule={rule}
+            questionId={null}
+            questionType={null}
+            questionMap={questionMap}
+            onDraftEdit={handleDraftEdit}
+            onDraftReaderChange={handleDraftReaderChange}
             onSave={(next) => void handleSave(next)}
             onCancel={handleCancelEdit}
             isSaving={validateAndReplace.isPending}
@@ -181,7 +186,11 @@ const GlobalRuleDetailPanel: React.FC<Props> = ({
           <RuleConfigAccordion value={rule} />
         )}
 
-        <InlineRulePreview rule={previewRule} assessmentId={assessmentId} />
+        <InlineRulePreview
+          rule={rule}
+          getRule={getPreviewRule}
+          assessmentId={assessmentId}
+        />
       </Stack>
 
       {/* ── Delete confirmation ── */}

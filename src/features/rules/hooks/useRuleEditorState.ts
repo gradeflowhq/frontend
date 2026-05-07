@@ -57,7 +57,6 @@ export interface UseRuleEditorStateOptions {
 
 export interface UseRuleEditorStateResult {
   draft: RuleValue;
-  setDraft: React.Dispatch<React.SetStateAction<RuleValue>>;
   schemaForRender: JSONSchema7 | null;
   mergedUiSchema: Record<string, unknown>;
   concreteKey: string | null;
@@ -68,8 +67,7 @@ export interface UseRuleEditorStateResult {
 
 /**
  * Encapsulates all schema-augmentation and draft-materialisation logic shared
- * between single-target (InlineRuleEditor) and multi-target (GlobalRuleDetailPanel)
- * rule editors.
+ * by single-target and multi-target rule editors.
  */
 export const useRuleEditorState = ({
   selectedRuleKey,
@@ -154,5 +152,5 @@ export const useRuleEditorState = ({
     };
   }, [baseSchema, finalDefs, hiddenKeys]);
 
-  return { draft, setDraft, schemaForRender, mergedUiSchema, concreteKey, hiddenKeys };
+  return { draft, schemaForRender, mergedUiSchema, concreteKey, hiddenKeys };
 };

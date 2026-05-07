@@ -23,10 +23,10 @@ import { getRuleDescriptionText } from '@features/rules/helpers';
 import { findSchemaKeyByType, friendlyRuleLabel } from '@features/rules/schema';
 import { getErrorMessage } from '@utils/error';
 
-import InlineRuleEditor from './InlineRuleEditor';
 import InlineRulePreview from './InlineRulePreview';
 import RuleConfigAccordion from './RuleConfigAccordion';
 import RuleDescriptionBlock from './RuleDescriptionBlock';
+import RuleEditor from './RuleEditor';
 
 import type { RuleValue } from '../types';
 import type { QuestionSetOutputQuestionMap } from '@api/models';
@@ -78,8 +78,9 @@ const QuestionDetailPanel: React.FC<Props> = ({
   const [editState, setEditState] = useState<EditState | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
 
-  // Live draft tracked for preview (updated by InlineRuleEditor)
+  // Live draft tracked for preview when a new rule editor first mounts.
   const [liveDraft, setLiveDraft] = useState<RuleValue | null>(null);
+  const draftReaderRef = React.useRef<(() => RuleValue | null) | null>(null);
 
   // The rule to pass to the preview: draft when editing, saved rule when viewing
   const previewRule = editState ? liveDraft : existingRule;
@@ -139,7 +140,12 @@ const QuestionDetailPanel: React.FC<Props> = ({
   const handleCancelEdit = () => {
     setEditState(null);
     setLiveDraft(null);
+    draftReaderRef.current = null;
   };
+
+  const handleDraftReaderChange = React.useCallback((reader: (() => RuleValue | null) | null) => {
+    draftReaderRef.current = reader;
+  }, []);
 
   const handleSave = async (rule: RuleValue) => {
     const nextRule = { ...rule, question_id: qid } as RuleValue;
@@ -180,6 +186,10 @@ const QuestionDetailPanel: React.FC<Props> = ({
   const canAddRule = !coveredByGlobal && !existingRule && !isEditing;
   const canEditRule = !coveredByGlobal && !!existingRule && !isEditing;
   const showPreview = (existingRule !== null || (isEditing && previewRule !== null)) && !!assessmentId;
+  const getPreviewRule = React.useCallback(
+    () => (isEditing ? (draftReaderRef.current?.() ?? previewRule) : existingRule),
+    [existingRule, isEditing, previewRule],
+  );
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
@@ -284,7 +294,8 @@ const QuestionDetailPanel: React.FC<Props> = ({
             </Group>
           </Alert>
         ) : isEditing ? (
-          <InlineRuleEditor
+          <RuleEditor
+            formKeyBase={`rule:${qid}`}
             selectedRuleKey={editState!.ruleKey}
             initialRule={editState!.mode === 'edit' ? existingRule : null}
             questionId={qid}
@@ -295,6 +306,7 @@ const QuestionDetailPanel: React.FC<Props> = ({
             isSaving={validateAndReplace.isPending}
             error={validateAndReplace.isError ? validateAndReplace.error : null}
             onDraftChange={setLiveDraft}
+            onDraftReaderChange={handleDraftReaderChange}
           />
         ) : existingRule ? (
           <RuleConfigAccordion value={existingRule} contextQuestionId={qid} />
@@ -308,6 +320,7 @@ const QuestionDetailPanel: React.FC<Props> = ({
         {showPreview && previewRule !== null && (
           <InlineRulePreview
             rule={previewRule}
+            getRule={getPreviewRule}
             assessmentId={assessmentId}
           />
         )}

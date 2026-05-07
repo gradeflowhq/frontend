@@ -7,24 +7,28 @@ import RuleEditorForm from './RuleEditorForm';
 import type { QuestionSetOutputQuestionMap } from '@api/models';
 import type { RuleValue } from '@features/rules/types';
 
-interface Props {
+interface RuleEditorProps {
+  formKeyBase: string;
   selectedRuleKey: string | null;
   initialRule?: RuleValue | null;
-  questionId: string;
-  questionType: string;
+  questionId?: string | null;
+  questionType?: string | null;
   questionMap?: QuestionSetOutputQuestionMap;
   onSave: (rule: RuleValue) => void;
   onCancel: () => void;
   isSaving?: boolean;
   error?: unknown;
   /**
-   * Called on every draft change so parents (e.g. QuestionDetailPanel) can
-   * drive a live grading preview with the current draft.
+   * Called when the editor materializes its initial draft. Kept intentionally
+   * quiet after that so parent panels do not re-render on every field edit.
    */
   onDraftChange?: (draft: RuleValue) => void;
+  onDraftEdit?: () => void;
+  onDraftReaderChange?: (reader: (() => RuleValue | null) | null) => void;
 }
 
-const InlineRuleEditor: React.FC<Props> = ({
+const RuleEditor: React.FC<RuleEditorProps> = ({
+  formKeyBase,
   selectedRuleKey,
   initialRule,
   questionId,
@@ -35,8 +39,10 @@ const InlineRuleEditor: React.FC<Props> = ({
   isSaving,
   error,
   onDraftChange,
+  onDraftEdit,
+  onDraftReaderChange,
 }) => {
-  const { draft, setDraft, schemaForRender, mergedUiSchema, concreteKey, hiddenKeys } =
+  const { draft, schemaForRender, mergedUiSchema, concreteKey, hiddenKeys } =
     useRuleEditorState({
       selectedRuleKey,
       initialRule,
@@ -44,20 +50,34 @@ const InlineRuleEditor: React.FC<Props> = ({
       questionType,
       questionMap,
     });
+  const draftRef = React.useRef(draft);
 
-  // Keep parent in sync for live preview
   React.useEffect(() => {
+    draftRef.current = draft;
     onDraftChange?.(draft);
   }, [draft, onDraftChange]);
 
+  React.useEffect(() => {
+    onDraftReaderChange?.(() => draftRef.current);
+    return () => onDraftReaderChange?.(null);
+  }, [onDraftReaderChange]);
+
+  const handleDraftChange = React.useCallback(
+    (next: RuleValue) => {
+      draftRef.current = next;
+      onDraftEdit?.();
+    },
+    [onDraftEdit],
+  );
+
   return (
     <RuleEditorForm
-      formKey={`rule:${concreteKey ?? 'unknown'}:${questionId}`}
+      formKey={`${formKeyBase}:${concreteKey ?? 'unknown'}`}
       schemaForRender={schemaForRender}
       mergedUiSchema={mergedUiSchema}
       hiddenKeys={hiddenKeys}
       draft={draft}
-      onDraftChange={setDraft}
+      onDraftChange={handleDraftChange}
       onSave={onSave}
       onCancel={onCancel}
       isSaving={isSaving}
@@ -66,4 +86,4 @@ const InlineRuleEditor: React.FC<Props> = ({
   );
 };
 
-export default InlineRuleEditor;
+export default RuleEditor;

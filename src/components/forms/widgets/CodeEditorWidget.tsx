@@ -30,6 +30,7 @@ const CodeEditorWidget: React.FC<WidgetProps> = ({
   const height = opts.height ?? '400px';
   const isReadOnly = disabled || readonly || opts.readOnly;
   const isPython = (opts.language ?? 'python') === 'python';
+  const extensions = React.useMemo(() => (isPython ? [python()] : []), [isPython]);
 
   return (
     <div>
@@ -42,7 +43,7 @@ const CodeEditorWidget: React.FC<WidgetProps> = ({
           value={typeof value === 'string' ? value : ''}
           theme={oneDark}
           height={height}
-          extensions={isPython ? [python()] : []}
+          extensions={extensions}
           readOnly={isReadOnly}
           placeholder={opts.placeholder ?? placeholder}
           onChange={(val) => onChange(val)}
