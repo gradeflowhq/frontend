@@ -6,7 +6,6 @@ import React, { useCallback, useMemo } from 'react';
 import { useScrollIntoView } from '@hooks/useScrollIntoView';
 
 import type { RuleValue } from '../../features/rules/types';
-import type { AdjustableSubmission } from '@api/models';
 
 // ── Sub-types ────────────────────────────────────────────────────────────────
 
@@ -98,8 +97,6 @@ interface Props {
   selectedQid: string | null;
   onSelect: (qid: string) => void;
   searchQuery: string;
-  gradingItems?: AdjustableSubmission[];
-  totalStudents?: number;
 }
 
 const QuestionMasterList: React.FC<Props> = ({
@@ -111,8 +108,6 @@ const QuestionMasterList: React.FC<Props> = ({
   selectedQid,
   onSelect,
   searchQuery,
-  gradingItems,
-  totalStudents = 0,
 }) => {
   const selectedRef = useScrollIntoView<HTMLDivElement>(selectedQid);
 
@@ -151,8 +146,6 @@ const QuestionMasterList: React.FC<Props> = ({
     coveredQuestionIds,
     coveringRuleByQid,
     searchQuery,
-    gradingItems,
-    totalStudents,
   ]);
 
   // Keyboard navigation: arrow keys move selection within the filtered list

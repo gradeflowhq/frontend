@@ -11,7 +11,7 @@ import { notifications } from '@mantine/notifications';
 import { IconPencil, IconTrash } from '@tabler/icons-react';
 import React, { useMemo, useState } from 'react';
 
-import { useValidateAndReplaceRubric } from '@features/rules/api';
+import { useUpdateRule } from '@features/rules/api';
 import { getRuleDescriptionText } from '@features/rules/helpers';
 import { getRuleTargetQids } from '@features/rules/schema';
 
@@ -24,14 +24,12 @@ import type { QuestionSetOutputQuestionMap } from '@api/models';
 import type { RuleValue } from '@features/rules/types';
 
 interface Props {
-  /** Index of this rule in allRules. -1 for pending new rules. */
-  ruleIndex: number;
   rule: RuleValue;
-  allRules: RuleValue[];
   assessmentId: string;
   questionMap: QuestionSetOutputQuestionMap;
   onEditStateChange?: (isEditing: boolean) => void;
   onDelete: () => void;
+  isSaving?: boolean;
   /**
    * When true, the editor opens immediately and Save calls onSavePending
    * instead of the normal replace-in-place logic.
@@ -42,22 +40,22 @@ interface Props {
 }
 
 const GlobalRuleDetailPanel: React.FC<Props> = ({
-  ruleIndex,
   rule,
-  allRules,
   assessmentId,
   questionMap,
   onEditStateChange,
   onDelete,
+  isSaving = false,
   isPendingNew = false,
   onSavePending,
   onCancelPending,
 }) => {
-  const validateAndReplace = useValidateAndReplaceRubric(assessmentId);
+  const updateRule = useUpdateRule(assessmentId);
 
   // Pending new rules open straight into edit mode
   const [isEditing, setIsEditing] = useState(isPendingNew);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [pendingSave, setPendingSave] = useState(false);
   // Local save error state — needed for isPendingNew where the mutation
   // lives in the parent component (MultiTargetRulesSection) and its error
   // state is not accessible here.
@@ -100,29 +98,28 @@ const GlobalRuleDetailPanel: React.FC<Props> = ({
   const handleSave = async (next: RuleValue) => {
     setSaveError(null);
     if (isPendingNew) {
+      setPendingSave(true);
       try {
         await onSavePending?.(next);
       } catch (err) {
         setSaveError(err);
+      } finally {
+        setPendingSave(false);
       }
       return;
     }
-    const nextRules = allRules.map((r, i) => (i === ruleIndex ? next : r));
     try {
-      await validateAndReplace.mutateAsync(nextRules, {
-        onSuccess: () => {
-          setIsEditing(false);
-          notifications.show({ color: 'green', message: 'Rule saved' });
-        },
-      });
-    } catch {
+      await updateRule.mutateAsync({ ruleId: rule.id, rule: next });
+      setIsEditing(false);
+      notifications.show({ color: 'green', message: 'Rule saved' });
+    } catch (err) {
+      setSaveError(err);
       notifications.show({ color: 'red', message: 'Save failed' });
     }
   };
 
-  const displayError = isPendingNew
-    ? saveError
-    : (validateAndReplace.isError ? validateAndReplace.error : null);
+  const displayError = saveError ?? updateRule.error;
+  const editorSaving = isSaving || pendingSave || updateRule.isPending;
 
   const getPreviewRule = React.useCallback(
     () => (isEditing ? (draftReaderRef.current?.() ?? rule) : rule),
@@ -169,7 +166,7 @@ const GlobalRuleDetailPanel: React.FC<Props> = ({
 
         {isEditing ? (
           <RuleEditor
-            formKeyBase={`global-rule:${isPendingNew ? 'new' : ruleIndex}:${ruleType}`}
+            formKeyBase={`global-rule:${isPendingNew ? 'new' : rule.id}:${ruleType}`}
             selectedRuleKey={null}
             initialRule={rule}
             questionId={null}
@@ -179,7 +176,7 @@ const GlobalRuleDetailPanel: React.FC<Props> = ({
             onDraftReaderChange={handleDraftReaderChange}
             onSave={(next) => void handleSave(next)}
             onCancel={handleCancelEdit}
-            isSaving={validateAndReplace.isPending}
+            isSaving={editorSaving}
             error={displayError}
           />
         ) : (

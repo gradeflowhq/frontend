@@ -9,6 +9,7 @@ import type { ManualQuestionRuleInputQuestionTypesItem } from './manualQuestionR
 import type { QuestionConstraint } from './questionConstraint';
 
 export interface ManualQuestionRuleInput {
+  id?: string;
   readonly question_types?: readonly ManualQuestionRuleInputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
   question_id: string;

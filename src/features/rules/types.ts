@@ -18,8 +18,11 @@ export type {
   ValidateRubricResponse,
 };
 
-// Unified rule value type used by UI — display_name is always present at runtime (backend always provides it)
-export type RuleValue = (RubricOutputRulesItem | RubricInputRulesItem) & { display_name: string };
+// Unified rule value type used by UI — backend rules always carry id/display_name.
+export type RuleValue = (RubricOutputRulesItem | RubricInputRulesItem) & {
+  id: string;
+  display_name: string;
+};
 
 // Alias the existing model type for UI code
 export type QuestionType = QuestionConstraintType;

@@ -11,6 +11,7 @@ import type { CompositeQuestionRuleOutputRulesItem } from './compositeQuestionRu
 import type { CompositeQuestionRuleOutputAggregation } from './compositeQuestionRuleOutputAggregation';
 
 export interface CompositeQuestionRuleOutput {
+  id?: string;
   readonly question_types?: readonly CompositeQuestionRuleOutputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
   question_id: string;

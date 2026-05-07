@@ -17,6 +17,14 @@ import type { JSONSchema7 } from 'json-schema';
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
+const newDraftRuleId = (): string => {
+  const crypto = globalThis.crypto;
+  if (typeof crypto?.randomUUID === 'function') {
+    return crypto.randomUUID().replaceAll('-', '');
+  }
+  return `${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`;
+};
+
 /**
  * Builds an initial draft from a schema definition.
  * Exported so callers that construct bare drafts (e.g. handleAdd) can reuse it.
@@ -29,6 +37,7 @@ export const materializeDraft = (
   const props =
     (schema?.properties as Record<string, JSONSchema7> | undefined) ?? {};
   const draft: Record<string, unknown> = { ...(initial ?? {}) };
+  if (draft.id === undefined) draft.id = newDraftRuleId();
   const typeConst = props?.type?.const ?? props?.type?.default;
   if (typeConst !== undefined && draft.type === undefined) draft.type = typeConst;
   if (props?.question_id && questionId && draft.question_id === undefined) {

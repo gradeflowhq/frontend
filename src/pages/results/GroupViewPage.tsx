@@ -376,8 +376,6 @@ const GroupViewPage: React.FC = () => {
       selectedQid={selectedQid}
       onSelect={handleSelect}
       searchQuery={searchQuery}
-      gradingItems={submissions}
-      totalStudents={submissions.length}
     />
   );
 

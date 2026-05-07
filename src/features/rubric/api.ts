@@ -44,3 +44,33 @@ export const useDeleteRubric = (assessmentId: string) => {
     },
   });
 };
+
+export const useAcknowledgeRubricStaleness = (assessmentId: string) => {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationKey: ['rubric', assessmentId, 'acknowledgeStaleness'],
+    mutationFn: async () => {
+      await api.acknowledgeRubricStalenessAssessmentsAssessmentIdRubricStalenessAcknowledgePost(
+        assessmentId
+      );
+    },
+    onSuccess: async () => {
+      await invalidateRubricQueries(qc, assessmentId);
+    },
+  });
+};
+
+export const useCreateEmptyRubric = (assessmentId: string) => {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationKey: ['rubric', assessmentId, 'createEmpty'],
+    mutationFn: async () => {
+      await api.createEmptyRubricAssessmentsAssessmentIdRubricEmptyPost(assessmentId);
+    },
+    onSuccess: async () => {
+      await invalidateRubricQueries(qc, assessmentId);
+    },
+  });
+};

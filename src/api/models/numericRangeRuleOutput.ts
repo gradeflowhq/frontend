@@ -11,6 +11,7 @@ import type { NumericRangeRuleOutputMinValue } from './numericRangeRuleOutputMin
 import type { NumericRangeRuleOutputMaxValue } from './numericRangeRuleOutputMaxValue';
 
 export interface NumericRangeRuleOutput {
+  id?: string;
   readonly question_types?: readonly NumericRangeRuleOutputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
   readonly type?: 'NUMERIC_RANGE';

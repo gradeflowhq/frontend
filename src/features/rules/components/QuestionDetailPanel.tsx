@@ -15,9 +15,10 @@ import React, { useMemo, useState } from 'react';
 
 import {
   useCompatibleRuleKeys,
-  useReplaceRubric,
+  useCreateRule,
+  useDeleteRule,
   useRuleDefinitions,
-  useValidateAndReplaceRubric,
+  useUpdateRule,
 } from '@features/rules/api';
 import { getRuleDescriptionText } from '@features/rules/helpers';
 import { findSchemaKeyByType, friendlyRuleLabel } from '@features/rules/schema';
@@ -37,7 +38,6 @@ interface Props {
   qid: string;
   questionType: string;
   rules: RuleValue[];
-  allRules: RuleValue[];
   coveredByGlobal: boolean;
   coveringRule?: RuleValue;
   questionMap: QuestionSetOutputQuestionMap;
@@ -58,7 +58,6 @@ const QuestionDetailPanel: React.FC<Props> = ({
   qid,
   questionType,
   rules,
-  allRules,
   coveredByGlobal,
   coveringRule,
   questionMap,
@@ -68,8 +67,9 @@ const QuestionDetailPanel: React.FC<Props> = ({
 }) => {
   const defs = useRuleDefinitions();
   const singleTargetRuleKeys = useCompatibleRuleKeys(defs, undefined, true);
-  const validateAndReplace = useValidateAndReplaceRubric(assessmentId);
-  const replace = useReplaceRubric(assessmentId);
+  const createRule = useCreateRule(assessmentId);
+  const updateRule = useUpdateRule(assessmentId);
+  const deleteRule = useDeleteRule(assessmentId);
 
   // Each question has at most one rule
   const existingRule = rules[0] ?? null;
@@ -149,30 +149,24 @@ const QuestionDetailPanel: React.FC<Props> = ({
 
   const handleSave = async (rule: RuleValue) => {
     const nextRule = { ...rule, question_id: qid } as RuleValue;
-    const existingIdx = existingRule ? allRules.indexOf(existingRule) : -1;
-    const nextRules =
-      existingIdx >= 0
-        ? allRules.map((r, i) => (i === existingIdx ? nextRule : r))
-        : [...allRules, nextRule];
 
-    await validateAndReplace.mutateAsync(nextRules, {
-      onSuccess: () => {
-        setEditState(null);
-        setLiveDraft(null);
-        notifications.show({ color: 'green', message: 'Rule saved' });
-      },
-      onError: () => {
-        notifications.show({ color: 'red', message: 'Save failed' });
-      },
-    });
+    try {
+      if (existingRule) {
+        await updateRule.mutateAsync({ ruleId: existingRule.id, rule: nextRule });
+      } else {
+        await createRule.mutateAsync(nextRule);
+      }
+      setEditState(null);
+      setLiveDraft(null);
+      notifications.show({ color: 'green', message: 'Rule saved' });
+    } catch {
+      notifications.show({ color: 'red', message: 'Save failed' });
+    }
   };
 
   const handleDelete = async () => {
     if (!existingRule) return;
-    const existingIdx = allRules.indexOf(existingRule);
-    if (existingIdx < 0) return;
-    const nextRules = allRules.filter((_, i) => i !== existingIdx);
-    await replace.mutateAsync(nextRules, {
+    await deleteRule.mutateAsync(existingRule.id, {
       onSuccess: () => {
         setDeleteConfirm(false);
         notifications.show({ color: 'green', message: 'Rule deleted' });
@@ -186,6 +180,8 @@ const QuestionDetailPanel: React.FC<Props> = ({
   const canAddRule = !coveredByGlobal && !existingRule && !isEditing;
   const canEditRule = !coveredByGlobal && !!existingRule && !isEditing;
   const showPreview = (existingRule !== null || (isEditing && previewRule !== null)) && !!assessmentId;
+  const isSaving = createRule.isPending || updateRule.isPending;
+  const saveError = createRule.error ?? updateRule.error;
   const getPreviewRule = React.useCallback(
     () => (isEditing ? (draftReaderRef.current?.() ?? previewRule) : existingRule),
     [existingRule, isEditing, previewRule],
@@ -303,8 +299,8 @@ const QuestionDetailPanel: React.FC<Props> = ({
             questionMap={questionMap}
             onSave={(rule) => void handleSave(rule)}
             onCancel={handleCancelEdit}
-            isSaving={validateAndReplace.isPending}
-            error={validateAndReplace.isError ? validateAndReplace.error : null}
+            isSaving={isSaving}
+            error={saveError}
             onDraftChange={setLiveDraft}
             onDraftReaderChange={handleDraftReaderChange}
           />
@@ -338,21 +334,21 @@ const QuestionDetailPanel: React.FC<Props> = ({
           <Button
             variant="subtle"
             onClick={() => setDeleteConfirm(false)}
-            disabled={replace.isPending}
+            disabled={deleteRule.isPending}
           >
             Cancel
           </Button>
           <Button
             color="red"
-            loading={replace.isPending}
+            loading={deleteRule.isPending}
             onClick={() => void handleDelete()}
           >
             Delete
           </Button>
         </Group>
-        {replace.isError && (
+        {deleteRule.isError && (
           <Alert color="red" mt="sm">
-            {getErrorMessage(replace.error)}
+            {getErrorMessage(deleteRule.error)}
           </Alert>
         )}
       </Modal>

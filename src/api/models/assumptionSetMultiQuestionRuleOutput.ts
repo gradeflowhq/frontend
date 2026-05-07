@@ -11,6 +11,7 @@ import type { AssumptionSetMultiQuestionRuleOutputMode } from './assumptionSetMu
 import type { MultiQuestionAssumptionOutput } from './multiQuestionAssumptionOutput';
 
 export interface AssumptionSetMultiQuestionRuleOutput {
+  id?: string;
   readonly question_types?: readonly AssumptionSetMultiQuestionRuleOutputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
   /** Mode to select which assumption to use */

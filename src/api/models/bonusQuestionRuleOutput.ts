@@ -9,6 +9,7 @@ import type { BonusQuestionRuleOutputQuestionTypesItem } from './bonusQuestionRu
 import type { QuestionConstraint } from './questionConstraint';
 
 export interface BonusQuestionRuleOutput {
+  id?: string;
   readonly question_types?: readonly BonusQuestionRuleOutputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
   question_id: string;

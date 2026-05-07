@@ -10,6 +10,7 @@ import type { QuestionConstraint } from './questionConstraint';
 import type { SimilarityQuestionRuleOutputAlgorithm } from './similarityQuestionRuleOutputAlgorithm';
 
 export interface SimilarityQuestionRuleOutput {
+  id?: string;
   readonly question_types?: readonly SimilarityQuestionRuleOutputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
   question_id: string;

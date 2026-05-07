@@ -26,6 +26,7 @@ import type {
   ExportQuestionSetResponse,
   ExportRubricRequest,
   ExportRubricResponse,
+  GetRuleAssessmentsAssessmentIdRulesRuleIdGet200,
   GradeAdjustmentRequest,
   GradingDownloadRequest,
   GradingDownloadResponse,
@@ -47,6 +48,9 @@ import type {
   ParseSubmissionsResponse,
   QuestionSetResponse,
   RubricResponse,
+  RuleCreateRequest,
+  RuleUpdateRequest,
+  RulesResponse,
   SetQuestionSetByModelRequest,
   SetRoleRequest,
   SetRubricByModelRequest,
@@ -506,6 +510,28 @@ const importRubricAssessmentsAssessmentIdRubricImportPut = <TData = AxiosRespons
   }
 
 /**
+ * @summary Create Empty Rubric
+ */
+const createEmptyRubricAssessmentsAssessmentIdRubricEmptyPost = <TData = AxiosResponse<RubricResponse>>(
+    assessmentId: string, options?: AxiosRequestConfig
+ ): Promise<TData> => {
+    return axios.default.post(
+      `/assessments/${assessmentId}/rubric/empty`,undefined,options
+    );
+  }
+
+/**
+ * @summary Acknowledge Rubric Staleness
+ */
+const acknowledgeRubricStalenessAssessmentsAssessmentIdRubricStalenessAcknowledgePost = <TData = AxiosResponse<RubricResponse>>(
+    assessmentId: string, options?: AxiosRequestConfig
+ ): Promise<TData> => {
+    return axios.default.post(
+      `/assessments/${assessmentId}/rubric/staleness/acknowledge`,undefined,options
+    );
+  }
+
+/**
  * @summary Validate Rubric
  */
 const validateRubricAssessmentsAssessmentIdRubricValidatePost = <TData = AxiosResponse<ValidateRubricResponse>>(
@@ -528,6 +554,68 @@ const rubricCoverageAssessmentsAssessmentIdRubricCoveragePost = <TData = AxiosRe
     return axios.default.post(
       `/assessments/${assessmentId}/rubric/coverage`,
       coverageRequest,options
+    );
+  }
+
+/**
+ * @summary List Rules
+ */
+const listRulesAssessmentsAssessmentIdRulesGet = <TData = AxiosResponse<RulesResponse>>(
+    assessmentId: string, options?: AxiosRequestConfig
+ ): Promise<TData> => {
+    return axios.default.get(
+      `/assessments/${assessmentId}/rules`,options
+    );
+  }
+
+/**
+ * @summary Create Rule
+ */
+const createRuleAssessmentsAssessmentIdRulesPost = <TData = AxiosResponse<RubricResponse>>(
+    assessmentId: string,
+    ruleCreateRequest: RuleCreateRequest, options?: AxiosRequestConfig
+ ): Promise<TData> => {
+    return axios.default.post(
+      `/assessments/${assessmentId}/rules`,
+      ruleCreateRequest,options
+    );
+  }
+
+/**
+ * @summary Get Rule
+ */
+const getRuleAssessmentsAssessmentIdRulesRuleIdGet = <TData = AxiosResponse<GetRuleAssessmentsAssessmentIdRulesRuleIdGet200>>(
+    assessmentId: string,
+    ruleId: string, options?: AxiosRequestConfig
+ ): Promise<TData> => {
+    return axios.default.get(
+      `/assessments/${assessmentId}/rules/${ruleId}`,options
+    );
+  }
+
+/**
+ * @summary Update Rule
+ */
+const updateRuleAssessmentsAssessmentIdRulesRuleIdPut = <TData = AxiosResponse<RubricResponse>>(
+    assessmentId: string,
+    ruleId: string,
+    ruleUpdateRequest: RuleUpdateRequest, options?: AxiosRequestConfig
+ ): Promise<TData> => {
+    return axios.default.put(
+      `/assessments/${assessmentId}/rules/${ruleId}`,
+      ruleUpdateRequest,options
+    );
+  }
+
+/**
+ * @summary Delete Rule
+ */
+const deleteRuleAssessmentsAssessmentIdRulesRuleIdDelete = <TData = AxiosResponse<void>>(
+    assessmentId: string,
+    ruleId: string, options?: AxiosRequestConfig
+ ): Promise<TData> => {
+    return axios.default.delete(
+      `/assessments/${assessmentId}/rules/${ruleId}`,options
     );
   }
 
@@ -758,7 +846,7 @@ const meUsersMeGet = <TData = AxiosResponse<MeResponse>>(
     );
   }
 
-return {healthHealthGet,questionSetSerializersRegistrySerializersQuestionSetsGet,rubricSerializersRegistrySerializersRubricsGet,submissionsSerializersRegistrySerializersSubmissionsGet,rawSubmissionsAdaptersRegistryAdaptersRawSubmissionsGet,questionSetAdaptersRegistryAdaptersQuestionSetsGet,rubricAdaptersRegistryAdaptersRubricsGet,listAssessmentsAssessmentsGet,createAssessmentAssessmentsPost,getAssessmentAssessmentsAssessmentIdGet,updateAssessmentAssessmentsAssessmentIdPatch,deleteAssessmentAssessmentsAssessmentIdDelete,getAssessmentMetadataAssessmentsAssessmentIdMetadataGet,replaceAssessmentMetadataAssessmentsAssessmentIdMetadataPut,getAssessmentMetadataValueAssessmentsAssessmentIdMetadataKeyGet,setAssessmentMetadataValueAssessmentsAssessmentIdMetadataKeyPut,deleteAssessmentMetadataValueAssessmentsAssessmentIdMetadataKeyDelete,uploadSourceDataAssessmentsAssessmentIdSubmissionsSourcePut,getSourceDataAssessmentsAssessmentIdSubmissionsSourceGet,saveImportConfigAssessmentsAssessmentIdSubmissionsConfigPut,getImportConfigAssessmentsAssessmentIdSubmissionsConfigGet,getSubmissionsAssessmentsAssessmentIdSubmissionsGet,deleteSubmissionsAssessmentsAssessmentIdSubmissionsDelete,getQuestionSetAssessmentsAssessmentIdQuestionSetGet,setQuestionSetByModelAssessmentsAssessmentIdQuestionSetPut,deleteQuestionSetAssessmentsAssessmentIdQuestionSetDelete,exportQuestionSetAssessmentsAssessmentIdQuestionSetExportPost,setQuestionSetByDataAssessmentsAssessmentIdQuestionSetUploadPut,importQuestionSetAssessmentsAssessmentIdQuestionSetImportPut,inferQuestionSetAssessmentsAssessmentIdQuestionSetInferPost,parseSubmissionsAssessmentsAssessmentIdQuestionSetParsePost,getRubricAssessmentsAssessmentIdRubricGet,setRubricByModelAssessmentsAssessmentIdRubricPut,deleteRubricAssessmentsAssessmentIdRubricDelete,exportRubricAssessmentsAssessmentIdRubricExportPost,setRubricByDataAssessmentsAssessmentIdRubricUploadPut,importRubricAssessmentsAssessmentIdRubricImportPut,validateRubricAssessmentsAssessmentIdRubricValidatePost,rubricCoverageAssessmentsAssessmentIdRubricCoveragePost,getGradingAssessmentsAssessmentIdGradingGet,runGradingAssessmentsAssessmentIdGradingPost,deleteGradingAssessmentsAssessmentIdGradingDelete,getGradingJobAssessmentsAssessmentIdGradingJobGet,cancelGradingJobAssessmentsAssessmentIdGradingJobDelete,adjustGradingAssessmentsAssessmentIdGradingAdjustPost,bulkAdjustGradingAssessmentsAssessmentIdGradingBulkAdjustPost,downloadGradingAssessmentsAssessmentIdGradingDownloadPost,runGradingPreviewAssessmentsAssessmentIdGradingPreviewPost,getGradingPreviewAssessmentsAssessmentIdGradingPreviewGet,getGradingPreviewJobAssessmentsAssessmentIdGradingPreviewJobGet,cancelGradingPreviewJobAssessmentsAssessmentIdGradingPreviewJobDelete,listMembersAssessmentsAssessmentIdMembersGet,addMemberAssessmentsAssessmentIdMembersPost,setMemberRoleAssessmentsAssessmentIdMembersUserIdPatch,removeMemberAssessmentsAssessmentIdMembersUserIdDelete,getStatusJobsJobIdGet,callbackJobsCallbackTokenPost,meUsersMeGet}};
+return {healthHealthGet,questionSetSerializersRegistrySerializersQuestionSetsGet,rubricSerializersRegistrySerializersRubricsGet,submissionsSerializersRegistrySerializersSubmissionsGet,rawSubmissionsAdaptersRegistryAdaptersRawSubmissionsGet,questionSetAdaptersRegistryAdaptersQuestionSetsGet,rubricAdaptersRegistryAdaptersRubricsGet,listAssessmentsAssessmentsGet,createAssessmentAssessmentsPost,getAssessmentAssessmentsAssessmentIdGet,updateAssessmentAssessmentsAssessmentIdPatch,deleteAssessmentAssessmentsAssessmentIdDelete,getAssessmentMetadataAssessmentsAssessmentIdMetadataGet,replaceAssessmentMetadataAssessmentsAssessmentIdMetadataPut,getAssessmentMetadataValueAssessmentsAssessmentIdMetadataKeyGet,setAssessmentMetadataValueAssessmentsAssessmentIdMetadataKeyPut,deleteAssessmentMetadataValueAssessmentsAssessmentIdMetadataKeyDelete,uploadSourceDataAssessmentsAssessmentIdSubmissionsSourcePut,getSourceDataAssessmentsAssessmentIdSubmissionsSourceGet,saveImportConfigAssessmentsAssessmentIdSubmissionsConfigPut,getImportConfigAssessmentsAssessmentIdSubmissionsConfigGet,getSubmissionsAssessmentsAssessmentIdSubmissionsGet,deleteSubmissionsAssessmentsAssessmentIdSubmissionsDelete,getQuestionSetAssessmentsAssessmentIdQuestionSetGet,setQuestionSetByModelAssessmentsAssessmentIdQuestionSetPut,deleteQuestionSetAssessmentsAssessmentIdQuestionSetDelete,exportQuestionSetAssessmentsAssessmentIdQuestionSetExportPost,setQuestionSetByDataAssessmentsAssessmentIdQuestionSetUploadPut,importQuestionSetAssessmentsAssessmentIdQuestionSetImportPut,inferQuestionSetAssessmentsAssessmentIdQuestionSetInferPost,parseSubmissionsAssessmentsAssessmentIdQuestionSetParsePost,getRubricAssessmentsAssessmentIdRubricGet,setRubricByModelAssessmentsAssessmentIdRubricPut,deleteRubricAssessmentsAssessmentIdRubricDelete,exportRubricAssessmentsAssessmentIdRubricExportPost,setRubricByDataAssessmentsAssessmentIdRubricUploadPut,importRubricAssessmentsAssessmentIdRubricImportPut,createEmptyRubricAssessmentsAssessmentIdRubricEmptyPost,acknowledgeRubricStalenessAssessmentsAssessmentIdRubricStalenessAcknowledgePost,validateRubricAssessmentsAssessmentIdRubricValidatePost,rubricCoverageAssessmentsAssessmentIdRubricCoveragePost,listRulesAssessmentsAssessmentIdRulesGet,createRuleAssessmentsAssessmentIdRulesPost,getRuleAssessmentsAssessmentIdRulesRuleIdGet,updateRuleAssessmentsAssessmentIdRulesRuleIdPut,deleteRuleAssessmentsAssessmentIdRulesRuleIdDelete,getGradingAssessmentsAssessmentIdGradingGet,runGradingAssessmentsAssessmentIdGradingPost,deleteGradingAssessmentsAssessmentIdGradingDelete,getGradingJobAssessmentsAssessmentIdGradingJobGet,cancelGradingJobAssessmentsAssessmentIdGradingJobDelete,adjustGradingAssessmentsAssessmentIdGradingAdjustPost,bulkAdjustGradingAssessmentsAssessmentIdGradingBulkAdjustPost,downloadGradingAssessmentsAssessmentIdGradingDownloadPost,runGradingPreviewAssessmentsAssessmentIdGradingPreviewPost,getGradingPreviewAssessmentsAssessmentIdGradingPreviewGet,getGradingPreviewJobAssessmentsAssessmentIdGradingPreviewJobGet,cancelGradingPreviewJobAssessmentsAssessmentIdGradingPreviewJobDelete,listMembersAssessmentsAssessmentIdMembersGet,addMemberAssessmentsAssessmentIdMembersPost,setMemberRoleAssessmentsAssessmentIdMembersUserIdPatch,removeMemberAssessmentsAssessmentIdMembersUserIdDelete,getStatusJobsJobIdGet,callbackJobsCallbackTokenPost,meUsersMeGet}};
 export type HealthHealthGetResult = AxiosResponse<HealthHealthGet200>
 export type QuestionSetSerializersRegistrySerializersQuestionSetsGetResult = AxiosResponse<string[]>
 export type RubricSerializersRegistrySerializersRubricsGetResult = AxiosResponse<string[]>
@@ -796,8 +884,15 @@ export type DeleteRubricAssessmentsAssessmentIdRubricDeleteResult = AxiosRespons
 export type ExportRubricAssessmentsAssessmentIdRubricExportPostResult = AxiosResponse<ExportRubricResponse>
 export type SetRubricByDataAssessmentsAssessmentIdRubricUploadPutResult = AxiosResponse<RubricResponse>
 export type ImportRubricAssessmentsAssessmentIdRubricImportPutResult = AxiosResponse<RubricResponse>
+export type CreateEmptyRubricAssessmentsAssessmentIdRubricEmptyPostResult = AxiosResponse<RubricResponse>
+export type AcknowledgeRubricStalenessAssessmentsAssessmentIdRubricStalenessAcknowledgePostResult = AxiosResponse<RubricResponse>
 export type ValidateRubricAssessmentsAssessmentIdRubricValidatePostResult = AxiosResponse<ValidateRubricResponse>
 export type RubricCoverageAssessmentsAssessmentIdRubricCoveragePostResult = AxiosResponse<CoverageResponse>
+export type ListRulesAssessmentsAssessmentIdRulesGetResult = AxiosResponse<RulesResponse>
+export type CreateRuleAssessmentsAssessmentIdRulesPostResult = AxiosResponse<RubricResponse>
+export type GetRuleAssessmentsAssessmentIdRulesRuleIdGetResult = AxiosResponse<GetRuleAssessmentsAssessmentIdRulesRuleIdGet200>
+export type UpdateRuleAssessmentsAssessmentIdRulesRuleIdPutResult = AxiosResponse<RubricResponse>
+export type DeleteRuleAssessmentsAssessmentIdRulesRuleIdDeleteResult = AxiosResponse<void>
 export type GetGradingAssessmentsAssessmentIdGradingGetResult = AxiosResponse<GradingResponse>
 export type RunGradingAssessmentsAssessmentIdGradingPostResult = AxiosResponse<GradingJob>
 export type DeleteGradingAssessmentsAssessmentIdGradingDeleteResult = AxiosResponse<void>

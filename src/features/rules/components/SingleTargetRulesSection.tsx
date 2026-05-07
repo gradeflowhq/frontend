@@ -10,7 +10,7 @@ import QuestionDetailPanel from './QuestionDetailPanel';
 
 
 import type { RuleValue } from '../types';
-import type { AdjustableSubmission, QuestionSetOutputQuestionMap, RubricOutput } from '@api/models';
+import type { QuestionSetOutputQuestionMap, RubricOutput } from '@api/models';
 import type { GuardedSectionProps } from '@hooks/useUnsavedChangesGuard';
 
 interface Props extends GuardedSectionProps {
@@ -23,8 +23,6 @@ interface Props extends GuardedSectionProps {
   searchQuery?: string;
   coveringRuleByQid?: Record<string, RuleValue>;
   onViewGlobalRule?: (qid: string) => void;
-  gradingItems?: AdjustableSubmission[];
-  totalStudents?: number;
 }
 
 const SingleTargetRulesSection: React.FC<Props> = ({
@@ -37,8 +35,6 @@ const SingleTargetRulesSection: React.FC<Props> = ({
   searchQuery = '',
   coveringRuleByQid = {},
   onViewGlobalRule,
-  gradingItems,
-  totalStudents,
   guard,
   onEditStateChange,
   registerResetEditing,
@@ -111,8 +107,6 @@ const SingleTargetRulesSection: React.FC<Props> = ({
       selectedQid={selectedQid}
       onSelect={handleSelect}
       searchQuery={searchQuery}
-      gradingItems={gradingItems}
-      totalStudents={totalStudents}
     />
   );
 
@@ -122,7 +116,6 @@ const SingleTargetRulesSection: React.FC<Props> = ({
       qid={selectedQid}
       questionType={selectedType}
       rules={selectedRules}
-      allRules={allRules}
       coveredByGlobal={coveredByGlobal}
       coveringRule={coveringRule}
       questionMap={questionMap}

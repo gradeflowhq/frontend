@@ -13,6 +13,7 @@ import type { ConditionalMultiQuestionRuleInputThenRulesItem } from './condition
 import type { ConditionalMultiQuestionRuleInputElseRulesItem } from './conditionalMultiQuestionRuleInputElseRulesItem';
 
 export interface ConditionalMultiQuestionRuleInput {
+  id?: string;
   readonly question_types?: readonly ConditionalMultiQuestionRuleInputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
   readonly type?: 'CONDITIONAL';

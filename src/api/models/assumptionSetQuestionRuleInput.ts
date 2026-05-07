@@ -11,6 +11,7 @@ import type { AssumptionSetQuestionRuleInputMode } from './assumptionSetQuestion
 import type { AssumptionInput } from './assumptionInput';
 
 export interface AssumptionSetQuestionRuleInput {
+  id?: string;
   readonly question_types?: readonly AssumptionSetQuestionRuleInputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
   question_id: string;

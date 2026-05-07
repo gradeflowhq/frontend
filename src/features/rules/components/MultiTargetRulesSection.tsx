@@ -7,9 +7,9 @@ import { useSearchParams } from 'react-router-dom';
 import MasterDetailLayout from '@components/common/MasterDetailLayout';
 import {
   useCompatibleRuleKeys,
-  useReplaceRubric,
+  useCreateRule,
+  useDeleteRule,
   useRuleDefinitions,
-  useValidateAndReplaceRubric,
 } from '@features/rules/api';
 import { materializeDraft } from '@features/rules/hooks/useRuleEditorState';
 import { isMultiTargetRule } from '@features/rules/schema';
@@ -52,8 +52,8 @@ const MultiTargetRulesSection: React.FC<Props> = ({
   } | null>(null);
 
   const defs = useRuleDefinitions();
-  const validateAndReplace = useValidateAndReplaceRubric(assessmentId);
-  const replace = useReplaceRubric(assessmentId);
+  const createRule = useCreateRule(assessmentId);
+  const deleteRule = useDeleteRule(assessmentId);
 
   const rawEligibleKeys = useCompatibleRuleKeys(defs, undefined, false);
   const multiRuleKeys = useMemo(
@@ -71,24 +71,25 @@ const MultiTargetRulesSection: React.FC<Props> = ({
     [allRules],
   );
 
-  // ── URL-synced selected index ─────────────────────────────────────────────
+  // ── URL-synced selected rule ID ───────────────────────────────────────────
 
-  const urlIndex = searchParams.get(SEARCH_PARAM);
-  const selectedIndex = useMemo(() => {
+  const urlRuleId = searchParams.get(SEARCH_PARAM);
+  const selectedRuleId = useMemo(() => {
     if (pendingNewRule) return null;
-    const parsed = urlIndex !== null ? parseInt(urlIndex, 10) : NaN;
-    if (!Number.isNaN(parsed) && parsed >= 0 && parsed < multiRules.length) {
-      return parsed;
-    }
-    return multiRules.length > 0 ? 0 : null;
-  }, [urlIndex, multiRules.length, pendingNewRule]);
 
-  const setSelectedIndex = useCallback(
-    (index: number) => {
+    if (urlRuleId && multiRules.some((rule) => rule.id === urlRuleId)) {
+      return urlRuleId;
+    }
+
+    return multiRules.length > 0 ? multiRules[0].id : null;
+  }, [urlRuleId, multiRules, pendingNewRule]);
+
+  const setSelectedRuleId = useCallback(
+    (ruleId: string) => {
       setSearchParams(
         (prev) => {
           const next = new URLSearchParams(prev);
-          next.set(SEARCH_PARAM, String(index));
+          next.set(SEARCH_PARAM, ruleId);
           return next;
         },
         { replace: true },
@@ -97,30 +98,28 @@ const MultiTargetRulesSection: React.FC<Props> = ({
     [setSearchParams],
   );
 
-  // Initialise URL param on first mount
+  // Keep the URL selection populated with a valid rule id.
   React.useEffect(() => {
-    if (urlIndex === null && multiRules.length > 0) {
-      setSearchParams(
-        (prev) => {
-          const next = new URLSearchParams(prev);
-          next.set(SEARCH_PARAM, '0');
-          return next;
-        },
-        { replace: true },
-      );
+    if (!selectedRuleId || urlRuleId === selectedRuleId || pendingNewRule) {
+      return;
     }
-  }, [urlIndex, multiRules.length, setSearchParams]);
+
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.set(SEARCH_PARAM, selectedRuleId);
+        return next;
+      },
+      { replace: true },
+    );
+  }, [pendingNewRule, selectedRuleId, setSearchParams, urlRuleId]);
 
   // ── Highlight from parent tab ─────────────────────────────────────────────
 
   React.useEffect(() => {
     if (!highlightedRule) return;
-    const idx = multiRules.findIndex((r) => r === highlightedRule);
-    if (idx >= 0) {
+    if (multiRules.some((rule) => rule.id === highlightedRule.id)) {
       setPendingNewRule(null);
-      // URL already has the correct `gr=N` from RulesPage.handleViewGlobalRule —
-      // calling setSelectedIndex here is redundant and causes a snap-back flicker
-      // if setSelectedIndex's identity changes between renders.
       setMobileShowDetail(true);
     }
   }, [highlightedRule, multiRules]);
@@ -136,13 +135,13 @@ const MultiTargetRulesSection: React.FC<Props> = ({
 
   useGuardRegistration(isCurrentlyEditing, onEditStateChange, registerResetEditing, resetEditing);
 
-  const commitSelectIndex = useCallback(
-    (index: number) => {
+  const commitSelectRule = useCallback(
+    (ruleId: string) => {
       setPendingNewRule(null);
-      setSelectedIndex(index);
+      setSelectedRuleId(ruleId);
       setMobileShowDetail(true);
     },
-    [setSelectedIndex],
+    [setSelectedRuleId],
   );
 
   const commitAdd = useCallback(
@@ -158,10 +157,10 @@ const MultiTargetRulesSection: React.FC<Props> = ({
   // ── Handlers ─────────────────────────────────────────────────────────────
 
   const handleSelect = useCallback(
-    (index: number) => {
-      guard(() => commitSelectIndex(index));
+    (ruleId: string) => {
+      guard(() => commitSelectRule(ruleId));
     },
-    [guard, commitSelectIndex],
+    [guard, commitSelectRule],
   );
 
   const handleAdd = useCallback(
@@ -173,48 +172,48 @@ const MultiTargetRulesSection: React.FC<Props> = ({
 
   const handleSavePending = useCallback(
     async (savedRule: RuleValue) => {
-      const nextRules = [...allRules, savedRule];
       // Don't catch here — let the caller (GlobalRuleDetailPanel) display the
       // inline error. mutateAsync will still reject and propagate on failure.
-      await validateAndReplace.mutateAsync(nextRules, {
-        onSuccess: () => {
-          const newMultiIndex = nextRules.filter(isMultiTargetRule).length - 1;
-          // Flush editing-state changes synchronously so the parent guard
-          // sees isEditing=false before setSelectedIndex triggers a
-          // search-param navigation.
-          flushSync(() => {
-            setDetailEditing(false);
-            setPendingNewRule(null);
-          });
-          setSelectedIndex(Math.max(0, newMultiIndex));
-          notifications.show({ color: 'green', message: 'Rule saved' });
-        },
+      const existingRuleIds = new Set(multiRules.map((rule) => rule.id));
+      const result = await createRule.mutateAsync(savedRule);
+      const createdRule = [...((result.rubric.rules ?? []) as RuleValue[])]
+        .reverse()
+        .find((rule) => isMultiTargetRule(rule) && !existingRuleIds.has(rule.id));
+
+      // Flush editing-state changes synchronously so the parent guard sees
+      // isEditing=false before setSelectedRuleId triggers a search-param change.
+      flushSync(() => {
+        setDetailEditing(false);
+        setPendingNewRule(null);
       });
+      if (createdRule) {
+        setSelectedRuleId(createdRule.id);
+      }
+      notifications.show({ color: 'green', message: 'Rule saved' });
     },
-    [allRules, validateAndReplace, setSelectedIndex, setDetailEditing],
+    [createRule, multiRules, setSelectedRuleId],
   );
 
   const handleDelete = useCallback(
-    (index: number) => {
-      const ruleToDelete = multiRules[index];
-      if (!ruleToDelete) return;
-      const globalIndex = allRules.indexOf(ruleToDelete);
-      if (globalIndex < 0) return;
-      const nextRules = allRules.filter((_, i) => i !== globalIndex);
-      replace.mutate(nextRules, {
+    (ruleId: string) => {
+      const deletedIndex = multiRules.findIndex((rule) => rule.id === ruleId);
+      if (deletedIndex < 0) return;
+
+      deleteRule.mutate(ruleId, {
         onSuccess: () => {
           notifications.show({ color: 'green', message: 'Rule deleted' });
-          const remainingMulti = nextRules.filter(isMultiTargetRule);
+          const remainingMulti = multiRules.filter((rule) => rule.id !== ruleId);
           if (remainingMulti.length === 0) {
             setMobileShowDetail(false);
           } else {
-            setSelectedIndex(Math.max(0, index - 1));
+            const nextRule = remainingMulti[Math.max(0, deletedIndex - 1)];
+            setSelectedRuleId(nextRule.id);
           }
         },
         onError: () => notifications.show({ color: 'red', message: 'Delete failed' }),
       });
     },
-    [allRules, multiRules, replace, setSelectedIndex],
+    [deleteRule, multiRules, setSelectedRuleId],
   );
 
   // ── Early returns ─────────────────────────────────────────────────────────
@@ -225,20 +224,18 @@ const MultiTargetRulesSection: React.FC<Props> = ({
 
   // ── Render ────────────────────────────────────────────────────────────────
 
-  const selectedRule =
-    selectedIndex !== null ? (multiRules[selectedIndex] ?? null) : null;
-  const selectedGlobalIndex =
-    selectedRule !== null ? allRules.indexOf(selectedRule) : -1;
+  const selectedRule = selectedRuleId
+    ? (multiRules.find((rule) => rule.id === selectedRuleId) ?? null)
+    : null;
 
   const detailPanel = pendingNewRule ? (
     <GlobalRuleDetailPanel
       key="pending-new"
-      ruleIndex={-1}
       rule={pendingNewRule.draft}
-      allRules={allRules}
       assessmentId={assessmentId}
       questionMap={questionMap}
       onEditStateChange={setDetailEditing}
+      isSaving={createRule.isPending}
       isPendingNew
       onSavePending={handleSavePending}
       onCancelPending={() => {
@@ -250,16 +247,14 @@ const MultiTargetRulesSection: React.FC<Props> = ({
         // no-op — pending rules are discarded via cancel
       }}
     />
-  ) : selectedRule !== null && selectedGlobalIndex >= 0 ? (
+  ) : selectedRule !== null && selectedRuleId ? (
     <GlobalRuleDetailPanel
-      key={selectedGlobalIndex}
-      ruleIndex={selectedGlobalIndex}
+      key={selectedRuleId}
       rule={selectedRule}
-      allRules={allRules}
       assessmentId={assessmentId}
       questionMap={questionMap}
       onEditStateChange={setDetailEditing}
-      onDelete={() => handleDelete(selectedIndex!)}
+      onDelete={() => handleDelete(selectedRuleId)}
     />
   ) : (
     <Text c="dimmed" size="md" ta="center">
@@ -270,7 +265,7 @@ const MultiTargetRulesSection: React.FC<Props> = ({
   const listPanel = (
     <GlobalRuleMasterList
       rules={multiRules}
-      selectedIndex={selectedIndex}
+      selectedRuleId={selectedRuleId}
       onSelect={handleSelect}
       onAdd={handleAdd}
       addableRuleKeys={multiRuleKeys}

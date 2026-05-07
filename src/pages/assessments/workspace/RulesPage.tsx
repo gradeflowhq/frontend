@@ -27,10 +27,15 @@ import { ActionOptionCard } from '@components/common/ActionOptionCard';
 import PageShell from '@components/common/PageShell';
 import SectionStatusBadge from '@components/common/SectionStatusBadge';
 import { UnsavedChangesModal } from '@components/common/UnsavedChangesModal';
-import { useGrading } from '@features/grading/api';
 import { useQuestionSet } from '@features/questions/api';
 import { buildQuestionTypesById } from '@features/questions/helpers';
-import { useRubric, useRubricCoverage, useDeleteRubric } from '@features/rubric/api';
+import {
+  useAcknowledgeRubricStaleness,
+  useCreateEmptyRubric,
+  useRubric,
+  useRubricCoverage,
+  useDeleteRubric,
+} from '@features/rubric/api';
 const RubricExportModal = lazy(
   () => import('@features/rubric/components/RubricExportModal'),
 );
@@ -40,19 +45,19 @@ const RubricImportModal = lazy(
 const RubricUploadModal = lazy(
   () => import('@features/rubric/components/RubricUploadModal'),
 );
-import { useReplaceRubric } from '@features/rules/api';
+import { useDeleteRules } from '@features/rules/api';
 import MultiTargetRulesSection from '@features/rules/components/MultiTargetRulesSection';
 import RulesToolbar from '@features/rules/components/RulesToolbar';
 import SingleTargetRulesSection from '@features/rules/components/SingleTargetRulesSection';
 import { getRuleTargetQids, isMultiTargetRule } from '@features/rules/schema';
-import { getInvalidRuleReferences, synchronizeRules } from '@features/rules/synchronization';
+import { getInvalidRuleReferences } from '@features/rules/synchronization';
 import { useAutoResetState } from '@hooks/useAutoResetState';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { useUnsavedChangesGuard } from '@hooks/useUnsavedChangesGuard';
 import { getErrorMessage, isNotFoundError } from '@utils/error';
 import { notifyError, notifyErrorMessage, notifySuccess } from '@utils/notifications';
 
-import type { AdjustableSubmission, RubricOutput, RubricOutputRulesItem, QuestionSetOutputQuestionMap } from '@api/models';
+import type { RubricOutput, QuestionSetOutputQuestionMap } from '@api/models';
 import type { RuleValue } from '@features/rules/types';
 
 const getRulesStatusMessage = (isStale: boolean, invalidRuleCount: number): string => {
@@ -125,14 +130,6 @@ const RulesPage: React.FC = () => {
     () => rubricRes?.rubric ?? { rules: [] },
     [rubricRes],
   );
-
-  const { data: gradingData } = useGrading(assessmentId, enabled);
-
-  const gradingItems = React.useMemo(
-    () => (gradingData?.submissions ?? []) as AdjustableSubmission[],
-    [gradingData],
-  );
-  const totalStudents = gradingItems.length;
 
   const cov = coverageRes?.coverage;
   const coveredQuestionIds = React.useMemo(
@@ -210,14 +207,12 @@ const RulesPage: React.FC = () => {
     (qid: string) => {
       guard(() => {
         const rule = coveringRuleByQid[qid] ?? null;
-        const multiRules = (rubric?.rules ?? []).filter(isMultiTargetRule);
-        const ruleIdx = rule ? multiRules.indexOf(rule as unknown as RubricOutputRulesItem) : -1;
         setSearchParams(
           (prev) => {
             const next = new URLSearchParams(prev);
             next.set('tab', 'global');
             next.delete('q');
-            if (ruleIdx >= 0) next.set('gr', String(ruleIdx));
+            if (rule) next.set('gr', rule.id);
             return next;
           },
           { replace: true },
@@ -225,11 +220,13 @@ const RulesPage: React.FC = () => {
         setHighlightedRule(rule);
       });
     },
-    [guard, coveringRuleByQid, rubric, setSearchParams, setHighlightedRule],
+    [guard, coveringRuleByQid, setSearchParams, setHighlightedRule],
   );
 
   const deleteRubric = useDeleteRubric(assessmentId);
-  const replaceRubric = useReplaceRubric(assessmentId);
+  const acknowledgeRubricStaleness = useAcknowledgeRubricStaleness(assessmentId);
+  const createEmptyRubric = useCreateEmptyRubric(assessmentId);
+  const deleteRules = useDeleteRules(assessmentId);
 
   const invalidRuleReferences = React.useMemo(
     () => getInvalidRuleReferences((rubric?.rules ?? []) as RuleValue[], questionIds),
@@ -245,7 +242,7 @@ const RulesPage: React.FC = () => {
     hasInvalidRules && dismissedRulesSyncSignature !== rulesSyncSignature
   );
 
-  // No-op save to acknowledge staleness and refresh updated_at
+  // Acknowledge staleness by refreshing the stored rubric timestamp.
   const handleDismissStatus = React.useCallback(() => {
     if (hasInvalidRules) {
       setDismissedRulesSyncSignature(rulesSyncSignature);
@@ -259,7 +256,7 @@ const RulesPage: React.FC = () => {
     if (!rubric) return;
 
     setStatusAction('dismiss');
-    replaceRubric.mutate(rubric.rules as RuleValue[], {
+    acknowledgeRubricStaleness.mutate(undefined, {
       onSuccess: () => {
         notifySuccess('Rules warning dismissed');
       },
@@ -271,12 +268,13 @@ const RulesPage: React.FC = () => {
       },
       onSettled: () => setStatusAction(null),
     });
-  }, [hasInvalidRules, isRubricStale, replaceRubric, rubric, rulesSyncSignature]);
+  }, [acknowledgeRubricStaleness, hasInvalidRules, isRubricStale, rubric, rulesSyncSignature]);
 
   const handleSynchronizeRules = React.useCallback(() => {
-    const nextRules = synchronizeRules((rubric?.rules ?? []) as RuleValue[], invalidRuleReferences);
+    const ruleIds = invalidRuleReferences.map((rule) => rule.ruleId);
+
     setStatusAction('sync');
-    replaceRubric.mutate(nextRules, {
+    deleteRules.mutate(ruleIds, {
       onSuccess: () => {
         setConfirmSynchronizeRules(false);
         setDismissedRulesSyncSignature(null);
@@ -291,17 +289,17 @@ const RulesPage: React.FC = () => {
       },
       onSettled: () => setStatusAction(null),
     });
-  }, [invalidRuleReferences, replaceRubric, rubric]);
+  }, [deleteRules, invalidRuleReferences]);
 
   // Create an empty rubric explicitly when the user requests it
   const handleCreateEmptyRubric = React.useCallback(() => {
-    replaceRubric.mutate([], {
+    createEmptyRubric.mutate(undefined, {
       onSuccess: () =>
         notifySuccess('Empty rubric created'),
       onError: () =>
         notifyErrorMessage('Could not create rubric'),
     });
-  }, [replaceRubric]);
+  }, [createEmptyRubric]);
 
   const hasRules = (rubric?.rules?.length ?? 0) > 0;
   const covTotal = cov?.total ?? 0;
@@ -316,7 +314,7 @@ const RulesPage: React.FC = () => {
         onClick: () => setConfirmSynchronizeRules(true),
         color: 'orange',
         variant: 'light' as const,
-        disabled: replaceRubric.isPending,
+        disabled: deleteRules.isPending,
       });
     }
 
@@ -324,19 +322,19 @@ const RulesPage: React.FC = () => {
       actions.push({
         label: 'Dismiss',
         onClick: handleDismissStatus,
-        loading: statusAction === 'dismiss' && replaceRubric.isPending,
-        disabled: replaceRubric.isPending && statusAction !== 'dismiss',
+        loading: statusAction === 'dismiss' && acknowledgeRubricStaleness.isPending,
+        disabled: acknowledgeRubricStaleness.isPending && statusAction !== 'dismiss',
       });
     } else if (hasInvalidRules) {
       actions.push({
         label: 'Dismiss',
         onClick: handleDismissStatus,
-        disabled: replaceRubric.isPending,
+        disabled: acknowledgeRubricStaleness.isPending,
       });
     }
 
     return actions;
-  }, [handleDismissStatus, hasInvalidRules, isRubricStale, replaceRubric.isPending, statusAction]);
+  }, [acknowledgeRubricStaleness.isPending, deleteRules.isPending, handleDismissStatus, hasInvalidRules, isRubricStale, statusAction]);
 
   const rulesStatusBanner = (
     <SectionStatusBadge
@@ -359,7 +357,7 @@ const RulesPage: React.FC = () => {
       </Text>
       <Stack gap="xs" mb="md">
         {invalidRuleReferences.map((rule) => (
-          <Text key={`${rule.ruleIndex}:${rule.summary}`} ff="monospace" size="sm">
+          <Text key={`${rule.ruleId}:${rule.summary}`} ff="monospace" size="sm">
             {rule.summary}
           </Text>
         ))}
@@ -368,7 +366,7 @@ const RulesPage: React.FC = () => {
         <Button variant="default" onClick={() => setConfirmSynchronizeRules(false)}>
           Cancel
         </Button>
-        <Button color="orange" loading={replaceRubric.isPending} onClick={handleSynchronizeRules}>
+        <Button color="orange" loading={deleteRules.isPending} onClick={handleSynchronizeRules}>
           Synchronize
         </Button>
       </Group>
@@ -481,7 +479,7 @@ const RulesPage: React.FC = () => {
                 icon={<IconPlus size={14} />}
                 iconColor="blue"
                 title="Start with an empty rubric"
-                description={<>Create a blank rubric and define rules question by question.{' '}<Anchor component="button" size="xs" onClick={handleCreateEmptyRubric}>{replaceRubric.isPending ? 'Creating…' : 'Create now →'}</Anchor></>}
+                description={<>Create a blank rubric and define rules question by question.{' '}<Anchor component="button" size="xs" onClick={handleCreateEmptyRubric}>{createEmptyRubric.isPending ? 'Creating…' : 'Create now →'}</Anchor></>}
               />
 
               <ActionOptionCard
@@ -499,9 +497,9 @@ const RulesPage: React.FC = () => {
               />
             </Stack>
 
-            {replaceRubric.isError && (
+            {createEmptyRubric.isError && (
               <Alert color="red" w="100%">
-                {getErrorMessage(replaceRubric.error)}
+                {getErrorMessage(createEmptyRubric.error)}
               </Alert>
             )}
           </Stack>
@@ -606,8 +604,6 @@ const RulesPage: React.FC = () => {
                 searchQuery={searchQuery}
                 coveringRuleByQid={coveringRuleByQid}
                 onViewGlobalRule={handleViewGlobalRule}
-                gradingItems={gradingItems}
-                totalStudents={totalStudents}
                 guard={guard}
                 onEditStateChange={setChildEditing}
                 registerResetEditing={registerChildReset}

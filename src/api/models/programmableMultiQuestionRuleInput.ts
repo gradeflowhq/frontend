@@ -11,6 +11,7 @@ import type { ProgrammableMultiQuestionRuleInputParameters } from './programmabl
 import type { ProgrammableMultiQuestionRuleInputMode } from './programmableMultiQuestionRuleInputMode';
 
 export interface ProgrammableMultiQuestionRuleInput {
+  id?: string;
   readonly question_types?: readonly ProgrammableMultiQuestionRuleInputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
   readonly type?: 'PROGRAMMABLE_MULTI';

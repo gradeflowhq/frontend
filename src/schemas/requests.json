@@ -385,6 +385,10 @@
   },
   "TextMatchQuestionRule": {
     "properties": {
+      "id": {
+        "type": "string",
+        "title": "Id"
+      },
       "question_types": {
         "items": {
           "type": "string",
@@ -399,8 +403,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -479,6 +483,10 @@
   },
   "SimilarityQuestionRule": {
     "properties": {
+      "id": {
+        "type": "string",
+        "title": "Id"
+      },
       "question_types": {
         "items": {
           "type": "string",
@@ -559,6 +567,10 @@
   },
   "RegexQuestionRule": {
     "properties": {
+      "id": {
+        "type": "string",
+        "title": "Id"
+      },
       "question_types": {
         "items": {
           "type": "string",
@@ -647,6 +659,10 @@
   },
   "ProgrammingQuestionRule": {
     "properties": {
+      "id": {
+        "type": "string",
+        "title": "Id"
+      },
       "question_types": {
         "items": {
           "type": "string",
@@ -789,6 +805,10 @@
   },
   "ProgrammableMultiQuestionRule": {
     "properties": {
+      "id": {
+        "type": "string",
+        "title": "Id"
+      },
       "question_types": {
         "items": {
           "type": "string",
@@ -803,10 +823,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "MULTI_VALUED",
           "CHOICE",
-          "NUMERIC",
           "TEXT",
-          "MULTI_VALUED"
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -1091,6 +1111,10 @@
   },
   "ProgrammableQuestionRule": {
     "properties": {
+      "id": {
+        "type": "string",
+        "title": "Id"
+      },
       "question_types": {
         "items": {
           "type": "string",
@@ -1105,10 +1129,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "MULTI_VALUED",
           "CHOICE",
-          "NUMERIC",
           "TEXT",
-          "MULTI_VALUED"
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -1202,6 +1226,10 @@
   },
   "NumericRangeQuestionRule": {
     "properties": {
+      "id": {
+        "type": "string",
+        "title": "Id"
+      },
       "question_types": {
         "items": {
           "type": "string",
@@ -1272,6 +1300,10 @@
   },
   "NumberEqualQuestionRule": {
     "properties": {
+      "id": {
+        "type": "string",
+        "title": "Id"
+      },
       "question_types": {
         "items": {
           "type": "string",
@@ -1361,6 +1393,10 @@
   },
   "MultiValuedQuestionRule": {
     "properties": {
+      "id": {
+        "type": "string",
+        "title": "Id"
+      },
       "question_types": {
         "items": {
           "type": "string",
@@ -1498,6 +1534,10 @@
   },
   "TextMatchRule": {
     "properties": {
+      "id": {
+        "type": "string",
+        "title": "Id"
+      },
       "question_types": {
         "items": {
           "type": "string",
@@ -1512,8 +1552,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -1558,6 +1598,10 @@
   },
   "SimilarityRule": {
     "properties": {
+      "id": {
+        "type": "string",
+        "title": "Id"
+      },
       "question_types": {
         "items": {
           "type": "string",
@@ -1634,6 +1678,10 @@
   },
   "RegexRule": {
     "properties": {
+      "id": {
+        "type": "string",
+        "title": "Id"
+      },
       "question_types": {
         "items": {
           "type": "string",
@@ -1693,6 +1741,10 @@
   },
   "ProgrammingRule": {
     "properties": {
+      "id": {
+        "type": "string",
+        "title": "Id"
+      },
       "question_types": {
         "items": {
           "type": "string",
@@ -1780,6 +1832,10 @@
   },
   "ProgrammableRule": {
     "properties": {
+      "id": {
+        "type": "string",
+        "title": "Id"
+      },
       "question_types": {
         "items": {
           "type": "string",
@@ -1794,10 +1850,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "MULTI_VALUED",
           "CHOICE",
-          "NUMERIC",
           "TEXT",
-          "MULTI_VALUED"
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -1884,6 +1940,10 @@
   },
   "NumericRangeRule": {
     "properties": {
+      "id": {
+        "type": "string",
+        "title": "Id"
+      },
       "question_types": {
         "items": {
           "type": "string",
@@ -1947,6 +2007,10 @@
   },
   "NumberEqualRule": {
     "properties": {
+      "id": {
+        "type": "string",
+        "title": "Id"
+      },
       "question_types": {
         "items": {
           "type": "string",
@@ -2013,6 +2077,10 @@
   },
   "MultiValuedRule": {
     "properties": {
+      "id": {
+        "type": "string",
+        "title": "Id"
+      },
       "question_types": {
         "items": {
           "type": "string",
@@ -2145,6 +2213,10 @@
   },
   "MultipleChoiceRule": {
     "properties": {
+      "id": {
+        "type": "string",
+        "title": "Id"
+      },
       "question_types": {
         "items": {
           "type": "string",
@@ -2224,6 +2296,10 @@
   },
   "ManualRule": {
     "properties": {
+      "id": {
+        "type": "string",
+        "title": "Id"
+      },
       "question_types": {
         "items": {
           "type": "string",
@@ -2238,10 +2314,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "MULTI_VALUED",
           "CHOICE",
-          "NUMERIC",
           "TEXT",
-          "MULTI_VALUED"
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -2274,6 +2350,10 @@
   },
   "LengthRule": {
     "properties": {
+      "id": {
+        "type": "string",
+        "title": "Id"
+      },
       "question_types": {
         "items": {
           "type": "string",
@@ -2347,6 +2427,10 @@
   },
   "KeywordsRule": {
     "properties": {
+      "id": {
+        "type": "string",
+        "title": "Id"
+      },
       "question_types": {
         "items": {
           "type": "string",
@@ -2417,6 +2501,10 @@
   },
   "CompositeRule": {
     "properties": {
+      "id": {
+        "type": "string",
+        "title": "Id"
+      },
       "question_types": {
         "items": {
           "type": "string",
@@ -2431,8 +2519,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -2550,6 +2638,10 @@
   },
   "BonusRule": {
     "properties": {
+      "id": {
+        "type": "string",
+        "title": "Id"
+      },
       "question_types": {
         "items": {
           "type": "string",
@@ -2564,10 +2656,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "MULTI_VALUED",
           "CHOICE",
-          "NUMERIC",
           "TEXT",
-          "MULTI_VALUED"
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -2600,6 +2692,10 @@
   },
   "MultipleChoiceQuestionRule": {
     "properties": {
+      "id": {
+        "type": "string",
+        "title": "Id"
+      },
       "question_types": {
         "items": {
           "type": "string",
@@ -2684,6 +2780,10 @@
   },
   "ManualQuestionRule": {
     "properties": {
+      "id": {
+        "type": "string",
+        "title": "Id"
+      },
       "question_types": {
         "items": {
           "type": "string",
@@ -2698,10 +2798,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "MULTI_VALUED",
           "CHOICE",
-          "NUMERIC",
           "TEXT",
-          "MULTI_VALUED"
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -2741,6 +2841,10 @@
   },
   "LengthQuestionRule": {
     "properties": {
+      "id": {
+        "type": "string",
+        "title": "Id"
+      },
       "question_types": {
         "items": {
           "type": "string",
@@ -2821,6 +2925,10 @@
   },
   "KeywordsQuestionRule": {
     "properties": {
+      "id": {
+        "type": "string",
+        "title": "Id"
+      },
       "question_types": {
         "items": {
           "type": "string",
@@ -2896,6 +3004,10 @@
   },
   "ConditionalMultiQuestionRule": {
     "properties": {
+      "id": {
+        "type": "string",
+        "title": "Id"
+      },
       "question_types": {
         "items": {
           "type": "string",
@@ -2910,10 +3022,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "MULTI_VALUED",
           "CHOICE",
-          "NUMERIC",
           "TEXT",
-          "MULTI_VALUED"
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -3185,6 +3297,10 @@
   },
   "CompositeQuestionRule": {
     "properties": {
+      "id": {
+        "type": "string",
+        "title": "Id"
+      },
       "question_types": {
         "items": {
           "type": "string",
@@ -3199,8 +3315,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -3323,6 +3439,10 @@
   },
   "BonusQuestionRule": {
     "properties": {
+      "id": {
+        "type": "string",
+        "title": "Id"
+      },
       "question_types": {
         "items": {
           "type": "string",
@@ -3337,10 +3457,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "MULTI_VALUED",
           "CHOICE",
-          "NUMERIC",
           "TEXT",
-          "MULTI_VALUED"
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -3380,6 +3500,10 @@
   },
   "AssumptionSetQuestionRule": {
     "properties": {
+      "id": {
+        "type": "string",
+        "title": "Id"
+      },
       "question_types": {
         "items": {
           "type": "string",
@@ -3394,10 +3518,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "MULTI_VALUED",
           "CHOICE",
-          "NUMERIC",
           "TEXT",
-          "MULTI_VALUED"
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -3548,6 +3672,10 @@
   },
   "AssumptionSetMultiQuestionRule": {
     "properties": {
+      "id": {
+        "type": "string",
+        "title": "Id"
+      },
       "question_types": {
         "items": {
           "type": "string",
@@ -3562,10 +3690,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "MULTI_VALUED",
           "CHOICE",
-          "NUMERIC",
           "TEXT",
-          "MULTI_VALUED"
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -3777,6 +3905,188 @@
       "question_set"
     ],
     "title": "SetQuestionSetByModelRequest"
+  },
+  "RuleUpdateRequest": {
+    "properties": {
+      "rule": {
+        "oneOf": [
+          {
+            "$ref": "#/definitions/AssumptionSetQuestionRule"
+          },
+          {
+            "$ref": "#/definitions/BonusQuestionRule"
+          },
+          {
+            "$ref": "#/definitions/CompositeQuestionRule"
+          },
+          {
+            "$ref": "#/definitions/ProgrammableQuestionRule"
+          },
+          {
+            "$ref": "#/definitions/ProgrammingQuestionRule"
+          },
+          {
+            "$ref": "#/definitions/SimilarityQuestionRule"
+          },
+          {
+            "$ref": "#/definitions/TextMatchQuestionRule"
+          },
+          {
+            "$ref": "#/definitions/KeywordsQuestionRule"
+          },
+          {
+            "$ref": "#/definitions/RegexQuestionRule"
+          },
+          {
+            "$ref": "#/definitions/LengthQuestionRule"
+          },
+          {
+            "$ref": "#/definitions/ManualQuestionRule"
+          },
+          {
+            "$ref": "#/definitions/MultiValuedQuestionRule"
+          },
+          {
+            "$ref": "#/definitions/MultipleChoiceQuestionRule"
+          },
+          {
+            "$ref": "#/definitions/NumberEqualQuestionRule"
+          },
+          {
+            "$ref": "#/definitions/NumericRangeQuestionRule"
+          },
+          {
+            "$ref": "#/definitions/AssumptionSetMultiQuestionRule"
+          },
+          {
+            "$ref": "#/definitions/ConditionalMultiQuestionRule"
+          },
+          {
+            "$ref": "#/definitions/ProgrammableMultiQuestionRule"
+          }
+        ],
+        "title": "Rule",
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "ASSUMPTION_SET": "#/definitions/AssumptionSetQuestionRule",
+            "ASSUMPTION_SET_MULTI": "#/definitions/AssumptionSetMultiQuestionRule",
+            "BONUS": "#/definitions/BonusQuestionRule",
+            "COMPOSITE": "#/definitions/CompositeQuestionRule",
+            "CONDITIONAL": "#/definitions/ConditionalMultiQuestionRule",
+            "KEYWORDS": "#/definitions/KeywordsQuestionRule",
+            "LENGTH": "#/definitions/LengthQuestionRule",
+            "MANUAL": "#/definitions/ManualQuestionRule",
+            "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceQuestionRule",
+            "MULTI_VALUED": "#/definitions/MultiValuedQuestionRule",
+            "NUMBER_EQUAL": "#/definitions/NumberEqualQuestionRule",
+            "NUMERIC_RANGE": "#/definitions/NumericRangeQuestionRule",
+            "PROGRAMMABLE": "#/definitions/ProgrammableQuestionRule",
+            "PROGRAMMABLE_MULTI": "#/definitions/ProgrammableMultiQuestionRule",
+            "PROGRAMMING": "#/definitions/ProgrammingQuestionRule",
+            "REGEX": "#/definitions/RegexQuestionRule",
+            "SIMILARITY": "#/definitions/SimilarityQuestionRule",
+            "TEXT_MATCH": "#/definitions/TextMatchQuestionRule"
+          }
+        }
+      }
+    },
+    "type": "object",
+    "required": [
+      "rule"
+    ],
+    "title": "RuleUpdateRequest"
+  },
+  "RuleCreateRequest": {
+    "properties": {
+      "rule": {
+        "oneOf": [
+          {
+            "$ref": "#/definitions/AssumptionSetQuestionRule"
+          },
+          {
+            "$ref": "#/definitions/BonusQuestionRule"
+          },
+          {
+            "$ref": "#/definitions/CompositeQuestionRule"
+          },
+          {
+            "$ref": "#/definitions/ProgrammableQuestionRule"
+          },
+          {
+            "$ref": "#/definitions/ProgrammingQuestionRule"
+          },
+          {
+            "$ref": "#/definitions/SimilarityQuestionRule"
+          },
+          {
+            "$ref": "#/definitions/TextMatchQuestionRule"
+          },
+          {
+            "$ref": "#/definitions/KeywordsQuestionRule"
+          },
+          {
+            "$ref": "#/definitions/RegexQuestionRule"
+          },
+          {
+            "$ref": "#/definitions/LengthQuestionRule"
+          },
+          {
+            "$ref": "#/definitions/ManualQuestionRule"
+          },
+          {
+            "$ref": "#/definitions/MultiValuedQuestionRule"
+          },
+          {
+            "$ref": "#/definitions/MultipleChoiceQuestionRule"
+          },
+          {
+            "$ref": "#/definitions/NumberEqualQuestionRule"
+          },
+          {
+            "$ref": "#/definitions/NumericRangeQuestionRule"
+          },
+          {
+            "$ref": "#/definitions/AssumptionSetMultiQuestionRule"
+          },
+          {
+            "$ref": "#/definitions/ConditionalMultiQuestionRule"
+          },
+          {
+            "$ref": "#/definitions/ProgrammableMultiQuestionRule"
+          }
+        ],
+        "title": "Rule",
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "ASSUMPTION_SET": "#/definitions/AssumptionSetQuestionRule",
+            "ASSUMPTION_SET_MULTI": "#/definitions/AssumptionSetMultiQuestionRule",
+            "BONUS": "#/definitions/BonusQuestionRule",
+            "COMPOSITE": "#/definitions/CompositeQuestionRule",
+            "CONDITIONAL": "#/definitions/ConditionalMultiQuestionRule",
+            "KEYWORDS": "#/definitions/KeywordsQuestionRule",
+            "LENGTH": "#/definitions/LengthQuestionRule",
+            "MANUAL": "#/definitions/ManualQuestionRule",
+            "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceQuestionRule",
+            "MULTI_VALUED": "#/definitions/MultiValuedQuestionRule",
+            "NUMBER_EQUAL": "#/definitions/NumberEqualQuestionRule",
+            "NUMERIC_RANGE": "#/definitions/NumericRangeQuestionRule",
+            "PROGRAMMABLE": "#/definitions/ProgrammableQuestionRule",
+            "PROGRAMMABLE_MULTI": "#/definitions/ProgrammableMultiQuestionRule",
+            "PROGRAMMING": "#/definitions/ProgrammingQuestionRule",
+            "REGEX": "#/definitions/RegexQuestionRule",
+            "SIMILARITY": "#/definitions/SimilarityQuestionRule",
+            "TEXT_MATCH": "#/definitions/TextMatchQuestionRule"
+          }
+        }
+      }
+    },
+    "type": "object",
+    "required": [
+      "rule"
+    ],
+    "title": "RuleCreateRequest"
   },
   "ParseSubmissionsRequest": {
     "properties": {
@@ -4264,8 +4574,8 @@
           "integer",
           "null"
         ],
-        "minimum": 1,
-        "maximum": 20
+        "maximum": 20,
+        "minimum": 1
       },
       "selection": {
         "type": "string",

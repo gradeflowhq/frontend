@@ -10,6 +10,7 @@ import type { QuestionConstraint } from './questionConstraint';
 import type { MultipleChoiceRuleInputMode } from './multipleChoiceRuleInputMode';
 
 export interface MultipleChoiceRuleInput {
+  id?: string;
   readonly question_types?: readonly MultipleChoiceRuleInputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
   readonly type?: 'MULTIPLE_CHOICE';

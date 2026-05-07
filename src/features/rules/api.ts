@@ -6,8 +6,8 @@ import { invalidateRubricQueries } from '@api/queryInvalidation';
 
 import { findSchemaKeyByType, getRuleDefinitions } from './schema/lookup';
 
-import type { RubricOutput } from './types';
 import type { RuleValue, QuestionType } from './types';
+import type { RuleCreateRequestRule, RuleUpdateRequestRule } from '@api/models';
 import type { JSONSchema7 } from 'json-schema';
 
 export type RuleDefinitions = Record<string, JSONSchema7>;
@@ -31,33 +31,31 @@ export const useRuleDefinitions = (): RuleDefinitions => {
   return useMemo(() => getRuleDefinitions(), []);
 };
 
-/**
- * Validate a prospective rubric change then save it when valid.
- * Usage:
- *   const validateAndReplace = useValidateAndReplaceRubric(assessmentId);
- *   await validateAndReplace.mutateAsync(nextRules);
- */
-export const useValidateAndReplaceRubric = (assessmentId: string) => {
+export const useCreateRule = (assessmentId: string) => {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationKey: ['rubric', assessmentId, 'validateAndReplace'],
-    mutationFn: async (nextRules: RuleValue[]) => {
-      // Validate against current question set
-      const res = await api.validateRubricAssessmentsAssessmentIdRubricValidatePost(assessmentId, {
-        use_stored_question_set: true,
-        use_stored_rubric: false,
-        rubric: { rules: nextRules as RubricOutput['rules'] },
+    mutationKey: ['rules', assessmentId, 'create'],
+    mutationFn: async (rule: RuleValue) => {
+      const response = await api.createRuleAssessmentsAssessmentIdRulesPost(assessmentId, {
+        rule: rule as RuleCreateRequestRule,
       });
-      const errs: string[] = res.data?.errors ?? [];
-      if (errs.length > 0) {
-        // Throw in the same shape ErrorAlert expects
-        throw { response: { data: { errors: errs } } };
-      }
+      return response.data;
+    },
+    onSuccess: async () => {
+      await invalidateRubricQueries(qc, assessmentId);
+    },
+  });
+};
 
-      // Save rubric
-      await api.setRubricByModelAssessmentsAssessmentIdRubricPut(assessmentId, {
-        rubric: { rules: nextRules as RubricOutput['rules'] },
+export const useUpdateRule = (assessmentId: string) => {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationKey: ['rules', assessmentId, 'update'],
+    mutationFn: async ({ ruleId, rule }: { ruleId: string; rule: RuleValue }) => {
+      await api.updateRuleAssessmentsAssessmentIdRulesRuleIdPut(assessmentId, ruleId, {
+        rule: rule as RuleUpdateRequestRule,
       });
     },
     onSuccess: async () => {
@@ -66,18 +64,31 @@ export const useValidateAndReplaceRubric = (assessmentId: string) => {
   });
 };
 
-/**
- * Replace rubric rules without running validation.
- * Use this when deleting rules (or when you explicitly want to skip validation).
- */
-export const useReplaceRubric = (assessmentId: string) => {
+export const useDeleteRule = (assessmentId: string) => {
   const qc = useQueryClient();
+
   return useMutation({
-    mutationKey: ['rubric', assessmentId, 'replaceOnly'],
-    mutationFn: async (nextRules: RuleValue[]) => {
-      await api.setRubricByModelAssessmentsAssessmentIdRubricPut(assessmentId, {
-        rubric: { rules: nextRules as RubricOutput['rules'] },
-      });
+    mutationKey: ['rules', assessmentId, 'delete'],
+    mutationFn: async (ruleId: string) => {
+      await api.deleteRuleAssessmentsAssessmentIdRulesRuleIdDelete(assessmentId, ruleId);
+    },
+    onSuccess: async () => {
+      await invalidateRubricQueries(qc, assessmentId);
+    },
+  });
+};
+
+export const useDeleteRules = (assessmentId: string) => {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationKey: ['rules', assessmentId, 'deleteMany'],
+    mutationFn: async (ruleIds: string[]) => {
+      const ids = [...new Set(ruleIds)];
+
+      for (const id of ids) {
+        await api.deleteRuleAssessmentsAssessmentIdRulesRuleIdDelete(assessmentId, id);
+      }
     },
     onSuccess: async () => {
       await invalidateRubricQueries(qc, assessmentId);

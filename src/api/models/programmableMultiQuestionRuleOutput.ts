@@ -11,6 +11,7 @@ import type { ProgrammableMultiQuestionRuleOutputParameters } from './programmab
 import type { ProgrammableMultiQuestionRuleOutputMode } from './programmableMultiQuestionRuleOutputMode';
 
 export interface ProgrammableMultiQuestionRuleOutput {
+  id?: string;
   readonly question_types?: readonly ProgrammableMultiQuestionRuleOutputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
   readonly type?: 'PROGRAMMABLE_MULTI';

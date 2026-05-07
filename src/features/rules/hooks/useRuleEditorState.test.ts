@@ -5,22 +5,22 @@ import { materializeDraft } from '@features/rules/hooks/useRuleEditorState';
 import type { JSONSchema7 } from 'json-schema';
 
 describe('materializeDraft', () => {
-  it('returns empty object for null schema', () => {
-    expect(materializeDraft(null)).toEqual({});
+  it('initializes a draft id for null schema', () => {
+    expect(materializeDraft(null)).toEqual({ id: expect.any(String) });
   });
 
   it('populates type from schema const', () => {
     const schema: JSONSchema7 = {
       properties: { type: { const: 'TEXT_MATCH' } },
     };
-    expect(materializeDraft(schema)).toEqual({ type: 'TEXT_MATCH' });
+    expect(materializeDraft(schema)).toEqual({ id: expect.any(String), type: 'TEXT_MATCH' });
   });
 
   it('populates type from schema default', () => {
     const schema: JSONSchema7 = {
       properties: { type: { default: 'NUMERIC' } },
     };
-    expect(materializeDraft(schema)).toEqual({ type: 'NUMERIC' });
+    expect(materializeDraft(schema)).toEqual({ id: expect.any(String), type: 'NUMERIC' });
   });
 
   it('adds question_id when schema has the property and questionId provided', () => {
@@ -31,6 +31,7 @@ describe('materializeDraft', () => {
       },
     };
     expect(materializeDraft(schema, 'Q1')).toEqual({
+      id: expect.any(String),
       type: 'TEXT_MATCH',
       question_id: 'Q1',
     });

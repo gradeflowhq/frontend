@@ -11,6 +11,7 @@ import type { ProgrammableRuleOutputParameters } from './programmableRuleOutputP
 import type { ProgrammableRuleOutputMode } from './programmableRuleOutputMode';
 
 export interface ProgrammableRuleOutput {
+  id?: string;
   readonly question_types?: readonly ProgrammableRuleOutputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
   readonly type?: 'PROGRAMMABLE';

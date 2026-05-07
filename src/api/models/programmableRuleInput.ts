@@ -11,6 +11,7 @@ import type { ProgrammableRuleInputParameters } from './programmableRuleInputPar
 import type { ProgrammableRuleInputMode } from './programmableRuleInputMode';
 
 export interface ProgrammableRuleInput {
+  id?: string;
   readonly question_types?: readonly ProgrammableRuleInputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
   readonly type?: 'PROGRAMMABLE';

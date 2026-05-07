@@ -11,6 +11,7 @@ import type { CompositeQuestionRuleInputRulesItem } from './compositeQuestionRul
 import type { CompositeQuestionRuleInputAggregation } from './compositeQuestionRuleInputAggregation';
 
 export interface CompositeQuestionRuleInput {
+  id?: string;
   readonly question_types?: readonly CompositeQuestionRuleInputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
   question_id: string;

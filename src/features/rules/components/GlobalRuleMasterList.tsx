@@ -20,8 +20,7 @@ import type { RuleValue } from '../types';
 // ── types ─────────────────────────────────────────────────────────────────────
 
 interface GlobalRuleRowData {
-  /** Position in the filtered rows array — used for keyboard nav. */
-  index: number;
+  ruleId: string;
   label: string;
   coveredQids: string[];
 }
@@ -40,21 +39,21 @@ const MAX_VISIBLE_QID_BADGES = 8;
 interface RowProps {
   data: GlobalRuleRowData;
   isSelected: boolean;
-  onSelect: (index: number) => void;
+  onSelect: (ruleId: string) => void;
 }
 
 const GlobalRuleRow: React.FC<RowProps> = ({ data, isSelected, onSelect }) => {
-  const handleClick = useCallback(() => onSelect(data.index), [data.index, onSelect]);
+  const handleClick = useCallback(() => onSelect(data.ruleId), [data.ruleId, onSelect]);
   const hiddenQids = data.coveredQids.slice(MAX_VISIBLE_QID_BADGES);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        onSelect(data.index);
+        onSelect(data.ruleId);
       }
     },
-    [data.index, onSelect],
+    [data.ruleId, onSelect],
   );
 
   return (
@@ -113,8 +112,8 @@ const GlobalRuleRow: React.FC<RowProps> = ({ data, isSelected, onSelect }) => {
 
 interface Props {
   rules: RuleValue[];
-  selectedIndex: number | null;
-  onSelect: (index: number) => void;
+  selectedRuleId: string | null;
+  onSelect: (ruleId: string) => void;
   onAdd: (ruleKey: string) => void;
   addableRuleKeys: string[];
   searchQuery?: string;
@@ -122,21 +121,21 @@ interface Props {
 
 const GlobalRuleMasterList: React.FC<Props> = ({
   rules,
-  selectedIndex,
+  selectedRuleId,
   onSelect,
   onAdd,
   addableRuleKeys,
   searchQuery = '',
 }) => {
-  const selectedRef = useScrollIntoView<HTMLDivElement>(selectedIndex);
+  const selectedRef = useScrollIntoView<HTMLDivElement>(selectedRuleId);
 
   const rows = useMemo((): GlobalRuleRowData[] => {
     const q = searchQuery.trim().toLowerCase();
     // Build base rows with labels
-    const baseRows = rules.map((rule, index) => {
+    const baseRows = rules.map((rule) => {
       const label = rule.display_name;
       const coveredQids = getRuleTargetQids(rule);
-      return { index, label, coveredQids };
+      return { ruleId: rule.id, label, coveredQids };
     });
     // Append a sequence number when multiple rules share the same label
     const labelCounts: Record<string, number> = {};
@@ -159,16 +158,16 @@ const GlobalRuleMasterList: React.FC<Props> = ({
     (e: React.KeyboardEvent<HTMLDivElement>) => {
       if (!['ArrowDown', 'ArrowUp'].includes(e.key)) return;
       e.preventDefault();
-      const currentIdx = rows.findIndex((r) => r.index === selectedIndex);
+      const currentIdx = rows.findIndex((r) => r.ruleId === selectedRuleId);
       const nextIdx =
         currentIdx === -1
           ? 0
           : e.key === 'ArrowDown'
           ? Math.min(currentIdx + 1, rows.length - 1)
           : Math.max(currentIdx - 1, 0);
-      if (rows[nextIdx]) onSelect(rows[nextIdx].index);
+      if (rows[nextIdx]) onSelect(rows[nextIdx].ruleId);
     },
-    [rows, selectedIndex, onSelect],
+    [rows, selectedRuleId, onSelect],
   );
 
   return (
@@ -221,12 +220,12 @@ const GlobalRuleMasterList: React.FC<Props> = ({
           )}
           {rows.map((row) => (
             <Box
-              key={row.index}
-              ref={row.index === selectedIndex ? selectedRef : undefined}
+              key={row.ruleId}
+              ref={row.ruleId === selectedRuleId ? selectedRef : undefined}
             >
               <GlobalRuleRow
                 data={row}
-                isSelected={row.index === selectedIndex}
+                isSelected={row.ruleId === selectedRuleId}
                 onSelect={onSelect}
               />
             </Box>

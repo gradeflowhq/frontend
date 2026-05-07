@@ -11,6 +11,7 @@ import type { NumberEqualQuestionRuleInputAnswersItem } from './numberEqualQuest
 import type { NumberEqualConfig } from './numberEqualConfig';
 
 export interface NumberEqualQuestionRuleInput {
+  id?: string;
   readonly question_types?: readonly NumberEqualQuestionRuleInputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
   question_id: string;

@@ -11,6 +11,7 @@ import type { MultiValuedRuleOutputRulesItem } from './multiValuedRuleOutputRule
 import type { MultiValuedRuleOutputAggregation } from './multiValuedRuleOutputAggregation';
 
 export interface MultiValuedRuleOutput {
+  id?: string;
   readonly question_types?: readonly MultiValuedRuleOutputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
   readonly type?: 'MULTI_VALUED';
