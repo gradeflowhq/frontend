@@ -18,7 +18,7 @@ import {
   IconQuestionMark,
   IconUpload,
 } from '@tabler/icons-react';
-import React, { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { lazy, Suspense, useCallback, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { useAssessmentContext } from '@app/contexts/AssessmentContext';
@@ -29,10 +29,13 @@ import SectionStatusBadge from '@components/common/SectionStatusBadge';
 import { UnsavedChangesModal } from '@components/common/UnsavedChangesModal';
 import {
   inferQuestionSetFromSubmissions,
+  useCreateQuestion,
+  useDeleteQuestion,
   useDeleteQuestionSet,
   useInferAndParseQuestionSet,
   useParsedSubmissions,
   useQuestionSet,
+  useUpdateQuestion,
   useUpdateQuestionSet,
 } from '@features/questions/api';
 import { QuestionsHeader } from '@features/questions/components';
@@ -117,10 +120,6 @@ const QuestionsPage: React.FC = () => {
   const [isSynchronizingQuestions, setIsSynchronizingQuestions] = useState(false);
   const [statusAction, setStatusAction] = useState<'dismiss' | 'sync' | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [pendingAddedQuestion, setPendingAddedQuestion] = useState<{
-    qid: string;
-    def: QuestionDef;
-  } | null>(null);
 
   const [detailEditing, setDetailEditing] = useState(false);
   const [mobileShowDetail, setMobileShowDetail] = useState(false);
@@ -153,22 +152,7 @@ const QuestionsPage: React.FC = () => {
     () => (qsMissing ? {} : (qsRes?.question_set?.question_map ?? {})),
     [qsMissing, qsRes],
   );
-  const questionMap = useMemo(() => {
-    if (!pendingAddedQuestion || baseQuestionMap[pendingAddedQuestion.qid]) {
-      return baseQuestionMap;
-    }
-
-    return {
-      ...baseQuestionMap,
-      [pendingAddedQuestion.qid]: pendingAddedQuestion.def,
-    };
-  }, [baseQuestionMap, pendingAddedQuestion]);
-
-  useEffect(() => {
-    if (pendingAddedQuestion && baseQuestionMap[pendingAddedQuestion.qid]) {
-      setPendingAddedQuestion(null);
-    }
-  }, [baseQuestionMap, pendingAddedQuestion]);
+  const questionMap = baseQuestionMap;
 
   // "record exists" = API has a QS object (even with 0 questions)
   const hasQuestionSetRecord = !qsMissing && !!qsRes?.question_set;
@@ -210,8 +194,10 @@ const QuestionsPage: React.FC = () => {
 
   const missingSubmissions = errorParsed && isNotFoundError(parsedError);
 
-  // Update question set (manual edits)
   const updateMutation = useUpdateQuestionSet(assessmentId);
+  const createQuestionMutation = useCreateQuestion(assessmentId);
+  const updateQuestionMutation = useUpdateQuestion(assessmentId);
+  const deleteQuestionMutation = useDeleteQuestion(assessmentId);
 
   // Delete question set
   const deleteMutation = useDeleteQuestionSet(assessmentId);
@@ -229,7 +215,12 @@ const QuestionsPage: React.FC = () => {
   const hasMissingQuestionIds = missingQuestionIds.length > 0;
   const hasOutOfSyncQuestions = hasInvalidQuestionIds || hasMissingQuestionIds;
   const isQuestionSetStale = Boolean(qsRes?.status?.is_stale);
-  const isQuestionActionPending = updateMutation.isPending || isSynchronizingQuestions;
+  const isQuestionActionPending =
+    updateMutation.isPending ||
+    createQuestionMutation.isPending ||
+    updateQuestionMutation.isPending ||
+    deleteQuestionMutation.isPending ||
+    isSynchronizingQuestions;
   const questionSyncSignature = useMemo(
     () => JSON.stringify({ invalid: invalidQuestionIds, missing: missingQuestionIds }),
     [invalidQuestionIds, missingQuestionIds],
@@ -375,14 +366,14 @@ const QuestionsPage: React.FC = () => {
   );
 
   const handleOpenAddQuestion = useCallback(() => {
-    updateMutation.reset();
+    createQuestionMutation.reset();
     setOpenAddQuestion(true);
-  }, [updateMutation]);
+  }, [createQuestionMutation]);
 
   const handleCloseAddQuestion = useCallback(() => {
-    updateMutation.reset();
+    createQuestionMutation.reset();
     setOpenAddQuestion(false);
-  }, [updateMutation]);
+  }, [createQuestionMutation]);
 
   const handleCreateEmptyQuestionSet = useCallback(() => {
     updateMutation.mutate(
@@ -398,52 +389,46 @@ const QuestionsPage: React.FC = () => {
   const handleSave = useCallback(
     async (updated: QuestionDef) => {
       if (!selectedQid) return;
-      const next: QuestionSetInput = {
-        question_map: {
-          ...questionMap,
-          [selectedQid]: updated,
-        } as QuestionSetInput['question_map'],
-      };
-      await updateMutation.mutateAsync(next, {
-        onSuccess: () => notifySuccess('Question saved'),
-        onError: (err) => notifyError(err),
-      });
+      await updateQuestionMutation.mutateAsync(
+        {
+          questionId: selectedQid,
+          question: updated,
+        },
+        {
+          onSuccess: () => notifySuccess('Question saved'),
+          onError: (err) => notifyError(err),
+        },
+      );
     },
-    [selectedQid, questionMap, updateMutation],
+    [selectedQid, updateQuestionMutation],
   );
 
   // Add a new question (blank slate).
   const handleAddQuestion = useCallback(
     (qid: string, type: string) => {
       const newQuestionDef = { type } as QuestionDef;
-      const next: QuestionSetInput = {
-        question_map: {
-          ...questionMap,
-          [qid]: newQuestionDef,
-        } as QuestionSetInput['question_map'],
-      };
-      updateMutation.mutate(next, {
-        onSuccess: () => {
-          notifySuccess(`Question "${qid}" added`);
-          setPendingAddedQuestion({ qid, def: newQuestionDef });
-          handleCloseAddQuestion();
-          setSelectedQid(qid);
+      createQuestionMutation.mutate(
+        {
+          questionId: qid,
+          question: newQuestionDef,
         },
-        onError: (err) => notifyError(err),
-      });
+        {
+          onSuccess: () => {
+            notifySuccess(`Question "${qid}" added`);
+            handleCloseAddQuestion();
+            setSelectedQid(qid);
+          },
+          onError: (err) => notifyError(err),
+        },
+      );
     },
-    [handleCloseAddQuestion, questionMap, updateMutation, setSelectedQid],
+    [createQuestionMutation, handleCloseAddQuestion, setSelectedQid],
   );
 
   // Delete a specific question.
   const handleDeleteQuestion = useCallback(
     (qid: string) => {
-      const next: QuestionSetInput = {
-        question_map: Object.fromEntries(
-          Object.entries(questionMap).filter(([id]) => id !== qid),
-        ) as QuestionSetInput['question_map'],
-      };
-      updateMutation.mutate(next, {
+      deleteQuestionMutation.mutate(qid, {
         onSuccess: () => {
           notifySuccess(`Question "${qid}" deleted`);
           setConfirmDeleteQid(null);
@@ -454,7 +439,7 @@ const QuestionsPage: React.FC = () => {
         onError: (err) => notifyError(err),
       });
     },
-    [questionMap, questionIds, updateMutation, setSelectedQid],
+    [deleteQuestionMutation, questionIds, setSelectedQid],
   );
 
   // ── Shared toolbar ──────────────────────────────────────────────────────────
@@ -640,7 +625,7 @@ const QuestionsPage: React.FC = () => {
       key={selectedQid}
       qid={selectedQid}
       questionDef={questionMap[selectedQid] as QuestionDef}
-      updating={updateMutation.isPending}
+      updating={updateQuestionMutation.isPending}
       examples={examplesByQuestion[selectedQid] ?? []}
       loadingExamples={loadingParsed}
       examplesError={
@@ -651,7 +636,7 @@ const QuestionsPage: React.FC = () => {
       onSave={handleSave}
       onEditStateChange={setDetailEditing}
       onDelete={() => setConfirmDeleteQid(selectedQid)}
-      deleting={updateMutation.isPending && confirmDeleteQid === selectedQid}
+      deleting={deleteQuestionMutation.isPending && confirmDeleteQid === selectedQid}
     />
   ) : (
     <Center py="xl">
@@ -755,8 +740,8 @@ const QuestionsPage: React.FC = () => {
           opened={openAddQuestion}
           existingIds={questionIds}
           submissionQids={submissionQids}
-          isSaving={updateMutation.isPending}
-          error={updateMutation.isError ? updateMutation.error : null}
+          isSaving={createQuestionMutation.isPending}
+          error={createQuestionMutation.isError ? createQuestionMutation.error : null}
           onClose={handleCloseAddQuestion}
           onAdd={handleAddQuestion}
         />
@@ -777,7 +762,7 @@ const QuestionsPage: React.FC = () => {
             </Button>
             <Button
               color="red"
-              loading={updateMutation.isPending}
+              loading={deleteQuestionMutation.isPending}
               onClick={() => confirmDeleteQid && handleDeleteQuestion(confirmDeleteQid)}
             >
               Delete
@@ -893,4 +878,3 @@ const InferModal: React.FC<InferModalProps> = ({ opened, onClose, inferMutation 
 );
 
 export default QuestionsPage;
-

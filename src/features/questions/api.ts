@@ -4,7 +4,16 @@ import { api } from '@api';
 import { invalidateQuestionSetQueries } from '@api/queryInvalidation';
 import { QK } from '@api/queryKeys';
 
-import type { QuestionSetResponse, ParseSubmissionsResponse, QuestionSetInput, SetQuestionSetByModelRequest } from '@api/models';
+import type {
+  ParseSubmissionsResponse,
+  QuestionCreateRequest,
+  QuestionCreateRequestQuestion,
+  QuestionSetInput,
+  QuestionSetResponse,
+  QuestionUpdateRequest,
+  QuestionUpdateRequestQuestion,
+  SetQuestionSetByModelRequest,
+} from '@api/models';
 
 export const useQuestionSet = (assessmentId: string, enabled = true) =>
   useQuery({
@@ -49,6 +58,94 @@ export const useUpdateQuestionSet = (assessmentId: string) => {
           return {
             ...current,
             question_set: nextQS,
+          };
+        },
+      );
+
+      await invalidateQuestionSetQueries(qc, assessmentId);
+    },
+  });
+};
+
+export const useCreateQuestion = (assessmentId: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ['questionSet', assessmentId, 'question', 'create'],
+    mutationFn: async ({
+      questionId,
+      question,
+    }: {
+      questionId: string;
+      question: QuestionCreateRequestQuestion;
+    }) => {
+      const payload: QuestionCreateRequest = {
+        question_id: questionId,
+        question,
+      };
+      return (
+        await api.createQuestionAssessmentsAssessmentIdQuestionSetQuestionsPost(
+          assessmentId,
+          payload,
+        )
+      ).data as QuestionSetResponse;
+    },
+    onSuccess: async (data) => {
+      qc.setQueryData(QK.questionSet.item(assessmentId), data);
+      await invalidateQuestionSetQueries(qc, assessmentId);
+    },
+  });
+};
+
+export const useUpdateQuestion = (assessmentId: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ['questionSet', assessmentId, 'question', 'update'],
+    mutationFn: async ({
+      questionId,
+      question,
+    }: {
+      questionId: string;
+      question: QuestionUpdateRequestQuestion;
+    }) => {
+      const payload: QuestionUpdateRequest = { question };
+      return (
+        await api.updateQuestionAssessmentsAssessmentIdQuestionSetQuestionsQuestionIdPut(
+          assessmentId,
+          questionId,
+          payload,
+        )
+      ).data as QuestionSetResponse;
+    },
+    onSuccess: async (data) => {
+      qc.setQueryData(QK.questionSet.item(assessmentId), data);
+      await invalidateQuestionSetQueries(qc, assessmentId);
+    },
+  });
+};
+
+export const useDeleteQuestion = (assessmentId: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ['questionSet', assessmentId, 'question', 'delete'],
+    mutationFn: async (questionId: string) => {
+      await api.deleteQuestionAssessmentsAssessmentIdQuestionSetQuestionsQuestionIdDelete(
+        assessmentId,
+        questionId,
+      );
+    },
+    onSuccess: async (_data, questionId) => {
+      qc.setQueryData<QuestionSetResponse | undefined>(
+        QK.questionSet.item(assessmentId),
+        (current) => {
+          if (!current) return current;
+          const { [questionId]: _removed, ...questionMap } =
+            current.question_set.question_map;
+          return {
+            ...current,
+            question_set: {
+              ...current.question_set,
+              question_map: questionMap,
+            },
           };
         },
       );

@@ -572,6 +572,41 @@
     "type": "object",
     "title": "RegexConfig"
   },
+  "QuestionUpdateRequest": {
+    "properties": {
+      "question": {
+        "oneOf": [
+          {
+            "$ref": "#/definitions/ChoiceQuestion"
+          },
+          {
+            "$ref": "#/definitions/MultiValuedQuestion"
+          },
+          {
+            "$ref": "#/definitions/TextQuestion"
+          },
+          {
+            "$ref": "#/definitions/NumericQuestion"
+          }
+        ],
+        "title": "Question",
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "CHOICE": "#/definitions/ChoiceQuestion",
+            "MULTI_VALUED": "#/definitions/MultiValuedQuestion",
+            "NUMERIC": "#/definitions/NumericQuestion",
+            "TEXT": "#/definitions/TextQuestion"
+          }
+        }
+      }
+    },
+    "type": "object",
+    "required": [
+      "question"
+    ],
+    "title": "QuestionUpdateRequest"
+  },
   "QuestionSetResponse": {
     "properties": {
       "question_set": {
@@ -660,6 +695,46 @@
       "max_points"
     ],
     "title": "QuestionResult"
+  },
+  "QuestionCreateRequest": {
+    "properties": {
+      "question_id": {
+        "type": "string",
+        "title": "Question Id"
+      },
+      "question": {
+        "oneOf": [
+          {
+            "$ref": "#/definitions/ChoiceQuestion"
+          },
+          {
+            "$ref": "#/definitions/MultiValuedQuestion"
+          },
+          {
+            "$ref": "#/definitions/TextQuestion"
+          },
+          {
+            "$ref": "#/definitions/NumericQuestion"
+          }
+        ],
+        "title": "Question",
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "CHOICE": "#/definitions/ChoiceQuestion",
+            "MULTI_VALUED": "#/definitions/MultiValuedQuestion",
+            "NUMERIC": "#/definitions/NumericQuestion",
+            "TEXT": "#/definitions/TextQuestion"
+          }
+        }
+      }
+    },
+    "type": "object",
+    "required": [
+      "question_id",
+      "question"
+    ],
+    "title": "QuestionCreateRequest"
   },
   "ProgrammingQuestionRule": {
     "properties": {

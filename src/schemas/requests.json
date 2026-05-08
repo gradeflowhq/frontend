@@ -4214,6 +4214,81 @@
     ],
     "title": "RuleCreateRequest"
   },
+  "QuestionUpdateRequest": {
+    "properties": {
+      "question": {
+        "oneOf": [
+          {
+            "$ref": "#/definitions/ChoiceQuestion"
+          },
+          {
+            "$ref": "#/definitions/MultiValuedQuestion"
+          },
+          {
+            "$ref": "#/definitions/TextQuestion"
+          },
+          {
+            "$ref": "#/definitions/NumericQuestion"
+          }
+        ],
+        "title": "Question",
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "CHOICE": "#/definitions/ChoiceQuestion",
+            "MULTI_VALUED": "#/definitions/MultiValuedQuestion",
+            "NUMERIC": "#/definitions/NumericQuestion",
+            "TEXT": "#/definitions/TextQuestion"
+          }
+        }
+      }
+    },
+    "type": "object",
+    "required": [
+      "question"
+    ],
+    "title": "QuestionUpdateRequest"
+  },
+  "QuestionCreateRequest": {
+    "properties": {
+      "question_id": {
+        "type": "string",
+        "title": "Question Id"
+      },
+      "question": {
+        "oneOf": [
+          {
+            "$ref": "#/definitions/ChoiceQuestion"
+          },
+          {
+            "$ref": "#/definitions/MultiValuedQuestion"
+          },
+          {
+            "$ref": "#/definitions/TextQuestion"
+          },
+          {
+            "$ref": "#/definitions/NumericQuestion"
+          }
+        ],
+        "title": "Question",
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "CHOICE": "#/definitions/ChoiceQuestion",
+            "MULTI_VALUED": "#/definitions/MultiValuedQuestion",
+            "NUMERIC": "#/definitions/NumericQuestion",
+            "TEXT": "#/definitions/TextQuestion"
+          }
+        }
+      }
+    },
+    "type": "object",
+    "required": [
+      "question_id",
+      "question"
+    ],
+    "title": "QuestionCreateRequest"
+  },
   "ParseSubmissionsRequest": {
     "properties": {
       "use_stored_question_set": {
