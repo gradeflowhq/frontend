@@ -16,6 +16,7 @@ export const QK = {
   },
   questionSet: {
     item: (assessmentId: string) => ['questionSet', assessmentId] as const,
+    status: (assessmentId: string) => ['questionSet', assessmentId, 'status'] as const,
     parsed: (assessmentId: string) => ['parsedSubmissions', assessmentId] as const,
   },
   rubric: {

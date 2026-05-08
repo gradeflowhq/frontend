@@ -7,7 +7,7 @@ import { getErrorMessage } from '@utils/error';
 interface Props {
   opened: boolean;
   existingIds: string[];
-  submissionQids?: string[];
+  suggestedQuestionIds?: string[];
   isSaving?: boolean;
   error?: unknown;
   onClose: () => void;
@@ -17,7 +17,7 @@ interface Props {
 const AddQuestionModal: React.FC<Props> = ({
   opened,
   existingIds,
-  submissionQids = [],
+  suggestedQuestionIds = [],
   isSaving,
   error,
   onClose,
@@ -28,8 +28,6 @@ const AddQuestionModal: React.FC<Props> = ({
 
   const combobox = useCombobox();
 
-  // Reset local form state whenever the modal opens or closes so parent-driven
-  // updates do not briefly surface duplicate-ID or stale server errors.
   useEffect(() => {
     setQuestionId('');
     setQuestionType('TEXT');
@@ -40,8 +38,8 @@ const AddQuestionModal: React.FC<Props> = ({
   const idError = opened && !isSaving && trimmedQuestionId
     ? existingIds.includes(trimmedQuestionId)
       ? 'A question with this ID already exists.'
-      : submissionQids.length > 0 && !submissionQids.includes(trimmedQuestionId)
-        ? 'Question ID must match a question found in the uploaded submissions.'
+      : suggestedQuestionIds.length > 0 && !suggestedQuestionIds.includes(trimmedQuestionId)
+        ? 'Question ID must match a detected missing question.'
       : undefined
     : undefined;
 
@@ -57,13 +55,13 @@ const AddQuestionModal: React.FC<Props> = ({
     onClose();
   };
 
-  const filteredOpts = submissionQids.filter((qid) =>
+  const filteredOpts = suggestedQuestionIds.filter((qid) =>
     !questionId.trim() || qid.toLowerCase().includes(questionId.toLowerCase()),
   );
 
   return (
     <Modal opened={opened} onClose={handleClose} title="Add Question" size="sm">
-      {submissionQids.length > 0 ? (
+      {suggestedQuestionIds.length > 0 ? (
         <Combobox
           store={combobox}
           onOptionSubmit={(val) => {
@@ -94,7 +92,7 @@ const AddQuestionModal: React.FC<Props> = ({
           <Combobox.Dropdown>
             <Combobox.Options>
               {filteredOpts.length === 0 ? (
-                <Combobox.Empty>No matching submission questions</Combobox.Empty>
+                <Combobox.Empty>No matching missing questions</Combobox.Empty>
               ) : (
                 filteredOpts.map((qid) => (
                   <Combobox.Option value={qid} key={qid}>

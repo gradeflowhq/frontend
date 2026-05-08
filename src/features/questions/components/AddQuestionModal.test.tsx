@@ -10,7 +10,7 @@ const renderModal = (props?: Partial<React.ComponentProps<typeof AddQuestionModa
   const defaultProps: React.ComponentProps<typeof AddQuestionModal> = {
     opened: true,
     existingIds: [],
-    submissionQids: [],
+    suggestedQuestionIds: [],
     onClose: () => {},
     onAdd: () => {},
   };
@@ -34,7 +34,7 @@ describe('AddQuestionModal', () => {
         <AddQuestionModal
           opened
           existingIds={['Q1']}
-          submissionQids={[]}
+          suggestedQuestionIds={[]}
           isSaving
           onClose={() => {}}
           onAdd={() => {}}
@@ -49,7 +49,7 @@ describe('AddQuestionModal', () => {
         <AddQuestionModal
           opened={false}
           existingIds={['Q1']}
-          submissionQids={[]}
+          suggestedQuestionIds={[]}
           onClose={() => {}}
           onAdd={() => {}}
         />
@@ -59,7 +59,7 @@ describe('AddQuestionModal', () => {
     expect(screen.queryByText('A question with this ID already exists.')).not.toBeInTheDocument();
   });
 
-  it('does not show stale server errors while closing', () => {
+  it('does not show server errors while closing', () => {
     const view = renderModal({ error: new Error('Question already exists') });
 
     expect(screen.getByText('Question already exists')).toBeInTheDocument();
@@ -69,7 +69,7 @@ describe('AddQuestionModal', () => {
         <AddQuestionModal
           opened={false}
           existingIds={[]}
-          submissionQids={[]}
+          suggestedQuestionIds={[]}
           error={new Error('Question already exists')}
           onClose={() => {}}
           onAdd={() => {}}
@@ -80,15 +80,15 @@ describe('AddQuestionModal', () => {
     expect(screen.queryByText('Question already exists')).not.toBeInTheDocument();
   });
 
-  it('requires question ids to exist in current submissions', async () => {
+  it('requires suggested question ids when suggestions are provided', async () => {
     const user = userEvent.setup();
 
-    renderModal({ submissionQids: ['Q1', 'Q2'] });
+    renderModal({ suggestedQuestionIds: ['Q1', 'Q2'] });
 
     await user.type(screen.getByLabelText('Question ID'), 'Q3');
 
     expect(
-      screen.getByText('Question ID must match a question found in the uploaded submissions.'),
+      screen.getByText('Question ID must match a detected missing question.'),
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Add' })).toBeDisabled();
   });

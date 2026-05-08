@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 
 import { useAssessmentContext } from '@app/contexts/AssessmentContext';
 import { PATHS } from '@app/routes/paths';
-import { useQuestionSet } from '@features/questions/api';
+import { useQuestionSet, useQuestionSetStatus } from '@features/questions/api';
 import { useRubricOverview } from '@features/rubric/api';
 import { useSubmissions } from '@features/submissions/api';
 import { isNotFoundError } from '@utils/error';
@@ -45,6 +45,10 @@ export const useSetupSteps = (assessmentId: string): SetupStepsResult => {
   const questionIds = useMemo(() => Object.keys(questionMap), [questionMap]);
   const questionCount = questionIds.length;
   const subsCount = subsRes?.raw_submissions?.length ?? 0;
+  const hasSubmissions = subsCount > 0;
+
+  const { data: questionSetStatus, isLoading: questionSetStatusLoading } =
+    useQuestionSetStatus(assessmentId, !!assessmentId && hasSubmissions);
 
   const { data: rubricOverview, isLoading: rubricOverviewLoading } = useRubricOverview(
     assessmentId,
@@ -65,7 +69,9 @@ export const useSetupSteps = (assessmentId: string): SetupStepsResult => {
   const rulesAreStale = Boolean(
     rubricOverview?.status?.is_stale || (rubricOverview?.stale_rules.length ?? 0) > 0,
   );
-  const hasSubmissions = subsCount > 0;
+  const questionsNeedAttention = Boolean(
+    questionSetStatus?.status?.is_stale || questionSetStatus?.drift?.has_drift,
+  );
   const hasQuestions = questionCount > 0 && hasSubmissions;
 
   const subsStatus: StepStatus = subsCount === 0 ? 'not-started' : 'complete';
@@ -73,7 +79,7 @@ export const useSetupSteps = (assessmentId: string): SetupStepsResult => {
   const qsStatus: StepStatus =
     !hasSubmissions         ? 'locked'      :
     questionCount === 0     ? 'not-started' :
-    qsRes?.status?.is_stale ? 'stale'       : 'complete';
+    questionsNeedAttention  ? 'stale'       : 'complete';
 
   const rulesStatus: StepStatus =
     !hasQuestions               ? 'locked'      :
@@ -84,36 +90,46 @@ export const useSetupSteps = (assessmentId: string): SetupStepsResult => {
   const setupSteps = useMemo<SetupStep[]>(() => {
     const ap = PATHS.assessment(assessmentId);
     return [
-    {
-      label:     'Submissions',
-      status:    subsStatus,
-      summary:   subsCount > 0 ? `${subsCount} students` : 'No submissions yet',
-      updatedAt: assessment?.source_updated_at ?? null,
-      fixLink:   ap.submissions,
-    },
-    {
-      label:     'Questions',
-      status:    qsStatus,
-      summary:
-        qsStatus === 'locked' ? 'Complete submissions first' :
-        questionCount > 0     ? `${questionCount} questions`  : 'Not configured',
-      updatedAt: qsRes?.status?.updated_at ?? null,
-      fixLink:   ap.questions,
-    },
-    {
-      label:     'Rules',
-      status:    rulesStatus,
-      summary:
-        rulesStatus === 'locked' ? 'Complete questions first'          :
-        hasRules                 ? `${covCovered}/${covTotal} covered` : 'No rules configured',
-      updatedAt: rubricOverview?.status?.updated_at ?? null,
-      fixLink:   ap.rules,
-    },
-  ];}, [
-    subsStatus, subsCount, assessment,
-    qsStatus, questionCount, qsRes,
-    rulesStatus, covCovered, covTotal, hasRules, rubricOverview,
+      {
+        label: 'Submissions',
+        status: subsStatus,
+        summary: subsCount > 0 ? `${subsCount} students` : 'No submissions yet',
+        updatedAt: assessment?.source_updated_at ?? null,
+        fixLink: ap.submissions,
+      },
+      {
+        label: 'Questions',
+        status: qsStatus,
+        summary:
+          qsStatus === 'locked' ? 'Complete submissions first' :
+          questionCount > 0     ? `${questionCount} questions`  : 'Not configured',
+        updatedAt: questionSetStatus?.status?.updated_at ?? qsRes?.status?.updated_at ?? null,
+        fixLink: ap.questions,
+      },
+      {
+        label: 'Rules',
+        status: rulesStatus,
+        summary:
+          rulesStatus === 'locked' ? 'Complete questions first'          :
+          hasRules                 ? `${covCovered}/${covTotal} covered` : 'No rules configured',
+        updatedAt: rubricOverview?.status?.updated_at ?? null,
+        fixLink: ap.rules,
+      },
+    ];
+  }, [
+    assessment,
     assessmentId,
+    covCovered,
+    covTotal,
+    hasRules,
+    qsRes,
+    qsStatus,
+    questionCount,
+    questionSetStatus,
+    rubricOverview,
+    rulesStatus,
+    subsCount,
+    subsStatus,
   ]);
 
   const completeCount = setupSteps.filter((s) => s.status === 'complete').length;
@@ -122,7 +138,7 @@ export const useSetupSteps = (assessmentId: string): SetupStepsResult => {
     setupSteps,
     completeCount,
     allComplete: completeCount === setupSteps.length,
-    isLoading:   subsLoading || qsLoading || rubricOverviewLoading,
+    isLoading: subsLoading || qsLoading || questionSetStatusLoading || rubricOverviewLoading,
     subsCount,
     questionCount,
     covPct,

@@ -17,6 +17,7 @@ export const invalidateQuestionSetQueries = async (
 ): Promise<void> => {
   await invalidateQueryKeys(queryClient, [
     QK.questionSet.item(assessmentId),
+    QK.questionSet.status(assessmentId),
     QK.questionSet.parsed(assessmentId),
     QK.rubric.overview(assessmentId),
     QK.assessments.item(assessmentId),
@@ -41,6 +42,10 @@ export const invalidateSubmissionQueries = async (
     QK.submissions.list(assessmentId),
     QK.submissions.source(assessmentId),
     QK.submissions.config(assessmentId),
+    QK.questionSet.item(assessmentId),
+    QK.questionSet.status(assessmentId),
+    QK.questionSet.parsed(assessmentId),
+    QK.rubric.overview(assessmentId),
     QK.assessments.item(assessmentId),
   ]);
 };

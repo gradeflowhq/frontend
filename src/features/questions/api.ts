@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { api } from '@api';
 import { invalidateQuestionSetQueries } from '@api/queryInvalidation';
@@ -10,6 +10,7 @@ import type {
   QuestionCreateRequestQuestion,
   QuestionSetInput,
   QuestionSetResponse,
+  QuestionSetStatusResponse,
   QuestionUpdateRequest,
   QuestionUpdateRequestQuestion,
   SetQuestionSetByModelRequest,
@@ -23,6 +24,15 @@ export const useQuestionSet = (assessmentId: string, enabled = true) =>
     enabled,
   });
 
+export const useQuestionSetStatus = (assessmentId: string, enabled = true) =>
+  useQuery({
+    queryKey: QK.questionSet.status(assessmentId),
+    queryFn: async () =>
+      (await api.getQuestionSetStatusAssessmentsAssessmentIdQuestionSetStatusGet(assessmentId))
+        .data as QuestionSetStatusResponse,
+    enabled,
+  });
+
 export const useParsedSubmissions = (assessmentId: string, enabled = true) =>
   useQuery({
     queryKey: QK.questionSet.parsed(assessmentId),
@@ -33,14 +43,6 @@ export const useParsedSubmissions = (assessmentId: string, enabled = true) =>
       })).data as ParseSubmissionsResponse,
     enabled,
   });
-
-export const inferQuestionSetFromSubmissions = async (assessmentId: string) =>
-  (
-    await api.inferQuestionSetAssessmentsAssessmentIdQuestionSetInferPost(assessmentId, {
-      use_stored_submissions: true,
-      commit: false,
-    })
-  ).data as QuestionSetResponse;
 
 export const useUpdateQuestionSet = (assessmentId: string) => {
   const qc = useQueryClient();
@@ -168,7 +170,36 @@ export const useDeleteQuestionSet = (assessmentId: string) => {
   });
 };
 
-// A reusable pipeline: Infer question set then parse submissions
+export const useSyncQuestionSet = (assessmentId: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ['questionSet', assessmentId, 'sync'],
+    mutationFn: async () =>
+      (await api.syncQuestionSetAssessmentsAssessmentIdQuestionSetSyncPost(assessmentId)).data as QuestionSetResponse,
+    onSuccess: async (data) => {
+      qc.setQueryData(QK.questionSet.item(assessmentId), data);
+      await invalidateQuestionSetQueries(qc, assessmentId);
+    },
+  });
+};
+
+export const useAcknowledgeQuestionSetStaleness = (assessmentId: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationKey: ['questionSet', assessmentId, 'acknowledgeStaleness'],
+    mutationFn: async () =>
+      (
+        await api.acknowledgeQuestionSetStalenessAssessmentsAssessmentIdQuestionSetStalenessAcknowledgePost(
+          assessmentId,
+        )
+      ).data as QuestionSetResponse,
+    onSuccess: async (data) => {
+      qc.setQueryData(QK.questionSet.item(assessmentId), data);
+      await invalidateQuestionSetQueries(qc, assessmentId);
+    },
+  });
+};
+
 export const useInferAndParseQuestionSet = (assessmentId: string) => {
   const qc = useQueryClient();
   return useMutation({

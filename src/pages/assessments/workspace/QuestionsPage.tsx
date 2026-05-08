@@ -28,13 +28,15 @@ import PageShell from '@components/common/PageShell';
 import SectionStatusBadge from '@components/common/SectionStatusBadge';
 import { UnsavedChangesModal } from '@components/common/UnsavedChangesModal';
 import {
-  inferQuestionSetFromSubmissions,
+  useAcknowledgeQuestionSetStaleness,
   useCreateQuestion,
   useDeleteQuestion,
   useDeleteQuestionSet,
   useInferAndParseQuestionSet,
   useParsedSubmissions,
   useQuestionSet,
+  useQuestionSetStatus,
+  useSyncQuestionSet,
   useUpdateQuestion,
   useUpdateQuestionSet,
 } from '@features/questions/api';
@@ -54,11 +56,7 @@ const QuestionSetUploadModal = lazy(
 import {
   buildExamplesFromParsed,
   buildQuestionTypesById,
-  getInvalidQuestionIds,
-  getMissingQuestionIds,
   getQuestionIdsSorted,
-  getSubmissionQuestionIds,
-  synchronizeQuestionMap,
 } from '@features/questions/helpers';
 import { useSubmissions } from '@features/submissions/api';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
@@ -67,15 +65,16 @@ import { useUrlSelectedId } from '@hooks/useUrlSelectedId';
 import { getErrorMessage, isNotFoundError } from '@utils/error';
 import { notifyError, notifyErrorMessage, notifySuccess } from '@utils/notifications';
 
-import type { QuestionSetInput, QuestionSetInputQuestionMap } from '@api/models';
+import type { ChoiceOptionDrift, QuestionSetInput } from '@api/models';
 import type { QuestionDef } from '@features/questions/components/QuestionEditorPanel';
 
 const getQuestionStatusMessage = (
   isStale: boolean,
   missingQuestionCount: number,
-  invalidQuestionCount: number,
+  extraQuestionCount: number,
+  choiceOptionDriftCount: number,
 ): string => {
-  const outOfSyncQuestionCount = missingQuestionCount + invalidQuestionCount;
+  const outOfSyncQuestionCount = missingQuestionCount + extraQuestionCount + choiceOptionDriftCount;
 
   if (outOfSyncQuestionCount > 0) {
     const parts = [];
@@ -86,9 +85,15 @@ const getQuestionStatusMessage = (
       );
     }
 
-    if (invalidQuestionCount > 0) {
+    if (extraQuestionCount > 0) {
       parts.push(
-        `${invalidQuestionCount} invalid question ID${invalidQuestionCount === 1 ? '' : 's'}`,
+        `${extraQuestionCount} extra question ID${extraQuestionCount === 1 ? '' : 's'}`,
+      );
+    }
+
+    if (choiceOptionDriftCount > 0) {
+      parts.push(
+        `${choiceOptionDriftCount} choice option update${choiceOptionDriftCount === 1 ? '' : 's'}`,
       );
     }
 
@@ -100,6 +105,11 @@ const getQuestionStatusMessage = (
   }
 
   return 'Questions may be out of date — submissions have been updated since the last question set was configured.';
+};
+
+const getChoiceOptionDriftSummary = (drift: ChoiceOptionDrift): string => {
+  const missingOptions = drift.missing_options ?? [];
+  return `${drift.question_id}: add ${missingOptions.join(', ')}`;
 };
 
 const QuestionsPage: React.FC = () => {
@@ -117,7 +127,6 @@ const QuestionsPage: React.FC = () => {
   const [confirmDeleteQid, setConfirmDeleteQid] = useState<string | null>(null);
   const [confirmSynchronizeQuestions, setConfirmSynchronizeQuestions] = useState(false);
   const [dismissedQuestionSyncSignature, setDismissedQuestionSyncSignature] = useState<string | null>(null);
-  const [isSynchronizingQuestions, setIsSynchronizingQuestions] = useState(false);
   const [statusAction, setStatusAction] = useState<'dismiss' | 'sync' | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -146,7 +155,15 @@ const QuestionsPage: React.FC = () => {
     error: qsError,
   } = useQuestionSet(assessmentId, enabled);
 
+  const {
+    data: statusRes,
+    isLoading: loadingQuestionSetStatus,
+    isError: errorQuestionSetStatus,
+    error: questionSetStatusError,
+  } = useQuestionSetStatus(assessmentId, enabled && hasSubmissions);
+
   const qsMissing = useMemo(() => isNotFoundError(qsError), [qsError]);
+  const questionSetDrift = statusRes?.drift;
 
   const baseQuestionMap = useMemo(
     () => (qsMissing ? {} : (qsRes?.question_set?.question_map ?? {})),
@@ -161,25 +178,18 @@ const QuestionsPage: React.FC = () => {
 
   const questionIds = useMemo(() => getQuestionIdsSorted(questionMap), [questionMap]);
 
-  const submissionQuestionIds = useMemo(
-    () => getSubmissionQuestionIds(subsRes?.raw_submissions),
-    [subsRes],
-  );
-
-  // Available question IDs derived from raw submissions (for the "Add question" dropdown)
-  const submissionQids = useMemo(() => {
-    return submissionQuestionIds.filter((qid) => !questionIds.includes(qid));
-  }, [submissionQuestionIds, questionIds]);
-
-  const invalidQuestionIds = useMemo(
-    () => getInvalidQuestionIds(questionMap, submissionQuestionIds),
-    [questionMap, submissionQuestionIds],
-  );
   const missingQuestionIds = useMemo(
-    () => getMissingQuestionIds(questionMap, submissionQuestionIds),
-    [questionMap, submissionQuestionIds],
+    () => questionSetDrift?.missing_question_ids ?? [],
+    [questionSetDrift?.missing_question_ids],
   );
-
+  const extraQuestionIds = useMemo(
+    () => questionSetDrift?.extra_question_ids ?? [],
+    [questionSetDrift?.extra_question_ids],
+  );
+  const choiceOptionDrifts = useMemo(
+    () => questionSetDrift?.choice_option_drifts ?? [],
+    [questionSetDrift?.choice_option_drifts],
+  );
   const { selectedId: selectedQid, setSelectedId: setSelectedQid } = useUrlSelectedId(questionIds, 'q');
 
   const questionTypesById = useMemo(() => buildQuestionTypesById(questionMap), [questionMap]);
@@ -204,6 +214,8 @@ const QuestionsPage: React.FC = () => {
 
   // Infer (replace) questions from submissions, then parse
   const inferMutation = useInferAndParseQuestionSet(assessmentId);
+  const syncQuestionSetMutation = useSyncQuestionSet(assessmentId);
+  const acknowledgeQuestionSetStalenessMutation = useAcknowledgeQuestionSetStaleness(assessmentId);
 
   // Examples from parsed submissions
   const examplesByQuestion = useMemo(
@@ -211,27 +223,29 @@ const QuestionsPage: React.FC = () => {
     [parsedRes],
   );
 
-  const hasInvalidQuestionIds = invalidQuestionIds.length > 0;
-  const hasMissingQuestionIds = missingQuestionIds.length > 0;
-  const hasOutOfSyncQuestions = hasInvalidQuestionIds || hasMissingQuestionIds;
-  const isQuestionSetStale = Boolean(qsRes?.status?.is_stale);
+  const hasQuestionSetDrift = Boolean(questionSetDrift?.has_drift);
+  const isQuestionSetStale = Boolean(statusRes?.status?.is_stale ?? qsRes?.status?.is_stale);
   const isQuestionActionPending =
     updateMutation.isPending ||
     createQuestionMutation.isPending ||
     updateQuestionMutation.isPending ||
     deleteQuestionMutation.isPending ||
-    isSynchronizingQuestions;
+    acknowledgeQuestionSetStalenessMutation.isPending ||
+    syncQuestionSetMutation.isPending;
   const questionSyncSignature = useMemo(
-    () => JSON.stringify({ invalid: invalidQuestionIds, missing: missingQuestionIds }),
-    [invalidQuestionIds, missingQuestionIds],
+    () => JSON.stringify({
+      choice_options: choiceOptionDrifts,
+      extra: extraQuestionIds,
+      missing: missingQuestionIds,
+    }),
+    [choiceOptionDrifts, extraQuestionIds, missingQuestionIds],
   );
   const showQuestionStatusBadge = isQuestionSetStale || (
-    hasOutOfSyncQuestions && dismissedQuestionSyncSignature !== questionSyncSignature
+    hasQuestionSetDrift && dismissedQuestionSyncSignature !== questionSyncSignature
   );
 
-  // No-op save to acknowledge staleness and refresh updated_at
   const handleDismissStatus = useCallback(() => {
-    if (hasOutOfSyncQuestions) {
+    if (hasQuestionSetDrift) {
       setDismissedQuestionSyncSignature(questionSyncSignature);
     }
 
@@ -243,14 +257,12 @@ const QuestionsPage: React.FC = () => {
     if (!hasQuestionSetRecord) return;
 
     setStatusAction('dismiss');
-    updateMutation.mutate({
-      question_map: baseQuestionMap as QuestionSetInput['question_map'],
-    }, {
+    acknowledgeQuestionSetStalenessMutation.mutate(undefined, {
       onSuccess: () => {
         notifySuccess('Question warning dismissed');
       },
       onError: () => {
-        if (hasOutOfSyncQuestions) {
+        if (hasQuestionSetDrift) {
           setDismissedQuestionSyncSignature(null);
         }
         notifyErrorMessage('Could not dismiss warning');
@@ -258,31 +270,22 @@ const QuestionsPage: React.FC = () => {
       onSettled: () => setStatusAction(null),
     });
   }, [
-    baseQuestionMap,
-    hasOutOfSyncQuestions,
+    acknowledgeQuestionSetStalenessMutation,
+    hasQuestionSetDrift,
     hasQuestionSetRecord,
     isQuestionSetStale,
     questionSyncSignature,
-    updateMutation,
   ]);
 
   const handleSynchronizeQuestions = useCallback(async () => {
     setStatusAction('sync');
-    setIsSynchronizingQuestions(true);
 
     try {
-      const inferredQuestionSet = await inferQuestionSetFromSubmissions(assessmentId);
-      const nextQuestionMap = synchronizeQuestionMap(
-        questionMap,
-        (inferredQuestionSet.question_set?.question_map ?? {}) as QuestionSetInputQuestionMap,
-      );
-
-      await updateMutation.mutateAsync({
-        question_map: nextQuestionMap as QuestionSetInput['question_map'],
-      });
+      const syncedQuestionSet = await syncQuestionSetMutation.mutateAsync();
+      const nextQuestionMap = syncedQuestionSet.question_set.question_map;
 
       const remainingIds = getQuestionIdsSorted(nextQuestionMap);
-      if (selectedQid && invalidQuestionIds.includes(selectedQid)) {
+      if (selectedQid && extraQuestionIds.includes(selectedQid)) {
         setSelectedQid(remainingIds[0] ?? null);
         setMobileShowDetail(remainingIds.length > 0);
       }
@@ -297,11 +300,18 @@ const QuestionsPage: React.FC = () => {
             : `Added questions: ${missingQuestionIds.join(', ')}`,
         );
       }
-      if (invalidQuestionIds.length > 0) {
+      if (extraQuestionIds.length > 0) {
         changes.push(
-          invalidQuestionIds.length === 1
-            ? `Removed invalid question: ${invalidQuestionIds[0]}`
-            : `Removed invalid questions: ${invalidQuestionIds.join(', ')}`,
+          extraQuestionIds.length === 1
+            ? `Removed question: ${extraQuestionIds[0]}`
+            : `Removed questions: ${extraQuestionIds.join(', ')}`,
+        );
+      }
+      if (choiceOptionDrifts.length > 0) {
+        changes.push(
+          choiceOptionDrifts.length === 1
+            ? `Updated choice options: ${getChoiceOptionDriftSummary(choiceOptionDrifts[0])}`
+            : `Updated choice options: ${choiceOptionDrifts.map(getChoiceOptionDriftSummary).join('; ')}`,
         );
       }
 
@@ -310,28 +320,27 @@ const QuestionsPage: React.FC = () => {
     } catch (err) {
       notifyError(err);
     } finally {
-      setIsSynchronizingQuestions(false);
       setStatusAction(null);
     }
   }, [
-    invalidQuestionIds,
+    choiceOptionDrifts,
+    extraQuestionIds,
     missingQuestionIds,
-    questionMap,
     selectedQid,
-    assessmentId,
     setSelectedQid,
-    updateMutation,
+    syncQuestionSetMutation,
   ]);
 
   const questionStatusActions = useMemo(() => {
     const actions = [];
 
-    if (hasOutOfSyncQuestions) {
+    if (hasQuestionSetDrift) {
       actions.push({
         label: 'Synchronize questions',
         onClick: () => setConfirmSynchronizeQuestions(true),
         color: 'orange',
         variant: 'light' as const,
+        loading: statusAction === 'sync' && syncQuestionSetMutation.isPending,
         disabled: isQuestionActionPending,
       });
     }
@@ -343,7 +352,7 @@ const QuestionsPage: React.FC = () => {
         loading: statusAction === 'dismiss' && isQuestionActionPending,
         disabled: isQuestionActionPending && statusAction !== 'dismiss',
       });
-    } else if (hasOutOfSyncQuestions) {
+    } else if (hasQuestionSetDrift) {
       actions.push({
         label: 'Dismiss',
         onClick: handleDismissStatus,
@@ -352,7 +361,14 @@ const QuestionsPage: React.FC = () => {
     }
 
     return actions;
-  }, [handleDismissStatus, hasOutOfSyncQuestions, isQuestionActionPending, isQuestionSetStale, statusAction]);
+  }, [
+    handleDismissStatus,
+    hasQuestionSetDrift,
+    isQuestionActionPending,
+    isQuestionSetStale,
+    statusAction,
+    syncQuestionSetMutation.isPending,
+  ]);
 
   // Question selection — guards against navigating away with unsaved edits.
   const handleSelect = useCallback(
@@ -466,7 +482,7 @@ const QuestionsPage: React.FC = () => {
 
   // ── Loading ────────────────────────────────────────────────────────────────
 
-  if (loadingSubmissions || loadingQS) {
+  if (loadingSubmissions || loadingQS || loadingQuestionSetStatus) {
     return (
       <PageShell title="Questions" actions={pageActions}>
         <Stack gap="xs">
@@ -664,9 +680,14 @@ const QuestionsPage: React.FC = () => {
     >
       <Stack gap="md">
         <SectionStatusBadge
-          isStale={qsRes?.status?.is_stale}
+          isStale={isQuestionSetStale}
           show={showQuestionStatusBadge}
-          staleMessage={getQuestionStatusMessage(isQuestionSetStale, missingQuestionIds.length, invalidQuestionIds.length)}
+          staleMessage={getQuestionStatusMessage(
+            isQuestionSetStale,
+            missingQuestionIds.length,
+            extraQuestionIds.length,
+            choiceOptionDrifts.length,
+          )}
           actions={questionStatusActions}
         />
 
@@ -675,6 +696,9 @@ const QuestionsPage: React.FC = () => {
         )}
         {errorParsed && !missingSubmissions && (
           <Alert color="red">{getErrorMessage(parsedError)}</Alert>
+        )}
+        {errorQuestionSetStatus && (
+          <Alert color="red">{getErrorMessage(questionSetStatusError)}</Alert>
         )}
 
         <MasterDetailLayout
@@ -739,7 +763,7 @@ const QuestionsPage: React.FC = () => {
         <AddQuestionModal
           opened={openAddQuestion}
           existingIds={questionIds}
-          submissionQids={submissionQids}
+          suggestedQuestionIds={missingQuestionIds}
           isSaving={createQuestionMutation.isPending}
           error={createQuestionMutation.isError ? createQuestionMutation.error : null}
           onClose={handleCloseAddQuestion}
@@ -777,7 +801,7 @@ const QuestionsPage: React.FC = () => {
           size="sm"
         >
           <Text mb="sm">
-            This will synchronize the question set with the current submissions by adding newly detected questions and removing question IDs that no longer exist.
+            This will synchronize the question set with the current submissions by adding newly detected questions, removing extra question IDs, and updating choice options from observed answers.
           </Text>
           {missingQuestionIds.length > 0 && (
             <>
@@ -787,19 +811,35 @@ const QuestionsPage: React.FC = () => {
               </Text>
             </>
           )}
-          {invalidQuestionIds.length > 0 && (
+          {extraQuestionIds.length > 0 && (
             <>
               <Text fw={600} mb={4} size="sm">Questions to remove</Text>
               <Text mb="md" ff="monospace" size="sm">
-                {invalidQuestionIds.join(', ')}
+                {extraQuestionIds.join(', ')}
               </Text>
+            </>
+          )}
+          {choiceOptionDrifts.length > 0 && (
+            <>
+              <Text fw={600} mb={4} size="sm">Choice options to update</Text>
+              <Stack gap={4} mb="md">
+                {choiceOptionDrifts.map((drift) => (
+                  <Text key={drift.question_id} ff="monospace" size="sm">
+                    {getChoiceOptionDriftSummary(drift)}
+                  </Text>
+                ))}
+              </Stack>
             </>
           )}
           <Group justify="flex-end" gap="sm">
             <Button variant="default" onClick={() => setConfirmSynchronizeQuestions(false)}>
               Cancel
             </Button>
-            <Button color="orange" loading={isSynchronizingQuestions} onClick={() => void handleSynchronizeQuestions()}>
+            <Button
+              color="orange"
+              loading={syncQuestionSetMutation.isPending}
+              onClick={() => void handleSynchronizeQuestions()}
+            >
               Synchronize
             </Button>
           </Group>
