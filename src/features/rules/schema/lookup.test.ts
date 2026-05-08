@@ -3,8 +3,6 @@ import { describe, expect, it } from 'vitest';
 import {
   findSchemaKeyByType,
   friendlyRuleLabel,
-  getRuleTargetQids,
-  isMultiTargetRule,
   isRuleObject,
   prettifyKey,
 } from '@features/rules/schema/lookup';
@@ -59,36 +57,38 @@ describe('findSchemaKeyByType', () => {
     TextMatchQuestionRule: {
       properties: {
         type: { const: 'TEXT_MATCH' },
+        scope: { default: 'question' },
         question_id: { type: 'string' },
       },
     },
     AllOrNothingMultiQuestionRule: {
       properties: {
         type: { default: 'ALL_OR_NOTHING' },
+        scope: { default: 'global' },
       },
     },
   } as never;
 
-  it('finds by const value', () => {
-    expect(findSchemaKeyByType(defs, 'TEXT_MATCH')).toBe('TextMatchQuestionRule');
+  it('finds by const value and scope', () => {
+    expect(findSchemaKeyByType(defs, 'TEXT_MATCH', 'question')).toBe('TextMatchQuestionRule');
   });
 
-  it('finds by default value', () => {
-    expect(findSchemaKeyByType(defs, 'ALL_OR_NOTHING')).toBe('AllOrNothingMultiQuestionRule');
+  it('finds by default value and scope', () => {
+    expect(findSchemaKeyByType(defs, 'ALL_OR_NOTHING', 'global')).toBe('AllOrNothingMultiQuestionRule');
   });
 
   it('returns null for unknown type', () => {
-    expect(findSchemaKeyByType(defs, 'UNKNOWN')).toBeNull();
+    expect(findSchemaKeyByType(defs, 'UNKNOWN', 'question')).toBeNull();
   });
 
-  it('filters by requireQuestionId=true', () => {
-    expect(findSchemaKeyByType(defs, 'TEXT_MATCH', true)).toBe('TextMatchQuestionRule');
-    expect(findSchemaKeyByType(defs, 'ALL_OR_NOTHING', true)).toBeNull();
+  it('filters by question scope', () => {
+    expect(findSchemaKeyByType(defs, 'TEXT_MATCH', 'question')).toBe('TextMatchQuestionRule');
+    expect(findSchemaKeyByType(defs, 'ALL_OR_NOTHING', 'question')).toBeNull();
   });
 
-  it('filters by requireQuestionId=false', () => {
-    expect(findSchemaKeyByType(defs, 'ALL_OR_NOTHING', false)).toBe('AllOrNothingMultiQuestionRule');
-    expect(findSchemaKeyByType(defs, 'TEXT_MATCH', false)).toBeNull();
+  it('filters by global scope', () => {
+    expect(findSchemaKeyByType(defs, 'ALL_OR_NOTHING', 'global')).toBe('AllOrNothingMultiQuestionRule');
+    expect(findSchemaKeyByType(defs, 'TEXT_MATCH', 'global')).toBeNull();
   });
 });
 
@@ -97,13 +97,14 @@ describe('isRuleObject', () => {
     TextMatchQuestionRule: {
       properties: {
         type: { const: 'TEXT_MATCH' },
+        scope: { default: 'question' },
         question_id: { type: 'string' },
       },
     },
   } as never;
 
   it('returns true for valid rule object', () => {
-    expect(isRuleObject({ type: 'TEXT_MATCH', question_id: 'Q1' }, defs)).toBe(true);
+    expect(isRuleObject({ type: 'TEXT_MATCH', scope: 'question', question_id: 'Q1' }, defs)).toBe(true);
   });
 
   it('returns false for null', () => {
@@ -118,73 +119,11 @@ describe('isRuleObject', () => {
     expect(isRuleObject({ question_id: 'Q1' }, defs)).toBe(false);
   });
 
+  it('returns false for missing scope', () => {
+    expect(isRuleObject({ type: 'TEXT_MATCH', question_id: 'Q1' }, defs)).toBe(false);
+  });
+
   it('returns false for unknown type', () => {
-    expect(isRuleObject({ type: 'UNKNOWN' }, defs)).toBe(false);
-  });
-});
-
-describe('isMultiTargetRule', () => {
-  it('returns true for null', () => {
-    expect(isMultiTargetRule(null)).toBe(true);
-  });
-
-  it('returns true for non-object', () => {
-    expect(isMultiTargetRule('string')).toBe(true);
-  });
-
-  it('returns true for object without question_id', () => {
-    expect(isMultiTargetRule({ type: 'ALL_OR_NOTHING' })).toBe(true);
-  });
-
-  it('returns false for object with string question_id', () => {
-    expect(isMultiTargetRule({ type: 'TEXT_MATCH', question_id: 'Q1' })).toBe(false);
-  });
-
-  it('returns true for non-string question_id', () => {
-    expect(isMultiTargetRule({ question_id: 123 })).toBe(true);
-  });
-});
-
-describe('getRuleTargetQids', () => {
-  it('extracts single question_id', () => {
-    expect(getRuleTargetQids({ question_id: 'Q1' })).toEqual(['Q1']);
-  });
-
-  it('extracts question_ids array', () => {
-    const qids = getRuleTargetQids({ question_ids: ['Q1', 'Q2'] });
-    expect(qids.sort()).toEqual(['Q1', 'Q2']);
-  });
-
-  it('extracts from assumptions (ASSUMPTION_SET_MULTI)', () => {
-    const rule = {
-      assumptions: [
-        { rules: [{ question_id: 'Q1' }, { question_id: 'Q2' }] },
-      ],
-    };
-    expect(getRuleTargetQids(rule).sort()).toEqual(['Q1', 'Q2']);
-  });
-
-  it('extracts from then_rules and else_rules (CONDITIONAL)', () => {
-    const rule = {
-      if_rules: [{ question_id: 'Q_IGNORED' }],
-      then_rules: [{ question_id: 'Q1' }],
-      else_rules: [{ question_id: 'Q2' }],
-    };
-    const qids = getRuleTargetQids(rule);
-    expect(qids).not.toContain('Q_IGNORED');
-    expect(qids.sort()).toEqual(['Q1', 'Q2']);
-  });
-
-  it('deduplicates across paths', () => {
-    const rule = {
-      question_id: 'Q1',
-      question_ids: ['Q1', 'Q2'],
-    };
-    const qids = getRuleTargetQids(rule);
-    expect(qids.sort()).toEqual(['Q1', 'Q2']);
-  });
-
-  it('returns empty for rule with no targets', () => {
-    expect(getRuleTargetQids({ type: 'SOME_RULE' })).toEqual([]);
+    expect(isRuleObject({ type: 'UNKNOWN', scope: 'question' }, defs)).toBe(false);
   });
 });

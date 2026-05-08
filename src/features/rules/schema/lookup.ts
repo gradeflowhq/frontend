@@ -7,12 +7,19 @@ export const getRuleDefinitions = (): Record<string, JSONSchema7> => {
   return (defs ?? {}) as Record<string, JSONSchema7>;
 };
 
+export type RuleScope = 'question' | 'global';
+
 const getSchemaStringValue = (schema: unknown): string | null => {
   if (!schema || typeof schema !== 'object' || Array.isArray(schema)) return null;
   const value =
     (schema as { const?: unknown; default?: unknown }).const ??
     (schema as { default?: unknown }).default;
   return typeof value === 'string' ? value : null;
+};
+
+export const getRuleScope = (props: Record<string, unknown> | undefined): RuleScope | null => {
+  const scope = getSchemaStringValue(props?.scope);
+  return scope === 'question' || scope === 'global' ? scope : null;
 };
 
 const ruleLabelLookup = (() => {
@@ -54,14 +61,14 @@ export const prettifyKey = (s: string): string =>
 export const findSchemaKeyByType = (
   defs: Record<string, JSONSchema7>,
   type: string,
-  requireQuestionId?: boolean
+  scope: RuleScope,
 ): string | null => {
   for (const k of Object.keys(defs)) {
     const props = defs[k]?.properties as Record<string, unknown> | undefined;
     const typeObj = props?.type as { const?: unknown; default?: unknown } | undefined;
     const typeConst = (typeObj?.const ?? typeObj?.default) as string | undefined;
-    const hasQid = !!props?.question_id;
-    if (typeConst === type && (requireQuestionId === undefined || requireQuestionId === hasQid)) {
+    const ruleScope = getRuleScope(props);
+    if (typeConst === type && ruleScope === scope) {
       return k;
     }
   }
@@ -72,61 +79,8 @@ export const isRuleObject = (obj: unknown, defs: Record<string, JSONSchema7>): b
   if (!obj || typeof obj !== 'object') return false;
   const t = (obj as { type?: unknown }).type;
   if (typeof t !== 'string') return false;
-  const key = findSchemaKeyByType(defs, t, !!(obj as { question_id?: unknown }).question_id);
+  const scope = (obj as { scope?: unknown }).scope;
+  if (scope !== 'question' && scope !== 'global') return false;
+  const key = findSchemaKeyByType(defs, t, scope);
   return !!key;
-};
-
-/**
- * Returns true when the rule object is a multi-target (global) rule,
- * i.e. it does NOT have a direct `question_id` field.
- */
-export const isMultiTargetRule = (rule: unknown): boolean =>  !rule ||
-  typeof rule !== 'object' ||  typeof (rule as { question_id?: unknown }).question_id !== 'string';
-
-/**
- * Extracts all question IDs targeted by a rule (single or multi-target).
- * Mirrors the engine's `get_target_question_ids()` logic.
- */
-export const getRuleTargetQids = (rule: unknown): string[] => {
-  const qids = new Set<string>();
-
-  // Single-target rule: direct question_id
-  const directQid = (rule as { question_id?: unknown }).question_id;
-  if (typeof directQid === 'string') qids.add(directQid);
-
-  // Top-level explicit question_ids array (legacy / simple multi)
-  const topQids = (rule as { question_ids?: unknown }).question_ids;
-  if (Array.isArray(topQids)) {
-    for (const qid of topQids) {
-      if (typeof qid === 'string') qids.add(qid);
-    }
-  }
-
-  // ASSUMPTION_SET_MULTI: assumptions[].rules[].question_id
-  const assumptions = (rule as { assumptions?: unknown }).assumptions;
-  if (Array.isArray(assumptions)) {
-    for (const assumption of assumptions) {
-      const subRules = (assumption as { rules?: unknown }).rules;
-      if (Array.isArray(subRules)) {
-        for (const r of subRules) {
-          const qid = (r as { question_id?: unknown }).question_id;
-          if (typeof qid === 'string') qids.add(qid);
-        }
-      }
-    }
-  }
-
-  // CONDITIONAL: then_rules and else_rules only
-  // (if_rules are condition checks, not grading targets — matches engine behaviour)
-  for (const field of ['then_rules', 'else_rules']) {
-    const subRules = (rule as Record<string, unknown>)[field];
-    if (Array.isArray(subRules)) {
-      for (const r of subRules) {
-        const qid = (r as { question_id?: unknown }).question_id;
-        if (typeof qid === 'string') qids.add(qid);
-      }
-    }
-  }
-
-  return Array.from(qids);
 };

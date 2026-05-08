@@ -14,6 +14,7 @@ export interface CompositeQuestionRuleInput {
   id?: string;
   readonly question_types?: readonly CompositeQuestionRuleInputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
+  readonly scope?: 'question';
   question_id: string;
   readonly type?: 'COMPOSITE';
   readonly display_name?: 'Composite';

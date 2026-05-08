@@ -19,8 +19,7 @@ export const QK = {
     parsed: (assessmentId: string) => ['parsedSubmissions', assessmentId] as const,
   },
   rubric: {
-    item: (assessmentId: string) => ['rubric', assessmentId] as const,
-    coverage: (assessmentId: string) => ['rubricCoverage', assessmentId] as const,
+    overview: (assessmentId: string) => ['rubricOverview', assessmentId] as const,
   },
   grading: {
     item: (assessmentId: string) => ['grading', assessmentId] as const,

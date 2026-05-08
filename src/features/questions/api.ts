@@ -67,7 +67,6 @@ export const useDeleteQuestionSet = (assessmentId: string) => {
     },
     onSuccess: async () => {
       await invalidateQuestionSetQueries(qc, assessmentId);
-      await qc.invalidateQueries({ queryKey: QK.rubric.coverage(assessmentId) });
     },
   });
 };

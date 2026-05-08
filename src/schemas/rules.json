@@ -19,8 +19,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "TEXT"
         ],
         "readOnly": true
       },
@@ -112,8 +112,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "TEXT"
         ],
         "readOnly": true
       },
@@ -124,6 +124,13 @@
         "type": "array",
         "title": "Constraints",
         "default": [],
+        "readOnly": true
+      },
+      "scope": {
+        "type": "string",
+        "const": "question",
+        "title": "Scope",
+        "default": "question",
         "readOnly": true
       },
       "question_id": {
@@ -160,6 +167,27 @@
       "answers"
     ],
     "title": "TextMatchQuestionRule"
+  },
+  "StaleRuleReference": {
+    "properties": {
+      "rule_id": {
+        "type": "string",
+        "title": "Rule Id"
+      },
+      "qids": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array",
+        "title": "Qids"
+      }
+    },
+    "type": "object",
+    "required": [
+      "rule_id",
+      "qids"
+    ],
+    "title": "StaleRuleReference"
   },
   "SimilarityRule": {
     "properties": {
@@ -272,6 +300,13 @@
         "type": "array",
         "title": "Constraints",
         "default": [],
+        "readOnly": true
+      },
+      "scope": {
+        "type": "string",
+        "const": "question",
+        "title": "Scope",
+        "default": "question",
         "readOnly": true
       },
       "question_id": {
@@ -475,6 +510,13 @@
         "default": [],
         "readOnly": true
       },
+      "scope": {
+        "type": "string",
+        "const": "question",
+        "title": "Scope",
+        "default": "question",
+        "readOnly": true
+      },
       "question_id": {
         "type": "string",
         "title": "Question Id"
@@ -565,6 +607,13 @@
         "type": "array",
         "title": "Constraints",
         "default": [],
+        "readOnly": true
+      },
+      "scope": {
+        "type": "string",
+        "const": "question",
+        "title": "Scope",
+        "default": "question",
         "readOnly": true
       },
       "question_id": {
@@ -700,10 +749,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
+          "NUMERIC",
           "CHOICE",
           "TEXT",
-          "NUMERIC"
+          "MULTI_VALUED"
         ],
         "readOnly": true
       },
@@ -714,6 +763,13 @@
         "type": "array",
         "title": "Constraints",
         "default": [],
+        "readOnly": true
+      },
+      "scope": {
+        "type": "string",
+        "const": "global",
+        "title": "Scope",
+        "default": "global",
         "readOnly": true
       },
       "type": {
@@ -1006,10 +1062,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
+          "NUMERIC",
           "CHOICE",
           "TEXT",
-          "NUMERIC"
+          "MULTI_VALUED"
         ],
         "readOnly": true
       },
@@ -1020,6 +1076,13 @@
         "type": "array",
         "title": "Constraints",
         "default": [],
+        "readOnly": true
+      },
+      "scope": {
+        "type": "string",
+        "const": "question",
+        "title": "Scope",
+        "default": "question",
         "readOnly": true
       },
       "question_id": {
@@ -1134,6 +1197,13 @@
         "default": [],
         "readOnly": true
       },
+      "scope": {
+        "type": "string",
+        "const": "question",
+        "title": "Scope",
+        "default": "question",
+        "readOnly": true
+      },
       "question_id": {
         "type": "string",
         "title": "Question Id"
@@ -1206,6 +1276,13 @@
         "type": "array",
         "title": "Constraints",
         "default": [],
+        "readOnly": true
+      },
+      "scope": {
+        "type": "string",
+        "const": "question",
+        "title": "Scope",
+        "default": "question",
         "readOnly": true
       },
       "question_id": {
@@ -1299,6 +1376,13 @@
         "type": "array",
         "title": "Constraints",
         "default": [],
+        "readOnly": true
+      },
+      "scope": {
+        "type": "string",
+        "const": "question",
+        "title": "Scope",
+        "default": "question",
         "readOnly": true
       },
       "question_id": {
@@ -1583,10 +1667,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
+          "NUMERIC",
           "CHOICE",
           "TEXT",
-          "NUMERIC"
+          "MULTI_VALUED"
         ],
         "readOnly": true
       },
@@ -2047,10 +2131,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
+          "NUMERIC",
           "CHOICE",
           "TEXT",
-          "NUMERIC"
+          "MULTI_VALUED"
         ],
         "readOnly": true
       },
@@ -2252,8 +2336,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "TEXT"
         ],
         "readOnly": true
       },
@@ -2389,10 +2473,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
+          "NUMERIC",
           "CHOICE",
           "TEXT",
-          "NUMERIC"
+          "MULTI_VALUED"
         ],
         "readOnly": true
       },
@@ -2460,6 +2544,13 @@
             "target": "answer"
           }
         ],
+        "readOnly": true
+      },
+      "scope": {
+        "type": "string",
+        "const": "question",
+        "title": "Scope",
+        "default": "question",
         "readOnly": true
       },
       "question_id": {
@@ -2531,10 +2622,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
+          "NUMERIC",
           "CHOICE",
           "TEXT",
-          "NUMERIC"
+          "MULTI_VALUED"
         ],
         "readOnly": true
       },
@@ -2545,6 +2636,13 @@
         "type": "array",
         "title": "Constraints",
         "default": [],
+        "readOnly": true
+      },
+      "scope": {
+        "type": "string",
+        "const": "question",
+        "title": "Scope",
+        "default": "question",
         "readOnly": true
       },
       "question_id": {
@@ -2603,6 +2701,13 @@
         "type": "array",
         "title": "Constraints",
         "default": [],
+        "readOnly": true
+      },
+      "scope": {
+        "type": "string",
+        "const": "question",
+        "title": "Scope",
+        "default": "question",
         "readOnly": true
       },
       "question_id": {
@@ -2689,6 +2794,13 @@
         "default": [],
         "readOnly": true
       },
+      "scope": {
+        "type": "string",
+        "const": "question",
+        "title": "Scope",
+        "default": "question",
+        "readOnly": true
+      },
       "question_id": {
         "type": "string",
         "title": "Question Id"
@@ -2755,10 +2867,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
+          "NUMERIC",
           "CHOICE",
           "TEXT",
-          "NUMERIC"
+          "MULTI_VALUED"
         ],
         "readOnly": true
       },
@@ -2769,6 +2881,13 @@
         "type": "array",
         "title": "Constraints",
         "default": [],
+        "readOnly": true
+      },
+      "scope": {
+        "type": "string",
+        "const": "global",
+        "title": "Scope",
+        "default": "global",
         "readOnly": true
       },
       "type": {
@@ -3048,8 +3167,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "TEXT"
         ],
         "readOnly": true
       },
@@ -3060,6 +3179,13 @@
         "type": "array",
         "title": "Constraints",
         "default": [],
+        "readOnly": true
+      },
+      "scope": {
+        "type": "string",
+        "const": "question",
+        "title": "Scope",
+        "default": "question",
         "readOnly": true
       },
       "question_id": {
@@ -3190,10 +3316,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
+          "NUMERIC",
           "CHOICE",
           "TEXT",
-          "NUMERIC"
+          "MULTI_VALUED"
         ],
         "readOnly": true
       },
@@ -3204,6 +3330,13 @@
         "type": "array",
         "title": "Constraints",
         "default": [],
+        "readOnly": true
+      },
+      "scope": {
+        "type": "string",
+        "const": "question",
+        "title": "Scope",
+        "default": "question",
         "readOnly": true
       },
       "question_id": {
@@ -3251,10 +3384,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
+          "NUMERIC",
           "CHOICE",
           "TEXT",
-          "NUMERIC"
+          "MULTI_VALUED"
         ],
         "readOnly": true
       },
@@ -3265,6 +3398,13 @@
         "type": "array",
         "title": "Constraints",
         "default": [],
+        "readOnly": true
+      },
+      "scope": {
+        "type": "string",
+        "const": "question",
+        "title": "Scope",
+        "default": "question",
         "readOnly": true
       },
       "question_id": {
@@ -3423,10 +3563,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
+          "NUMERIC",
           "CHOICE",
           "TEXT",
-          "NUMERIC"
+          "MULTI_VALUED"
         ],
         "readOnly": true
       },
@@ -3437,6 +3577,13 @@
         "type": "array",
         "title": "Constraints",
         "default": [],
+        "readOnly": true
+      },
+      "scope": {
+        "type": "string",
+        "const": "global",
+        "title": "Scope",
+        "default": "global",
         "readOnly": true
       },
       "mode": {

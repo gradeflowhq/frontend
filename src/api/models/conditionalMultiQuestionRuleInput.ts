@@ -16,6 +16,7 @@ export interface ConditionalMultiQuestionRuleInput {
   id?: string;
   readonly question_types?: readonly ConditionalMultiQuestionRuleInputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
+  readonly scope?: 'global';
   readonly type?: 'CONDITIONAL';
   readonly display_name?: 'Conditional';
   /**

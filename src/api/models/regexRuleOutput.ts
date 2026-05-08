@@ -10,14 +10,14 @@ import type { QuestionConstraint } from './questionConstraint';
 import type { RegexConfig } from './regexConfig';
 
 export interface RegexRuleOutput {
-  id?: string;
-  readonly question_types?: readonly RegexRuleOutputQuestionTypesItem[];
-  readonly constraints?: readonly QuestionConstraint[];
-  readonly type?: 'REGEX';
-  readonly display_name?: 'Regex';
+  id: string;
+  readonly question_types: readonly RegexRuleOutputQuestionTypesItem[];
+  readonly constraints: readonly QuestionConstraint[];
+  readonly type: 'REGEX';
+  readonly display_name: 'Regex';
   /** Regular expression pattern to match against the answer */
   pattern: string;
   /** Configuration for regex matching behavior */
-  config?: RegexConfig;
+  config: RegexConfig;
   readonly description: string;
 }

@@ -20,7 +20,7 @@ import { useDecryptedIds } from '@features/encryption/useDecryptedIds';
 import { useGrading, useAdjustGrading } from '@features/grading/api';
 import { GradingStatusBanner } from '@features/grading/components';
 import { useQuestionSet } from '@features/questions/api';
-import { useRubric } from '@features/rubric/api';
+import { useRubricOverview } from '@features/rubric/api';
 import { getRuleDescriptionText } from '@features/rules/helpers';
 import { friendlyRuleLabel } from '@features/rules/schema';
 import { isEncrypted } from '@utils/crypto';
@@ -308,25 +308,37 @@ const SubmissionDetailInner: React.FC<{ assessmentId: string; encodedStudentId: 
 
   const { data, isLoading, isError, error } = useGrading(assessmentId);
   const { data: qsRes } = useQuestionSet(assessmentId, true);
-  const { data: rubricData } = useRubric(assessmentId);
   const adjustMutation = useAdjustGrading(assessmentId);
 
   const questionMap = useMemo<QuestionSetOutputQuestionMap>(
     () => qsRes?.question_set?.question_map ?? {},
     [qsRes],
   );
+  const questionIds = useMemo(() => Object.keys(questionMap), [questionMap]);
+  const { data: rubricOverview } = useRubricOverview(
+    assessmentId,
+    questionIds.length > 0,
+  );
 
   const ruleDescriptionByQid = useMemo(() => {
     const map: Record<string, string | null> = {};
-    const rules = (rubricData?.rubric?.rules ?? []) as RuleValue[];
-    for (const rule of rules) {
-      const qid = (rule as { question_id?: string }).question_id;
-      if (qid) {
-        map[qid] = getRuleDescriptionText(rule);
-      }
+    const rules = [
+      ...((rubricOverview?.question_rules ?? []) as RuleValue[]),
+      ...((rubricOverview?.global_rules ?? []) as RuleValue[]),
+    ];
+    const ruleById = new Map(rules.map((rule) => [rule.id, rule]));
+
+    for (const qid of questionIds) {
+      const ruleId =
+        rubricOverview?.coverage.question_rules[qid] ??
+        rubricOverview?.coverage.global_rules[qid];
+      if (!ruleId) continue;
+
+      const rule = ruleById.get(ruleId);
+      if (rule) map[qid] = getRuleDescriptionText(rule);
     }
     return map;
-  }, [rubricData]);
+  }, [questionIds, rubricOverview]);
 
   const submissions = useMemo<AdjustableSubmission[]>(() => data?.submissions ?? [], [data]);
   const studentIds = useMemo(() => submissions.map((s) => s.student_id).sort(natsort), [submissions]);

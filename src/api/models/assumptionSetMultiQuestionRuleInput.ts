@@ -14,6 +14,7 @@ export interface AssumptionSetMultiQuestionRuleInput {
   id?: string;
   readonly question_types?: readonly AssumptionSetMultiQuestionRuleInputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
+  readonly scope?: 'global';
   /** Mode to select which assumption to use */
   mode?: AssumptionSetMultiQuestionRuleInputMode;
   readonly type?: 'ASSUMPTION_SET_MULTI';

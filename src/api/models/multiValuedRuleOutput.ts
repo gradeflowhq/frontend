@@ -11,17 +11,17 @@ import type { MultiValuedRuleOutputRulesItem } from './multiValuedRuleOutputRule
 import type { MultiValuedRuleOutputAggregation } from './multiValuedRuleOutputAggregation';
 
 export interface MultiValuedRuleOutput {
-  id?: string;
-  readonly question_types?: readonly MultiValuedRuleOutputQuestionTypesItem[];
-  readonly constraints?: readonly QuestionConstraint[];
-  readonly type?: 'MULTI_VALUED';
-  readonly display_name?: 'Multi Valued';
+  id: string;
+  readonly question_types: readonly MultiValuedRuleOutputQuestionTypesItem[];
+  readonly constraints: readonly QuestionConstraint[];
+  readonly type: 'MULTI_VALUED';
+  readonly display_name: 'Multi Valued';
   /**
    * List of rules to apply to each value in the multi-valued answer
    * @minItems 1
    */
   rules: MultiValuedRuleOutputRulesItem[];
   /** Aggregation method */
-  aggregation?: MultiValuedRuleOutputAggregation;
+  aggregation: MultiValuedRuleOutputAggregation;
   readonly description: string;
 }

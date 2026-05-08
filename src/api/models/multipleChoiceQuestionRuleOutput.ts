@@ -10,18 +10,19 @@ import type { QuestionConstraint } from './questionConstraint';
 import type { MultipleChoiceQuestionRuleOutputMode } from './multipleChoiceQuestionRuleOutputMode';
 
 export interface MultipleChoiceQuestionRuleOutput {
-  id?: string;
-  readonly question_types?: readonly MultipleChoiceQuestionRuleOutputQuestionTypesItem[];
-  readonly constraints?: readonly QuestionConstraint[];
+  id: string;
+  readonly question_types: readonly MultipleChoiceQuestionRuleOutputQuestionTypesItem[];
+  readonly constraints: readonly QuestionConstraint[];
+  readonly scope: 'question';
   question_id: string;
-  readonly type?: 'MULTIPLE_CHOICE';
-  readonly display_name?: 'Multiple Choice';
+  readonly type: 'MULTIPLE_CHOICE';
+  readonly display_name: 'Multiple Choice';
   /**
    * Set of correct choices
    * @minItems 1
    */
   answer: string[];
   /** Mode of choice matching: 'ALL' requires all specified choices to be selected, 'CONTAIN' requires all specified choices to be selected but allows extra choices, 'NOT_CONTAIN' requires none of the specified choices to be selected, 'ANY' requires at least one of the specified choices to be selected, 'PARTIAL' gives credit for each specified choice selected minus each unspecified choice selected. */
-  mode?: MultipleChoiceQuestionRuleOutputMode;
+  mode: MultipleChoiceQuestionRuleOutputMode;
   readonly description: string;
 }

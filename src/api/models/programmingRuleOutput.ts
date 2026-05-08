@@ -12,23 +12,23 @@ import type { ProgrammingConfig } from './programmingConfig';
 import type { ProgrammingRuleOutputMode } from './programmingRuleOutputMode';
 
 export interface ProgrammingRuleOutput {
-  id?: string;
-  readonly question_types?: readonly ProgrammingRuleOutputQuestionTypesItem[];
-  readonly constraints?: readonly QuestionConstraint[];
-  readonly type?: 'PROGRAMMING';
-  readonly display_name?: 'Programming';
+  id: string;
+  readonly question_types: readonly ProgrammingRuleOutputQuestionTypesItem[];
+  readonly constraints: readonly QuestionConstraint[];
+  readonly type: 'PROGRAMMING';
+  readonly display_name: 'Programming';
   /**
    * List of test cases to run against the code
    * @minItems 1
    */
   testcases: ProgrammingTestCase[];
   /** Programming language of the code to be tested */
-  language?: 'python';
+  language: 'python';
   /** Configuration for code testing */
-  config?: ProgrammingConfig;
+  config: ProgrammingConfig;
   /** Whether to show the evaluated expected output in feedback */
-  show_evaluated_expected?: boolean;
+  show_evaluated_expected: boolean;
   /** Mode of test case evaluation: 'ALL' requires all test cases to pass, 'ANY' requires at least one to pass, 'PARTIAL' gives credit for each test case passed. */
-  mode?: ProgrammingRuleOutputMode;
+  mode: ProgrammingRuleOutputMode;
   readonly description: string;
 }

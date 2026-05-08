@@ -14,6 +14,7 @@ export interface MultiValuedQuestionRuleInput {
   id?: string;
   readonly question_types?: readonly MultiValuedQuestionRuleInputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
+  readonly scope?: 'question';
   question_id: string;
   readonly type?: 'MULTI_VALUED';
   readonly display_name?: 'Multi Valued';

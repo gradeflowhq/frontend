@@ -11,18 +11,19 @@ import type { NumberEqualQuestionRuleOutputAnswersItem } from './numberEqualQues
 import type { NumberEqualConfig } from './numberEqualConfig';
 
 export interface NumberEqualQuestionRuleOutput {
-  id?: string;
-  readonly question_types?: readonly NumberEqualQuestionRuleOutputQuestionTypesItem[];
-  readonly constraints?: readonly QuestionConstraint[];
+  id: string;
+  readonly question_types: readonly NumberEqualQuestionRuleOutputQuestionTypesItem[];
+  readonly constraints: readonly QuestionConstraint[];
+  readonly scope: 'question';
   question_id: string;
-  readonly type?: 'NUMBER_EQUAL';
-  readonly display_name?: 'Number Equal';
+  readonly type: 'NUMBER_EQUAL';
+  readonly display_name: 'Number Equal';
   /**
    * List of acceptable numeric answers
    * @minItems 1
    */
   answers: NumberEqualQuestionRuleOutputAnswersItem[];
   /** Configuration for numeric equality checks */
-  config?: NumberEqualConfig;
+  config: NumberEqualConfig;
   readonly description: string;
 }

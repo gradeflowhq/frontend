@@ -11,17 +11,18 @@ import type { ProgrammableQuestionRuleOutputParameters } from './programmableQue
 import type { ProgrammableQuestionRuleOutputMode } from './programmableQuestionRuleOutputMode';
 
 export interface ProgrammableQuestionRuleOutput {
-  id?: string;
-  readonly question_types?: readonly ProgrammableQuestionRuleOutputQuestionTypesItem[];
-  readonly constraints?: readonly QuestionConstraint[];
+  id: string;
+  readonly question_types: readonly ProgrammableQuestionRuleOutputQuestionTypesItem[];
+  readonly constraints: readonly QuestionConstraint[];
+  readonly scope: 'question';
   question_id: string;
-  readonly type?: 'PROGRAMMABLE';
-  readonly display_name?: 'Programmable';
+  readonly type: 'PROGRAMMABLE';
+  readonly display_name: 'Programmable';
   /** Code to evaluate the answer. Required variables: 'output', 'passed'. Optional variable: 'feedback'. */
-  code?: string;
+  code: string;
   /** Parameters that can be used in the code. */
-  parameters?: ProgrammableQuestionRuleOutputParameters;
+  parameters: ProgrammableQuestionRuleOutputParameters;
   /** Mode of evaluation: 'PASS_FAIL' uses a boolean 'passed' variable, 'OUTPUT' uses the 'output' variable (0-1) for scoring. */
-  mode?: ProgrammableQuestionRuleOutputMode;
+  mode: ProgrammableQuestionRuleOutputMode;
   readonly description: string;
 }

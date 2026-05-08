@@ -39,7 +39,9 @@ export const materializeDraft = (
   const draft: Record<string, unknown> = { ...(initial ?? {}) };
   if (draft.id === undefined) draft.id = newDraftRuleId();
   const typeConst = props?.type?.const ?? props?.type?.default;
-  if (typeConst !== undefined && draft.type === undefined) draft.type = typeConst;
+  if (typeConst !== undefined) draft.type = typeConst;
+  const scopeConst = props?.scope?.const ?? props?.scope?.default;
+  if (scopeConst !== undefined) draft.scope = scopeConst;
   if (props?.question_id && questionId && draft.question_id === undefined) {
     draft.question_id = questionId;
   }
@@ -89,11 +91,12 @@ export const useRuleEditorState = ({
 
   // Treat empty string the same as null — never a valid questionId.
   const isSingleTarget = typeof questionId === 'string' && questionId.length > 0;
+  const editorScope = isSingleTarget ? 'question' : 'global';
 
   const eligibleKeys = useCompatibleRuleKeys(
     defs,
     (questionType as QuestionType | undefined) ?? undefined,
-    isSingleTarget,
+    editorScope,
   );
   const findKeyByType = useFindSchemaKeyByType(defs);
 
@@ -109,13 +112,12 @@ export const useRuleEditorState = ({
   // 4. Resolve the concrete schema key to use
   const concreteKey = React.useMemo(() => {
     if (selectedRuleKey && finalDefs[selectedRuleKey]) return selectedRuleKey;
-    const initType = initialRule?.type;
-    if (initType) {
-      const k = findKeyByType(String(initType), isSingleTarget);
+    if (initialRule) {
+      const k = findKeyByType(initialRule.type, initialRule.scope);
       if (k) return k;
     }
     return eligibleKeys[0] ?? null;
-  }, [finalDefs, selectedRuleKey, initialRule, eligibleKeys, findKeyByType, isSingleTarget]);
+  }, [finalDefs, selectedRuleKey, initialRule, eligibleKeys, findKeyByType]);
 
   const baseSchema = React.useMemo(
     () => (concreteKey ? finalDefs[concreteKey] : null),

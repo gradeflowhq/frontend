@@ -10,17 +10,17 @@ import type { QuestionConstraint } from './questionConstraint';
 import type { KeywordsRuleOutputMode } from './keywordsRuleOutputMode';
 
 export interface KeywordsRuleOutput {
-  id?: string;
-  readonly question_types?: readonly KeywordsRuleOutputQuestionTypesItem[];
-  readonly constraints?: readonly QuestionConstraint[];
-  readonly type?: 'KEYWORDS';
-  readonly display_name?: 'Keywords';
+  id: string;
+  readonly question_types: readonly KeywordsRuleOutputQuestionTypesItem[];
+  readonly constraints: readonly QuestionConstraint[];
+  readonly type: 'KEYWORDS';
+  readonly display_name: 'Keywords';
   /**
    * List of keywords that must be present in the answer
    * @minItems 1
    */
   keywords: string[];
   /** Mode of keyword matching: 'ALL' requires all keywords to be present, 'ANY' requires at least one.'PARTIAL' gives credit for each keyword present. */
-  mode?: KeywordsRuleOutputMode;
+  mode: KeywordsRuleOutputMode;
   readonly description: string;
 }

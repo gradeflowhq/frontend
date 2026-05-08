@@ -13,7 +13,6 @@ import React, { useMemo, useState } from 'react';
 
 import { useUpdateRule } from '@features/rules/api';
 import { getRuleDescriptionText } from '@features/rules/helpers';
-import { getRuleTargetQids } from '@features/rules/schema';
 
 import InlineRulePreview from './InlineRulePreview';
 import RuleConfigAccordion from './RuleConfigAccordion';
@@ -29,6 +28,7 @@ interface Props {
   questionMap: QuestionSetOutputQuestionMap;
   onEditStateChange?: (isEditing: boolean) => void;
   onDelete: () => void;
+  coveredQids: string[];
   isSaving?: boolean;
   /**
    * When true, the editor opens immediately and Save calls onSavePending
@@ -45,6 +45,7 @@ const GlobalRuleDetailPanel: React.FC<Props> = ({
   questionMap,
   onEditStateChange,
   onDelete,
+  coveredQids,
   isSaving = false,
   isPendingNew = false,
   onSavePending,
@@ -62,11 +63,9 @@ const GlobalRuleDetailPanel: React.FC<Props> = ({
   const [saveError, setSaveError] = useState<unknown>(null);
   const draftReaderRef = React.useRef<(() => RuleValue | null) | null>(null);
 
-  const ruleType = String((rule as { type?: unknown }).type ?? '');
+  const ruleType = rule.type;
   const ruleLabel = rule.display_name;
   const ruleDescription = useMemo(() => getRuleDescriptionText(rule), [rule]);
-
-  const coveredQids = useMemo(() => getRuleTargetQids(rule), [rule]);
 
   React.useEffect(() => {
     onEditStateChange?.(isEditing);

@@ -5,8 +5,5 @@
  * Thin FastAPI wrapper over GradeFlow Engine
  * OpenAPI spec version: 0.1.0
  */
-import type { RubricCoverage } from './rubricCoverage';
 
-export interface CoverageResponse {
-  coverage: RubricCoverage;
-}
+export type RubricCoverageQuestionsByRule = {[key: string]: string[]};

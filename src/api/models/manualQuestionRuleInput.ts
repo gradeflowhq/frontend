@@ -12,6 +12,7 @@ export interface ManualQuestionRuleInput {
   id?: string;
   readonly question_types?: readonly ManualQuestionRuleInputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
+  readonly scope?: 'question';
   question_id: string;
   readonly type?: 'MANUAL';
   readonly display_name?: 'Manual';

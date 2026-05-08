@@ -11,21 +11,22 @@ import type { ProgrammableMultiQuestionRuleOutputParameters } from './programmab
 import type { ProgrammableMultiQuestionRuleOutputMode } from './programmableMultiQuestionRuleOutputMode';
 
 export interface ProgrammableMultiQuestionRuleOutput {
-  id?: string;
-  readonly question_types?: readonly ProgrammableMultiQuestionRuleOutputQuestionTypesItem[];
-  readonly constraints?: readonly QuestionConstraint[];
-  readonly type?: 'PROGRAMMABLE_MULTI';
-  readonly display_name?: 'Programmable';
+  id: string;
+  readonly question_types: readonly ProgrammableMultiQuestionRuleOutputQuestionTypesItem[];
+  readonly constraints: readonly QuestionConstraint[];
+  readonly scope: 'global';
+  readonly type: 'PROGRAMMABLE_MULTI';
+  readonly display_name: 'Programmable';
   /**
    * List of question IDs this rule targets.
    * @minItems 1
    */
   target_question_ids: string[];
   /** Code to evaluate the answer_map. Required variable: 'results' (dict mapping question_id -> dict with 'output', 'passed', and optionally 'feedback'). */
-  code?: string;
+  code: string;
   /** Parameters that can be used in the code. */
-  parameters?: ProgrammableMultiQuestionRuleOutputParameters;
+  parameters: ProgrammableMultiQuestionRuleOutputParameters;
   /** Mode of evaluation: 'PASS_FAIL' uses 'passed' per question, 'OUTPUT' uses 'output' (0-1) per question for scoring. */
-  mode?: ProgrammableMultiQuestionRuleOutputMode;
+  mode: ProgrammableMultiQuestionRuleOutputMode;
   readonly description: string;
 }

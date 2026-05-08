@@ -403,8 +403,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "TEXT"
         ],
         "readOnly": true
       },
@@ -415,6 +415,13 @@
         "type": "array",
         "title": "Constraints",
         "default": [],
+        "readOnly": true
+      },
+      "scope": {
+        "type": "string",
+        "const": "question",
+        "title": "Scope",
+        "default": "question",
         "readOnly": true
       },
       "question_id": {
@@ -514,6 +521,13 @@
         "default": [],
         "readOnly": true
       },
+      "scope": {
+        "type": "string",
+        "const": "question",
+        "title": "Scope",
+        "default": "question",
+        "readOnly": true
+      },
       "question_id": {
         "type": "string",
         "title": "Question Id"
@@ -596,6 +610,13 @@
         "type": "array",
         "title": "Constraints",
         "default": [],
+        "readOnly": true
+      },
+      "scope": {
+        "type": "string",
+        "const": "question",
+        "title": "Scope",
+        "default": "question",
         "readOnly": true
       },
       "question_id": {
@@ -688,6 +709,13 @@
         "type": "array",
         "title": "Constraints",
         "default": [],
+        "readOnly": true
+      },
+      "scope": {
+        "type": "string",
+        "const": "question",
+        "title": "Scope",
+        "default": "question",
         "readOnly": true
       },
       "question_id": {
@@ -823,10 +851,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
+          "NUMERIC",
           "CHOICE",
           "TEXT",
-          "NUMERIC"
+          "MULTI_VALUED"
         ],
         "readOnly": true
       },
@@ -837,6 +865,13 @@
         "type": "array",
         "title": "Constraints",
         "default": [],
+        "readOnly": true
+      },
+      "scope": {
+        "type": "string",
+        "const": "global",
+        "title": "Scope",
+        "default": "global",
         "readOnly": true
       },
       "type": {
@@ -1129,10 +1164,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
+          "NUMERIC",
           "CHOICE",
           "TEXT",
-          "NUMERIC"
+          "MULTI_VALUED"
         ],
         "readOnly": true
       },
@@ -1143,6 +1178,13 @@
         "type": "array",
         "title": "Constraints",
         "default": [],
+        "readOnly": true
+      },
+      "scope": {
+        "type": "string",
+        "const": "question",
+        "title": "Scope",
+        "default": "question",
         "readOnly": true
       },
       "question_id": {
@@ -1257,6 +1299,13 @@
         "default": [],
         "readOnly": true
       },
+      "scope": {
+        "type": "string",
+        "const": "question",
+        "title": "Scope",
+        "default": "question",
+        "readOnly": true
+      },
       "question_id": {
         "type": "string",
         "title": "Question Id"
@@ -1329,6 +1378,13 @@
         "type": "array",
         "title": "Constraints",
         "default": [],
+        "readOnly": true
+      },
+      "scope": {
+        "type": "string",
+        "const": "question",
+        "title": "Scope",
+        "default": "question",
         "readOnly": true
       },
       "question_id": {
@@ -1422,6 +1478,13 @@
         "type": "array",
         "title": "Constraints",
         "default": [],
+        "readOnly": true
+      },
+      "scope": {
+        "type": "string",
+        "const": "question",
+        "title": "Scope",
+        "default": "question",
         "readOnly": true
       },
       "question_id": {
@@ -1552,8 +1615,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "TEXT"
         ],
         "readOnly": true
       },
@@ -1850,10 +1913,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
+          "NUMERIC",
           "CHOICE",
           "TEXT",
-          "NUMERIC"
+          "MULTI_VALUED"
         ],
         "readOnly": true
       },
@@ -2314,10 +2377,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
+          "NUMERIC",
           "CHOICE",
           "TEXT",
-          "NUMERIC"
+          "MULTI_VALUED"
         ],
         "readOnly": true
       },
@@ -2519,8 +2582,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "TEXT"
         ],
         "readOnly": true
       },
@@ -2656,10 +2719,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
+          "NUMERIC",
           "CHOICE",
           "TEXT",
-          "NUMERIC"
+          "MULTI_VALUED"
         ],
         "readOnly": true
       },
@@ -2727,6 +2790,13 @@
             "target": "answer"
           }
         ],
+        "readOnly": true
+      },
+      "scope": {
+        "type": "string",
+        "const": "question",
+        "title": "Scope",
+        "default": "question",
         "readOnly": true
       },
       "question_id": {
@@ -2798,10 +2868,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
+          "NUMERIC",
           "CHOICE",
           "TEXT",
-          "NUMERIC"
+          "MULTI_VALUED"
         ],
         "readOnly": true
       },
@@ -2812,6 +2882,13 @@
         "type": "array",
         "title": "Constraints",
         "default": [],
+        "readOnly": true
+      },
+      "scope": {
+        "type": "string",
+        "const": "question",
+        "title": "Scope",
+        "default": "question",
         "readOnly": true
       },
       "question_id": {
@@ -2870,6 +2947,13 @@
         "type": "array",
         "title": "Constraints",
         "default": [],
+        "readOnly": true
+      },
+      "scope": {
+        "type": "string",
+        "const": "question",
+        "title": "Scope",
+        "default": "question",
         "readOnly": true
       },
       "question_id": {
@@ -2956,6 +3040,13 @@
         "default": [],
         "readOnly": true
       },
+      "scope": {
+        "type": "string",
+        "const": "question",
+        "title": "Scope",
+        "default": "question",
+        "readOnly": true
+      },
       "question_id": {
         "type": "string",
         "title": "Question Id"
@@ -3022,10 +3113,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
+          "NUMERIC",
           "CHOICE",
           "TEXT",
-          "NUMERIC"
+          "MULTI_VALUED"
         ],
         "readOnly": true
       },
@@ -3036,6 +3127,13 @@
         "type": "array",
         "title": "Constraints",
         "default": [],
+        "readOnly": true
+      },
+      "scope": {
+        "type": "string",
+        "const": "global",
+        "title": "Scope",
+        "default": "global",
         "readOnly": true
       },
       "type": {
@@ -3315,8 +3413,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "TEXT"
         ],
         "readOnly": true
       },
@@ -3327,6 +3425,13 @@
         "type": "array",
         "title": "Constraints",
         "default": [],
+        "readOnly": true
+      },
+      "scope": {
+        "type": "string",
+        "const": "question",
+        "title": "Scope",
+        "default": "question",
         "readOnly": true
       },
       "question_id": {
@@ -3457,10 +3562,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
+          "NUMERIC",
           "CHOICE",
           "TEXT",
-          "NUMERIC"
+          "MULTI_VALUED"
         ],
         "readOnly": true
       },
@@ -3471,6 +3576,13 @@
         "type": "array",
         "title": "Constraints",
         "default": [],
+        "readOnly": true
+      },
+      "scope": {
+        "type": "string",
+        "const": "question",
+        "title": "Scope",
+        "default": "question",
         "readOnly": true
       },
       "question_id": {
@@ -3518,10 +3630,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
+          "NUMERIC",
           "CHOICE",
           "TEXT",
-          "NUMERIC"
+          "MULTI_VALUED"
         ],
         "readOnly": true
       },
@@ -3532,6 +3644,13 @@
         "type": "array",
         "title": "Constraints",
         "default": [],
+        "readOnly": true
+      },
+      "scope": {
+        "type": "string",
+        "const": "question",
+        "title": "Scope",
+        "default": "question",
         "readOnly": true
       },
       "question_id": {
@@ -3690,10 +3809,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "MULTI_VALUED",
+          "NUMERIC",
           "CHOICE",
           "TEXT",
-          "NUMERIC"
+          "MULTI_VALUED"
         ],
         "readOnly": true
       },
@@ -3704,6 +3823,13 @@
         "type": "array",
         "title": "Constraints",
         "default": [],
+        "readOnly": true
+      },
+      "scope": {
+        "type": "string",
+        "const": "global",
+        "title": "Scope",
+        "default": "global",
         "readOnly": true
       },
       "mode": {
@@ -4776,42 +4902,6 @@
       "serializer"
     ],
     "title": "ExportQuestionSetRequest"
-  },
-  "CoverageRequest": {
-    "properties": {
-      "use_stored_rubric": {
-        "type": "boolean",
-        "title": "Use Stored Rubric",
-        "default": true
-      },
-      "use_stored_question_set": {
-        "type": "boolean",
-        "title": "Use Stored Question Set",
-        "default": true
-      },
-      "rubric": {
-        "anyOf": [
-          {
-            "$ref": "#/definitions/Rubric"
-          },
-          {
-            "type": "null"
-          }
-        ]
-      },
-      "question_set": {
-        "anyOf": [
-          {
-            "$ref": "#/definitions/QuestionSet"
-          },
-          {
-            "type": "null"
-          }
-        ]
-      }
-    },
-    "type": "object",
-    "title": "CoverageRequest"
   },
   "BulkGradeAdjustmentRequest": {
     "properties": {

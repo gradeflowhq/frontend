@@ -14,6 +14,7 @@ export interface NumericRangeQuestionRuleInput {
   id?: string;
   readonly question_types?: readonly NumericRangeQuestionRuleInputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
+  readonly scope?: 'question';
   question_id: string;
   readonly type?: 'NUMERIC_RANGE';
   readonly display_name?: 'Numeric Range';

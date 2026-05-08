@@ -4,32 +4,34 @@ import axios from 'axios';
 import { api } from '@api';
 import { invalidateRubricQueries } from '@api/queryInvalidation';
 import { QK } from '@api/queryKeys';
+import { getErrorInfo } from '@utils/error';
 
-import type { RubricResponse, CoverageResponse } from '@api/models';
+import type { RubricOverviewResponse } from '@api/models';
 
-export const useRubric = (assessmentId: string) =>
+export const isMissingStoredRubricError = (error: unknown): boolean => {
+  const info = getErrorInfo(error);
+  return (
+    info.status === 404 &&
+    info.code === 'NOT_FOUND' &&
+    info.messages.includes('Rubric not set')
+  );
+};
+
+export const useRubricOverview = (assessmentId: string, enabled = true) =>
   useQuery({
-    queryKey: QK.rubric.item(assessmentId),
+    queryKey: QK.rubric.overview(assessmentId),
+    enabled,
     queryFn: async () => {
       try {
-        return (await api.getRubricAssessmentsAssessmentIdRubricGet(assessmentId)).data as RubricResponse;
+        return (await api.rubricOverviewAssessmentsAssessmentIdRubricOverviewGet(assessmentId))
+          .data as RubricOverviewResponse;
       } catch (e: unknown) {
-        if (axios.isAxiosError(e) && e.response?.status === 404) {
+        if (axios.isAxiosError(e) && isMissingStoredRubricError(e)) {
           return null;
         }
         throw e;
       }
     },
-  });
-
-export const useRubricCoverage = (assessmentId: string) =>
-  useQuery({
-    queryKey: QK.rubric.coverage(assessmentId),
-    queryFn: async () =>
-      (await api.rubricCoverageAssessmentsAssessmentIdRubricCoveragePost(assessmentId, {
-        use_stored_rubric: true,
-        use_stored_question_set: true,
-      })).data as CoverageResponse,
   });
 
 export const useDeleteRubric = (assessmentId: string) => {
@@ -39,6 +41,19 @@ export const useDeleteRubric = (assessmentId: string) => {
     mutationFn: async () => {
       await api.deleteRubricAssessmentsAssessmentIdRubricDelete(assessmentId);
     },
+    onSuccess: async () => {
+      await invalidateRubricQueries(qc, assessmentId);
+    },
+  });
+};
+
+export const useSyncRubric = (assessmentId: string) => {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationKey: ['rubric', assessmentId, 'sync'],
+    mutationFn: async () =>
+      (await api.syncRubricAssessmentsAssessmentIdRubricSyncPost(assessmentId)).data,
     onSuccess: async () => {
       await invalidateRubricQueries(qc, assessmentId);
     },
@@ -69,7 +84,7 @@ export const useCreateEmptyRubric = (assessmentId: string) => {
     mutationFn: async () => {
       await api.createEmptyRubricAssessmentsAssessmentIdRubricEmptyPost(assessmentId);
     },
-    onSuccess: async () => {
+    onSettled: async () => {
       await invalidateRubricQueries(qc, assessmentId);
     },
   });

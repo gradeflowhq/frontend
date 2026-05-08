@@ -11,7 +11,7 @@ import {
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconCircleCheck, IconPencil, IconPlus, IconTrash } from '@tabler/icons-react';
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 
 import {
   useCompatibleRuleKeys,
@@ -29,7 +29,7 @@ import RuleConfigAccordion from './RuleConfigAccordion';
 import RuleDescriptionBlock from './RuleDescriptionBlock';
 import RuleEditor from './RuleEditor';
 
-import type { RuleValue } from '../types';
+import type { QuestionType, RuleValue } from '../types';
 import type { QuestionSetOutputQuestionMap } from '@api/models';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -66,7 +66,7 @@ const QuestionDetailPanel: React.FC<Props> = ({
   onEditStateChange,
 }) => {
   const defs = useRuleDefinitions();
-  const singleTargetRuleKeys = useCompatibleRuleKeys(defs, undefined, true);
+  const compatibleKeys = useCompatibleRuleKeys(defs, questionType as QuestionType, 'question');
   const createRule = useCreateRule(assessmentId);
   const updateRule = useUpdateRule(assessmentId);
   const deleteRule = useDeleteRule(assessmentId);
@@ -84,21 +84,6 @@ const QuestionDetailPanel: React.FC<Props> = ({
 
   // The rule to pass to the preview: draft when editing, saved rule when viewing
   const previewRule = editState ? liveDraft : existingRule;
-
-  // Filter compatible rule keys for this question's type
-  const compatibleKeys = useMemo((): string[] => {
-    return singleTargetRuleKeys.filter((key) => {
-      const props = defs[key]?.properties as Record<string, unknown> | undefined;
-      const qt = props?.question_types;
-      let allowed: unknown;
-      if (qt && typeof qt === 'object' && !Array.isArray(qt)) {
-        const defaults = (qt as { default?: unknown }).default;
-        const enums = (qt as { enum?: unknown }).enum;
-        allowed = Array.isArray(defaults) ? defaults : Array.isArray(enums) ? enums : undefined;
-      }
-      return !Array.isArray(allowed) || (allowed as unknown[]).includes(questionType);
-    });
-  }, [defs, singleTargetRuleKeys, questionType]);
 
   // Label for the covering global rule
   const coveringRuleLabel = coveringRule?.display_name ?? 'a global rule';
@@ -131,8 +116,7 @@ const QuestionDetailPanel: React.FC<Props> = ({
 
   const handleStartEdit = () => {
     if (!existingRule) return;
-    const ruleType = String((existingRule as { type?: unknown }).type ?? '');
-    const key = findSchemaKeyByType(defs, ruleType, true);
+    const key = findSchemaKeyByType(defs, existingRule.type, existingRule.scope);
     setLiveDraft(existingRule);
     setEditState({ mode: 'edit', ruleKey: key });
   };

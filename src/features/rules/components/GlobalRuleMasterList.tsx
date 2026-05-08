@@ -12,7 +12,7 @@ import {
 import { IconPlus } from '@tabler/icons-react';
 import React, { useCallback, useMemo } from 'react';
 
-import { friendlyRuleLabel, getRuleTargetQids } from '@features/rules/schema';
+import { friendlyRuleLabel } from '@features/rules/schema';
 import { useScrollIntoView } from '@hooks/useScrollIntoView';
 
 import type { RuleValue } from '../types';
@@ -116,6 +116,7 @@ interface Props {
   onSelect: (ruleId: string) => void;
   onAdd: (ruleKey: string) => void;
   addableRuleKeys: string[];
+  coveredQidsByRuleId: Record<string, string[]>;
   searchQuery?: string;
 }
 
@@ -125,6 +126,7 @@ const GlobalRuleMasterList: React.FC<Props> = ({
   onSelect,
   onAdd,
   addableRuleKeys,
+  coveredQidsByRuleId,
   searchQuery = '',
 }) => {
   const selectedRef = useScrollIntoView<HTMLDivElement>(selectedRuleId);
@@ -134,7 +136,7 @@ const GlobalRuleMasterList: React.FC<Props> = ({
     // Build base rows with labels
     const baseRows = rules.map((rule) => {
       const label = rule.display_name;
-      const coveredQids = getRuleTargetQids(rule);
+      const coveredQids = coveredQidsByRuleId[rule.id] ?? [];
       return { ruleId: rule.id, label, coveredQids };
     });
     // Append a sequence number when multiple rules share the same label
@@ -152,7 +154,7 @@ const GlobalRuleMasterList: React.FC<Props> = ({
       return row;
     });
     return numberedRows.filter(({ label }) => !q || label.toLowerCase().includes(q));
-  }, [rules, searchQuery]);
+  }, [coveredQidsByRuleId, rules, searchQuery]);
 
   const handleListKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {

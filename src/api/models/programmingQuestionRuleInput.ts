@@ -15,6 +15,7 @@ export interface ProgrammingQuestionRuleInput {
   id?: string;
   readonly question_types?: readonly ProgrammingQuestionRuleInputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
+  readonly scope?: 'question';
   question_id: string;
   readonly type?: 'PROGRAMMING';
   readonly display_name?: 'Programming';

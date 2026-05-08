@@ -13,16 +13,16 @@ import type { SimilarityRuleOutputAlgorithm } from './similarityRuleOutputAlgori
  * A rule that checks for similarity between the student's answer and a reference text.
  */
 export interface SimilarityRuleOutput {
-  id?: string;
-  readonly question_types?: readonly SimilarityRuleOutputQuestionTypesItem[];
-  readonly constraints?: readonly QuestionConstraint[];
-  readonly type?: 'SIMILARITY';
-  readonly display_name?: 'Similarity';
+  id: string;
+  readonly question_types: readonly SimilarityRuleOutputQuestionTypesItem[];
+  readonly constraints: readonly QuestionConstraint[];
+  readonly type: 'SIMILARITY';
+  readonly display_name: 'Similarity';
   /** Reference answers for similarity comparison */
   references: string[];
   /** Similarity threshold for passing the rule (0 to 1) */
-  threshold?: number;
+  threshold: number;
   /** Similarity algorithm to use (options: 'levenshtein', 'jaro_winkler', 'transformer'). 'transformer' uses the BAAI/bge-small-en-v1.5 model and requires the 'ml' extra. */
-  algorithm?: SimilarityRuleOutputAlgorithm;
+  algorithm: SimilarityRuleOutputAlgorithm;
   readonly description: string;
 }

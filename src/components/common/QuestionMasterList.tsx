@@ -5,20 +5,18 @@ import React, { useCallback, useMemo } from 'react';
 
 import { useScrollIntoView } from '@hooks/useScrollIntoView';
 
-import type { RuleValue } from '../../features/rules/types';
-
 // ── Sub-types ────────────────────────────────────────────────────────────────
 
-type CoverageStatus = 'covered' | 'global' | 'uncovered';
+export type QuestionCoverageStatus = 'covered' | 'global' | 'uncovered';
 
 interface QuestionMasterRowData {
   qid: string;
-  coverageStatus: CoverageStatus;
+  coverageStatus: QuestionCoverageStatus;
 }
 
 // ── Coverage dot ─────────────────────────────────────────────────────────────
 
-const COVERAGE_COLORS: Record<CoverageStatus, string> = {
+const COVERAGE_COLORS: Record<QuestionCoverageStatus, string> = {
   covered: 'var(--mantine-color-green-6)',
   global: 'var(--mantine-color-blue-4)',
   uncovered: 'transparent',
@@ -69,20 +67,20 @@ const QuestionMasterRow: React.FC<RowProps> = ({ data, isSelected, onSelect }) =
         transition: 'background-color 90ms ease',
       }}
     >
-  <Group gap="xs" wrap="nowrap" align="center">
-    <Stack gap={0} style={{ flex: 1, minWidth: 0 }}>
-      <Text
-        ff="monospace"
-        size="xs"
-        fw={isSelected ? 700 : 500}
-        truncate
-        c={isSelected ? 'blue.7' : undefined}
-      >
-        {data.qid}
-      </Text>
-    </Stack>
-  </Group>
-</Box>
+      <Group gap="xs" wrap="nowrap" align="center">
+        <Stack gap={0} style={{ flex: 1, minWidth: 0 }}>
+          <Text
+            ff="monospace"
+            size="xs"
+            fw={isSelected ? 700 : 500}
+            truncate
+            c={isSelected ? 'blue.7' : undefined}
+          >
+            {data.qid}
+          </Text>
+        </Stack>
+      </Group>
+    </Box>
   );
 };
 
@@ -91,9 +89,7 @@ const QuestionMasterRow: React.FC<RowProps> = ({ data, isSelected, onSelect }) =
 interface Props {
   questionIds: string[];
   questionTypesById: Record<string, string>;
-  byQuestion: Record<string, RuleValue[]>;
-  coveredQuestionIds: Set<string>;
-  coveringRuleByQid: Record<string, RuleValue>;
+  coverageByQid: Record<string, QuestionCoverageStatus>;
   selectedQid: string | null;
   onSelect: (qid: string) => void;
   searchQuery: string;
@@ -102,9 +98,7 @@ interface Props {
 const QuestionMasterList: React.FC<Props> = ({
   questionIds,
   questionTypesById,
-  byQuestion,
-  coveredQuestionIds,
-  coveringRuleByQid,
+  coverageByQid,
   selectedQid,
   onSelect,
   searchQuery,
@@ -119,34 +113,11 @@ const QuestionMasterList: React.FC<Props> = ({
         const type = (questionTypesById[qid] ?? '').toLowerCase();
         return qid.toLowerCase().includes(q) || type.includes(q);
       })
-      .map((qid) => {
-        const rules = byQuestion[qid] ?? [];
-        const hasDirectRules = rules.length > 0;
-        const isCoveredByGlobal =
-          !hasDirectRules && coveredQuestionIds.has(qid) && !!coveringRuleByQid[qid];
-        const isCovered = hasDirectRules || coveredQuestionIds.has(qid);
-
-        const coverageStatus: CoverageStatus = hasDirectRules
-          ? 'covered'
-          : isCoveredByGlobal
-          ? 'global'
-          : isCovered
-          ? 'covered'
-          : 'uncovered';
-
-        return {
-          qid,
-          coverageStatus,
-        };
-      });
-  }, [
-    questionIds,
-    questionTypesById,
-    byQuestion,
-    coveredQuestionIds,
-    coveringRuleByQid,
-    searchQuery,
-  ]);
+      .map((qid) => ({
+        qid,
+        coverageStatus: coverageByQid[qid] ?? 'uncovered',
+      }));
+  }, [coverageByQid, questionIds, questionTypesById, searchQuery]);
 
   // Keyboard navigation: arrow keys move selection within the filtered list
   const handleListKeyDown = useCallback(
@@ -170,7 +141,7 @@ const QuestionMasterList: React.FC<Props> = ({
   return (
     <Box
       style={{
-        width: "100%",
+        width: '100%',
         display: 'flex',
         flexDirection: 'column',
         height: '100%',

@@ -18,9 +18,12 @@ describe('queryInvalidation helpers', () => {
       queryKey: QK.questionSet.parsed('assessment-1'),
     });
     expect(queryClient.invalidateQueries).toHaveBeenNthCalledWith(3, {
+      queryKey: QK.rubric.overview('assessment-1'),
+    });
+    expect(queryClient.invalidateQueries).toHaveBeenNthCalledWith(4, {
       queryKey: QK.assessments.item('assessment-1'),
     });
-    expect(queryClient.invalidateQueries).toHaveBeenCalledTimes(3);
+    expect(queryClient.invalidateQueries).toHaveBeenCalledTimes(4);
   });
 
   it('invalidates the rubric related query keys for an assessment', async () => {
@@ -31,15 +34,12 @@ describe('queryInvalidation helpers', () => {
     await invalidateRubricQueries(queryClient as never, 'assessment-1');
 
     expect(queryClient.invalidateQueries).toHaveBeenNthCalledWith(1, {
-      queryKey: QK.rubric.item('assessment-1'),
+      queryKey: QK.rubric.overview('assessment-1'),
     });
     expect(queryClient.invalidateQueries).toHaveBeenNthCalledWith(2, {
-      queryKey: QK.rubric.coverage('assessment-1'),
-    });
-    expect(queryClient.invalidateQueries).toHaveBeenNthCalledWith(3, {
       queryKey: QK.assessments.item('assessment-1'),
     });
-    expect(queryClient.invalidateQueries).toHaveBeenCalledTimes(3);
+    expect(queryClient.invalidateQueries).toHaveBeenCalledTimes(2);
   });
 
   it('invalidates the submission related query keys for an assessment', async () => {

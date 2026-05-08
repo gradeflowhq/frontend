@@ -9,11 +9,12 @@ import type { ManualQuestionRuleOutputQuestionTypesItem } from './manualQuestion
 import type { QuestionConstraint } from './questionConstraint';
 
 export interface ManualQuestionRuleOutput {
-  id?: string;
-  readonly question_types?: readonly ManualQuestionRuleOutputQuestionTypesItem[];
-  readonly constraints?: readonly QuestionConstraint[];
+  id: string;
+  readonly question_types: readonly ManualQuestionRuleOutputQuestionTypesItem[];
+  readonly constraints: readonly QuestionConstraint[];
+  readonly scope: 'question';
   question_id: string;
-  readonly type?: 'MANUAL';
-  readonly display_name?: 'Manual';
+  readonly type: 'MANUAL';
+  readonly display_name: 'Manual';
   readonly description: string;
 }

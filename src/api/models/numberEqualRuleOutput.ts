@@ -11,17 +11,17 @@ import type { NumberEqualRuleOutputAnswersItem } from './numberEqualRuleOutputAn
 import type { NumberEqualConfig } from './numberEqualConfig';
 
 export interface NumberEqualRuleOutput {
-  id?: string;
-  readonly question_types?: readonly NumberEqualRuleOutputQuestionTypesItem[];
-  readonly constraints?: readonly QuestionConstraint[];
-  readonly type?: 'NUMBER_EQUAL';
-  readonly display_name?: 'Number Equal';
+  id: string;
+  readonly question_types: readonly NumberEqualRuleOutputQuestionTypesItem[];
+  readonly constraints: readonly QuestionConstraint[];
+  readonly type: 'NUMBER_EQUAL';
+  readonly display_name: 'Number Equal';
   /**
    * List of acceptable numeric answers
    * @minItems 1
    */
   answers: NumberEqualRuleOutputAnswersItem[];
   /** Configuration for numeric equality checks */
-  config?: NumberEqualConfig;
+  config: NumberEqualConfig;
   readonly description: string;
 }

@@ -3,9 +3,10 @@ import { useMemo } from 'react';
 import { useAssessmentContext } from '@app/contexts/AssessmentContext';
 import { PATHS } from '@app/routes/paths';
 import { useQuestionSet } from '@features/questions/api';
-import { useRubric, useRubricCoverage } from '@features/rubric/api';
+import { useRubricOverview } from '@features/rubric/api';
 import { useSubmissions } from '@features/submissions/api';
 import { isNotFoundError } from '@utils/error';
+import { natsort } from '@utils/sort';
 
 import type { SetupStep, StepStatus } from '../components/OverviewSetupTimeline';
 
@@ -32,29 +33,38 @@ export const useSetupSteps = (assessmentId: string): SetupStepsResult => {
     isError: qsError,
     error: qsErrorData,
   } = useQuestionSet(assessmentId, !!assessmentId);
-  const { data: coverageRes, isLoading: covLoading } = useRubricCoverage(assessmentId);
-  const { data: rubricRes, isLoading: rubricLoading } = useRubric(assessmentId);
 
   const isQsMissing = useMemo(() => {
     return qsError && (isNotFoundError(qsErrorData) || !qsRes?.question_set);
   }, [qsError, qsErrorData, qsRes]);
 
-  const questionMap = isQsMissing ? {} : (qsRes?.question_set?.question_map ?? {});
-  const questionCount = Object.keys(questionMap).length;
+  const questionMap = useMemo(
+    () => (isQsMissing ? {} : (qsRes?.question_set?.question_map ?? {})),
+    [isQsMissing, qsRes],
+  );
+  const questionIds = useMemo(() => Object.keys(questionMap), [questionMap]);
+  const questionCount = questionIds.length;
   const subsCount = subsRes?.raw_submissions?.length ?? 0;
 
-  const cov = coverageRes?.coverage;
-  const covPct = cov?.percentage ?? 0;
-  const covTotal = cov?.total ?? 0;
-  const covCovered = cov?.covered ?? 0;
+  const { data: rubricOverview, isLoading: rubricOverviewLoading } = useRubricOverview(
+    assessmentId,
+    !!assessmentId && questionCount > 0,
+  );
+
+  const coverage = rubricOverview?.coverage;
+  const covTotal = coverage?.total ?? 0;
+  const covCovered = coverage?.covered ?? 0;
+  const covPct = coverage?.percentage ?? 0;
 
   const uncoveredIds = useMemo(() => {
-    const all = cov?.question_ids ?? [];
-    const covered = new Set(cov?.covered_question_ids ?? []);
-    return all.filter((qid) => !covered.has(qid));
-  }, [cov]);
+    return [...(coverage?.uncovered_question_ids ?? [])].sort(natsort);
+  }, [coverage?.uncovered_question_ids]);
 
-  const hasRules = (rubricRes?.rubric?.rules?.length ?? 0) > 0;
+  const hasRules =
+    (rubricOverview?.question_rules.length ?? 0) + (rubricOverview?.global_rules.length ?? 0) > 0;
+  const rulesAreStale = Boolean(
+    rubricOverview?.status?.is_stale || (rubricOverview?.stale_rules.length ?? 0) > 0,
+  );
   const hasSubmissions = subsCount > 0;
   const hasQuestions = questionCount > 0 && hasSubmissions;
 
@@ -68,7 +78,7 @@ export const useSetupSteps = (assessmentId: string): SetupStepsResult => {
   const rulesStatus: StepStatus =
     !hasQuestions               ? 'locked'      :
     !hasRules                   ? 'not-started' :
-    rubricRes?.status?.is_stale ? 'stale'       :
+    rulesAreStale               ? 'stale'       :
     covPct >= 1                 ? 'complete'    : 'warning';
 
   const setupSteps = useMemo<SetupStep[]>(() => {
@@ -96,13 +106,13 @@ export const useSetupSteps = (assessmentId: string): SetupStepsResult => {
       summary:
         rulesStatus === 'locked' ? 'Complete questions first'          :
         hasRules                 ? `${covCovered}/${covTotal} covered` : 'No rules configured',
-      updatedAt: rubricRes?.status?.updated_at ?? null,
+      updatedAt: rubricOverview?.status?.updated_at ?? null,
       fixLink:   ap.rules,
     },
   ];}, [
     subsStatus, subsCount, assessment,
     qsStatus, questionCount, qsRes,
-    rulesStatus, covCovered, covTotal, hasRules, rubricRes,
+    rulesStatus, covCovered, covTotal, hasRules, rubricOverview,
     assessmentId,
   ]);
 
@@ -112,7 +122,7 @@ export const useSetupSteps = (assessmentId: string): SetupStepsResult => {
     setupSteps,
     completeCount,
     allComplete: completeCount === setupSteps.length,
-    isLoading:   subsLoading || qsLoading || covLoading || rubricLoading,
+    isLoading:   subsLoading || qsLoading || rubricOverviewLoading,
     subsCount,
     questionCount,
     covPct,

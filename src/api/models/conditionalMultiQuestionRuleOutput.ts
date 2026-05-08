@@ -13,18 +13,19 @@ import type { ConditionalMultiQuestionRuleOutputThenRulesItem } from './conditio
 import type { ConditionalMultiQuestionRuleOutputElseRulesItem } from './conditionalMultiQuestionRuleOutputElseRulesItem';
 
 export interface ConditionalMultiQuestionRuleOutput {
-  id?: string;
-  readonly question_types?: readonly ConditionalMultiQuestionRuleOutputQuestionTypesItem[];
-  readonly constraints?: readonly QuestionConstraint[];
-  readonly type?: 'CONDITIONAL';
-  readonly display_name?: 'Conditional';
+  id: string;
+  readonly question_types: readonly ConditionalMultiQuestionRuleOutputQuestionTypesItem[];
+  readonly constraints: readonly QuestionConstraint[];
+  readonly scope: 'global';
+  readonly type: 'CONDITIONAL';
+  readonly display_name: 'Conditional';
   /**
    * List of rules to evaluate the 'if' condition
    * @minItems 1
    */
   if_rules: ConditionalMultiQuestionRuleOutputIfRulesItem[];
   /** Aggregation mode for 'if' rules: 'AND' requires all to be true, 'OR' requires at least one to be true */
-  if_aggregation?: ConditionalMultiQuestionRuleOutputIfAggregation;
+  if_aggregation: ConditionalMultiQuestionRuleOutputIfAggregation;
   /**
    * List of rules to evaluate if 'if' condition is met
    * @minItems 1

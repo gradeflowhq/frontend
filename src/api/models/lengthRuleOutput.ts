@@ -12,16 +12,16 @@ import type { LengthRuleOutputMaxLength } from './lengthRuleOutputMaxLength';
 import type { LengthRuleOutputMode } from './lengthRuleOutputMode';
 
 export interface LengthRuleOutput {
-  id?: string;
-  readonly question_types?: readonly LengthRuleOutputQuestionTypesItem[];
-  readonly constraints?: readonly QuestionConstraint[];
-  readonly type?: 'LENGTH';
-  readonly display_name?: 'Length';
+  id: string;
+  readonly question_types: readonly LengthRuleOutputQuestionTypesItem[];
+  readonly constraints: readonly QuestionConstraint[];
+  readonly type: 'LENGTH';
+  readonly display_name: 'Length';
   /** Minimum length of the answer */
-  min_length?: LengthRuleOutputMinLength;
+  min_length: LengthRuleOutputMinLength;
   /** Maximum length of the answer */
-  max_length?: LengthRuleOutputMaxLength;
+  max_length: LengthRuleOutputMaxLength;
   /** Mode of length measurement */
-  mode?: LengthRuleOutputMode;
+  mode: LengthRuleOutputMode;
   readonly description: string;
 }

@@ -35,10 +35,10 @@ import { notifyError, notifyErrorMessage, notifySuccess } from '@utils/notificat
 import { natsort } from '@utils/sort';
 
 import type { AdjustableSubmission, QuestionSetOutputQuestionMap } from '@api/models';
+import type { QuestionCoverageStatus } from '@components/common/QuestionMasterList';
 import type { BulkAdjustArgs } from '@features/grading/components/group-view';
 import type { SemanticState } from '@features/grading/components/group-view/GroupModeSelector';
 import type { AnswerGroup, ClusterOpts, GroupingMode, NormalizeOpts } from '@features/grading/helpers/grouping';
-import type { RuleValue } from '@features/rules/types';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -118,7 +118,11 @@ const GroupViewPage: React.FC = () => {
     return map;
   }, [submissions]);
 
-  const coveredQuestionIds = useMemo(() => new Set(Object.keys(byQuestion)), [byQuestion]);
+  const coverageByQid = useMemo((): Record<string, QuestionCoverageStatus> => {
+    return Object.fromEntries(
+      Object.keys(byQuestion).map((qid) => [qid, 'covered'] as const),
+    );
+  }, [byQuestion]);
 
   const threshold = useSemanticGrouping ? semanticThreshold : textThreshold;
   const pendingThreshold = useSemanticGrouping ? pendingSemanticThreshold : pendingTextThreshold;
@@ -370,9 +374,7 @@ const GroupViewPage: React.FC = () => {
     <QuestionMasterList
       questionIds={questionIds}
       questionTypesById={questionTypesById}
-      byQuestion={byQuestion as Record<string, RuleValue[]>}
-      coveredQuestionIds={coveredQuestionIds}
-      coveringRuleByQid={{}}
+      coverageByQid={coverageByQid}
       selectedQid={selectedQid}
       onSelect={handleSelect}
       searchQuery={searchQuery}

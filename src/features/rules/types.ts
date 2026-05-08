@@ -1,26 +1,14 @@
 import type {
-  RubricOutput,
   RubricOutputRulesItem,
-  RubricInput,
   RubricInputRulesItem,
-  QuestionSetOutputQuestionMap,
   QuestionConstraintType,
-  ValidateRubricResponse,
 } from '@api/models';
 
-// Re-export API types (single source of truth)
-export type {
-  RubricOutput,
-  RubricOutputRulesItem,
-  RubricInput,
-  RubricInputRulesItem,
-  QuestionSetOutputQuestionMap,
-  ValidateRubricResponse,
-};
-
-// Unified rule value type used by UI — backend rules always carry id/display_name.
+// Unified rule value type used by UI — backend rules always carry these fields.
 export type RuleValue = (RubricOutputRulesItem | RubricInputRulesItem) & {
   id: string;
+  type: RubricOutputRulesItem['type'];
+  scope: RubricOutputRulesItem['scope'];
   display_name: string;
 };
 

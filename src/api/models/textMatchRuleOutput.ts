@@ -9,11 +9,11 @@ import type { TextMatchRuleOutputQuestionTypesItem } from './textMatchRuleOutput
 import type { QuestionConstraint } from './questionConstraint';
 
 export interface TextMatchRuleOutput {
-  id?: string;
-  readonly question_types?: readonly TextMatchRuleOutputQuestionTypesItem[];
-  readonly constraints?: readonly QuestionConstraint[];
-  readonly type?: 'TEXT_MATCH';
-  readonly display_name?: 'Text Match';
+  id: string;
+  readonly question_types: readonly TextMatchRuleOutputQuestionTypesItem[];
+  readonly constraints: readonly QuestionConstraint[];
+  readonly type: 'TEXT_MATCH';
+  readonly display_name: 'Text Match';
   /**
    * List of acceptable exact answers
    * @minItems 1

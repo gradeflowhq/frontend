@@ -13,6 +13,7 @@ export interface RegexQuestionRuleInput {
   id?: string;
   readonly question_types?: readonly RegexQuestionRuleInputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
+  readonly scope?: 'question';
   question_id: string;
   readonly type?: 'REGEX';
   readonly display_name?: 'Regex';

@@ -4,8 +4,9 @@ import { useCallback, useMemo } from 'react';
 import { api } from '@api';
 import { invalidateRubricQueries } from '@api/queryInvalidation';
 
-import { findSchemaKeyByType, getRuleDefinitions } from './schema/lookup';
+import { findSchemaKeyByType, getRuleDefinitions, getRuleScope } from './schema/lookup';
 
+import type { RuleScope } from './schema/lookup';
 import type { RuleValue, QuestionType } from './types';
 import type { RuleCreateRequestRule, RuleUpdateRequestRule } from '@api/models';
 import type { JSONSchema7 } from 'json-schema';
@@ -78,56 +79,35 @@ export const useDeleteRule = (assessmentId: string) => {
   });
 };
 
-export const useDeleteRules = (assessmentId: string) => {
-  const qc = useQueryClient();
-
-  return useMutation({
-    mutationKey: ['rules', assessmentId, 'deleteMany'],
-    mutationFn: async (ruleIds: string[]) => {
-      const ids = [...new Set(ruleIds)];
-
-      for (const id of ids) {
-        await api.deleteRuleAssessmentsAssessmentIdRulesRuleIdDelete(assessmentId, id);
-      }
-    },
-    onSuccess: async () => {
-      await invalidateRubricQueries(qc, assessmentId);
-    },
-  });
-};
-
 /**
- * Compute compatible rule schema keys for a given question type and whether the rule
- * is single-target (has question_id) or multi-target.
+ * Compute compatible rule schema keys for a given question type and rule scope.
  */
 export const useCompatibleRuleKeys = (
   defs: RuleDefinitions,
-  questionType?: QuestionType,
-  singleTarget?: boolean
+  questionType: QuestionType | undefined,
+  scope: RuleScope,
 ): string[] => {
   return useMemo(() => {
     const keys = Object.keys(defs ?? {});
     return keys.filter((key) => {
       const props = extractProperties(defs[key]);
-      const hasQid = !!props.question_id;
+      const ruleScope = getRuleScope(props);
 
-      if (singleTarget === true && !hasQid) return false;
-      if (singleTarget === false && hasQid) return false;
+      if (ruleScope !== scope) return false;
 
       const qt = props.question_types as { default?: unknown; enum?: unknown } | undefined;
       const allowed = stringArray(qt?.default) ?? stringArray(qt?.enum);
 
       return !questionType || !allowed || allowed.includes(questionType);
     });
-  }, [defs, questionType, singleTarget]);
+  }, [defs, questionType, scope]);
 };
 
 /**
- * Resolve a concrete schema key for a rule by its type (and optional question_id requirement).
- * Useful when editing an existing rule object.
+ * Resolve a concrete schema key for a rule by its type and scope.
  */
 export const useFindSchemaKeyByType = (defs: RuleDefinitions) => {
-  return useCallback((type: string, requireQuestionId?: boolean): string | null => {
-    return findSchemaKeyByType(defs, type, requireQuestionId);
+  return useCallback((type: string, scope: RuleScope): string | null => {
+    return findSchemaKeyByType(defs, type, scope);
   }, [defs]);
 };

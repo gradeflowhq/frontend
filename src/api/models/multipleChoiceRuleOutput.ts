@@ -10,17 +10,17 @@ import type { QuestionConstraint } from './questionConstraint';
 import type { MultipleChoiceRuleOutputMode } from './multipleChoiceRuleOutputMode';
 
 export interface MultipleChoiceRuleOutput {
-  id?: string;
-  readonly question_types?: readonly MultipleChoiceRuleOutputQuestionTypesItem[];
-  readonly constraints?: readonly QuestionConstraint[];
-  readonly type?: 'MULTIPLE_CHOICE';
-  readonly display_name?: 'Multiple Choice';
+  id: string;
+  readonly question_types: readonly MultipleChoiceRuleOutputQuestionTypesItem[];
+  readonly constraints: readonly QuestionConstraint[];
+  readonly type: 'MULTIPLE_CHOICE';
+  readonly display_name: 'Multiple Choice';
   /**
    * Set of correct choices
    * @minItems 1
    */
   answer: string[];
   /** Mode of choice matching: 'ALL' requires all specified choices to be selected, 'CONTAIN' requires all specified choices to be selected but allows extra choices, 'NOT_CONTAIN' requires none of the specified choices to be selected, 'ANY' requires at least one of the specified choices to be selected, 'PARTIAL' gives credit for each specified choice selected minus each unspecified choice selected. */
-  mode?: MultipleChoiceRuleOutputMode;
+  mode: MultipleChoiceRuleOutputMode;
   readonly description: string;
 }

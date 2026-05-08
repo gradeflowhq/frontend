@@ -18,6 +18,7 @@ export const invalidateQuestionSetQueries = async (
   await invalidateQueryKeys(queryClient, [
     QK.questionSet.item(assessmentId),
     QK.questionSet.parsed(assessmentId),
+    QK.rubric.overview(assessmentId),
     QK.assessments.item(assessmentId),
   ]);
 };
@@ -27,8 +28,7 @@ export const invalidateRubricQueries = async (
   assessmentId: string
 ): Promise<void> => {
   await invalidateQueryKeys(queryClient, [
-    QK.rubric.item(assessmentId),
-    QK.rubric.coverage(assessmentId),
+    QK.rubric.overview(assessmentId),
     QK.assessments.item(assessmentId),
   ]);
 };

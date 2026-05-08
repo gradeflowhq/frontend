@@ -12,6 +12,7 @@ export interface TextMatchQuestionRuleInput {
   id?: string;
   readonly question_types?: readonly TextMatchQuestionRuleInputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
+  readonly scope?: 'question';
   question_id: string;
   readonly type?: 'TEXT_MATCH';
   readonly display_name?: 'Text Match';

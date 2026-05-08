@@ -5,11 +5,18 @@
  * Thin FastAPI wrapper over GradeFlow Engine
  * OpenAPI spec version: 0.1.0
  */
+import type { RubricCoverageQuestionRules } from './rubricCoverageQuestionRules';
+import type { RubricCoverageGlobalRules } from './rubricCoverageGlobalRules';
+import type { RubricCoverageQuestionsByRule } from './rubricCoverageQuestionsByRule';
 
 export interface RubricCoverage {
-  question_ids?: string[];
-  covered_question_ids?: string[];
-  total?: number;
-  covered?: number;
-  percentage?: number;
+  question_ids: string[];
+  covered_question_ids: string[];
+  uncovered_question_ids: string[];
+  question_rules: RubricCoverageQuestionRules;
+  global_rules: RubricCoverageGlobalRules;
+  questions_by_rule: RubricCoverageQuestionsByRule;
+  total: number;
+  covered: number;
+  percentage: number;
 }

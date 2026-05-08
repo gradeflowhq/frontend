@@ -11,15 +11,16 @@ import type { NumericRangeQuestionRuleOutputMinValue } from './numericRangeQuest
 import type { NumericRangeQuestionRuleOutputMaxValue } from './numericRangeQuestionRuleOutputMaxValue';
 
 export interface NumericRangeQuestionRuleOutput {
-  id?: string;
-  readonly question_types?: readonly NumericRangeQuestionRuleOutputQuestionTypesItem[];
-  readonly constraints?: readonly QuestionConstraint[];
+  id: string;
+  readonly question_types: readonly NumericRangeQuestionRuleOutputQuestionTypesItem[];
+  readonly constraints: readonly QuestionConstraint[];
+  readonly scope: 'question';
   question_id: string;
-  readonly type?: 'NUMERIC_RANGE';
-  readonly display_name?: 'Numeric Range';
+  readonly type: 'NUMERIC_RANGE';
+  readonly display_name: 'Numeric Range';
   /** Minimum acceptable value */
-  min_value?: NumericRangeQuestionRuleOutputMinValue;
+  min_value: NumericRangeQuestionRuleOutputMinValue;
   /** Maximum acceptable value */
-  max_value?: NumericRangeQuestionRuleOutputMaxValue;
+  max_value: NumericRangeQuestionRuleOutputMaxValue;
   readonly description: string;
 }

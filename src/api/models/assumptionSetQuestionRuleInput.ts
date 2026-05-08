@@ -14,6 +14,7 @@ export interface AssumptionSetQuestionRuleInput {
   id?: string;
   readonly question_types?: readonly AssumptionSetQuestionRuleInputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
+  readonly scope?: 'question';
   question_id: string;
   /** Mode to select which assumption to use */
   mode?: AssumptionSetQuestionRuleInputMode;

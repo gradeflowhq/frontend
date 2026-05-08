@@ -14,6 +14,7 @@ export interface ProgrammableMultiQuestionRuleInput {
   id?: string;
   readonly question_types?: readonly ProgrammableMultiQuestionRuleInputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
+  readonly scope?: 'global';
   readonly type?: 'PROGRAMMABLE_MULTI';
   readonly display_name?: 'Programmable';
   /**

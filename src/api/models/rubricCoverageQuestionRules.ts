@@ -5,6 +5,5 @@
  * Thin FastAPI wrapper over GradeFlow Engine
  * OpenAPI spec version: 0.1.0
  */
-import type { QuestionSetInput } from './questionSetInput';
 
-export type CoverageRequestQuestionSet = QuestionSetInput | null;
+export type RubricCoverageQuestionRules = {[key: string]: string};

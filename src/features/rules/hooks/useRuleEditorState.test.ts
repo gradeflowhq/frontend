@@ -11,16 +11,24 @@ describe('materializeDraft', () => {
 
   it('populates type from schema const', () => {
     const schema: JSONSchema7 = {
-      properties: { type: { const: 'TEXT_MATCH' } },
+      properties: { type: { const: 'TEXT_MATCH' }, scope: { const: 'question' } },
     };
-    expect(materializeDraft(schema)).toEqual({ id: expect.any(String), type: 'TEXT_MATCH' });
+    expect(materializeDraft(schema)).toEqual({
+      id: expect.any(String),
+      type: 'TEXT_MATCH',
+      scope: 'question',
+    });
   });
 
-  it('populates type from schema default', () => {
+  it('populates type and scope from schema defaults', () => {
     const schema: JSONSchema7 = {
-      properties: { type: { default: 'NUMERIC' } },
+      properties: { type: { default: 'NUMERIC' }, scope: { default: 'global' } },
     };
-    expect(materializeDraft(schema)).toEqual({ id: expect.any(String), type: 'NUMERIC' });
+    expect(materializeDraft(schema)).toEqual({
+      id: expect.any(String),
+      type: 'NUMERIC',
+      scope: 'global',
+    });
   });
 
   it('adds question_id when schema has the property and questionId provided', () => {
@@ -57,13 +65,13 @@ describe('materializeDraft', () => {
     expect(draft).toMatchObject({ pattern: '.*', case_sensitive: true });
   });
 
-  it('does not overwrite initial type', () => {
+  it('keeps schema type authoritative over initial type', () => {
     const schema: JSONSchema7 = {
       properties: { type: { const: 'TEXT_MATCH' } },
     };
     const initial = { type: 'EXISTING' } as never;
     expect(materializeDraft(schema, null, initial)).toMatchObject({
-      type: 'EXISTING',
+      type: 'TEXT_MATCH',
     });
   });
 

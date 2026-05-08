@@ -10,17 +10,18 @@ import type { QuestionConstraint } from './questionConstraint';
 import type { SimilarityQuestionRuleOutputAlgorithm } from './similarityQuestionRuleOutputAlgorithm';
 
 export interface SimilarityQuestionRuleOutput {
-  id?: string;
-  readonly question_types?: readonly SimilarityQuestionRuleOutputQuestionTypesItem[];
-  readonly constraints?: readonly QuestionConstraint[];
+  id: string;
+  readonly question_types: readonly SimilarityQuestionRuleOutputQuestionTypesItem[];
+  readonly constraints: readonly QuestionConstraint[];
+  readonly scope: 'question';
   question_id: string;
-  readonly type?: 'SIMILARITY';
-  readonly display_name?: 'Similarity';
+  readonly type: 'SIMILARITY';
+  readonly display_name: 'Similarity';
   /** Reference answers for similarity comparison */
   references: string[];
   /** Similarity threshold for passing the rule (0 to 1) */
-  threshold?: number;
+  threshold: number;
   /** Similarity algorithm to use (options: 'levenshtein', 'jaro_winkler', 'transformer'). 'transformer' uses the BAAI/bge-small-en-v1.5 model and requires the 'ml' extra. */
-  algorithm?: SimilarityQuestionRuleOutputAlgorithm;
+  algorithm: SimilarityQuestionRuleOutputAlgorithm;
   readonly description: string;
 }

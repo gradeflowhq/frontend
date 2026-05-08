@@ -13,6 +13,7 @@ export interface KeywordsQuestionRuleInput {
   id?: string;
   readonly question_types?: readonly KeywordsQuestionRuleInputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
+  readonly scope?: 'question';
   question_id: string;
   readonly type?: 'KEYWORDS';
   readonly display_name?: 'Keywords';

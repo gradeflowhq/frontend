@@ -11,18 +11,19 @@ import type { CompositeQuestionRuleOutputRulesItem } from './compositeQuestionRu
 import type { CompositeQuestionRuleOutputAggregation } from './compositeQuestionRuleOutputAggregation';
 
 export interface CompositeQuestionRuleOutput {
-  id?: string;
-  readonly question_types?: readonly CompositeQuestionRuleOutputQuestionTypesItem[];
-  readonly constraints?: readonly QuestionConstraint[];
+  id: string;
+  readonly question_types: readonly CompositeQuestionRuleOutputQuestionTypesItem[];
+  readonly constraints: readonly QuestionConstraint[];
+  readonly scope: 'question';
   question_id: string;
-  readonly type?: 'COMPOSITE';
-  readonly display_name?: 'Composite';
+  readonly type: 'COMPOSITE';
+  readonly display_name: 'Composite';
   /**
    * List of rules to apply to the answer
    * @minItems 1
    */
   rules: CompositeQuestionRuleOutputRulesItem[];
   /** Aggregation method to combine rule results: 'ALL', 'ANY', or 'PARTIAL' */
-  aggregation?: CompositeQuestionRuleOutputAggregation;
+  aggregation: CompositeQuestionRuleOutputAggregation;
   readonly description: string;
 }

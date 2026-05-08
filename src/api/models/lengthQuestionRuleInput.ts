@@ -15,6 +15,7 @@ export interface LengthQuestionRuleInput {
   id?: string;
   readonly question_types?: readonly LengthQuestionRuleInputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
+  readonly scope?: 'question';
   question_id: string;
   readonly type?: 'LENGTH';
   readonly display_name?: 'Length';

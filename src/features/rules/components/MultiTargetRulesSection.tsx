@@ -12,18 +12,19 @@ import {
   useRuleDefinitions,
 } from '@features/rules/api';
 import { materializeDraft } from '@features/rules/hooks/useRuleEditorState';
-import { isMultiTargetRule } from '@features/rules/schema';
 import { useGuardRegistration } from '@hooks/useUnsavedChangesGuard';
+import { natsort } from '@utils/sort';
 
 import GlobalRuleDetailPanel from './GlobalRuleDetailPanel';
 import GlobalRuleMasterList from './GlobalRuleMasterList';
 
-import type { QuestionSetOutputQuestionMap, RubricOutput } from '@api/models';
+import type { QuestionSetOutputQuestionMap, RubricCoverage } from '@api/models';
 import type { RuleValue } from '@features/rules/types';
 import type { GuardedSectionProps } from '@hooks/useUnsavedChangesGuard';
 
 interface Props extends GuardedSectionProps {
-  rubric: RubricOutput | null;
+  globalRules: RuleValue[];
+  coverage: RubricCoverage | null;
   assessmentId: string;
   questionMap: QuestionSetOutputQuestionMap;
   searchQuery?: string;
@@ -33,7 +34,8 @@ interface Props extends GuardedSectionProps {
 const SEARCH_PARAM = 'gr';
 
 const MultiTargetRulesSection: React.FC<Props> = ({
-  rubric,
+  globalRules,
+  coverage,
   assessmentId,
   questionMap,
   searchQuery = '',
@@ -55,21 +57,15 @@ const MultiTargetRulesSection: React.FC<Props> = ({
   const createRule = useCreateRule(assessmentId);
   const deleteRule = useDeleteRule(assessmentId);
 
-  const rawEligibleKeys = useCompatibleRuleKeys(defs, undefined, false);
-  const multiRuleKeys = useMemo(
-    () => rawEligibleKeys.filter((k) => k.includes('MultiQuestionRule')),
-    [rawEligibleKeys],
-  );
+  const globalRuleKeys = useCompatibleRuleKeys(defs, undefined, 'global');
 
-  const allRules = useMemo<RuleValue[]>(
-    () => (rubric?.rules ?? []) as RuleValue[],
-    [rubric],
-  );
-
-  const multiRules = useMemo(
-    () => allRules.filter(isMultiTargetRule),
-    [allRules],
-  );
+  const coveredQidsByRuleId = useMemo((): Record<string, string[]> => {
+    const map: Record<string, string[]> = {};
+    for (const [ruleId, qids] of Object.entries(coverage?.questions_by_rule ?? {})) {
+      map[ruleId] = [...qids].sort(natsort);
+    }
+    return map;
+  }, [coverage?.questions_by_rule]);
 
   // ── URL-synced selected rule ID ───────────────────────────────────────────
 
@@ -77,12 +73,12 @@ const MultiTargetRulesSection: React.FC<Props> = ({
   const selectedRuleId = useMemo(() => {
     if (pendingNewRule) return null;
 
-    if (urlRuleId && multiRules.some((rule) => rule.id === urlRuleId)) {
+    if (urlRuleId && globalRules.some((rule) => rule.id === urlRuleId)) {
       return urlRuleId;
     }
 
-    return multiRules.length > 0 ? multiRules[0].id : null;
-  }, [urlRuleId, multiRules, pendingNewRule]);
+    return globalRules.length > 0 ? globalRules[0].id : null;
+  }, [urlRuleId, globalRules, pendingNewRule]);
 
   const setSelectedRuleId = useCallback(
     (ruleId: string) => {
@@ -118,11 +114,11 @@ const MultiTargetRulesSection: React.FC<Props> = ({
 
   React.useEffect(() => {
     if (!highlightedRule) return;
-    if (multiRules.some((rule) => rule.id === highlightedRule.id)) {
+    if (globalRules.some((rule) => rule.id === highlightedRule.id)) {
       setPendingNewRule(null);
       setMobileShowDetail(true);
     }
-  }, [highlightedRule, multiRules]);
+  }, [highlightedRule, globalRules]);
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -174,11 +170,11 @@ const MultiTargetRulesSection: React.FC<Props> = ({
     async (savedRule: RuleValue) => {
       // Don't catch here — let the caller (GlobalRuleDetailPanel) display the
       // inline error. mutateAsync will still reject and propagate on failure.
-      const existingRuleIds = new Set(multiRules.map((rule) => rule.id));
+      const existingRuleIds = new Set(globalRules.map((rule) => rule.id));
       const result = await createRule.mutateAsync(savedRule);
       const createdRule = [...((result.rubric.rules ?? []) as RuleValue[])]
         .reverse()
-        .find((rule) => isMultiTargetRule(rule) && !existingRuleIds.has(rule.id));
+        .find((rule) => !existingRuleIds.has(rule.id));
 
       // Flush editing-state changes synchronously so the parent guard sees
       // isEditing=false before setSelectedRuleId triggers a search-param change.
@@ -191,41 +187,41 @@ const MultiTargetRulesSection: React.FC<Props> = ({
       }
       notifications.show({ color: 'green', message: 'Rule saved' });
     },
-    [createRule, multiRules, setSelectedRuleId],
+    [createRule, globalRules, setSelectedRuleId],
   );
 
   const handleDelete = useCallback(
     (ruleId: string) => {
-      const deletedIndex = multiRules.findIndex((rule) => rule.id === ruleId);
+      const deletedIndex = globalRules.findIndex((rule) => rule.id === ruleId);
       if (deletedIndex < 0) return;
 
       deleteRule.mutate(ruleId, {
         onSuccess: () => {
           notifications.show({ color: 'green', message: 'Rule deleted' });
-          const remainingMulti = multiRules.filter((rule) => rule.id !== ruleId);
-          if (remainingMulti.length === 0) {
+          const remainingGlobalRules = globalRules.filter((rule) => rule.id !== ruleId);
+          if (remainingGlobalRules.length === 0) {
             setMobileShowDetail(false);
           } else {
-            const nextRule = remainingMulti[Math.max(0, deletedIndex - 1)];
+            const nextRule = remainingGlobalRules[Math.max(0, deletedIndex - 1)];
             setSelectedRuleId(nextRule.id);
           }
         },
         onError: () => notifications.show({ color: 'red', message: 'Delete failed' }),
       });
     },
-    [deleteRule, multiRules, setSelectedRuleId],
+    [deleteRule, globalRules, setSelectedRuleId],
   );
 
   // ── Early returns ─────────────────────────────────────────────────────────
 
-  if (multiRuleKeys.length === 0) {
+  if (globalRuleKeys.length === 0) {
     return <Alert color="gray">No global rule types are available.</Alert>;
   }
 
   // ── Render ────────────────────────────────────────────────────────────────
 
   const selectedRule = selectedRuleId
-    ? (multiRules.find((rule) => rule.id === selectedRuleId) ?? null)
+    ? (globalRules.find((rule) => rule.id === selectedRuleId) ?? null)
     : null;
 
   const detailPanel = pendingNewRule ? (
@@ -241,11 +237,12 @@ const MultiTargetRulesSection: React.FC<Props> = ({
       onCancelPending={() => {
         setDetailEditing(false);
         setPendingNewRule(null);
-        setMobileShowDetail(multiRules.length > 0);
+        setMobileShowDetail(globalRules.length > 0);
       }}
       onDelete={() => {
         // no-op — pending rules are discarded via cancel
       }}
+      coveredQids={[]}
     />
   ) : selectedRule !== null && selectedRuleId ? (
     <GlobalRuleDetailPanel
@@ -255,6 +252,7 @@ const MultiTargetRulesSection: React.FC<Props> = ({
       questionMap={questionMap}
       onEditStateChange={setDetailEditing}
       onDelete={() => handleDelete(selectedRuleId)}
+      coveredQids={coveredQidsByRuleId[selectedRuleId] ?? []}
     />
   ) : (
     <Text c="dimmed" size="md" ta="center">
@@ -264,11 +262,12 @@ const MultiTargetRulesSection: React.FC<Props> = ({
 
   const listPanel = (
     <GlobalRuleMasterList
-      rules={multiRules}
+      rules={globalRules}
       selectedRuleId={selectedRuleId}
       onSelect={handleSelect}
       onAdd={handleAdd}
-      addableRuleKeys={multiRuleKeys}
+      addableRuleKeys={globalRuleKeys}
+      coveredQidsByRuleId={coveredQidsByRuleId}
       searchQuery={searchQuery}
     />
   );

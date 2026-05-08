@@ -8,32 +8,32 @@ import { useUrlSelectedId } from '@hooks/useUrlSelectedId';
 
 import QuestionDetailPanel from './QuestionDetailPanel';
 
-
 import type { RuleValue } from '../types';
-import type { QuestionSetOutputQuestionMap, RubricOutput } from '@api/models';
+import type { QuestionSetOutputQuestionMap, RubricCoverage } from '@api/models';
+import type { QuestionCoverageStatus } from '@components/common/QuestionMasterList';
 import type { GuardedSectionProps } from '@hooks/useUnsavedChangesGuard';
 
 interface Props extends GuardedSectionProps {
-  rubric: RubricOutput | null;
+  questionRules: RuleValue[];
+  globalRules: RuleValue[];
+  coverage: RubricCoverage | null;
   questionIds: string[];
   questionTypesById: Record<string, string>;
   assessmentId: string;
   questionMap: QuestionSetOutputQuestionMap;
-  coveredQuestionIds: Set<string>;
   searchQuery?: string;
-  coveringRuleByQid?: Record<string, RuleValue>;
   onViewGlobalRule?: (qid: string) => void;
 }
 
 const SingleTargetRulesSection: React.FC<Props> = ({
-  rubric,
+  questionRules,
+  globalRules,
+  coverage,
   questionIds,
   questionTypesById,
   assessmentId,
   questionMap,
-  coveredQuestionIds,
   searchQuery = '',
-  coveringRuleByQid = {},
   onViewGlobalRule,
   guard,
   onEditStateChange,
@@ -50,22 +50,52 @@ const SingleTargetRulesSection: React.FC<Props> = ({
 
   useGuardRegistration(detailPanelEditing, onEditStateChange, registerResetEditing, resetEditing);
 
-  const allRules = useMemo<RuleValue[]>(
-    () => (rubric?.rules ?? []) as RuleValue[],
-    [rubric],
+  const questionRuleById = useMemo(
+    () => new Map(questionRules.map((rule) => [rule.id, rule])),
+    [questionRules],
+  );
+
+  const globalRuleById = useMemo(
+    () => new Map(globalRules.map((rule) => [rule.id, rule])),
+    [globalRules],
   );
 
   const byQuestion = useMemo((): Record<string, RuleValue[]> => {
     const map: Record<string, RuleValue[]> = {};
-    for (const rule of allRules) {
-      const qid = (rule as { question_id?: unknown }).question_id;
-      if (typeof qid === 'string') {
-        if (!map[qid]) map[qid] = [];
-        map[qid].push(rule);
-      }
+    const coverageQuestionRules = coverage?.question_rules ?? {};
+
+    for (const qid of questionIds) {
+      const ruleId = coverageQuestionRules[qid];
+      const rule = ruleId ? questionRuleById.get(ruleId) : undefined;
+      if (rule) map[qid] = [rule];
     }
     return map;
-  }, [allRules]);
+  }, [coverage?.question_rules, questionIds, questionRuleById]);
+
+  const coveringRuleByQid = useMemo((): Record<string, RuleValue> => {
+    const map: Record<string, RuleValue> = {};
+    const coverageGlobalRules = coverage?.global_rules ?? {};
+
+    for (const [qid, ruleId] of Object.entries(coverageGlobalRules)) {
+      const rule = globalRuleById.get(ruleId);
+      if (rule) map[qid] = rule;
+    }
+    return map;
+  }, [coverage?.global_rules, globalRuleById]);
+
+  const coverageByQid = useMemo((): Record<string, QuestionCoverageStatus> => {
+    const map: Record<string, QuestionCoverageStatus> = {};
+    for (const qid of coverage?.covered_question_ids ?? []) {
+      map[qid] = 'covered';
+    }
+    for (const qid of Object.keys(coverage?.global_rules ?? {})) {
+      map[qid] = 'global';
+    }
+    for (const qid of Object.keys(coverage?.question_rules ?? {})) {
+      map[qid] = 'covered';
+    }
+    return map;
+  }, [coverage?.covered_question_ids, coverage?.global_rules, coverage?.question_rules]);
 
   const { selectedId: selectedQid, setSelectedId: setSelectedQid } = useUrlSelectedId(questionIds, 'q');
 
@@ -89,11 +119,11 @@ const SingleTargetRulesSection: React.FC<Props> = ({
 
   const selectedRules = selectedQid ? (byQuestion[selectedQid] ?? []) : [];
   const selectedType = selectedQid ? (questionTypesById[selectedQid] ?? 'TEXT') : 'TEXT';
+  const coveringRule = selectedQid ? coveringRuleByQid[selectedQid] : undefined;
   const coveredByGlobal =
     !!selectedQid &&
     selectedRules.length === 0 &&
-    coveredQuestionIds.has(selectedQid);
-  const coveringRule = selectedQid ? coveringRuleByQid[selectedQid] : undefined;
+    Boolean(coveringRule);
   const handleViewGlobalRule =
     selectedQid && onViewGlobalRule ? () => onViewGlobalRule(selectedQid) : undefined;
 
@@ -101,9 +131,7 @@ const SingleTargetRulesSection: React.FC<Props> = ({
     <QuestionMasterList
       questionIds={questionIds}
       questionTypesById={questionTypesById}
-      byQuestion={byQuestion}
-      coveredQuestionIds={coveredQuestionIds}
-      coveringRuleByQid={coveringRuleByQid}
+      coverageByQid={coverageByQid}
       selectedQid={selectedQid}
       onSelect={handleSelect}
       searchQuery={searchQuery}

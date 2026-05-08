@@ -5,6 +5,5 @@
  * Thin FastAPI wrapper over GradeFlow Engine
  * OpenAPI spec version: 0.1.0
  */
-import type { RubricInput } from './rubricInput';
 
-export type CoverageRequestRubric = RubricInput | null;
+export type RubricCoverageGlobalRules = {[key: string]: string};

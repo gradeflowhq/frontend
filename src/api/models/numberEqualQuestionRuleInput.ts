@@ -14,6 +14,7 @@ export interface NumberEqualQuestionRuleInput {
   id?: string;
   readonly question_types?: readonly NumberEqualQuestionRuleInputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
+  readonly scope?: 'question';
   question_id: string;
   readonly type?: 'NUMBER_EQUAL';
   readonly display_name?: 'Number Equal';

@@ -13,6 +13,7 @@ export interface SimilarityQuestionRuleInput {
   id?: string;
   readonly question_types?: readonly SimilarityQuestionRuleInputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
+  readonly scope?: 'question';
   question_id: string;
   readonly type?: 'SIMILARITY';
   readonly display_name?: 'Similarity';

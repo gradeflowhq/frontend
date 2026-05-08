@@ -13,6 +13,7 @@ export interface MultipleChoiceQuestionRuleInput {
   id?: string;
   readonly question_types?: readonly MultipleChoiceQuestionRuleInputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
+  readonly scope?: 'question';
   question_id: string;
   readonly type?: 'MULTIPLE_CHOICE';
   readonly display_name?: 'Multiple Choice';

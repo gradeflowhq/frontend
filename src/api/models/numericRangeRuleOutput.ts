@@ -11,14 +11,14 @@ import type { NumericRangeRuleOutputMinValue } from './numericRangeRuleOutputMin
 import type { NumericRangeRuleOutputMaxValue } from './numericRangeRuleOutputMaxValue';
 
 export interface NumericRangeRuleOutput {
-  id?: string;
-  readonly question_types?: readonly NumericRangeRuleOutputQuestionTypesItem[];
-  readonly constraints?: readonly QuestionConstraint[];
-  readonly type?: 'NUMERIC_RANGE';
-  readonly display_name?: 'Numeric Range';
+  id: string;
+  readonly question_types: readonly NumericRangeRuleOutputQuestionTypesItem[];
+  readonly constraints: readonly QuestionConstraint[];
+  readonly type: 'NUMERIC_RANGE';
+  readonly display_name: 'Numeric Range';
   /** Minimum acceptable value */
-  min_value?: NumericRangeRuleOutputMinValue;
+  min_value: NumericRangeRuleOutputMinValue;
   /** Maximum acceptable value */
-  max_value?: NumericRangeRuleOutputMaxValue;
+  max_value: NumericRangeRuleOutputMaxValue;
   readonly description: string;
 }
