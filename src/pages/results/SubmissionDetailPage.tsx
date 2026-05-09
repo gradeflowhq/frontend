@@ -2,7 +2,7 @@ import {
   ActionIcon, Alert, Badge, Box, Button, Center, Checkbox, Collapse, Divider, Group,
   Loader,
   Modal, NumberInput, Paper, Popover, Progress, SegmentedControl, Select,
-  SimpleGrid, Stack, Text, Textarea, Tooltip, UnstyledButton,
+  SimpleGrid, Stack, Text, Textarea, Title, Tooltip, UnstyledButton,
 } from '@mantine/core';
 import {
   IconAlertCircle, IconChevronDown, IconChevronLeft, IconChevronRight,
@@ -12,6 +12,7 @@ import {
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 
+import { useAssessmentContext } from '@app/contexts/AssessmentContext';
 import { PATHS } from '@app/routes/paths';
 import AnswerText from '@components/common/AnswerText';
 import PageShell from '@components/common/PageShell';
@@ -22,6 +23,7 @@ import { GradingStatusBanner } from '@features/grading/components';
 import { useQuestionSet } from '@features/questions/api';
 import { useRubricOverview } from '@features/rubric/api';
 import { getRuleDescriptionText } from '@features/rules/helpers';
+import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { isEncrypted } from '@utils/crypto';
 import { getErrorMessage } from '@utils/error';
 import { notifyError, notifyErrorMessage, notifySuccess } from '@utils/notifications';
@@ -293,6 +295,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
 const SubmissionDetailInner: React.FC<{ assessmentId: string; encodedStudentId: string }> = ({ assessmentId, encodedStudentId }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { assessment } = useAssessmentContext();
 
   const isFromStatistics = location.pathname.includes('/results/statistics/');
   const ap = PATHS.assessment(assessmentId);
@@ -342,6 +345,12 @@ const SubmissionDetailInner: React.FC<{ assessmentId: string; encodedStudentId: 
   const submissions = useMemo<AdjustableSubmission[]>(() => data?.submissions ?? [], [data]);
   const studentIds = useMemo(() => submissions.map((s) => s.student_id).sort(natsort), [submissions]);
   const { decryptedIds, isDecrypting: isDecryptingIds } = useDecryptedIds(studentIds, passphrase, notifyEncryptedDetected);
+  const studentDisplayId = decryptedIds[encodedStudentId] ?? encodedStudentId;
+  const documentTitlePrefix = encryptedDetected && !decryptedIds[encodedStudentId]
+    ? 'Submission'
+    : `Submission ${studentDisplayId}`;
+
+  useDocumentTitle(`${documentTitlePrefix} - ${assessment?.name ?? 'Assessment'} - GradeFlow`);
 
   const sortedIndex = studentIds.indexOf(encodedStudentId);
   const current = submissions.find((s) => s.student_id === encodedStudentId) ?? null;
@@ -488,9 +497,27 @@ const SubmissionDetailInner: React.FC<{ assessmentId: string; encodedStudentId: 
 
   // ── Loading / error states ──────────────────────────────────────────────────
 
-  if (isLoading) return <Center style={{ minHeight: '60vh' }}><Loader /></Center>;
-  if (isError) return <Box p="lg"><Alert color="red">{getErrorMessage(error)}</Alert></Box>;
-  if (!current) return <Box p="lg"><Alert color="yellow">Submission not found.</Alert></Box>;
+  if (isLoading) {
+    return (
+      <PageShell title="Submission">
+        <Center style={{ minHeight: '60vh' }}><Loader /></Center>
+      </PageShell>
+    );
+  }
+  if (isError) {
+    return (
+      <PageShell title="Submission">
+        <Alert color="red">{getErrorMessage(error)}</Alert>
+      </PageShell>
+    );
+  }
+  if (!current) {
+    return (
+      <PageShell title="Submission" updatedAt={data?.status?.updated_at}>
+        <Alert color="yellow">Submission not found.</Alert>
+      </PageShell>
+    );
+  }
 
   // ── Computed totals ─────────────────────────────────────────────────────────
 
@@ -508,37 +535,40 @@ const SubmissionDetailInner: React.FC<{ assessmentId: string; encodedStudentId: 
   // ── Title / actions ─────────────────────────────────────────────────────────
 
   const navTitle = (
-    <Group gap="sm" align="center" wrap="nowrap">
-      <Button
-        variant="outline"
-        size="sm"
-        leftSection={<IconChevronLeft size={14} />}
-        onClick={() => void navigate(backPath)}
-        px="xs"
-      >
-        Students
-      </Button>
-      <Select
-        searchable
-        size="sm"
-        w={220}
-        aria-label="Navigate to student"
-        placeholder="Select student"
-        value={encodedStudentId}
-        onChange={(v) => v && void navigate(detailPath(v))}
-        data={studentIds.map((id) => ({
-          value: id,
-          label: decryptedIds[id] ?? id,
-        }))}
-      />
-      {sortedIndex >= 0 && (
-        <Text size="sm" c="dimmed" style={{ whiteSpace: 'nowrap' }}>
-          ({sortedIndex + 1} of {studentIds.length})
-        </Text>
-      )}
-      {isDecryptingIds && (
-        <Badge variant="light" color="gray" size="sm">Decrypting...</Badge>
-      )}
+    <Group gap="md" align="center" wrap="wrap" style={{ minWidth: 0 }}>
+      <Title order={3}>Submission</Title>
+      <Group gap="sm" align="center" wrap="nowrap" style={{ minWidth: 0 }}>
+        <Button
+          variant="outline"
+          size="sm"
+          leftSection={<IconChevronLeft size={14} />}
+          onClick={() => void navigate(backPath)}
+          px="xs"
+        >
+          Students
+        </Button>
+        <Select
+          searchable
+          size="sm"
+          w={220}
+          aria-label="Navigate to student"
+          placeholder="Select student"
+          value={encodedStudentId}
+          onChange={(v) => v && void navigate(detailPath(v))}
+          data={studentIds.map((id) => ({
+            value: id,
+            label: decryptedIds[id] ?? id,
+          }))}
+        />
+        {sortedIndex >= 0 && (
+          <Text size="sm" c="dimmed" style={{ whiteSpace: 'nowrap' }}>
+            ({sortedIndex + 1} of {studentIds.length})
+          </Text>
+        )}
+        {isDecryptingIds && (
+          <Badge variant="light" color="gray" size="sm">Decrypting...</Badge>
+        )}
+      </Group>
     </Group>
   );
 
