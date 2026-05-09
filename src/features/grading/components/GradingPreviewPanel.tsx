@@ -1,23 +1,27 @@
-import { Alert, Loader, Skeleton, Stack, Text } from '@mantine/core';
+import { Alert, Skeleton, Stack, Text } from '@mantine/core';
 import { IconCircleCheck, IconAlertCircle } from '@tabler/icons-react';
 import { DataTable } from 'mantine-datatable';
 import React, { useMemo } from 'react';
 
+import { JobStatusResponseStatus as JobStatus } from '@api/models/jobStatusResponseStatus';
 import AnswerText from '@components/common/AnswerText';
 import DecryptedText from '@features/encryption/components/DecryptedText';
 import { useAssessmentPassphrase } from '@features/encryption/PassphraseContext';
+import JobProgressAlert from '@features/grading/components/JobProgressAlert';
 import { usePagination } from '@hooks/usePagination';
 import { getErrorMessage } from '@utils/error';
 import { natsort } from '@utils/sort';
 
-import type { JobStatusResponse } from '@api/models';
+import type { JobStatusResponseStatus } from '@api/models/jobStatusResponseStatus';
+import type { JobProgress } from '@features/grading/helpers/jobProgress';
 import type { AdjustableSubmission, AdjustableQuestionResult } from '@features/grading/types';
 
 type Props = {
   items: AdjustableSubmission[];
   loading?: boolean;
   error?: unknown;
-  status?: JobStatusResponse['status'] | null;
+  status?: JobStatusResponseStatus | null;
+  progress?: JobProgress;
   initialPageSize?: number;
 };
 
@@ -26,6 +30,7 @@ const GradingPreviewPanel: React.FC<Props> = ({
   loading,
   error,
   status,
+  progress,
   initialPageSize = 5,
 }) => {
   const { passphrase } = useAssessmentPassphrase();
@@ -109,12 +114,13 @@ const GradingPreviewPanel: React.FC<Props> = ({
   const { page, setPage, pageSize, setPageSize, paginate } = usePagination([], initialPageSize);
 
   if (loading) {
-    const statusLabel = status === 'queued' ? 'queued' : 'running';
+    const statusLabel = status === JobStatus.queued ? 'queued' : 'running';
     return (
       <Stack gap="sm">
-        <Alert icon={<Loader size={16} />} color="blue">
-          Preview job {statusLabel}.
-        </Alert>
+        <JobProgressAlert
+          statusText={`Preview job ${statusLabel}`}
+          progress={progress}
+        />
         <Skeleton height={200} />
       </Stack>
     );

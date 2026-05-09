@@ -9,6 +9,7 @@ import type { GradingJobResultType } from './gradingJobResultType';
 import type { Submission } from './submission';
 
 export interface GradingJobResult {
+  job_id: string;
   assessment_id: string;
   type: GradingJobResultType;
   submissions: Submission[];

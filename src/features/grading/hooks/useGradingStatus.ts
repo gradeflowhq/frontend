@@ -1,18 +1,22 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 
+import { JobStatusResponseStatus as JobStatus } from '@api/models/jobStatusResponseStatus';
 import { QK } from '@api/queryKeys';
 import { useGrading, useGradingJob, useJobStatus } from '@features/grading/api';
+import { useJobProgress } from '@features/grading/hooks/useJobProgress';
 
-import type { JobStatusResponse } from '@api/models';
+import type { JobStatusResponseStatus } from '@api/models/jobStatusResponseStatus';
+import type { JobProgress } from '@features/grading/helpers/jobProgress';
 
 export interface GradingStatusResult {
   gradingInProgress: boolean;
-  jobStatus: JobStatusResponse['status'] | undefined;
+  jobStatus: JobStatusResponseStatus | undefined;
   jobError: string | null | undefined;
   statusError?: unknown;
   isStale: boolean;
   updatedAt: string | null | undefined;
+  jobProgress: JobProgress;
 }
 
 /**
@@ -39,7 +43,11 @@ export const useGradingStatus = (assessmentId: string): GradingStatusResult => {
 
   const jobStatus = jobStatusRes?.status;
   const jobError = jobStatusRes?.error;
-  const gradingInProgress = jobStatus === 'queued' || jobStatus === 'running';
+  const gradingInProgress = jobStatus === JobStatus.queued || jobStatus === JobStatus.running;
+  const jobTiming = jobStatusRes ?? gradingJob;
+  const jobProgress = useJobProgress(jobTiming, gradingInProgress, {
+    startFromCurrentTime: true,
+  });
   const isStale = gradingData?.status?.is_stale ?? false;
   const updatedAt = gradingData?.status?.updated_at;
   let statusError: unknown;
@@ -52,11 +60,19 @@ export const useGradingStatus = (assessmentId: string): GradingStatusResult => {
   // Auto-invalidate grading results when the job transitions to completed so
   // pages always show fresh data without managing this effect themselves.
   useEffect(() => {
-    if (jobStatus === 'completed') {
+    if (jobStatus === JobStatus.completed) {
       void qc.invalidateQueries({ queryKey: QK.grading.item(assessmentId) });
       void qc.invalidateQueries({ queryKey: QK.grading.job(assessmentId) });
     }
   }, [jobStatus, assessmentId, qc]);
 
-  return { gradingInProgress, jobStatus, jobError, statusError, isStale, updatedAt };
+  return {
+    gradingInProgress,
+    jobStatus,
+    jobError,
+    statusError,
+    isStale,
+    updatedAt,
+    jobProgress,
+  };
 };

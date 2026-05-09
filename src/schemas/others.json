@@ -1,6 +1,36 @@
 {
   "GradingJob": {
     "properties": {
+      "completed_at": {
+        "title": "Completed At",
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time"
+      },
+      "duration_seconds": {
+        "title": "Duration Seconds",
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "estimated_duration_seconds": {
+        "title": "Estimated Duration Seconds",
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "estimated_completion_at": {
+        "title": "Estimated Completion At",
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time"
+      },
       "job_id": {
         "type": "string",
         "title": "Job Id"
@@ -8,17 +38,27 @@
       "url": {
         "type": "string",
         "title": "Url"
+      },
+      "created_at": {
+        "type": "string",
+        "format": "date-time",
+        "title": "Created At"
       }
     },
     "type": "object",
     "required": [
       "job_id",
-      "url"
+      "url",
+      "created_at"
     ],
     "title": "GradingJob"
   },
   "GradingJobResult": {
     "properties": {
+      "job_id": {
+        "type": "string",
+        "title": "Job Id"
+      },
       "assessment_id": {
         "type": "string",
         "title": "Assessment Id"
@@ -47,6 +87,7 @@
     },
     "type": "object",
     "required": [
+      "job_id",
       "assessment_id",
       "type",
       "submissions"

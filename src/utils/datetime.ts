@@ -1,14 +1,16 @@
 import dayjs from 'dayjs';
+import duration from 'dayjs/plugin/duration';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 
 // Enable the plugins once
+dayjs.extend(duration);
 dayjs.extend(relativeTime);
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-type DateInput = string | number | Date | dayjs.Dayjs;
+export type DateInput = string | number | Date | dayjs.Dayjs;
 
 type SmartFormatOptions = {
   // When to consider a date "recent" and use relative time.
@@ -45,6 +47,38 @@ const asDayjs = (v: DateInput, zone?: string) => {
   return zone ? base.tz(zone) : base.local();
 };
 
+export const getTimestampMs = (v: DateInput | null | undefined): number | null => {
+  if (v === null || v === undefined) return null;
+  if (typeof v === 'string' && v.trim() === '') return null;
+  return asDayjs(v)?.valueOf() ?? null;
+};
+
+export const getCurrentTimestampMs = (): number => dayjs().valueOf();
+
+export const secondsToMs = (seconds: number | null | undefined): number | null => {
+  if (seconds === null || seconds === undefined || !Number.isFinite(seconds)) return null;
+  return seconds > 0 ? dayjs.duration(seconds, 'seconds').asMilliseconds() : null;
+};
+
+export const formatDuration = (ms: number): string => {
+  const durationMs = Number.isFinite(ms) ? ms : 0;
+  const durationSeconds = Math.max(0, Math.ceil(dayjs.duration(durationMs, 'milliseconds').asSeconds()));
+  const durationValue = dayjs.duration(durationSeconds, 'seconds');
+  const secondsPerMinute = dayjs.duration(1, 'minute').asSeconds();
+  const secondsPerHour = dayjs.duration(1, 'hour').asSeconds();
+
+  if (durationSeconds < secondsPerMinute) return `${durationSeconds} sec`;
+
+  if (durationSeconds < secondsPerHour) {
+    const minutes = Math.floor(durationValue.asMinutes());
+    const remainingSeconds = durationValue.seconds();
+    return remainingSeconds > 0 ? `${minutes} min ${remainingSeconds} sec` : `${minutes} min`;
+  }
+
+  const hours = Math.floor(durationValue.asHours());
+  const minutes = Math.ceil(durationValue.subtract(dayjs.duration(hours, 'hours')).asMinutes());
+  return minutes > 0 ? `${hours} hr ${minutes} min` : `${hours} hr`;
+};
 
 // Pick a date pattern based on whether date is in the same year as “now”
 const pickPattern = (d: dayjs.Dayjs, includeTime?: boolean, sameYearPattern?: string, otherYearPattern?: string) => {
@@ -91,7 +125,7 @@ const formatSmart = (
   const d = asDayjs(v, zone);
   if (!d) return returnBoth ? { primary: '—', secondary: '' } : '—';
 
-  const diffAbsMs = Math.abs(d.valueOf() - dayjs().valueOf());
+  const diffAbsMs = Math.abs(d.valueOf() - getCurrentTimestampMs());
   const useRelative = diffAbsMs <= recentThresholdMs;
 
   const relative = withRelativeSuffix ? d.fromNow() : d.fromNow(true);

@@ -3,8 +3,10 @@ import { IconListCheck, IconSend } from '@tabler/icons-react';
 import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { JobStatusResponseStatus as JobStatus } from '@api/models/jobStatusResponseStatus';
 import { PATHS } from '@app/routes/paths';
 import SectionLabel from '@components/common/SectionLabel';
+import UpdatedAtBadge from '@components/common/UpdatedAtBadge';
 import { buildTotals, computeStats } from '@features/grading/helpers';
 
 import StatCard from './StatCard';
@@ -12,14 +14,14 @@ import StatCard from './StatCard';
 import type {
   AdjustableSubmission,
   GradingResponse,
-  JobStatusResponse,
 } from '@api/models';
+import type { JobStatusResponseStatus } from '@api/models/jobStatusResponseStatus';
 
 interface Props {
   assessmentId: string;
   hasGrading: boolean;
   hasGradingJob: boolean;
-  jobStatus?: JobStatusResponse['status'];
+  jobStatus?: JobStatusResponseStatus;
   submissions: AdjustableSubmission[];
   gradingData: GradingResponse | null | undefined;
 }
@@ -54,8 +56,11 @@ const GradingResultsCard: React.FC<Props> = ({
             <Text size="sm">
               {hasGrading
                 ? `${submissions.length} students graded`
-                : `Job ${jobStatus ?? 'queued'}`}
+                : `Job ${jobStatus ?? JobStatus.queued}`}
             </Text>
+            {gradingData?.status?.updated_at && (
+              <UpdatedAtBadge updatedAt={gradingData.status.updated_at} />
+            )}
             {gradingData?.status?.is_stale && (
               <Badge size="xs" variant="light" color="yellow">
                 Stale

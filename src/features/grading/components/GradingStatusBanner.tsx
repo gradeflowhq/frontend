@@ -1,8 +1,10 @@
-import { Alert, Box, Loader, Text } from '@mantine/core';
+import { Alert, Box, Text } from '@mantine/core';
 import { IconAlertCircle } from '@tabler/icons-react';
 import React from 'react';
 
+import { JobStatusResponseStatus as JobStatus } from '@api/models/jobStatusResponseStatus';
 import SectionStatusBadge from '@components/common/SectionStatusBadge';
+import JobProgressAlert from '@features/grading/components/JobProgressAlert';
 import { useGradingStatus } from '@features/grading/hooks/useGradingStatus';
 import { getErrorMessage } from '@utils/error';
 
@@ -11,7 +13,7 @@ interface GradingStatusBannerProps {
 }
 
 const GradingStatusBanner: React.FC<GradingStatusBannerProps> = ({ assessmentId }) => {
-  const { gradingInProgress, isStale, jobStatus, jobError, statusError } =
+  const { gradingInProgress, isStale, jobStatus, jobError, statusError, jobProgress } =
     useGradingStatus(assessmentId);
 
   if (statusError) {
@@ -29,7 +31,7 @@ const GradingStatusBanner: React.FC<GradingStatusBannerProps> = ({ assessmentId 
     );
   }
 
-  if (jobStatus === 'failed') {
+  if (jobStatus === JobStatus.failed) {
     return (
       <Alert
         icon={<IconAlertCircle size={16} />}
@@ -45,11 +47,14 @@ const GradingStatusBanner: React.FC<GradingStatusBannerProps> = ({ assessmentId 
   }
 
   if (gradingInProgress) {
-    const statusLabel = jobStatus === 'queued' ? 'queued' : 'running';
+    const statusLabel = jobStatus === JobStatus.queued ? 'queued' : 'running';
     return (
-      <Alert icon={<Loader size={16} />} color="blue" mb="md">
-        Grading job {statusLabel}. Showing previous results. This page will update automatically.
-      </Alert>
+      <JobProgressAlert
+        statusText={`Grading job ${statusLabel}`}
+        secondaryText="showing previous results"
+        progress={jobProgress}
+        mb="md"
+      />
     );
   }
 

@@ -78,6 +78,7 @@ const InlineRulePreview: React.FC<Props> = ({ rule, assessmentId }) => {
                   items={previewMutation.data?.submissions ?? []}
                   loading={previewMutation.isPending}
                   status={previewMutation.previewStatus}
+                  progress={previewMutation.previewProgress}
                   error={previewMutation.isError ? previewMutation.error : undefined}
                 />
               </Box>

@@ -330,8 +330,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -956,8 +956,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -1675,10 +1675,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
           "MULTI_VALUED",
+          "CHOICE",
           "TEXT",
-          "CHOICE"
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -1940,8 +1940,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -2222,10 +2222,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
           "MULTI_VALUED",
+          "CHOICE",
           "TEXT",
-          "CHOICE"
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -2552,10 +2552,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
           "MULTI_VALUED",
+          "CHOICE",
           "TEXT",
-          "CHOICE"
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -2672,10 +2672,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
           "MULTI_VALUED",
+          "CHOICE",
           "TEXT",
-          "CHOICE"
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -2787,10 +2787,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
           "MULTI_VALUED",
+          "CHOICE",
           "TEXT",
-          "CHOICE"
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -3076,8 +3076,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -3326,10 +3326,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
           "MULTI_VALUED",
+          "CHOICE",
           "TEXT",
-          "CHOICE"
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -3395,10 +3395,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
           "MULTI_VALUED",
+          "CHOICE",
           "TEXT",
-          "CHOICE"
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -3571,10 +3571,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
           "MULTI_VALUED",
+          "CHOICE",
           "TEXT",
-          "CHOICE"
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -4542,6 +4542,36 @@
   },
   "JobStatusResponse": {
     "properties": {
+      "completed_at": {
+        "title": "Completed At",
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time"
+      },
+      "duration_seconds": {
+        "title": "Duration Seconds",
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "estimated_duration_seconds": {
+        "title": "Estimated Duration Seconds",
+        "type": [
+          "number",
+          "null"
+        ]
+      },
+      "estimated_completion_at": {
+        "title": "Estimated Completion At",
+        "type": [
+          "string",
+          "null"
+        ],
+        "format": "date-time"
+      },
       "job_id": {
         "type": "string",
         "title": "Job Id"
@@ -4562,12 +4592,18 @@
           "string",
           "null"
         ]
+      },
+      "created_at": {
+        "type": "string",
+        "format": "date-time",
+        "title": "Created At"
       }
     },
     "type": "object",
     "required": [
       "job_id",
-      "status"
+      "status",
+      "created_at"
     ],
     "title": "JobStatusResponse"
   },

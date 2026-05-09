@@ -1,6 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { formatAbsolute, formatSmartLabel } from '@utils/datetime';
+import {
+  formatAbsolute,
+  formatDuration,
+  formatSmartLabel,
+  getTimestampMs,
+  secondsToMs,
+} from '@utils/datetime';
 
 describe('formatAbsolute', () => {
   it('returns em-dash for invalid dates', () => {
@@ -64,5 +70,26 @@ describe('formatSmartLabel', () => {
     const oneHourAgo = new Date('2024-06-15T11:00:00Z').toISOString();
     const result = formatSmartLabel(oneHourAgo, { withRelativeSuffix: false });
     expect(result).not.toContain('ago');
+  });
+});
+
+describe('datetime primitives', () => {
+  it('parses valid timestamps and returns null for invalid input', () => {
+    expect(getTimestampMs('2024-06-15T12:00:00Z')).toBe(Date.UTC(2024, 5, 15, 12));
+    expect(getTimestampMs('not-a-date')).toBeNull();
+    expect(getTimestampMs(null)).toBeNull();
+  });
+
+  it('converts positive second durations to milliseconds', () => {
+    expect(secondsToMs(12.5)).toBe(12_500);
+    expect(secondsToMs(0)).toBeNull();
+    expect(secondsToMs(null)).toBeNull();
+  });
+
+  it('formats durations compactly with seconds', () => {
+    expect(formatDuration(30_000)).toBe('30 sec');
+    expect(formatDuration(61_000)).toBe('1 min 1 sec');
+    expect(formatDuration(65 * 60_000)).toBe('1 hr 5 min');
+    expect(formatDuration(3_601_000)).toBe('1 hr 1 min');
   });
 });

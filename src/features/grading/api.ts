@@ -3,25 +3,24 @@ import axios from 'axios';
 import { useCallback, useState } from 'react';
 
 import { api } from '@api';
+import { JobStatusResponseStatus as JobStatus } from '@api/models/jobStatusResponseStatus';
 import { QK } from '@api/queryKeys';
+import { useJobProgress } from '@features/grading/hooks/useJobProgress';
 import {
   POLLING_INTERVAL_MS,
-  PREVIEW_JOB_TIMEOUT_MS,
   CACHE_STALE_TIME_GRADING,
   CACHE_STALE_TIME_JOB,
 } from '@lib/constants';
 
 import type {
-  GradingResponse,
   GradeAdjustmentRequest,
   BulkGradeAdjustmentRequest,
-  BulkGradeAdjustmentResponse,
   GradingPreviewRequest,
-  GradingJob,
-  JobStatusResponse,
 } from '@api/models';
+import type { JobStatusResponseStatus } from '@api/models/jobStatusResponseStatus';
+import type { JobTiming } from '@features/grading/helpers/jobProgress';
 
-export type GradingJobStatus = JobStatusResponse['status'];
+export type GradingJobStatus = JobStatusResponseStatus;
 
 // Base results query (always returns last computed results)
 export const useGrading = (assessmentId: string, enabled = true) =>
@@ -29,7 +28,7 @@ export const useGrading = (assessmentId: string, enabled = true) =>
     queryKey: QK.grading.item(assessmentId),
     queryFn: async () => {
       try {
-        return (await api.getGradingAssessmentsAssessmentIdGradingGet(assessmentId)).data as GradingResponse;
+        return (await api.getGradingAssessmentsAssessmentIdGradingGet(assessmentId)).data;
       } catch (e: unknown) {
         if (axios.isAxiosError(e) && e.response?.status === 404) {
           return null;
@@ -47,7 +46,7 @@ export const useGradingJob = (assessmentId: string, enabled = true) =>
     queryKey: QK.grading.job(assessmentId),
     queryFn: async () => {
       try {
-        return (await api.getGradingJobAssessmentsAssessmentIdGradingJobGet(assessmentId)).data as GradingJob;
+        return (await api.getGradingJobAssessmentsAssessmentIdGradingJobGet(assessmentId)).data;
       } catch (e: unknown) {
         if (axios.isAxiosError(e) && e.response?.status === 404) {
           return null;
@@ -66,20 +65,15 @@ export const useJobStatus = (jobId: string | null | undefined, enabled = true) =
     queryKey: QK.grading.jobStatus(jobId ?? 'none'),
     queryFn: async () => {
       if (!jobId) throw new Error('Missing jobId');
-      try {
-        return (await api.getStatusJobsJobIdGet(jobId)).data as JobStatusResponse;
-      } catch (e: unknown) {
-        if (axios.isAxiosError(e) && e.response?.status === 404) {
-          return null;
-        }
-        throw e;
-      }
+      return (await api.getStatusJobsJobIdGet(jobId)).data;
     },
     enabled: enabled && !!jobId,
     // Poll while running/queued; caller can decide when to stop
     refetchInterval: (query) => {
-      const status = (query.state.data as JobStatusResponse | undefined)?.status;
-      return status && (status === 'queued' || status === 'running') ? POLLING_INTERVAL_MS : false;
+      const status = query.state.data?.status;
+      return status === JobStatus.queued || status === JobStatus.running
+        ? POLLING_INTERVAL_MS
+        : false;
     },
   });
 
@@ -93,7 +87,7 @@ export const useRunGrading = (assessmentId: string) => {
         await api.runGradingAssessmentsAssessmentIdGradingPost(assessmentId, {
           remove_adjustments: removeAdjustments,
         })
-      ).data as GradingJob,
+      ).data,
     onSuccess: async () => {
       // Refresh job and grading queries; results will update when job completes
       await qc.invalidateQueries({ queryKey: QK.grading.job(assessmentId) });
@@ -148,7 +142,7 @@ export const useBulkAdjustGrading = (assessmentId: string) => {
           assessmentId,
           payload,
         )
-      ).data as BulkGradeAdjustmentResponse,
+      ).data,
     onSuccess: (data) => {
       qc.setQueryData(QK.grading.item(assessmentId), data.result);
     },
@@ -157,31 +151,38 @@ export const useBulkAdjustGrading = (assessmentId: string) => {
 
 // Preview: start job, poll preview job until completion/failure, then fetch snapshot
 export const usePreviewGrading = (assessmentId: string) => {
-  const [previewStatus, setPreviewStatus] = useState<GradingJobStatus | null>(null);
+  const [previewJob, setPreviewJob] = useState<{
+    status: GradingJobStatus;
+    timing: JobTiming | null;
+  } | null>(null);
+  const previewStatus = previewJob?.status ?? null;
+  const previewProgress = useJobProgress(
+    previewJob?.timing,
+    previewStatus === JobStatus.queued || previewStatus === JobStatus.running,
+  );
+
   const mutation = useMutation({
     mutationKey: ['grading', assessmentId, 'preview'],
     mutationFn: async (payload: GradingPreviewRequest) => {
-      setPreviewStatus('queued');
+      setPreviewJob({ status: JobStatus.queued, timing: null });
       try {
         const job = (
           await api.runGradingPreviewAssessmentsAssessmentIdGradingPreviewPost(
             assessmentId,
             payload,
           )
-        ).data as GradingJob;
+        ).data;
 
-        const deadline = Date.now() + PREVIEW_JOB_TIMEOUT_MS;
+        setPreviewJob({ status: JobStatus.queued, timing: job });
 
         while (true) {
           const statusRes = await api.getStatusJobsJobIdGet(job.job_id);
-          const status = statusRes.data.status;
-          setPreviewStatus(status);
-          if (status === 'completed') break;
-          if (status === 'failed') {
-            throw new Error(statusRes.data.error ?? 'Preview job failed');
-          }
-          if (Date.now() > deadline) {
-            throw new Error('Preview polling timed out');
+          const statusData = statusRes.data;
+          const status = statusData.status;
+          setPreviewJob({ status, timing: statusData });
+          if (status === JobStatus.completed) break;
+          if (status === JobStatus.failed) {
+            throw new Error(statusData.error ?? 'Preview job failed');
           }
           await new Promise((r) => setTimeout(r, POLLING_INTERVAL_MS));
         }
@@ -189,18 +190,18 @@ export const usePreviewGrading = (assessmentId: string) => {
         const res = await api.getGradingPreviewAssessmentsAssessmentIdGradingPreviewGet(
           assessmentId,
         );
-        return res.data as GradingResponse;
+        return res.data;
       } catch (error) {
-        setPreviewStatus(null);
+        setPreviewJob(null);
         throw error;
       }
     },
   });
 
   const reset = useCallback(() => {
-    setPreviewStatus(null);
+    setPreviewJob(null);
     mutation.reset();
   }, [mutation]);
 
-  return { ...mutation, previewStatus, reset };
+  return { ...mutation, previewStatus, previewProgress, reset };
 };

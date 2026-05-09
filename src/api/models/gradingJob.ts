@@ -5,8 +5,17 @@
  * Thin FastAPI wrapper over GradeFlow Engine
  * OpenAPI spec version: 0.1.0
  */
+import type { GradingJobCompletedAt } from './gradingJobCompletedAt';
+import type { GradingJobDurationSeconds } from './gradingJobDurationSeconds';
+import type { GradingJobEstimatedDurationSeconds } from './gradingJobEstimatedDurationSeconds';
+import type { GradingJobEstimatedCompletionAt } from './gradingJobEstimatedCompletionAt';
 
 export interface GradingJob {
+  completed_at?: GradingJobCompletedAt;
+  duration_seconds?: GradingJobDurationSeconds;
+  estimated_duration_seconds?: GradingJobEstimatedDurationSeconds;
+  estimated_completion_at?: GradingJobEstimatedCompletionAt;
   job_id: string;
   url: string;
+  created_at: string;
 }

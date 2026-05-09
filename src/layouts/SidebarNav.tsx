@@ -34,6 +34,7 @@ import React, { useCallback, useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { Link, useMatch, useLocation } from 'react-router-dom';
 
+import { JobStatusResponseStatus as JobStatus } from '@api/models/jobStatusResponseStatus';
 import { PATHS } from '@app/routes/paths';
 import { useAssessment } from '@features/assessments/api';
 import { useMe } from '@features/auth/api';
@@ -283,7 +284,7 @@ const AssessmentSidebarItems: React.FC<{ assessmentId: string; expanded: boolean
   const jobId = gradingJob?.job_id ?? null;
   const { data: jobStatusRes } = useJobStatus(jobId, !!jobId);
   const jobStatus = jobStatusRes?.status;
-  const gradingInProgress = jobStatus === 'queued' || jobStatus === 'running';
+  const gradingInProgress = jobStatus === JobStatus.queued || jobStatus === JobStatus.running;
 
   const gradingBadge = gradingInProgress ? (
     <Loader size={12} />

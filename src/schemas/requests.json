@@ -400,8 +400,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -1026,8 +1026,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -1745,10 +1745,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
           "MULTI_VALUED",
+          "CHOICE",
           "TEXT",
-          "CHOICE"
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -2010,8 +2010,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -2292,10 +2292,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
           "MULTI_VALUED",
+          "CHOICE",
           "TEXT",
-          "CHOICE"
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -2622,10 +2622,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
           "MULTI_VALUED",
+          "CHOICE",
           "TEXT",
-          "CHOICE"
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -2742,10 +2742,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
           "MULTI_VALUED",
+          "CHOICE",
           "TEXT",
-          "CHOICE"
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -2857,10 +2857,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
           "MULTI_VALUED",
+          "CHOICE",
           "TEXT",
-          "CHOICE"
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -3146,8 +3146,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -3396,10 +3396,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
           "MULTI_VALUED",
+          "CHOICE",
           "TEXT",
-          "CHOICE"
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -3465,10 +3465,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
           "MULTI_VALUED",
+          "CHOICE",
           "TEXT",
-          "CHOICE"
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -3641,10 +3641,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
           "MULTI_VALUED",
+          "CHOICE",
           "TEXT",
-          "CHOICE"
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -4591,8 +4591,8 @@
           "integer",
           "null"
         ],
-        "minimum": 1,
-        "maximum": 20
+        "maximum": 20,
+        "minimum": 1
       },
       "selection": {
         "type": "string",

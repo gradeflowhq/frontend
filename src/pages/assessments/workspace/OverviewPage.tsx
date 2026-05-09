@@ -6,7 +6,6 @@ import {
   Stack,
   Text,
   Title,
-  Loader,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import {
@@ -17,6 +16,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import React, { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { JobStatusResponseStatus as JobStatus } from '@api/models/jobStatusResponseStatus';
 import { QK } from '@api/queryKeys';
 import { useAssessmentContext } from '@app/contexts/AssessmentContext';
 import { PATHS } from '@app/routes/paths';
@@ -26,12 +26,14 @@ import { OverviewSetupTimeline } from '@features/assessments/components';
 import { useSetupSteps } from '@features/assessments/hooks/useSetupSteps';
 import { useGrading, useRunGrading, useCancelGrading } from '@features/grading/api';
 import { GradingResultsCard } from '@features/grading/components';
+import JobProgressAlert from '@features/grading/components/JobProgressAlert';
 const RunGradingModal = lazy(
   () => import('@features/grading/components/RunGradingModal'),
 );
 import { useGradingStatus } from '@features/grading/hooks/useGradingStatus';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { CACHE_STALE_TIME_OVERVIEW } from '@lib/constants';
+import { getCurrentTimestampMs } from '@utils/datetime';
 import { getErrorMessage } from '@utils/error';
 
 import type { AdjustableSubmission } from '@api/models';
@@ -61,7 +63,8 @@ const OverviewPage: React.FC = () => {
   } = useSetupSteps(assessmentId);
 
   const { data: gradingData, isLoading: gradingLoading } = useGrading(assessmentId, !!assessmentId);
-  const { gradingInProgress, jobStatus, jobError, statusError } = useGradingStatus(assessmentId);
+  const { gradingInProgress, jobStatus, jobError, statusError, jobProgress } =
+    useGradingStatus(assessmentId);
 
   const runGradingMutation = useRunGrading(assessmentId);
   const cancelGradingMutation = useCancelGrading(assessmentId);
@@ -139,12 +142,12 @@ const OverviewPage: React.FC = () => {
 
   useEffect(() => {
     if (!awaitingNav) return;
-    if (jobStatus === 'completed') {
+    if (jobStatus === JobStatus.completed) {
       setAwaitingNav(false);
       void (async () => {
         await qc.invalidateQueries({ queryKey: QK.grading.item(assessmentId) });
         await qc.invalidateQueries({ queryKey: QK.assessments.item(assessmentId) });
-        const notifId = `grading-complete-${assessmentId}-${Date.now()}`;
+        const notifId = `grading-complete-${assessmentId}-${getCurrentTimestampMs()}`;
         notifications.show({
           id: notifId,
           color: 'green',
@@ -174,7 +177,7 @@ const OverviewPage: React.FC = () => {
           autoClose: false,
         });
       })();
-    } else if (jobStatus === 'failed') {
+    } else if (jobStatus === JobStatus.failed) {
       setAwaitingNav(false);
       notifications.show({
         color: 'red',
@@ -199,7 +202,7 @@ const OverviewPage: React.FC = () => {
   };
 
   const isRunning = gradingInProgress || runGradingMutation.isPending || awaitingNav;
-  const activeJobStatus = jobStatus === 'queued' ? 'queued' : 'running';
+  const activeJobStatus = jobStatus === JobStatus.queued ? 'queued' : 'running';
 
   // ── Loading ───────────────────────────────────────────────────────────────
 
@@ -241,12 +244,11 @@ const OverviewPage: React.FC = () => {
       <Stack gap="md">
 
         {gradingInProgress && (
-          <Alert color="blue" radius="md">
-            <Group justify="space-between" align="center">
-              <Group gap="xs" align="center">
-                <Loader size={16} />
-                <Text size="sm">Grading job {activeJobStatus}.</Text>
-              </Group>
+          <JobProgressAlert
+            statusText={`Grading job ${activeJobStatus}`}
+            progress={jobProgress}
+            radius="md"
+            action={(
               <Button
                 size="xs"
                 color="red"
@@ -256,8 +258,8 @@ const OverviewPage: React.FC = () => {
               >
                 Cancel
               </Button>
-            </Group>
-          </Alert>
+            )}
+          />
         )}
 
         {statusError !== undefined && (

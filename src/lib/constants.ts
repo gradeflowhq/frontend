@@ -5,8 +5,8 @@
 /** Polling interval for job-status queries and async progress hooks (ms). */
 export const POLLING_INTERVAL_MS = 2000;
 
-/** Maximum time to wait for a preview grading job to complete (ms). */
-export const PREVIEW_JOB_TIMEOUT_MS = 60_000;
+/** Refresh cadence for time-based job progress displays (ms). */
+export const JOB_PROGRESS_UPDATE_INTERVAL_MS = 1000;
 
 // ---------------------------------------------------------------------------
 // React Query cache durations

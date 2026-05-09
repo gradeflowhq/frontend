@@ -654,8 +654,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -1251,8 +1251,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -1970,10 +1970,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
           "MULTI_VALUED",
+          "CHOICE",
           "TEXT",
-          "CHOICE"
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -2235,8 +2235,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -2517,10 +2517,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
           "MULTI_VALUED",
+          "CHOICE",
           "TEXT",
-          "CHOICE"
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -2847,10 +2847,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
           "MULTI_VALUED",
+          "CHOICE",
           "TEXT",
-          "CHOICE"
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -2962,8 +2962,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -3212,10 +3212,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
           "MULTI_VALUED",
+          "CHOICE",
           "TEXT",
-          "CHOICE"
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -3281,10 +3281,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
           "MULTI_VALUED",
+          "CHOICE",
           "TEXT",
-          "CHOICE"
+          "NUMERIC"
         ],
         "readOnly": true
       },
