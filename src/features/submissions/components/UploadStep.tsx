@@ -6,17 +6,21 @@ import { Dropzone } from '@mantine/dropzone';
 import { IconChevronRight, IconUpload, IconFile, IconX } from '@tabler/icons-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { DataTable } from 'mantine-datatable';
-import Papa from 'papaparse';
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
 
 import { api } from '@api';
 import { invalidateSubmissionQueries } from '@api/queryInvalidation';
 import { buildSourceCsv } from '@features/submissions/helpers';
 import { arraysEqual } from '@features/submissions/questionColumnInference';
+import {
+  parseSubmissionUploadFile,
+  SUBMISSION_UPLOAD_ACCEPT,
+} from '@features/submissions/uploadFile';
 import { getErrorMessage } from '@utils/error';
 import { buildPassphraseKey, readPassphrase, writePassphrase } from '@utils/passphrase';
 
 import type { CsvPreview, SubmissionPassphraseConfig } from '@features/submissions/types';
+import type { SubmissionUploadSheet } from '@features/submissions/uploadFile';
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), hi);
 
@@ -114,6 +118,10 @@ export const UploadStep: React.FC<{
 }> = ({ assessmentId, hasExistingSource, onNext }) => {
   const [rawGrid, setRawGrid] = useState<string[][] | null>(null);
   const [preview, setPreview] = useState<CsvPreview | null>(null);
+  const [sheets, setSheets] = useState<SubmissionUploadSheet[]>([]);
+  const [selectedSheetName, setSelectedSheetName] = useState<string | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const [isParsingFile, setIsParsingFile] = useState(false);
   const [studentIdColumn, setStudentIdColumn] = useState('');
   const [headerRow, setHeaderRow] = useState(1);
   const [dataStartRow, setDataStartRow] = useState(2);
@@ -123,6 +131,7 @@ export const UploadStep: React.FC<{
   const [encryptIds, setEncryptIds] = useState(false);
   const [passphrase, setPassphrase] = useState(() => readPassphrase(storageKey) ?? '');
   const [storePassphrase, setStorePassphrase] = useState(() => !!readPassphrase(storageKey));
+  const parseRequestId = useRef(0);
 
   const qc = useQueryClient();
 
@@ -175,22 +184,55 @@ export const UploadStep: React.FC<{
     [rawGrid, headerRow, dataStartRow, dataEndRow],
   );
 
+  const applyGrid = useCallback(
+    (data: string[][]) => {
+      setRawGrid(data);
+      setHeaderRow(1);
+      setDataStartRow(2);
+      setDataEndRow('');
+
+      if (data.length === 0) {
+        setPreview(null);
+        setStudentIdColumn('');
+        return;
+      }
+
+      recomputePreview({ rawGrid: data, headerRow: 1, dataStartRow: 2, dataEndRow: '' });
+    },
+    [recomputePreview],
+  );
+
   const onSelectFile = (f: File | null) => {
+    const requestId = parseRequestId.current + 1;
+    parseRequestId.current = requestId;
     setRawGrid(null);
     setPreview(null);
     setStudentIdColumn('');
+    setSheets([]);
+    setSelectedSheetName(null);
+    setFileError(null);
     if (!f) return;
-    Papa.parse(f, {
-      skipEmptyLines: true,
-      complete: (res) => {
-        const data = res.data as string[][];
-        if (!data?.length) { setRawGrid([]); return; }
-        setRawGrid(data);
-        setHeaderRow(1); setDataStartRow(2); setDataEndRow('');
-        recomputePreview({ rawGrid: data, headerRow: 1, dataStartRow: 2, dataEndRow: '' });
-      },
-      error: () => { setRawGrid(null); setPreview(null); },
-    });
+
+    setIsParsingFile(true);
+    void (async () => {
+      try {
+        const parsed = await parseSubmissionUploadFile(f);
+        if (parseRequestId.current !== requestId) return;
+        setSheets(parsed.sheets);
+        setSelectedSheetName(parsed.sheets[0]?.name ?? null);
+        applyGrid(parsed.grid);
+      } catch (error) {
+        if (parseRequestId.current !== requestId) return;
+        setRawGrid(null);
+        setPreview(null);
+        setStudentIdColumn('');
+        setFileError(getErrorMessage(error));
+      } finally {
+        if (parseRequestId.current === requestId) {
+          setIsParsingFile(false);
+        }
+      }
+    })();
   };
 
   const uploadMutation = useMutation({
@@ -205,7 +247,7 @@ export const UploadStep: React.FC<{
     },
   });
 
-  const canNext = !!preview && !!studentIdColumn && (!encryptIds || !!passphrase);
+  const canNext = !isParsingFile && !!preview && !!studentIdColumn && (!encryptIds || !!passphrase);
 
   const handleNext = () => {
     void (async () => {
@@ -232,8 +274,12 @@ export const UploadStep: React.FC<{
 
       <Dropzone
         onDrop={(files) => onSelectFile(files[0] ?? null)}
-        onReject={() => onSelectFile(null)}
-        accept={['text/csv', 'application/vnd.ms-excel', '.csv']}
+        onReject={() => {
+          onSelectFile(null);
+          setFileError('Upload a CSV or Excel file up to 50 MB');
+        }}
+        accept={SUBMISSION_UPLOAD_ACCEPT}
+        disabled={isParsingFile}
         maxFiles={1}
         maxSize={50 * 1024 * 1024}
       >
@@ -242,11 +288,28 @@ export const UploadStep: React.FC<{
           <Dropzone.Reject><IconX size={40} color="var(--mantine-color-red-6)" stroke={1.5} /></Dropzone.Reject>
           <Dropzone.Idle><IconFile size={40} color="var(--mantine-color-dimmed)" stroke={1.5} /></Dropzone.Idle>
           <div>
-            <Text size="lg" fw={500}>Drop CSV file here or click to select</Text>
-            <Text size="sm" c="dimmed">.csv files up to 50 MB</Text>
+            <Text size="lg" fw={500}>Drop CSV or Excel file here or click to select</Text>
+            <Text size="sm" c="dimmed">.csv, .xls, .xlsx, .xlsm, or .xlsb files up to 50 MB</Text>
           </div>
         </Group>
       </Dropzone>
+
+      {fileError && (
+        <Alert color="red">{fileError}</Alert>
+      )}
+
+      {sheets.length > 1 && (
+        <Select
+          label="Worksheet"
+          value={selectedSheetName}
+          onChange={(name) => {
+            const sheet = sheets.find((item) => item.name === name);
+            setSelectedSheetName(name);
+            if (sheet) applyGrid(sheet.grid);
+          }}
+          data={sheets.map((sheet) => ({ value: sheet.name, label: sheet.name }))}
+        />
+      )}
 
       {rawGrid && rawGrid.length > 0 && (
         <RowRangeControls
@@ -318,7 +381,7 @@ export const UploadStep: React.FC<{
           type="button"
           onClick={handleNext}
           disabled={!canNext}
-          loading={uploadMutation.isPending}
+          loading={isParsingFile || uploadMutation.isPending}
           leftSection={<IconChevronRight size={16} />}
           title={!canNext ? 'Select a file and choose a Student ID column' : undefined}
         >
