@@ -1,4 +1,4 @@
-import { Alert, Text } from '@mantine/core';
+import { Alert, Skeleton, Stack, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import React, { useCallback, useMemo, useState } from 'react';
 import { flushSync } from 'react-dom';
@@ -6,19 +6,17 @@ import { useSearchParams } from 'react-router-dom';
 
 import MasterDetailLayout from '@components/common/MasterDetailLayout';
 import {
-  useCompatibleRuleKeys,
+  useCompatibleRules,
   useCreateRule,
   useDeleteRule,
-  useRuleDefinitions,
 } from '@features/rules/api';
-import { materializeDraft } from '@features/rules/hooks/useRuleEditorState';
 import { useGuardRegistration } from '@hooks/useUnsavedChangesGuard';
 import { natsort } from '@utils/sort';
 
 import GlobalRuleDetailPanel from './GlobalRuleDetailPanel';
 import GlobalRuleMasterList from './GlobalRuleMasterList';
 
-import type { QuestionSetOutputQuestionMap, RubricCoverage } from '@api/models';
+import type { RubricCoverage } from '@api/models';
 import type { RuleValue } from '@features/rules/types';
 import type { GuardedSectionProps } from '@hooks/useUnsavedChangesGuard';
 
@@ -26,18 +24,43 @@ interface Props extends GuardedSectionProps {
   globalRules: RuleValue[];
   coverage: RubricCoverage | null;
   assessmentId: string;
-  questionMap: QuestionSetOutputQuestionMap;
   searchQuery?: string;
   highlightedRule?: RuleValue | null;
 }
 
 const SEARCH_PARAM = 'gr';
+const GLOBAL_RULE_LIST_WIDTH = '210px';
+const GLOBAL_RULE_LAYOUT_HEIGHT = 'calc(100dvh - 100px - 55px)';
+
+const GlobalRulesSkeleton: React.FC = () => (
+  <MasterDetailLayout
+    listWidth={GLOBAL_RULE_LIST_WIDTH}
+    layoutHeight={GLOBAL_RULE_LAYOUT_HEIGHT}
+    backLabel="Back to rules"
+    listPanel={(
+      <Stack gap="xs" aria-label="Loading global rules">
+        <Skeleton height={30} />
+        <Skeleton height={44} />
+        <Skeleton height={44} />
+      </Stack>
+    )}
+    detailPanel={(
+      <Stack gap="sm">
+        <Stack gap="xs">
+          <Skeleton height={22} width={180} />
+          <Skeleton height={16} width="70%" />
+        </Stack>
+        <Skeleton height={72} />
+        <Skeleton height={180} />
+      </Stack>
+    )}
+  />
+);
 
 const MultiTargetRulesSection: React.FC<Props> = ({
   globalRules,
   coverage,
   assessmentId,
-  questionMap,
   searchQuery = '',
   highlightedRule,
   guard,
@@ -49,15 +72,13 @@ const MultiTargetRulesSection: React.FC<Props> = ({
   const [mobileShowDetail, setMobileShowDetail] = useState(false);
 
   const [pendingNewRule, setPendingNewRule] = useState<{
-    ruleKey: string;
-    draft: RuleValue;
+    ruleType: string;
   } | null>(null);
 
-  const defs = useRuleDefinitions();
   const createRule = useCreateRule(assessmentId);
   const deleteRule = useDeleteRule(assessmentId);
 
-  const globalRuleKeys = useCompatibleRuleKeys(defs, undefined, 'global');
+  const globalRulesOptions = useCompatibleRules(assessmentId);
 
   const coveredQidsByRuleId = useMemo((): Record<string, string[]> => {
     const map: Record<string, string[]> = {};
@@ -77,7 +98,7 @@ const MultiTargetRulesSection: React.FC<Props> = ({
       return urlRuleId;
     }
 
-    return globalRules.length > 0 ? globalRules[0].id : null;
+    return globalRules.find((rule) => rule.id)?.id ?? null;
   }, [urlRuleId, globalRules, pendingNewRule]);
 
   const setSelectedRuleId = useCallback(
@@ -141,13 +162,11 @@ const MultiTargetRulesSection: React.FC<Props> = ({
   );
 
   const commitAdd = useCallback(
-    (ruleKey: string) => {
-      const schema = defs[ruleKey] ?? null;
-      const draft = materializeDraft(schema, null, null);
-      setPendingNewRule({ ruleKey, draft });
+    (ruleType: string) => {
+      setPendingNewRule({ ruleType });
       setMobileShowDetail(true);
     },
-    [defs],
+    [],
   );
 
   // ── Handlers ─────────────────────────────────────────────────────────────
@@ -160,8 +179,8 @@ const MultiTargetRulesSection: React.FC<Props> = ({
   );
 
   const handleAdd = useCallback(
-    (ruleKey: string) => {
-      guard(() => commitAdd(ruleKey));
+    (ruleType: string) => {
+      guard(() => commitAdd(ruleType));
     },
     [guard, commitAdd],
   );
@@ -170,11 +189,11 @@ const MultiTargetRulesSection: React.FC<Props> = ({
     async (savedRule: RuleValue) => {
       // Don't catch here — let the caller (GlobalRuleDetailPanel) display the
       // inline error. mutateAsync will still reject and propagate on failure.
-      const existingRuleIds = new Set(globalRules.map((rule) => rule.id));
+      const existingRuleIds = new Set(globalRules.flatMap((rule) => (rule.id ? [rule.id] : [])));
       const result = await createRule.mutateAsync(savedRule);
-      const createdRule = [...((result.rubric.rules ?? []) as RuleValue[])]
+      const createdRule = [...(result.rubric.rules ?? []) as RuleValue[]]
         .reverse()
-        .find((rule) => !existingRuleIds.has(rule.id));
+        .find((rule) => rule.id && !existingRuleIds.has(rule.id));
 
       // Flush editing-state changes synchronously so the parent guard sees
       // isEditing=false before setSelectedRuleId triggers a search-param change.
@@ -182,7 +201,7 @@ const MultiTargetRulesSection: React.FC<Props> = ({
         setDetailEditing(false);
         setPendingNewRule(null);
       });
-      if (createdRule) {
+      if (createdRule?.id) {
         setSelectedRuleId(createdRule.id);
       }
       notifications.show({ color: 'green', message: 'Rule saved' });
@@ -203,7 +222,7 @@ const MultiTargetRulesSection: React.FC<Props> = ({
             setMobileShowDetail(false);
           } else {
             const nextRule = remainingGlobalRules[Math.max(0, deletedIndex - 1)];
-            setSelectedRuleId(nextRule.id);
+            if (nextRule?.id) setSelectedRuleId(nextRule.id);
           }
         },
         onError: () => notifications.show({ color: 'red', message: 'Delete failed' }),
@@ -214,7 +233,11 @@ const MultiTargetRulesSection: React.FC<Props> = ({
 
   // ── Early returns ─────────────────────────────────────────────────────────
 
-  if (globalRuleKeys.length === 0) {
+  if (globalRulesOptions.isLoading) {
+    return <GlobalRulesSkeleton />;
+  }
+
+  if ((globalRulesOptions.data?.length ?? 0) === 0) {
     return <Alert color="gray">No global rule types are available.</Alert>;
   }
 
@@ -227,9 +250,8 @@ const MultiTargetRulesSection: React.FC<Props> = ({
   const detailPanel = pendingNewRule ? (
     <GlobalRuleDetailPanel
       key="pending-new"
-      rule={pendingNewRule.draft}
+      rule={{ type: pendingNewRule.ruleType } as RuleValue}
       assessmentId={assessmentId}
-      questionMap={questionMap}
       onEditStateChange={setDetailEditing}
       isSaving={createRule.isPending}
       isPendingNew
@@ -249,7 +271,6 @@ const MultiTargetRulesSection: React.FC<Props> = ({
       key={selectedRuleId}
       rule={selectedRule}
       assessmentId={assessmentId}
-      questionMap={questionMap}
       onEditStateChange={setDetailEditing}
       onDelete={() => handleDelete(selectedRuleId)}
       coveredQids={coveredQidsByRuleId[selectedRuleId] ?? []}
@@ -266,7 +287,7 @@ const MultiTargetRulesSection: React.FC<Props> = ({
       selectedRuleId={selectedRuleId}
       onSelect={handleSelect}
       onAdd={handleAdd}
-      addableRuleKeys={globalRuleKeys}
+      addableRules={globalRulesOptions.data ?? []}
       coveredQidsByRuleId={coveredQidsByRuleId}
       searchQuery={searchQuery}
     />
@@ -277,8 +298,8 @@ const MultiTargetRulesSection: React.FC<Props> = ({
       listPanel={listPanel}
       detailPanel={detailPanel}
       isDetailEditing={isCurrentlyEditing}
-      listWidth="210px"
-      layoutHeight="calc(100dvh - 100px - 55px)"
+      listWidth={GLOBAL_RULE_LIST_WIDTH}
+      layoutHeight={GLOBAL_RULE_LAYOUT_HEIGHT}
       backLabel="Back to rules"
       mobileShowDetail={mobileShowDetail}
       onMobileShowDetailChange={setMobileShowDetail}

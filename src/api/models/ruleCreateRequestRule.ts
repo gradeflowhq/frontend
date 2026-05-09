@@ -15,7 +15,6 @@ import type { TextMatchQuestionRuleInput } from './textMatchQuestionRuleInput';
 import type { KeywordsQuestionRuleInput } from './keywordsQuestionRuleInput';
 import type { RegexQuestionRuleInput } from './regexQuestionRuleInput';
 import type { LengthQuestionRuleInput } from './lengthQuestionRuleInput';
-import type { ManualQuestionRuleInput } from './manualQuestionRuleInput';
 import type { MultiValuedQuestionRuleInput } from './multiValuedQuestionRuleInput';
 import type { MultipleChoiceQuestionRuleInput } from './multipleChoiceQuestionRuleInput';
 import type { NumberEqualQuestionRuleInput } from './numberEqualQuestionRuleInput';
@@ -24,4 +23,4 @@ import type { AssumptionSetMultiQuestionRuleInput } from './assumptionSetMultiQu
 import type { ConditionalMultiQuestionRuleInput } from './conditionalMultiQuestionRuleInput';
 import type { ProgrammableMultiQuestionRuleInput } from './programmableMultiQuestionRuleInput';
 
-export type RuleCreateRequestRule = AssumptionSetQuestionRuleInput | BonusQuestionRuleInput | CompositeQuestionRuleInput | ProgrammableQuestionRuleInput | ProgrammingQuestionRuleInput | SimilarityQuestionRuleInput | TextMatchQuestionRuleInput | KeywordsQuestionRuleInput | RegexQuestionRuleInput | LengthQuestionRuleInput | ManualQuestionRuleInput | MultiValuedQuestionRuleInput | MultipleChoiceQuestionRuleInput | NumberEqualQuestionRuleInput | NumericRangeQuestionRuleInput | AssumptionSetMultiQuestionRuleInput | ConditionalMultiQuestionRuleInput | ProgrammableMultiQuestionRuleInput;
+export type RuleCreateRequestRule = AssumptionSetQuestionRuleInput | BonusQuestionRuleInput | CompositeQuestionRuleInput | ProgrammableQuestionRuleInput | ProgrammingQuestionRuleInput | SimilarityQuestionRuleInput | TextMatchQuestionRuleInput | KeywordsQuestionRuleInput | RegexQuestionRuleInput | LengthQuestionRuleInput | MultiValuedQuestionRuleInput | MultipleChoiceQuestionRuleInput | NumberEqualQuestionRuleInput | NumericRangeQuestionRuleInput | AssumptionSetMultiQuestionRuleInput | ConditionalMultiQuestionRuleInput | ProgrammableMultiQuestionRuleInput;

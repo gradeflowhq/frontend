@@ -15,7 +15,6 @@ import type { TextMatchQuestionRuleOutput } from './textMatchQuestionRuleOutput'
 import type { KeywordsQuestionRuleOutput } from './keywordsQuestionRuleOutput';
 import type { RegexQuestionRuleOutput } from './regexQuestionRuleOutput';
 import type { LengthQuestionRuleOutput } from './lengthQuestionRuleOutput';
-import type { ManualQuestionRuleOutput } from './manualQuestionRuleOutput';
 import type { MultiValuedQuestionRuleOutput } from './multiValuedQuestionRuleOutput';
 import type { MultipleChoiceQuestionRuleOutput } from './multipleChoiceQuestionRuleOutput';
 import type { NumberEqualQuestionRuleOutput } from './numberEqualQuestionRuleOutput';
@@ -24,4 +23,4 @@ import type { AssumptionSetMultiQuestionRuleOutput } from './assumptionSetMultiQ
 import type { ConditionalMultiQuestionRuleOutput } from './conditionalMultiQuestionRuleOutput';
 import type { ProgrammableMultiQuestionRuleOutput } from './programmableMultiQuestionRuleOutput';
 
-export type RubricOutputRulesItem = AssumptionSetQuestionRuleOutput | BonusQuestionRuleOutput | CompositeQuestionRuleOutput | ProgrammableQuestionRuleOutput | ProgrammingQuestionRuleOutput | SimilarityQuestionRuleOutput | TextMatchQuestionRuleOutput | KeywordsQuestionRuleOutput | RegexQuestionRuleOutput | LengthQuestionRuleOutput | ManualQuestionRuleOutput | MultiValuedQuestionRuleOutput | MultipleChoiceQuestionRuleOutput | NumberEqualQuestionRuleOutput | NumericRangeQuestionRuleOutput | AssumptionSetMultiQuestionRuleOutput | ConditionalMultiQuestionRuleOutput | ProgrammableMultiQuestionRuleOutput;
+export type RubricOutputRulesItem = AssumptionSetQuestionRuleOutput | BonusQuestionRuleOutput | CompositeQuestionRuleOutput | ProgrammableQuestionRuleOutput | ProgrammingQuestionRuleOutput | SimilarityQuestionRuleOutput | TextMatchQuestionRuleOutput | KeywordsQuestionRuleOutput | RegexQuestionRuleOutput | LengthQuestionRuleOutput | MultiValuedQuestionRuleOutput | MultipleChoiceQuestionRuleOutput | NumberEqualQuestionRuleOutput | NumericRangeQuestionRuleOutput | AssumptionSetMultiQuestionRuleOutput | ConditionalMultiQuestionRuleOutput | ProgrammableMultiQuestionRuleOutput;

@@ -22,7 +22,6 @@ import { GradingStatusBanner } from '@features/grading/components';
 import { useQuestionSet } from '@features/questions/api';
 import { useRubricOverview } from '@features/rubric/api';
 import { getRuleDescriptionText } from '@features/rules/helpers';
-import { friendlyRuleLabel } from '@features/rules/schema';
 import { isEncrypted } from '@utils/crypto';
 import { getErrorMessage } from '@utils/error';
 import { notifyError, notifyErrorMessage, notifySuccess } from '@utils/notifications';
@@ -130,7 +129,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
 
           <Group gap="xs" wrap="nowrap" align="center">
             <Badge variant="light" color="gray" size="sm" ff="monospace">
-              {friendlyRuleLabel(res.rule)}
+              {res.rule}
             </Badge>
 
             <Text ff="monospace" fw={600} size="sm" style={{ whiteSpace: 'nowrap' }}>
@@ -326,7 +325,7 @@ const SubmissionDetailInner: React.FC<{ assessmentId: string; encodedStudentId: 
       ...((rubricOverview?.question_rules ?? []) as RuleValue[]),
       ...((rubricOverview?.global_rules ?? []) as RuleValue[]),
     ];
-    const ruleById = new Map(rules.map((rule) => [rule.id, rule]));
+    const ruleById = new Map(rules.flatMap((rule) => (rule.id ? [[rule.id, rule]] : [])));
 
     for (const qid of questionIds) {
       const ruleId =

@@ -12,7 +12,7 @@ import type { LengthQuestionRuleOutputMaxLength } from './lengthQuestionRuleOutp
 import type { LengthQuestionRuleOutputMode } from './lengthQuestionRuleOutputMode';
 
 export interface LengthQuestionRuleOutput {
-  id: string;
+  readonly id: string;
   readonly question_types: readonly LengthQuestionRuleOutputQuestionTypesItem[];
   readonly constraints: readonly QuestionConstraint[];
   readonly scope: 'question';

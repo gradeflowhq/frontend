@@ -24,3 +24,9 @@ export const truncateText = (value: string, limit = 160) => {
   if (!value) return value;
   return value.length > limit ? `${value.slice(0, limit)}...` : value;
 };
+
+export const prettifyKey = (value: string): string =>
+  value
+    .replace(/_/g, ' ')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/\b\w/g, (char) => char.toUpperCase());

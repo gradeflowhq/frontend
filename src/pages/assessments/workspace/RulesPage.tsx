@@ -144,7 +144,7 @@ const RulesPage: React.FC = () => {
   const coverage: RubricCoverage | null = overview?.coverage ?? null;
 
   const ruleById = React.useMemo(
-    () => new Map(rules.map((rule) => [rule.id, rule])),
+    () => new Map(rules.flatMap((rule) => (rule.id ? [[rule.id, rule]] : []))),
     [rules],
   );
 
@@ -211,7 +211,7 @@ const RulesPage: React.FC = () => {
             const next = new URLSearchParams(prev);
             next.set('tab', 'global');
             next.delete('q');
-            if (rule) next.set('gr', rule.id);
+            if (rule?.id) next.set('gr', rule.id);
             return next;
           },
           { replace: true },
@@ -589,7 +589,6 @@ const RulesPage: React.FC = () => {
                 globalRules={globalRules}
                 coverage={coverage}
                 assessmentId={assessmentId}
-                questionMap={questionMap}
                 searchQuery={searchQuery}
                 highlightedRule={highlightedRule}
                 guard={guard}

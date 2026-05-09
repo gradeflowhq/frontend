@@ -325,9 +325,6 @@
               "$ref": "#/definitions/LengthQuestionRule"
             },
             {
-              "$ref": "#/definitions/ManualQuestionRule"
-            },
-            {
               "$ref": "#/definitions/MultiValuedQuestionRule"
             },
             {
@@ -359,7 +356,6 @@
               "CONDITIONAL": "#/definitions/ConditionalMultiQuestionRule",
               "KEYWORDS": "#/definitions/KeywordsQuestionRule",
               "LENGTH": "#/definitions/LengthQuestionRule",
-              "MANUAL": "#/definitions/ManualQuestionRule",
               "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceQuestionRule",
               "MULTI_VALUED": "#/definitions/MultiValuedQuestionRule",
               "NUMBER_EQUAL": "#/definitions/NumberEqualQuestionRule",
@@ -387,7 +383,8 @@
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -403,8 +400,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -457,7 +454,7 @@
       "question_id",
       "answers"
     ],
-    "title": "TextMatchQuestionRule"
+    "title": "Text Match"
   },
   "QuestionConstraint": {
     "properties": {
@@ -492,7 +489,8 @@
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -577,13 +575,14 @@
       "question_id",
       "references"
     ],
-    "title": "SimilarityQuestionRule"
+    "title": "Similarity"
   },
   "RegexQuestionRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -652,7 +651,7 @@
       "question_id",
       "pattern"
     ],
-    "title": "RegexQuestionRule"
+    "title": "Regex"
   },
   "RegexConfig": {
     "properties": {
@@ -676,13 +675,14 @@
       }
     },
     "type": "object",
-    "title": "RegexConfig"
+    "title": "Regex Configuration"
   },
   "ProgrammingQuestionRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -779,7 +779,7 @@
       "question_id",
       "testcases"
     ],
-    "title": "ProgrammingQuestionRule"
+    "title": "Programming"
   },
   "ProgrammingConfig": {
     "properties": {
@@ -787,13 +787,19 @@
         "type": "string",
         "title": "Prepend Code",
         "description": "Code to prepend to the student's answer",
-        "default": ""
+        "default": "",
+        "x-gradeflow": {
+          "input": "code"
+        }
       },
       "append_code": {
         "type": "string",
         "title": "Append Code",
         "description": "Code to append to the student's answer",
-        "default": ""
+        "default": "",
+        "x-gradeflow": {
+          "input": "code"
+        }
       },
       "indent": {
         "type": "integer",
@@ -809,7 +815,7 @@
       }
     },
     "type": "object",
-    "title": "ProgrammingConfig"
+    "title": "Programming Configuration"
   },
   "ProgrammingTestCase": {
     "properties": {
@@ -829,13 +835,14 @@
       "expression",
       "expected"
     ],
-    "title": "ProgrammingTestCase"
+    "title": "Test Case"
   },
   "ProgrammableMultiQuestionRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -851,9 +858,9 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "TEXT",
           "NUMERIC",
           "CHOICE",
-          "TEXT",
           "MULTI_VALUED"
         ],
         "readOnly": true
@@ -901,7 +908,10 @@
         "type": "string",
         "title": "Code",
         "description": "Code to evaluate the answer_map. Required variable: 'results' (dict mapping question_id -> dict with 'output', 'passed', and optionally 'feedback').",
-        "default": "# You have access to the following variables:\n# - 'answer_map' dict mapping question_id -> student's answer for each target question\n# - any additional variables defined in 'parameters' (e.g., 'param1', 'param2', etc.)\n# You must set the following variable:\n# - 'results' (dict): A dict mapping question_id -> dict with keys:\n#     - 'output' (float): A number between 0 and 1 -- max_points multiplier (OUTPUT mode)\n#     - 'passed' (bool): Whether the answer passed (only used in PASS_FAIL mode)\n#     - 'feedback' (str, optional): Feedback to provide to the student\n# Example code:\nresults = {}\nfor qid, answer in answer_map.items():\n    results[qid] = {\n        'output': 0.0,\n        'passed': False,\n        'feedback': str(answer),\n    }\n"
+        "default": "# You have access to the following variables:\n# - 'answer_map' dict mapping question_id -> student's answer for each target question\n# - any additional variables defined in 'parameters' (e.g., 'param1', 'param2', etc.)\n# You must set the following variable:\n# - 'results' (dict): A dict mapping question_id -> dict with keys:\n#     - 'output' (float): A number between 0 and 1 -- max_points multiplier (OUTPUT mode)\n#     - 'passed' (bool): Whether the answer passed (only used in PASS_FAIL mode)\n#     - 'feedback' (str, optional): Feedback to provide to the student\n# Example code:\nresults = {}\nfor qid, answer in answer_map.items():\n    results[qid] = {\n        'output': 0.0,\n        'passed': False,\n        'feedback': str(answer),\n    }\n",
+        "x-gradeflow": {
+          "input": "code"
+        }
       },
       "parameters": {
         "additionalProperties": {
@@ -924,18 +934,7 @@
             {
               "$ref": "#/definitions/DictParameter"
             }
-          ],
-          "discriminator": {
-            "propertyName": "dtype",
-            "mapping": {
-              "Boolean": "#/definitions/BooleanParameter",
-              "Dict": "#/definitions/DictParameter",
-              "Float": "#/definitions/FloatParameter",
-              "Int": "#/definitions/IntParameter",
-              "List": "#/definitions/ListParameter",
-              "String": "#/definitions/StringParameter"
-            }
-          }
+          ]
         },
         "type": "object",
         "title": "Parameters",
@@ -956,120 +955,7 @@
     "required": [
       "target_question_ids"
     ],
-    "title": "ProgrammableMultiQuestionRule"
-  },
-  "StringParameter": {
-    "properties": {
-      "dtype": {
-        "type": "string",
-        "const": "String",
-        "title": "Dtype",
-        "default": "String",
-        "readOnly": true
-      },
-      "value": {
-        "type": "string",
-        "title": "Value"
-      }
-    },
-    "type": "object",
-    "required": [
-      "value"
-    ],
-    "title": "StringParameter"
-  },
-  "ListParameter": {
-    "properties": {
-      "dtype": {
-        "type": "string",
-        "const": "List",
-        "title": "Dtype",
-        "default": "List",
-        "readOnly": true
-      },
-      "value": {
-        "items": {
-          "oneOf": [
-            {
-              "$ref": "#/definitions/IntParameter"
-            },
-            {
-              "$ref": "#/definitions/FloatParameter"
-            },
-            {
-              "$ref": "#/definitions/StringParameter"
-            },
-            {
-              "$ref": "#/definitions/BooleanParameter"
-            },
-            {
-              "$ref": "#/definitions/ListParameter"
-            },
-            {
-              "$ref": "#/definitions/DictParameter"
-            }
-          ],
-          "discriminator": {
-            "propertyName": "dtype",
-            "mapping": {
-              "Boolean": "#/definitions/BooleanParameter",
-              "Dict": "#/definitions/DictParameter",
-              "Float": "#/definitions/FloatParameter",
-              "Int": "#/definitions/IntParameter",
-              "List": "#/definitions/ListParameter",
-              "String": "#/definitions/StringParameter"
-            }
-          }
-        },
-        "type": "array",
-        "title": "Value"
-      }
-    },
-    "type": "object",
-    "required": [
-      "value"
-    ],
-    "title": "ListParameter"
-  },
-  "IntParameter": {
-    "properties": {
-      "dtype": {
-        "type": "string",
-        "const": "Int",
-        "title": "Dtype",
-        "default": "Int",
-        "readOnly": true
-      },
-      "value": {
-        "type": "integer",
-        "title": "Value"
-      }
-    },
-    "type": "object",
-    "required": [
-      "value"
-    ],
-    "title": "IntParameter"
-  },
-  "FloatParameter": {
-    "properties": {
-      "dtype": {
-        "type": "string",
-        "const": "Float",
-        "title": "Dtype",
-        "default": "Float",
-        "readOnly": true
-      },
-      "value": {
-        "type": "number",
-        "title": "Value"
-      }
-    },
-    "type": "object",
-    "required": [
-      "value"
-    ],
-    "title": "FloatParameter"
+    "title": "Programmable"
   },
   "DictParameter": {
     "properties": {
@@ -1101,18 +987,7 @@
             {
               "$ref": "#/definitions/DictParameter"
             }
-          ],
-          "discriminator": {
-            "propertyName": "dtype",
-            "mapping": {
-              "Boolean": "#/definitions/BooleanParameter",
-              "Dict": "#/definitions/DictParameter",
-              "Float": "#/definitions/FloatParameter",
-              "Int": "#/definitions/IntParameter",
-              "List": "#/definitions/ListParameter",
-              "String": "#/definitions/StringParameter"
-            }
-          }
+          ]
         },
         "type": "object",
         "title": "Value"
@@ -1122,7 +997,49 @@
     "required": [
       "value"
     ],
-    "title": "DictParameter"
+    "title": "Dictionary"
+  },
+  "ListParameter": {
+    "properties": {
+      "dtype": {
+        "type": "string",
+        "const": "List",
+        "title": "Dtype",
+        "default": "List",
+        "readOnly": true
+      },
+      "value": {
+        "items": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/IntParameter"
+            },
+            {
+              "$ref": "#/definitions/FloatParameter"
+            },
+            {
+              "$ref": "#/definitions/StringParameter"
+            },
+            {
+              "$ref": "#/definitions/BooleanParameter"
+            },
+            {
+              "$ref": "#/definitions/ListParameter"
+            },
+            {
+              "$ref": "#/definitions/DictParameter"
+            }
+          ]
+        },
+        "type": "array",
+        "title": "Value"
+      }
+    },
+    "type": "object",
+    "required": [
+      "value"
+    ],
+    "title": "List"
   },
   "BooleanParameter": {
     "properties": {
@@ -1142,13 +1059,74 @@
     "required": [
       "value"
     ],
-    "title": "BooleanParameter"
+    "title": "Boolean"
+  },
+  "StringParameter": {
+    "properties": {
+      "dtype": {
+        "type": "string",
+        "const": "String",
+        "title": "Dtype",
+        "default": "String",
+        "readOnly": true
+      },
+      "value": {
+        "type": "string",
+        "title": "Value"
+      }
+    },
+    "type": "object",
+    "required": [
+      "value"
+    ],
+    "title": "String"
+  },
+  "FloatParameter": {
+    "properties": {
+      "dtype": {
+        "type": "string",
+        "const": "Float",
+        "title": "Dtype",
+        "default": "Float",
+        "readOnly": true
+      },
+      "value": {
+        "type": "number",
+        "title": "Value"
+      }
+    },
+    "type": "object",
+    "required": [
+      "value"
+    ],
+    "title": "Float"
+  },
+  "IntParameter": {
+    "properties": {
+      "dtype": {
+        "type": "string",
+        "const": "Int",
+        "title": "Dtype",
+        "default": "Int",
+        "readOnly": true
+      },
+      "value": {
+        "type": "integer",
+        "title": "Value"
+      }
+    },
+    "type": "object",
+    "required": [
+      "value"
+    ],
+    "title": "Integer"
   },
   "ProgrammableQuestionRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -1164,9 +1142,9 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "TEXT",
           "NUMERIC",
           "CHOICE",
-          "TEXT",
           "MULTI_VALUED"
         ],
         "readOnly": true
@@ -1209,7 +1187,10 @@
         "type": "string",
         "title": "Code",
         "description": "Code to evaluate the answer. Required variables: 'output', 'passed'. Optional variable: 'feedback'.",
-        "default": "# You have access to the following variables:\n# - 'answer' variable contains the student's answer (can be str, float, list, or set)\n# - any additional variables defined in 'parameters' (e.g., 'param1', 'param2', etc.)\n# You must set the following variables:\n# - 'output' (float): A number between 0 and 1 -- max_points multiplier (only used in OUTPUT mode)\n# - 'passed' (bool): Whether the answer passed (only used in PASS_FAIL mode)\n# - 'feedback' (str, optional): Feedback to provide to the student\n# Example code:\npassed = False\noutput = 0.0\nfeedback = str(answer)\n"
+        "default": "# You have access to the following variables:\n# - 'answer' variable contains the student's answer (can be str, float, list, or set)\n# - any additional variables defined in 'parameters' (e.g., 'param1', 'param2', etc.)\n# You must set the following variables:\n# - 'output' (float): A number between 0 and 1 -- max_points multiplier (only used in OUTPUT mode)\n# - 'passed' (bool): Whether the answer passed (only used in PASS_FAIL mode)\n# - 'feedback' (str, optional): Feedback to provide to the student\n# Example code:\npassed = False\noutput = 0.0\nfeedback = str(answer)\n",
+        "x-gradeflow": {
+          "input": "code"
+        }
       },
       "parameters": {
         "additionalProperties": {
@@ -1232,18 +1213,7 @@
             {
               "$ref": "#/definitions/DictParameter"
             }
-          ],
-          "discriminator": {
-            "propertyName": "dtype",
-            "mapping": {
-              "Boolean": "#/definitions/BooleanParameter",
-              "Dict": "#/definitions/DictParameter",
-              "Float": "#/definitions/FloatParameter",
-              "Int": "#/definitions/IntParameter",
-              "List": "#/definitions/ListParameter",
-              "String": "#/definitions/StringParameter"
-            }
-          }
+          ]
         },
         "type": "object",
         "title": "Parameters",
@@ -1264,13 +1234,14 @@
     "required": [
       "question_id"
     ],
-    "title": "ProgrammableQuestionRule"
+    "title": "Programmable"
   },
   "NumericRangeQuestionRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -1345,13 +1316,14 @@
     "required": [
       "question_id"
     ],
-    "title": "NumericRangeQuestionRule"
+    "title": "Numeric Range"
   },
   "NumberEqualQuestionRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -1427,7 +1399,7 @@
       "question_id",
       "answers"
     ],
-    "title": "NumberEqualQuestionRule"
+    "title": "Number Equal"
   },
   "NumberEqualConfig": {
     "properties": {
@@ -1445,13 +1417,14 @@
       }
     },
     "type": "object",
-    "title": "NumberEqualConfig"
+    "title": "Number Equal Configuration"
   },
   "MultiValuedQuestionRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -1536,9 +1509,6 @@
               "$ref": "#/definitions/LengthRule"
             },
             {
-              "$ref": "#/definitions/ManualRule"
-            },
-            {
               "$ref": "#/definitions/MultiValuedRule"
             },
             {
@@ -1558,7 +1528,6 @@
               "COMPOSITE": "#/definitions/CompositeRule",
               "KEYWORDS": "#/definitions/KeywordsRule",
               "LENGTH": "#/definitions/LengthRule",
-              "MANUAL": "#/definitions/ManualRule",
               "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceRule",
               "MULTI_VALUED": "#/definitions/MultiValuedRule",
               "NUMBER_EQUAL": "#/definitions/NumberEqualRule",
@@ -1593,13 +1562,14 @@
       "question_id",
       "rules"
     ],
-    "title": "MultiValuedQuestionRule"
+    "title": "Multi Valued"
   },
   "TextMatchRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -1615,8 +1585,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -1657,13 +1627,14 @@
     "required": [
       "answers"
     ],
-    "title": "TextMatchRule"
+    "title": "Text Match"
   },
   "SimilarityRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -1736,14 +1707,15 @@
     "required": [
       "references"
     ],
-    "title": "SimilarityRule",
+    "title": "Similarity",
     "description": "A rule that checks for similarity between the student's answer and a reference text."
   },
   "RegexRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -1800,13 +1772,14 @@
     "required": [
       "pattern"
     ],
-    "title": "RegexRule"
+    "title": "Regex"
   },
   "ProgrammingRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -1891,13 +1864,14 @@
     "required": [
       "testcases"
     ],
-    "title": "ProgrammingRule"
+    "title": "Programming"
   },
   "ProgrammableRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -1913,9 +1887,9 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "TEXT",
           "NUMERIC",
           "CHOICE",
-          "TEXT",
           "MULTI_VALUED"
         ],
         "readOnly": true
@@ -1947,7 +1921,10 @@
         "type": "string",
         "title": "Code",
         "description": "Code to evaluate the answer. Required variables: 'output', 'passed'. Optional variable: 'feedback'.",
-        "default": "# You have access to the following variables:\n# - 'answer' variable contains the student's answer (can be str, float, list, or set)\n# - any additional variables defined in 'parameters' (e.g., 'param1', 'param2', etc.)\n# You must set the following variables:\n# - 'output' (float): A number between 0 and 1 -- max_points multiplier (only used in OUTPUT mode)\n# - 'passed' (bool): Whether the answer passed (only used in PASS_FAIL mode)\n# - 'feedback' (str, optional): Feedback to provide to the student\n# Example code:\npassed = False\noutput = 0.0\nfeedback = str(answer)\n"
+        "default": "# You have access to the following variables:\n# - 'answer' variable contains the student's answer (can be str, float, list, or set)\n# - any additional variables defined in 'parameters' (e.g., 'param1', 'param2', etc.)\n# You must set the following variables:\n# - 'output' (float): A number between 0 and 1 -- max_points multiplier (only used in OUTPUT mode)\n# - 'passed' (bool): Whether the answer passed (only used in PASS_FAIL mode)\n# - 'feedback' (str, optional): Feedback to provide to the student\n# Example code:\npassed = False\noutput = 0.0\nfeedback = str(answer)\n",
+        "x-gradeflow": {
+          "input": "code"
+        }
       },
       "parameters": {
         "additionalProperties": {
@@ -1970,18 +1947,7 @@
             {
               "$ref": "#/definitions/DictParameter"
             }
-          ],
-          "discriminator": {
-            "propertyName": "dtype",
-            "mapping": {
-              "Boolean": "#/definitions/BooleanParameter",
-              "Dict": "#/definitions/DictParameter",
-              "Float": "#/definitions/FloatParameter",
-              "Int": "#/definitions/IntParameter",
-              "List": "#/definitions/ListParameter",
-              "String": "#/definitions/StringParameter"
-            }
-          }
+          ]
         },
         "type": "object",
         "title": "Parameters",
@@ -1999,13 +1965,14 @@
       }
     },
     "type": "object",
-    "title": "ProgrammableRule"
+    "title": "Programmable"
   },
   "NumericRangeRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -2066,13 +2033,14 @@
       }
     },
     "type": "object",
-    "title": "NumericRangeRule"
+    "title": "Numeric Range"
   },
   "NumberEqualRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -2136,13 +2104,14 @@
     "required": [
       "answers"
     ],
-    "title": "NumberEqualRule"
+    "title": "Number Equal"
   },
   "MultiValuedRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -2216,9 +2185,6 @@
               "$ref": "#/definitions/LengthRule"
             },
             {
-              "$ref": "#/definitions/ManualRule"
-            },
-            {
               "$ref": "#/definitions/MultiValuedRule"
             },
             {
@@ -2238,7 +2204,6 @@
               "COMPOSITE": "#/definitions/CompositeRule",
               "KEYWORDS": "#/definitions/KeywordsRule",
               "LENGTH": "#/definitions/LengthRule",
-              "MANUAL": "#/definitions/ManualRule",
               "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceRule",
               "MULTI_VALUED": "#/definitions/MultiValuedRule",
               "NUMBER_EQUAL": "#/definitions/NumberEqualRule",
@@ -2272,13 +2237,14 @@
     "required": [
       "rules"
     ],
-    "title": "MultiValuedRule"
+    "title": "Multi Valued"
   },
   "MultipleChoiceRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -2355,67 +2321,14 @@
     "required": [
       "answer"
     ],
-    "title": "MultipleChoiceRule"
-  },
-  "ManualRule": {
-    "properties": {
-      "id": {
-        "type": "string",
-        "title": "Id"
-      },
-      "question_types": {
-        "items": {
-          "type": "string",
-          "enum": [
-            "TEXT",
-            "CHOICE",
-            "NUMERIC",
-            "MULTI_VALUED"
-          ]
-        },
-        "type": "array",
-        "uniqueItems": true,
-        "title": "Question Types",
-        "default": [
-          "NUMERIC",
-          "CHOICE",
-          "TEXT",
-          "MULTI_VALUED"
-        ],
-        "readOnly": true
-      },
-      "constraints": {
-        "items": {
-          "$ref": "#/definitions/QuestionConstraint"
-        },
-        "type": "array",
-        "title": "Constraints",
-        "default": [],
-        "readOnly": true
-      },
-      "type": {
-        "type": "string",
-        "const": "MANUAL",
-        "title": "Type",
-        "default": "MANUAL",
-        "readOnly": true
-      },
-      "display_name": {
-        "type": "string",
-        "const": "Manual",
-        "title": "Display Name",
-        "default": "Manual",
-        "readOnly": true
-      }
-    },
-    "type": "object",
-    "title": "ManualRule"
+    "title": "Multiple Choice"
   },
   "LengthRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -2486,13 +2399,14 @@
       }
     },
     "type": "object",
-    "title": "LengthRule"
+    "title": "Length"
   },
   "KeywordsRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -2560,13 +2474,14 @@
     "required": [
       "keywords"
     ],
-    "title": "KeywordsRule"
+    "title": "Keywords"
   },
   "CompositeRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -2582,8 +2497,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -2641,9 +2556,6 @@
               "$ref": "#/definitions/LengthRule"
             },
             {
-              "$ref": "#/definitions/ManualRule"
-            },
-            {
               "$ref": "#/definitions/MultiValuedRule"
             },
             {
@@ -2663,7 +2575,6 @@
               "COMPOSITE": "#/definitions/CompositeRule",
               "KEYWORDS": "#/definitions/KeywordsRule",
               "LENGTH": "#/definitions/LengthRule",
-              "MANUAL": "#/definitions/ManualRule",
               "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceRule",
               "MULTI_VALUED": "#/definitions/MultiValuedRule",
               "NUMBER_EQUAL": "#/definitions/NumberEqualRule",
@@ -2697,13 +2608,14 @@
     "required": [
       "rules"
     ],
-    "title": "CompositeRule"
+    "title": "Composite"
   },
   "BonusRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -2719,9 +2631,9 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "TEXT",
           "NUMERIC",
           "CHOICE",
-          "TEXT",
           "MULTI_VALUED"
         ],
         "readOnly": true
@@ -2751,13 +2663,14 @@
       }
     },
     "type": "object",
-    "title": "BonusRule"
+    "title": "Bonus"
   },
   "MultipleChoiceQuestionRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -2846,81 +2759,14 @@
       "question_id",
       "answer"
     ],
-    "title": "MultipleChoiceQuestionRule"
-  },
-  "ManualQuestionRule": {
-    "properties": {
-      "id": {
-        "type": "string",
-        "title": "Id"
-      },
-      "question_types": {
-        "items": {
-          "type": "string",
-          "enum": [
-            "TEXT",
-            "CHOICE",
-            "NUMERIC",
-            "MULTI_VALUED"
-          ]
-        },
-        "type": "array",
-        "uniqueItems": true,
-        "title": "Question Types",
-        "default": [
-          "NUMERIC",
-          "CHOICE",
-          "TEXT",
-          "MULTI_VALUED"
-        ],
-        "readOnly": true
-      },
-      "constraints": {
-        "items": {
-          "$ref": "#/definitions/QuestionConstraint"
-        },
-        "type": "array",
-        "title": "Constraints",
-        "default": [],
-        "readOnly": true
-      },
-      "scope": {
-        "type": "string",
-        "const": "question",
-        "title": "Scope",
-        "default": "question",
-        "readOnly": true
-      },
-      "question_id": {
-        "type": "string",
-        "title": "Question Id"
-      },
-      "type": {
-        "type": "string",
-        "const": "MANUAL",
-        "title": "Type",
-        "default": "MANUAL",
-        "readOnly": true
-      },
-      "display_name": {
-        "type": "string",
-        "const": "Manual",
-        "title": "Display Name",
-        "default": "Manual",
-        "readOnly": true
-      }
-    },
-    "type": "object",
-    "required": [
-      "question_id"
-    ],
-    "title": "ManualQuestionRule"
+    "title": "Multiple Choice"
   },
   "LengthQuestionRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -3005,13 +2851,14 @@
     "required": [
       "question_id"
     ],
-    "title": "LengthQuestionRule"
+    "title": "Length"
   },
   "KeywordsQuestionRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -3091,13 +2938,14 @@
       "question_id",
       "keywords"
     ],
-    "title": "KeywordsQuestionRule"
+    "title": "Keywords"
   },
   "ConditionalMultiQuestionRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -3113,9 +2961,9 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "TEXT",
           "NUMERIC",
           "CHOICE",
-          "TEXT",
           "MULTI_VALUED"
         ],
         "readOnly": true
@@ -3184,9 +3032,6 @@
               "$ref": "#/definitions/LengthQuestionRule"
             },
             {
-              "$ref": "#/definitions/ManualQuestionRule"
-            },
-            {
               "$ref": "#/definitions/MultiValuedQuestionRule"
             },
             {
@@ -3207,7 +3052,6 @@
               "COMPOSITE": "#/definitions/CompositeQuestionRule",
               "KEYWORDS": "#/definitions/KeywordsQuestionRule",
               "LENGTH": "#/definitions/LengthQuestionRule",
-              "MANUAL": "#/definitions/ManualQuestionRule",
               "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceQuestionRule",
               "MULTI_VALUED": "#/definitions/MultiValuedQuestionRule",
               "NUMBER_EQUAL": "#/definitions/NumberEqualQuestionRule",
@@ -3269,9 +3113,6 @@
               "$ref": "#/definitions/LengthQuestionRule"
             },
             {
-              "$ref": "#/definitions/ManualQuestionRule"
-            },
-            {
               "$ref": "#/definitions/MultiValuedQuestionRule"
             },
             {
@@ -3292,7 +3133,6 @@
               "COMPOSITE": "#/definitions/CompositeQuestionRule",
               "KEYWORDS": "#/definitions/KeywordsQuestionRule",
               "LENGTH": "#/definitions/LengthQuestionRule",
-              "MANUAL": "#/definitions/ManualQuestionRule",
               "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceQuestionRule",
               "MULTI_VALUED": "#/definitions/MultiValuedQuestionRule",
               "NUMBER_EQUAL": "#/definitions/NumberEqualQuestionRule",
@@ -3344,9 +3184,6 @@
               "$ref": "#/definitions/LengthQuestionRule"
             },
             {
-              "$ref": "#/definitions/ManualQuestionRule"
-            },
-            {
               "$ref": "#/definitions/MultiValuedQuestionRule"
             },
             {
@@ -3367,7 +3204,6 @@
               "COMPOSITE": "#/definitions/CompositeQuestionRule",
               "KEYWORDS": "#/definitions/KeywordsQuestionRule",
               "LENGTH": "#/definitions/LengthQuestionRule",
-              "MANUAL": "#/definitions/ManualQuestionRule",
               "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceQuestionRule",
               "MULTI_VALUED": "#/definitions/MultiValuedQuestionRule",
               "NUMBER_EQUAL": "#/definitions/NumberEqualQuestionRule",
@@ -3391,13 +3227,14 @@
       "then_rules",
       "else_rules"
     ],
-    "title": "ConditionalMultiQuestionRule"
+    "title": "Conditional"
   },
   "CompositeQuestionRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -3413,8 +3250,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -3483,9 +3320,6 @@
               "$ref": "#/definitions/LengthRule"
             },
             {
-              "$ref": "#/definitions/ManualRule"
-            },
-            {
               "$ref": "#/definitions/MultiValuedRule"
             },
             {
@@ -3505,7 +3339,6 @@
               "COMPOSITE": "#/definitions/CompositeRule",
               "KEYWORDS": "#/definitions/KeywordsRule",
               "LENGTH": "#/definitions/LengthRule",
-              "MANUAL": "#/definitions/ManualRule",
               "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceRule",
               "MULTI_VALUED": "#/definitions/MultiValuedRule",
               "NUMBER_EQUAL": "#/definitions/NumberEqualRule",
@@ -3540,13 +3373,14 @@
       "question_id",
       "rules"
     ],
-    "title": "CompositeQuestionRule"
+    "title": "Composite"
   },
   "BonusQuestionRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -3562,9 +3396,9 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "TEXT",
           "NUMERIC",
           "CHOICE",
-          "TEXT",
           "MULTI_VALUED"
         ],
         "readOnly": true
@@ -3608,13 +3442,14 @@
     "required": [
       "question_id"
     ],
-    "title": "BonusQuestionRule"
+    "title": "Bonus"
   },
   "AssumptionSetQuestionRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -3630,9 +3465,9 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "TEXT",
           "NUMERIC",
           "CHOICE",
-          "TEXT",
           "MULTI_VALUED"
         ],
         "readOnly": true
@@ -3695,7 +3530,7 @@
       "question_id",
       "assumptions"
     ],
-    "title": "AssumptionSetQuestionRule"
+    "title": "Assumption Set"
   },
   "Assumption": {
     "properties": {
@@ -3745,9 +3580,6 @@
             "$ref": "#/definitions/LengthRule"
           },
           {
-            "$ref": "#/definitions/ManualRule"
-          },
-          {
             "$ref": "#/definitions/MultiValuedRule"
           },
           {
@@ -3769,7 +3601,6 @@
             "COMPOSITE": "#/definitions/CompositeRule",
             "KEYWORDS": "#/definitions/KeywordsRule",
             "LENGTH": "#/definitions/LengthRule",
-            "MANUAL": "#/definitions/ManualRule",
             "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceRule",
             "MULTI_VALUED": "#/definitions/MultiValuedRule",
             "NUMBER_EQUAL": "#/definitions/NumberEqualRule",
@@ -3793,7 +3624,8 @@
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -3809,9 +3641,9 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "TEXT",
           "NUMERIC",
           "CHOICE",
-          "TEXT",
           "MULTI_VALUED"
         ],
         "readOnly": true
@@ -3869,7 +3701,7 @@
     "required": [
       "assumptions"
     ],
-    "title": "AssumptionSetMultiQuestionRule"
+    "title": "Assumption Set"
   },
   "MultiQuestionAssumption": {
     "properties": {
@@ -3923,9 +3755,6 @@
               "$ref": "#/definitions/LengthQuestionRule"
             },
             {
-              "$ref": "#/definitions/ManualQuestionRule"
-            },
-            {
               "$ref": "#/definitions/MultiValuedQuestionRule"
             },
             {
@@ -3946,7 +3775,6 @@
               "COMPOSITE": "#/definitions/CompositeQuestionRule",
               "KEYWORDS": "#/definitions/KeywordsQuestionRule",
               "LENGTH": "#/definitions/LengthQuestionRule",
-              "MANUAL": "#/definitions/ManualQuestionRule",
               "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceQuestionRule",
               "MULTI_VALUED": "#/definitions/MultiValuedQuestionRule",
               "NUMBER_EQUAL": "#/definitions/NumberEqualQuestionRule",
@@ -3968,7 +3796,7 @@
     "required": [
       "rules"
     ],
-    "title": "MultiQuestionAssumption"
+    "title": "Assumption"
   },
   "UploadSourceDataRequest": {
     "properties": {
@@ -4067,9 +3895,6 @@
             "$ref": "#/definitions/LengthQuestionRule"
           },
           {
-            "$ref": "#/definitions/ManualQuestionRule"
-          },
-          {
             "$ref": "#/definitions/MultiValuedQuestionRule"
           },
           {
@@ -4102,7 +3927,6 @@
             "CONDITIONAL": "#/definitions/ConditionalMultiQuestionRule",
             "KEYWORDS": "#/definitions/KeywordsQuestionRule",
             "LENGTH": "#/definitions/LengthQuestionRule",
-            "MANUAL": "#/definitions/ManualQuestionRule",
             "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceQuestionRule",
             "MULTI_VALUED": "#/definitions/MultiValuedQuestionRule",
             "NUMBER_EQUAL": "#/definitions/NumberEqualQuestionRule",
@@ -4158,9 +3982,6 @@
             "$ref": "#/definitions/LengthQuestionRule"
           },
           {
-            "$ref": "#/definitions/ManualQuestionRule"
-          },
-          {
             "$ref": "#/definitions/MultiValuedQuestionRule"
           },
           {
@@ -4193,7 +4014,6 @@
             "CONDITIONAL": "#/definitions/ConditionalMultiQuestionRule",
             "KEYWORDS": "#/definitions/KeywordsQuestionRule",
             "LENGTH": "#/definitions/LengthQuestionRule",
-            "MANUAL": "#/definitions/ManualQuestionRule",
             "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceQuestionRule",
             "MULTI_VALUED": "#/definitions/MultiValuedQuestionRule",
             "NUMBER_EQUAL": "#/definitions/NumberEqualQuestionRule",
@@ -4381,7 +4201,7 @@
       "rule": {
         "type": "string",
         "title": "Rule",
-        "description": "ID of the rule that was applied"
+        "description": "Display name of the rule that produced the result"
       },
       "graded": {
         "type": "boolean",
@@ -4702,9 +4522,6 @@
                 "$ref": "#/definitions/LengthQuestionRule"
               },
               {
-                "$ref": "#/definitions/ManualQuestionRule"
-              },
-              {
                 "$ref": "#/definitions/MultiValuedQuestionRule"
               },
               {
@@ -4736,7 +4553,6 @@
                 "CONDITIONAL": "#/definitions/ConditionalMultiQuestionRule",
                 "KEYWORDS": "#/definitions/KeywordsQuestionRule",
                 "LENGTH": "#/definitions/LengthQuestionRule",
-                "MANUAL": "#/definitions/ManualQuestionRule",
                 "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceQuestionRule",
                 "MULTI_VALUED": "#/definitions/MultiValuedQuestionRule",
                 "NUMBER_EQUAL": "#/definitions/NumberEqualQuestionRule",

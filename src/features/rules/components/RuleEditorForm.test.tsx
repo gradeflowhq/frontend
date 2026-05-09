@@ -1,469 +1,309 @@
 import { MantineProvider } from '@mantine/core';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import rawDefs from '@schemas/rules.json';
-
-import { HIDE_KEYS_SINGLE } from '../constants';
+import { mergeContextInitialValue } from '../contextInitialValue';
+import { buildRuleUiSchema } from '../schemaUi';
 import RuleEditorForm from './RuleEditorForm';
-import { prepareRuleDefinitionsForRender } from '../schema/prepare';
-
 
 import type { RuleValue } from '../types';
 import type { JSONSchema7 } from 'json-schema';
 
-// ---------------------------------------------------------------------------
-// Test helpers
-// ---------------------------------------------------------------------------
+const apiMocks = vi.hoisted(() => ({
+  useCompatibleRules: vi.fn(),
+  useRuleSchema: vi.fn(),
+}));
 
-/** Process definitions through the full pipeline (single-target TEXT). */
-function buildProcessedDefs(questionType = 'TEXT') {
-  return prepareRuleDefinitionsForRender(rawDefs as Record<string, unknown>, {
-    questionType,
-    questionId: 'q1',
-    isSingleTarget: true,
-    questionMap: { q1: { type: { type: 'string', default: questionType } } },
-  }) as Record<string, JSONSchema7>;
-}
+vi.mock('../api', () => apiMocks);
 
-/** Build a schemaForRender the same way useRuleEditorState does. */
-function buildSchema(defs: Record<string, JSONSchema7>, key: string): JSONSchema7 {
-  const base = defs[key];
-  if (!base) throw new Error(`Definition "${key}" not found`);
-  return { ...base, definitions: defs } as JSONSchema7;
-}
-
-/** Build the default uiSchema with hidden keys for single-target mode. */
-function buildUiSchema(): Record<string, unknown> {
-  const ui: Record<string, unknown> = {
-    'ui:title': '',
-    'ui:options': { label: true },
-    'ui:submitButtonOptions': { norender: true },
-  };
-  const hidden = {
-    'ui:widget': 'hidden',
-    'ui:title': '',
-    'ui:options': { label: false, hidden: true },
-  };
-  HIDE_KEYS_SINGLE.forEach((k) => {
-    ui[k] = hidden;
+beforeEach(() => {
+  apiMocks.useCompatibleRules.mockReturnValue({
+    data: [
+      { type: 'RULE_A', label: 'Rule A' },
+      { type: 'RULE_B', label: 'Rule B' },
+    ],
+    isError: false,
+    error: null,
   });
-  return ui;
-}
+  apiMocks.useRuleSchema.mockReturnValue({
+    data: undefined,
+    isLoading: false,
+    isError: false,
+    error: null,
+  });
+});
 
-const noop = () => {};
+const schema: JSONSchema7 = {
+  type: 'object',
+  properties: {
+    type: { const: 'RULE_A' },
+    answer: { type: 'string', title: 'Answer' },
+  },
+};
 
-function buildFormProps(
+const uiSchema = {
+  type: { 'ui:widget': 'hidden' },
+};
+
+const ControlledRuleEditorForm: React.FC<{
+  props: React.ComponentProps<typeof RuleEditorForm>;
+}> = ({ props }) => {
+  const [draft, setDraft] = React.useState(props.draft);
+  const handleDraftChange = React.useCallback(
+    (next: RuleValue) => {
+      setDraft(next);
+      props.onDraftChange(next);
+    },
+    [props],
+  );
+
+  return <RuleEditorForm {...props} draft={draft} onDraftChange={handleDraftChange} />;
+};
+
+const renderForm = (
   overrides: Partial<React.ComponentProps<typeof RuleEditorForm>> = {},
-): React.ComponentProps<typeof RuleEditorForm> {
-  const defaults: React.ComponentProps<typeof RuleEditorForm> = {
-    formKey: 'test-form',
-    schemaForRender: null,
-    mergedUiSchema: {},
-    hiddenKeys: [...HIDE_KEYS_SINGLE],
-    draft: {} as RuleValue,
-    onDraftChange: noop,
-    onSave: noop,
-    onCancel: noop,
+) => {
+  const props: React.ComponentProps<typeof RuleEditorForm> = {
+    formKey: 'rule-form',
+    schema,
+    uiSchema,
+    draft: { type: 'RULE_A', answer: 'initial' } as RuleValue,
+    formContext: { assessmentId: 'assessment-1', questionId: 'q1' },
+    onDraftChange: vi.fn(),
+    onSave: vi.fn(),
+    onCancel: vi.fn(),
+    ...overrides,
   };
 
-  return { ...defaults, ...overrides };
-}
-
-function renderForm(
-  overrides: Partial<React.ComponentProps<typeof RuleEditorForm>> = {},
-) {
-  const props = buildFormProps(overrides);
-  return render(
-    <MantineProvider>
-      <RuleEditorForm {...props} />
-    </MantineProvider>,
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
+  return {
+    props,
+    ...render(
+      <MantineProvider>
+        <ControlledRuleEditorForm props={props} />
+      </MantineProvider>,
+    ),
+  };
+};
 
 describe('RuleEditorForm', () => {
-  // ── Basic rendering ─────────────────────────────────────────────────────
-
-  it('shows a warning when schemaForRender is null', () => {
-    renderForm({ schemaForRender: null });
+  it('shows a warning when no schema is available', () => {
+    renderForm({ schema: null });
     expect(screen.getByText('Rule schema not found.')).toBeInTheDocument();
   });
 
-  it('renders Save and Cancel buttons', () => {
-    const defs = buildProcessedDefs();
-    const schema = buildSchema(defs, 'TextMatchRule');
-    renderForm({ schemaForRender: schema, mergedUiSchema: buildUiSchema() });
+  it('renders backend-provided schema and controls', () => {
+    renderForm();
+    expect(screen.getByDisplayValue('initial')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /save/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument();
   });
 
-  it('disables Cancel while saving', () => {
-    const defs = buildProcessedDefs();
-    const schema = buildSchema(defs, 'TextMatchRule');
+  it('hides backend read-only fields while editing', () => {
+    const contextualSchema: JSONSchema7 = {
+      type: 'object',
+      properties: {
+        type: { const: 'TEXT_MATCH', readOnly: true },
+        question_id: { const: 'q1', readOnly: true, title: 'Question Id' },
+        answer: { type: 'string', title: 'Answer' },
+      },
+    };
+
     renderForm({
-      schemaForRender: schema,
-      mergedUiSchema: buildUiSchema(),
-      isSaving: true,
+      schema: contextualSchema,
+      uiSchema: buildRuleUiSchema(contextualSchema),
+      draft: { type: 'TEXT_MATCH', question_id: 'q1', answer: 'expected' } as RuleValue,
     });
-    expect(screen.getByRole('button', { name: /cancel/i })).toBeDisabled();
+
+    expect(screen.getByDisplayValue('expected')).toBeInTheDocument();
+    expect(screen.queryByText('Question Id')).not.toBeInTheDocument();
+    expect(screen.queryByDisplayValue('q1')).not.toBeInTheDocument();
+    expect(screen.queryByDisplayValue('TEXT_MATCH')).not.toBeInTheDocument();
   });
 
-  it('shows error alert when error prop is set', () => {
-    const defs = buildProcessedDefs();
-    const schema = buildSchema(defs, 'TextMatchRule');
+  it('hides read-only discriminator fields in parameter values', () => {
+    const parameterSchema: JSONSchema7 = {
+      type: 'object',
+      properties: {
+        parameters: {
+          type: 'object',
+          title: 'Parameters',
+          additionalProperties: {
+            oneOf: [
+              {
+                type: 'object',
+                title: 'Int Parameter',
+                properties: {
+                  dtype: { const: 'Int', default: 'Int', readOnly: true, title: 'Dtype' },
+                  value: { type: 'integer', title: 'Value' },
+                },
+                required: ['value'],
+              },
+            ],
+          },
+        },
+      },
+    };
+
     renderForm({
-      schemaForRender: schema,
-      mergedUiSchema: buildUiSchema(),
-      error: new Error('Server error'),
-    });
-    expect(screen.getByText('Server error')).toBeInTheDocument();
-  });
-
-  // ── TextMatchRule ───────────────────────────────────────────────────────
-
-  it('renders TextMatchRule form with answers field', () => {
-    const defs = buildProcessedDefs();
-    const schema = buildSchema(defs, 'TextMatchRule');
-    renderForm({
-      schemaForRender: schema,
-      mergedUiSchema: buildUiSchema(),
-      draft: { type: 'TEXT_MATCH', question_id: 'q1' } as RuleValue,
-    });
-    // TextMatchRule has an "answers" array field — check for its heading
-    expect(screen.getByRole('heading', { name: /answers/i })).toBeInTheDocument();
-  });
-
-  // ── ProgrammingRule ─────────────────────────────────────────────────────
-
-  it('renders ProgrammingRule form with testcases field', () => {
-    const defs = buildProcessedDefs();
-    const schema = buildSchema(defs, 'ProgrammingRule');
-    renderForm({
-      schemaForRender: schema,
-      mergedUiSchema: buildUiSchema(),
-      draft: { type: 'PROGRAMMING', question_id: 'q1' } as RuleValue,
-    });
-    expect(screen.getByText(/testcases/i)).toBeInTheDocument();
-  });
-
-  // ── Cancel/Save callbacks ───────────────────────────────────────────────
-
-  it('calls onCancel when Cancel is clicked', async () => {
-    const user = userEvent.setup();
-    const onCancel = vi.fn();
-    const defs = buildProcessedDefs();
-    const schema = buildSchema(defs, 'TextMatchRule');
-    renderForm({
-      schemaForRender: schema,
-      mergedUiSchema: buildUiSchema(),
-      onCancel,
-    });
-    await user.click(screen.getByRole('button', { name: /cancel/i }));
-    expect(onCancel).toHaveBeenCalledOnce();
-  });
-
-  it('calls onSave with current draft when Save button is clicked', async () => {
-    const user = userEvent.setup();
-    const onSave = vi.fn();
-    const defs = buildProcessedDefs();
-    const schema = buildSchema(defs, 'TextMatchRule');
-    const draft = { type: 'TEXT_MATCH', question_id: 'q1' } as RuleValue;
-    renderForm({
-      schemaForRender: schema,
-      mergedUiSchema: buildUiSchema(),
-      draft,
-      onSave,
-    });
-    await user.click(screen.getByRole('button', { name: /save/i }));
-    expect(onSave).toHaveBeenCalledWith(draft);
-  });
-
-  it('saves the latest form data even when the parent has not re-rendered', async () => {
-    const user = userEvent.setup();
-    const onSave = vi.fn();
-    const defs = buildProcessedDefs();
-    const schema = buildSchema(defs, 'ProgrammingRule');
-    renderForm({
-      schemaForRender: schema,
-      mergedUiSchema: buildUiSchema(),
+      schema: parameterSchema,
+      uiSchema: buildRuleUiSchema(parameterSchema),
       draft: {
-        type: 'PROGRAMMING',
-        question_id: 'q1',
-        testcases: [{ expression: 'init', expected: '' }],
-        language: 'python',
-        show_evaluated_expected: true,
-        mode: 'ALL',
-      } as unknown as RuleValue,
-      onSave,
+        type: 'PROGRAMMABLE',
+        parameters: { points: { dtype: 'Int', value: 2 } },
+      } as RuleValue,
     });
 
-    const expressionInput = await screen.findByDisplayValue('init');
-    await user.click(expressionInput);
-    await user.type(expressionInput, 'x');
+    expect(screen.getByDisplayValue('2')).toBeInTheDocument();
+    expect(screen.queryByText('Dtype')).not.toBeInTheDocument();
+    expect(screen.queryByDisplayValue('Int')).not.toBeInTheDocument();
+  });
+
+  it('saves the latest local draft', async () => {
+    const user = userEvent.setup();
+    const onSave = vi.fn();
+    renderForm({ onSave });
+
+    const input = screen.getByDisplayValue('initial');
+    await user.clear(input);
+    await user.type(input, 'updated');
     await user.click(screen.getByRole('button', { name: /save/i }));
 
     expect(onSave).toHaveBeenCalledWith(
-      expect.objectContaining({
-        testcases: [expect.objectContaining({ expression: 'initx' })],
-      }),
+      expect.objectContaining({ type: 'RULE_A', answer: 'updated' }),
     );
   });
 
-  it('keeps edited branch data visible across parent re-renders', async () => {
-    const user = userEvent.setup();
-    const defs = buildProcessedDefs();
-    const schema = buildSchema(defs, 'ProgrammingRule');
-    const props = buildFormProps({
-      schemaForRender: schema,
-      mergedUiSchema: buildUiSchema(),
-      draft: {
-        type: 'PROGRAMMING',
-        question_id: 'q1',
-        testcases: [{ expression: 'init', expected: '' }],
-        language: 'python',
-        show_evaluated_expected: true,
-        mode: 'ALL',
-      } as unknown as RuleValue,
-    });
-
-    const view = render(
-      <MantineProvider>
-        <RuleEditorForm {...props} />
-      </MantineProvider>,
-    );
-
-    const expressionInput = await screen.findByDisplayValue('init');
-    await user.click(expressionInput);
-    await user.type(expressionInput, 'x');
-
-    await waitFor(() => {
-      expect(screen.getByDisplayValue('initx')).toBeInTheDocument();
-    });
-
-    view.rerender(
-      <MantineProvider>
-        <RuleEditorForm {...props} error={new Error('Parent re-render')} />
-      </MantineProvider>,
-    );
-
-    expect(screen.getByDisplayValue('initx')).toBeInTheDocument();
-  });
-});
-
-describe('RuleEditorForm – nested rule schemas', () => {
-  /**
-   * Verify that the processed schema for rules containing nested oneOf
-   * (like CompositeRule) preserves the discriminator mapping so RJSF can
-   * use getOptionMatchingSimpleDiscriminator for instant matching.
-   */
-  it('CompositeRule schema retains discriminator on nested rules oneOf', () => {
-    const defs = buildProcessedDefs();
-    const schema = buildSchema(defs, 'CompositeRule');
-    const rulesItems = (schema.properties as Record<string, JSONSchema7>)?.rules
-      ?.items as JSONSchema7 | undefined;
-
-    expect(rulesItems).toBeDefined();
-    expect(rulesItems!.oneOf).toBeDefined();
-
-    const disc = (rulesItems as Record<string, unknown>)?.discriminator as
-      | { propertyName: string; mapping?: Record<string, string> }
-      | undefined;
-    expect(disc).toBeDefined();
-    expect(disc!.propertyName).toBe('type');
-    // mapping should be pruned to only TEXT-compatible rules
-    expect(disc!.mapping).toBeDefined();
-    // ProgrammingRule is TEXT-compatible — it must be in the mapping
-    expect(Object.values(disc!.mapping!)).toContain('#/definitions/ProgrammingRule');
+  it('disables cancel while saving and shows save errors', () => {
+    renderForm({ isSaving: true, error: new Error('Save failed') });
+    expect(screen.getByRole('button', { name: /cancel/i })).toBeDisabled();
+    expect(screen.getByText('Save failed')).toBeInTheDocument();
   });
 
-  it('Nested rule option schemas have type.enum for simple discriminator matching', () => {
-    const defs = buildProcessedDefs();
-    // Check a few rule definitions have type.enum instead of type.const
-    for (const key of ['ProgrammingRule', 'TextMatchRule', 'RegexRule', 'CompositeRule']) {
-      const def = defs[key] as JSONSchema7 | undefined;
-      if (!def) continue;
-      const typeProp = (def.properties as Record<string, JSONSchema7> | undefined)?.type;
-      expect(typeProp, `${key} should have type property`).toBeDefined();
-      expect(typeProp!.enum, `${key}.type should have enum`)
-        .toBeInstanceOf(Array);
-      expect(typeProp!.const, `${key}.type should NOT have const`)
-        .toBeUndefined();
-    }
-  });
-
-  it('ProgrammingRule definition is present after filtering for TEXT questions', () => {
-    const defs = buildProcessedDefs('TEXT');
-    expect(defs).toHaveProperty('ProgrammingRule');
-    // ProgrammingRule is compatible with TEXT
-    const progDef = defs.ProgrammingRule as JSONSchema7;
-    expect(progDef.properties).toBeDefined();
-    const typeProp = (progDef.properties as Record<string, JSONSchema7>).type;
-    expect(typeProp.enum).toEqual(['PROGRAMMING']);
-    expect(typeProp.default).toBe('PROGRAMMING');
-  });
-
-  it('CompositeRule renders with a nested rule selector', () => {
-    const defs = buildProcessedDefs();
-    const schema = buildSchema(defs, 'CompositeRule');
+  it('renders add control for backend array schemas', () => {
     renderForm({
-      schemaForRender: schema,
-      mergedUiSchema: buildUiSchema(),
-      draft: {
-        type: 'COMPOSITE',
-        display_name: 'Composite',
-        rules: [],
-        aggregation: 'ALL',
-      } as unknown as RuleValue,
-    });
-    // Should render the rules array field — check for its heading
-    expect(screen.getByRole('heading', { name: /^rules$/i })).toBeInTheDocument();
-  });
-
-  it('CompositeRule with nested ProgrammingRule renders correctly', async () => {
-    const defs = buildProcessedDefs();
-    const schema = buildSchema(defs, 'CompositeRule');
-    const draft = {
-      type: 'COMPOSITE',
-      display_name: 'Composite',
-      rules: [
-        {
-          type: 'PROGRAMMING',
-          display_name: 'Programming',
-          testcases: [{ expression: 'foo()', expected: '42' }],
-          language: 'python',
-          show_evaluated_expected: true,
-          mode: 'ALL',
-        },
-      ],
-      aggregation: 'ALL',
-    } as unknown as RuleValue;
-
-    renderForm({
-      schemaForRender: schema,
-      mergedUiSchema: buildUiSchema(),
-      draft,
-    });
-
-    // The nested ProgrammingRule should render its test case data
-    await waitFor(() => {
-      expect(screen.getByDisplayValue('foo()')).toBeInTheDocument();
-      expect(screen.getByDisplayValue('42')).toBeInTheDocument();
-    });
-  });
-
-  it('CompositeRule with nested TextMatchRule renders answer fields', async () => {
-    const defs = buildProcessedDefs();
-    const schema = buildSchema(defs, 'CompositeRule');
-    const draft = {
-      type: 'COMPOSITE',
-      display_name: 'Composite',
-      rules: [
-        {
-          type: 'TEXT_MATCH',
-          display_name: 'Text Match',
-          answers: ['hello'],
-        },
-      ],
-      aggregation: 'ALL',
-    } as unknown as RuleValue;
-
-    renderForm({
-      schemaForRender: schema,
-      mergedUiSchema: buildUiSchema(),
-      draft,
-    });
-
-    await waitFor(() => {
-      expect(screen.getByDisplayValue('hello')).toBeInTheDocument();
-    });
-  });
-
-  it('deeply nested CompositeRule renders correctly', async () => {
-    const defs = buildProcessedDefs();
-    const schema = buildSchema(defs, 'CompositeRule');
-    const draft = {
-      type: 'COMPOSITE',
-      display_name: 'Composite',
-      rules: [
-        {
-          type: 'COMPOSITE',
-          display_name: 'Composite',
-          rules: [
-            {
-              type: 'TEXT_MATCH',
-              display_name: 'Text Match',
-              answers: ['nested-answer'],
+      schema: {
+        type: 'object',
+        required: ['type', 'groups'],
+        properties: {
+          type: { const: 'GROUPED_RULE' },
+          groups: {
+            type: 'array',
+            title: 'Groups',
+            items: {
+              type: 'object',
+              properties: {
+                name: { type: ['string', 'null'], title: 'Name' },
+                weight: { type: 'number', default: 1 },
+                children: {
+                  type: 'array',
+                  items: {
+                    oneOf: [
+                      {
+                        type: 'object',
+                        properties: {
+                          type: { const: 'CHILD_RULE' },
+                          values: { type: 'array', items: { type: 'string' } },
+                        },
+                      },
+                    ],
+                  },
+                },
+              },
             },
-          ],
-          aggregation: 'ALL',
+          },
         },
-      ],
-      aggregation: 'ALL',
-    } as unknown as RuleValue;
-
-    renderForm({
-      schemaForRender: schema,
-      mergedUiSchema: buildUiSchema(),
-      draft,
+      },
+      uiSchema: {
+        type: { 'ui:widget': 'hidden' },
+        groups: {
+          items: {
+            children: {
+              items: {
+                'ui:field': 'RuleSlotField',
+                'ui:fieldReplacesAnyOrOneOf': true,
+              },
+            },
+          },
+        },
+      },
+      draft: { type: 'GROUPED_RULE' } as RuleValue,
     });
 
-    await waitFor(() => {
-      expect(screen.getByDisplayValue('nested-answer')).toBeInTheDocument();
-    });
+    expect(screen.getByRole('button', { name: /add item/i })).toBeInTheDocument();
   });
 
-  it('calls onDraftChange when form fields are edited', async () => {
+  it('refreshes backend initial values when nested rule context changes', () => {
+    const next = mergeContextInitialValue(
+      { type: 'CONTEXTUAL_RULE', question_id: 'q2', code: 'code for q1' } as RuleValue,
+      { type: 'CONTEXTUAL_RULE', question_id: 'q1', code: 'code for q1' } as RuleValue,
+      { type: 'CONTEXTUAL_RULE', question_id: 'q2', code: 'code for q2' } as RuleValue,
+    );
+
+    expect(next).toEqual({ type: 'CONTEXTUAL_RULE', question_id: 'q2', code: 'code for q2' });
+  });
+
+  it('keeps edited nested values when rule context changes', () => {
+    const next = mergeContextInitialValue(
+      { type: 'CONTEXTUAL_RULE', question_id: 'q2', code: 'custom code' } as RuleValue,
+      { type: 'CONTEXTUAL_RULE', question_id: 'q1', code: 'code for q1' } as RuleValue,
+      { type: 'CONTEXTUAL_RULE', question_id: 'q2', code: 'code for q2' } as RuleValue,
+    );
+
+    expect(next).toBeNull();
+  });
+
+  it('renders backend suggestions as selectable string-list options', async () => {
     const user = userEvent.setup();
-    const onDraftChange = vi.fn();
-    const defs = buildProcessedDefs();
-    const schema = buildSchema(defs, 'ProgrammingRule');
     renderForm({
-      schemaForRender: schema,
-      mergedUiSchema: buildUiSchema(),
-      draft: {
-        type: 'PROGRAMMING',
-        question_id: 'q1',
-        testcases: [{ expression: 'init', expected: '' }],
-        language: 'python',
-        show_evaluated_expected: true,
-        mode: 'ALL',
-      } as unknown as RuleValue,
-      onDraftChange,
+      schema: {
+        type: 'object',
+        properties: {
+          type: { const: 'RULE_A' },
+          answers: {
+            type: 'array',
+            title: 'Answers',
+            items: { type: 'string' },
+            'x-gradeflow': { input: 'string-list', suggestions: ['Alice', 'Bob'] },
+          },
+        },
+      } as JSONSchema7,
+      uiSchema: {
+        type: { 'ui:widget': 'hidden' },
+        answers: { 'ui:field': 'StringListField' },
+      },
+      draft: { type: 'RULE_A', answers: [] } as RuleValue,
     });
 
-    // Find the expression input by its current value
-    const expressionInput = await screen.findByDisplayValue('init');
-    await user.click(expressionInput);
-    await user.type(expressionInput, 'x');
+    await user.click(screen.getByRole('combobox', { name: /answers/i }));
 
-    await waitFor(() => {
-      expect(onDraftChange).toHaveBeenCalled();
-    });
+    expect(screen.getByRole('option', { name: 'Alice', hidden: true })).toBeInTheDocument();
   });
-});
 
-describe('RuleEditorForm – rule type variety', () => {
-  it.each([
-    ['RegexRule', { type: 'REGEX', pattern: 'test.*' }],
-    ['KeywordsRule', { type: 'KEYWORDS', keywords: ['hello'], mode: 'ALL' }],
-    ['ManualRule', { type: 'MANUAL' }],
-    ['LengthRule', { type: 'LENGTH' }],
-  ] as const)('renders %s without crashing', (key, draft) => {
-    const defs = buildProcessedDefs();
-    if (!defs[key]) return; // skip if not in the definitions
-    const schema = buildSchema(defs, key);
+  it('renders string-list enum values as constrained selectable options', async () => {
+    const user = userEvent.setup();
     renderForm({
-      schemaForRender: schema,
-      mergedUiSchema: buildUiSchema(),
-      draft: { ...draft, question_id: 'q1', display_name: key } as unknown as RuleValue,
+      schema: {
+        type: 'object',
+        properties: {
+          type: { const: 'RULE_A' },
+          target_question_ids: {
+            type: 'array',
+            title: 'Target Question Ids',
+            items: { type: 'string', enum: ['q1', 'q2'] },
+          },
+        },
+      },
+      uiSchema: {
+        type: { 'ui:widget': 'hidden' },
+        target_question_ids: { 'ui:field': 'StringListField' },
+      },
+      draft: { type: 'RULE_A', target_question_ids: [] } as RuleValue,
     });
-    // Should render Save and Cancel buttons (form is functional)
-    expect(screen.getByRole('button', { name: /save/i })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('combobox', { name: /target question ids/i }));
+
+    expect(screen.getByRole('option', { name: 'q1', hidden: true })).toBeInTheDocument();
   });
 });

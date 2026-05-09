@@ -13,7 +13,7 @@ import type { ConditionalMultiQuestionRuleOutputThenRulesItem } from './conditio
 import type { ConditionalMultiQuestionRuleOutputElseRulesItem } from './conditionalMultiQuestionRuleOutputElseRulesItem';
 
 export interface ConditionalMultiQuestionRuleOutput {
-  id: string;
+  readonly id: string;
   readonly question_types: readonly ConditionalMultiQuestionRuleOutputQuestionTypesItem[];
   readonly constraints: readonly QuestionConstraint[];
   readonly scope: 'global';

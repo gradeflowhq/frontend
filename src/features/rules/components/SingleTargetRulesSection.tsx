@@ -51,12 +51,12 @@ const SingleTargetRulesSection: React.FC<Props> = ({
   useGuardRegistration(detailPanelEditing, onEditStateChange, registerResetEditing, resetEditing);
 
   const questionRuleById = useMemo(
-    () => new Map(questionRules.map((rule) => [rule.id, rule])),
+    () => new Map(questionRules.flatMap((rule) => (rule.id ? [[rule.id, rule]] : []))),
     [questionRules],
   );
 
   const globalRuleById = useMemo(
-    () => new Map(globalRules.map((rule) => [rule.id, rule])),
+    () => new Map(globalRules.flatMap((rule) => (rule.id ? [[rule.id, rule]] : []))),
     [globalRules],
   );
 

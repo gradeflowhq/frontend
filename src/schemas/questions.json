@@ -65,202 +65,6 @@
     "type": "object",
     "title": "TextParserConfig"
   },
-  "TextMatchQuestionRule": {
-    "properties": {
-      "id": {
-        "type": "string",
-        "title": "Id"
-      },
-      "question_types": {
-        "items": {
-          "type": "string",
-          "enum": [
-            "TEXT",
-            "CHOICE",
-            "NUMERIC",
-            "MULTI_VALUED"
-          ]
-        },
-        "type": "array",
-        "uniqueItems": true,
-        "title": "Question Types",
-        "default": [
-          "NUMERIC",
-          "TEXT"
-        ],
-        "readOnly": true
-      },
-      "constraints": {
-        "items": {
-          "$ref": "#/definitions/QuestionConstraint"
-        },
-        "type": "array",
-        "title": "Constraints",
-        "default": [],
-        "readOnly": true
-      },
-      "scope": {
-        "type": "string",
-        "const": "question",
-        "title": "Scope",
-        "default": "question",
-        "readOnly": true
-      },
-      "question_id": {
-        "type": "string",
-        "title": "Question Id"
-      },
-      "type": {
-        "type": "string",
-        "const": "TEXT_MATCH",
-        "title": "Type",
-        "default": "TEXT_MATCH",
-        "readOnly": true
-      },
-      "display_name": {
-        "type": "string",
-        "const": "Text Match",
-        "title": "Display Name",
-        "default": "Text Match",
-        "readOnly": true
-      },
-      "answers": {
-        "items": {
-          "type": "string"
-        },
-        "type": "array",
-        "minItems": 1,
-        "title": "Answers",
-        "description": "List of acceptable exact answers"
-      }
-    },
-    "type": "object",
-    "required": [
-      "question_id",
-      "answers"
-    ],
-    "title": "TextMatchQuestionRule"
-  },
-  "QuestionConstraint": {
-    "properties": {
-      "type": {
-        "type": "string",
-        "enum": [
-          "TEXT",
-          "CHOICE",
-          "NUMERIC",
-          "MULTI_VALUED"
-        ],
-        "title": "Type"
-      },
-      "source": {
-        "type": "string",
-        "title": "Source"
-      },
-      "target": {
-        "type": "string",
-        "title": "Target"
-      }
-    },
-    "type": "object",
-    "required": [
-      "type",
-      "source",
-      "target"
-    ],
-    "title": "QuestionConstraint"
-  },
-  "SimilarityQuestionRule": {
-    "properties": {
-      "id": {
-        "type": "string",
-        "title": "Id"
-      },
-      "question_types": {
-        "items": {
-          "type": "string",
-          "enum": [
-            "TEXT",
-            "CHOICE",
-            "NUMERIC",
-            "MULTI_VALUED"
-          ]
-        },
-        "type": "array",
-        "uniqueItems": true,
-        "title": "Question Types",
-        "default": [
-          "TEXT"
-        ],
-        "readOnly": true
-      },
-      "constraints": {
-        "items": {
-          "$ref": "#/definitions/QuestionConstraint"
-        },
-        "type": "array",
-        "title": "Constraints",
-        "default": [],
-        "readOnly": true
-      },
-      "scope": {
-        "type": "string",
-        "const": "question",
-        "title": "Scope",
-        "default": "question",
-        "readOnly": true
-      },
-      "question_id": {
-        "type": "string",
-        "title": "Question Id"
-      },
-      "type": {
-        "type": "string",
-        "const": "SIMILARITY",
-        "title": "Type",
-        "default": "SIMILARITY",
-        "readOnly": true
-      },
-      "display_name": {
-        "type": "string",
-        "const": "Similarity",
-        "title": "Display Name",
-        "default": "Similarity",
-        "readOnly": true
-      },
-      "references": {
-        "items": {
-          "type": "string"
-        },
-        "type": "array",
-        "title": "References",
-        "description": "Reference answers for similarity comparison"
-      },
-      "threshold": {
-        "type": "number",
-        "title": "Threshold",
-        "description": "Similarity threshold for passing the rule (0 to 1)",
-        "default": 0.8
-      },
-      "algorithm": {
-        "type": "string",
-        "enum": [
-          "levenshtein",
-          "jaro_winkler",
-          "transformer"
-        ],
-        "title": "Algorithm",
-        "description": "Similarity algorithm to use (options: 'levenshtein', 'jaro_winkler', 'transformer'). 'transformer' uses the BAAI/bge-small-en-v1.5 model and requires the 'ml' extra.",
-        "default": "levenshtein"
-      }
-    },
-    "type": "object",
-    "required": [
-      "question_id",
-      "references"
-    ],
-    "title": "SimilarityQuestionRule"
-  },
   "SetQuestionSetByModelRequest": {
     "properties": {
       "question_set": {
@@ -473,105 +277,6 @@
     "type": "object",
     "title": "ChoiceQuestion"
   },
-  "RegexQuestionRule": {
-    "properties": {
-      "id": {
-        "type": "string",
-        "title": "Id"
-      },
-      "question_types": {
-        "items": {
-          "type": "string",
-          "enum": [
-            "TEXT",
-            "CHOICE",
-            "NUMERIC",
-            "MULTI_VALUED"
-          ]
-        },
-        "type": "array",
-        "uniqueItems": true,
-        "title": "Question Types",
-        "default": [
-          "TEXT"
-        ],
-        "readOnly": true
-      },
-      "constraints": {
-        "items": {
-          "$ref": "#/definitions/QuestionConstraint"
-        },
-        "type": "array",
-        "title": "Constraints",
-        "default": [],
-        "readOnly": true
-      },
-      "scope": {
-        "type": "string",
-        "const": "question",
-        "title": "Scope",
-        "default": "question",
-        "readOnly": true
-      },
-      "question_id": {
-        "type": "string",
-        "title": "Question Id"
-      },
-      "type": {
-        "type": "string",
-        "const": "REGEX",
-        "title": "Type",
-        "default": "REGEX",
-        "readOnly": true
-      },
-      "display_name": {
-        "type": "string",
-        "const": "Regex",
-        "title": "Display Name",
-        "default": "Regex",
-        "readOnly": true
-      },
-      "pattern": {
-        "type": "string",
-        "title": "Pattern",
-        "description": "Regular expression pattern to match against the answer"
-      },
-      "config": {
-        "$ref": "#/definitions/RegexConfig",
-        "description": "Configuration for regex matching behavior"
-      }
-    },
-    "type": "object",
-    "required": [
-      "question_id",
-      "pattern"
-    ],
-    "title": "RegexQuestionRule"
-  },
-  "RegexConfig": {
-    "properties": {
-      "ignore_case": {
-        "type": "boolean",
-        "title": "Ignore Case",
-        "description": "Ignore case when matching",
-        "default": false
-      },
-      "multi_line": {
-        "type": "boolean",
-        "title": "Multi Line",
-        "description": "Multi-line matching",
-        "default": false
-      },
-      "dotall": {
-        "type": "boolean",
-        "title": "Dotall",
-        "description": "Dot matches all characters including newlines",
-        "default": false
-      }
-    },
-    "type": "object",
-    "title": "RegexConfig"
-  },
   "QuestionUpdateRequest": {
     "properties": {
       "question": {
@@ -607,21 +312,73 @@
     ],
     "title": "QuestionUpdateRequest"
   },
-  "QuestionSetResponse": {
+  "QuestionSetStatusResponse": {
     "properties": {
-      "question_set": {
-        "$ref": "#/definitions/QuestionSet"
-      },
       "status": {
         "$ref": "#/definitions/SectionStatus"
+      },
+      "drift": {
+        "$ref": "#/definitions/QuestionSetDrift"
       }
     },
     "type": "object",
     "required": [
-      "question_set",
-      "status"
+      "status",
+      "drift"
     ],
-    "title": "QuestionSetResponse"
+    "title": "QuestionSetStatusResponse"
+  },
+  "QuestionSetDrift": {
+    "properties": {
+      "missing_question_ids": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array",
+        "title": "Missing Question Ids"
+      },
+      "extra_question_ids": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array",
+        "title": "Extra Question Ids"
+      },
+      "choice_option_drifts": {
+        "items": {
+          "$ref": "#/definitions/ChoiceOptionDrift"
+        },
+        "type": "array",
+        "title": "Choice Option Drifts"
+      },
+      "has_drift": {
+        "type": "boolean",
+        "title": "Has Drift",
+        "default": false
+      }
+    },
+    "type": "object",
+    "title": "QuestionSetDrift"
+  },
+  "ChoiceOptionDrift": {
+    "properties": {
+      "question_id": {
+        "type": "string",
+        "title": "Question Id"
+      },
+      "missing_options": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array",
+        "title": "Missing Options"
+      }
+    },
+    "type": "object",
+    "required": [
+      "question_id"
+    ],
+    "title": "ChoiceOptionDrift"
   },
   "SectionStatus": {
     "properties": {
@@ -641,6 +398,22 @@
     },
     "type": "object",
     "title": "SectionStatus"
+  },
+  "QuestionSetResponse": {
+    "properties": {
+      "question_set": {
+        "$ref": "#/definitions/QuestionSet"
+      },
+      "status": {
+        "$ref": "#/definitions/SectionStatus"
+      }
+    },
+    "type": "object",
+    "required": [
+      "question_set",
+      "status"
+    ],
+    "title": "QuestionSetResponse"
   },
   "QuestionResult": {
     "properties": {
@@ -666,7 +439,7 @@
       "rule": {
         "type": "string",
         "title": "Rule",
-        "description": "ID of the rule that was applied"
+        "description": "Display name of the rule that produced the result"
       },
       "graded": {
         "type": "boolean",
@@ -736,11 +509,405 @@
     ],
     "title": "QuestionCreateRequest"
   },
+  "QuestionConstraint": {
+    "properties": {
+      "type": {
+        "type": "string",
+        "enum": [
+          "TEXT",
+          "CHOICE",
+          "NUMERIC",
+          "MULTI_VALUED"
+        ],
+        "title": "Type"
+      },
+      "source": {
+        "type": "string",
+        "title": "Source"
+      },
+      "target": {
+        "type": "string",
+        "title": "Target"
+      }
+    },
+    "type": "object",
+    "required": [
+      "type",
+      "source",
+      "target"
+    ],
+    "title": "QuestionConstraint"
+  },
+  "MultiQuestionAssumption": {
+    "properties": {
+      "name": {
+        "title": "Name",
+        "description": "Name of the assumption",
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "weight": {
+        "type": "number",
+        "maximum": 1,
+        "minimum": 0,
+        "title": "Weight",
+        "description": "Weight of the assumption",
+        "default": 1
+      },
+      "rules": {
+        "items": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/AssumptionSetQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/BonusQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/CompositeQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/ProgrammableQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/ProgrammingQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/SimilarityQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/TextMatchQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/KeywordsQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/RegexQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/LengthQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/MultiValuedQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/MultipleChoiceQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/NumberEqualQuestionRule"
+            },
+            {
+              "$ref": "#/definitions/NumericRangeQuestionRule"
+            }
+          ],
+          "discriminator": {
+            "propertyName": "type",
+            "mapping": {
+              "ASSUMPTION_SET": "#/definitions/AssumptionSetQuestionRule",
+              "BONUS": "#/definitions/BonusQuestionRule",
+              "COMPOSITE": "#/definitions/CompositeQuestionRule",
+              "KEYWORDS": "#/definitions/KeywordsQuestionRule",
+              "LENGTH": "#/definitions/LengthQuestionRule",
+              "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceQuestionRule",
+              "MULTI_VALUED": "#/definitions/MultiValuedQuestionRule",
+              "NUMBER_EQUAL": "#/definitions/NumberEqualQuestionRule",
+              "NUMERIC_RANGE": "#/definitions/NumericRangeQuestionRule",
+              "PROGRAMMABLE": "#/definitions/ProgrammableQuestionRule",
+              "PROGRAMMING": "#/definitions/ProgrammingQuestionRule",
+              "REGEX": "#/definitions/RegexQuestionRule",
+              "SIMILARITY": "#/definitions/SimilarityQuestionRule",
+              "TEXT_MATCH": "#/definitions/TextMatchQuestionRule"
+            }
+          }
+        },
+        "type": "array",
+        "title": "Rules",
+        "description": "List of rules that define the assumption"
+      }
+    },
+    "type": "object",
+    "required": [
+      "rules"
+    ],
+    "title": "Assumption"
+  },
+  "TextMatchQuestionRule": {
+    "properties": {
+      "id": {
+        "type": "string",
+        "title": "Id",
+        "readOnly": true
+      },
+      "question_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "CHOICE",
+            "NUMERIC",
+            "MULTI_VALUED"
+          ]
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Question Types",
+        "default": [
+          "TEXT",
+          "NUMERIC"
+        ],
+        "readOnly": true
+      },
+      "constraints": {
+        "items": {
+          "$ref": "#/definitions/QuestionConstraint"
+        },
+        "type": "array",
+        "title": "Constraints",
+        "default": [],
+        "readOnly": true
+      },
+      "scope": {
+        "type": "string",
+        "const": "question",
+        "title": "Scope",
+        "default": "question",
+        "readOnly": true
+      },
+      "question_id": {
+        "type": "string",
+        "title": "Question Id"
+      },
+      "type": {
+        "type": "string",
+        "const": "TEXT_MATCH",
+        "title": "Type",
+        "default": "TEXT_MATCH",
+        "readOnly": true
+      },
+      "display_name": {
+        "type": "string",
+        "const": "Text Match",
+        "title": "Display Name",
+        "default": "Text Match",
+        "readOnly": true
+      },
+      "answers": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array",
+        "minItems": 1,
+        "title": "Answers",
+        "description": "List of acceptable exact answers"
+      }
+    },
+    "type": "object",
+    "required": [
+      "question_id",
+      "answers"
+    ],
+    "title": "Text Match"
+  },
+  "SimilarityQuestionRule": {
+    "properties": {
+      "id": {
+        "type": "string",
+        "title": "Id",
+        "readOnly": true
+      },
+      "question_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "CHOICE",
+            "NUMERIC",
+            "MULTI_VALUED"
+          ]
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Question Types",
+        "default": [
+          "TEXT"
+        ],
+        "readOnly": true
+      },
+      "constraints": {
+        "items": {
+          "$ref": "#/definitions/QuestionConstraint"
+        },
+        "type": "array",
+        "title": "Constraints",
+        "default": [],
+        "readOnly": true
+      },
+      "scope": {
+        "type": "string",
+        "const": "question",
+        "title": "Scope",
+        "default": "question",
+        "readOnly": true
+      },
+      "question_id": {
+        "type": "string",
+        "title": "Question Id"
+      },
+      "type": {
+        "type": "string",
+        "const": "SIMILARITY",
+        "title": "Type",
+        "default": "SIMILARITY",
+        "readOnly": true
+      },
+      "display_name": {
+        "type": "string",
+        "const": "Similarity",
+        "title": "Display Name",
+        "default": "Similarity",
+        "readOnly": true
+      },
+      "references": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array",
+        "title": "References",
+        "description": "Reference answers for similarity comparison"
+      },
+      "threshold": {
+        "type": "number",
+        "title": "Threshold",
+        "description": "Similarity threshold for passing the rule (0 to 1)",
+        "default": 0.8
+      },
+      "algorithm": {
+        "type": "string",
+        "enum": [
+          "levenshtein",
+          "jaro_winkler",
+          "transformer"
+        ],
+        "title": "Algorithm",
+        "description": "Similarity algorithm to use (options: 'levenshtein', 'jaro_winkler', 'transformer'). 'transformer' uses the BAAI/bge-small-en-v1.5 model and requires the 'ml' extra.",
+        "default": "levenshtein"
+      }
+    },
+    "type": "object",
+    "required": [
+      "question_id",
+      "references"
+    ],
+    "title": "Similarity"
+  },
+  "RegexQuestionRule": {
+    "properties": {
+      "id": {
+        "type": "string",
+        "title": "Id",
+        "readOnly": true
+      },
+      "question_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "CHOICE",
+            "NUMERIC",
+            "MULTI_VALUED"
+          ]
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Question Types",
+        "default": [
+          "TEXT"
+        ],
+        "readOnly": true
+      },
+      "constraints": {
+        "items": {
+          "$ref": "#/definitions/QuestionConstraint"
+        },
+        "type": "array",
+        "title": "Constraints",
+        "default": [],
+        "readOnly": true
+      },
+      "scope": {
+        "type": "string",
+        "const": "question",
+        "title": "Scope",
+        "default": "question",
+        "readOnly": true
+      },
+      "question_id": {
+        "type": "string",
+        "title": "Question Id"
+      },
+      "type": {
+        "type": "string",
+        "const": "REGEX",
+        "title": "Type",
+        "default": "REGEX",
+        "readOnly": true
+      },
+      "display_name": {
+        "type": "string",
+        "const": "Regex",
+        "title": "Display Name",
+        "default": "Regex",
+        "readOnly": true
+      },
+      "pattern": {
+        "type": "string",
+        "title": "Pattern",
+        "description": "Regular expression pattern to match against the answer"
+      },
+      "config": {
+        "$ref": "#/definitions/RegexConfig",
+        "description": "Configuration for regex matching behavior"
+      }
+    },
+    "type": "object",
+    "required": [
+      "question_id",
+      "pattern"
+    ],
+    "title": "Regex"
+  },
+  "RegexConfig": {
+    "properties": {
+      "ignore_case": {
+        "type": "boolean",
+        "title": "Ignore Case",
+        "description": "Ignore case when matching",
+        "default": false
+      },
+      "multi_line": {
+        "type": "boolean",
+        "title": "Multi Line",
+        "description": "Multi-line matching",
+        "default": false
+      },
+      "dotall": {
+        "type": "boolean",
+        "title": "Dotall",
+        "description": "Dot matches all characters including newlines",
+        "default": false
+      }
+    },
+    "type": "object",
+    "title": "Regex Configuration"
+  },
   "ProgrammingQuestionRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -837,7 +1004,7 @@
       "question_id",
       "testcases"
     ],
-    "title": "ProgrammingQuestionRule"
+    "title": "Programming"
   },
   "ProgrammingConfig": {
     "properties": {
@@ -845,13 +1012,19 @@
         "type": "string",
         "title": "Prepend Code",
         "description": "Code to prepend to the student's answer",
-        "default": ""
+        "default": "",
+        "x-gradeflow": {
+          "input": "code"
+        }
       },
       "append_code": {
         "type": "string",
         "title": "Append Code",
         "description": "Code to append to the student's answer",
-        "default": ""
+        "default": "",
+        "x-gradeflow": {
+          "input": "code"
+        }
       },
       "indent": {
         "type": "integer",
@@ -867,7 +1040,7 @@
       }
     },
     "type": "object",
-    "title": "ProgrammingConfig"
+    "title": "Programming Configuration"
   },
   "ProgrammingTestCase": {
     "properties": {
@@ -887,13 +1060,14 @@
       "expression",
       "expected"
     ],
-    "title": "ProgrammingTestCase"
+    "title": "Test Case"
   },
   "ProgrammableQuestionRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -909,9 +1083,9 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "TEXT",
           "NUMERIC",
           "CHOICE",
-          "TEXT",
           "MULTI_VALUED"
         ],
         "readOnly": true
@@ -954,7 +1128,10 @@
         "type": "string",
         "title": "Code",
         "description": "Code to evaluate the answer. Required variables: 'output', 'passed'. Optional variable: 'feedback'.",
-        "default": "# You have access to the following variables:\n# - 'answer' variable contains the student's answer (can be str, float, list, or set)\n# - any additional variables defined in 'parameters' (e.g., 'param1', 'param2', etc.)\n# You must set the following variables:\n# - 'output' (float): A number between 0 and 1 -- max_points multiplier (only used in OUTPUT mode)\n# - 'passed' (bool): Whether the answer passed (only used in PASS_FAIL mode)\n# - 'feedback' (str, optional): Feedback to provide to the student\n# Example code:\npassed = False\noutput = 0.0\nfeedback = str(answer)\n"
+        "default": "# You have access to the following variables:\n# - 'answer' variable contains the student's answer (can be str, float, list, or set)\n# - any additional variables defined in 'parameters' (e.g., 'param1', 'param2', etc.)\n# You must set the following variables:\n# - 'output' (float): A number between 0 and 1 -- max_points multiplier (only used in OUTPUT mode)\n# - 'passed' (bool): Whether the answer passed (only used in PASS_FAIL mode)\n# - 'feedback' (str, optional): Feedback to provide to the student\n# Example code:\npassed = False\noutput = 0.0\nfeedback = str(answer)\n",
+        "x-gradeflow": {
+          "input": "code"
+        }
       },
       "parameters": {
         "additionalProperties": {
@@ -977,18 +1154,7 @@
             {
               "$ref": "#/definitions/DictParameter"
             }
-          ],
-          "discriminator": {
-            "propertyName": "dtype",
-            "mapping": {
-              "Boolean": "#/definitions/BooleanParameter",
-              "Dict": "#/definitions/DictParameter",
-              "Float": "#/definitions/FloatParameter",
-              "Int": "#/definitions/IntParameter",
-              "List": "#/definitions/ListParameter",
-              "String": "#/definitions/StringParameter"
-            }
-          }
+          ]
         },
         "type": "object",
         "title": "Parameters",
@@ -1009,120 +1175,7 @@
     "required": [
       "question_id"
     ],
-    "title": "ProgrammableQuestionRule"
-  },
-  "StringParameter": {
-    "properties": {
-      "dtype": {
-        "type": "string",
-        "const": "String",
-        "title": "Dtype",
-        "default": "String",
-        "readOnly": true
-      },
-      "value": {
-        "type": "string",
-        "title": "Value"
-      }
-    },
-    "type": "object",
-    "required": [
-      "value"
-    ],
-    "title": "StringParameter"
-  },
-  "ListParameter": {
-    "properties": {
-      "dtype": {
-        "type": "string",
-        "const": "List",
-        "title": "Dtype",
-        "default": "List",
-        "readOnly": true
-      },
-      "value": {
-        "items": {
-          "oneOf": [
-            {
-              "$ref": "#/definitions/IntParameter"
-            },
-            {
-              "$ref": "#/definitions/FloatParameter"
-            },
-            {
-              "$ref": "#/definitions/StringParameter"
-            },
-            {
-              "$ref": "#/definitions/BooleanParameter"
-            },
-            {
-              "$ref": "#/definitions/ListParameter"
-            },
-            {
-              "$ref": "#/definitions/DictParameter"
-            }
-          ],
-          "discriminator": {
-            "propertyName": "dtype",
-            "mapping": {
-              "Boolean": "#/definitions/BooleanParameter",
-              "Dict": "#/definitions/DictParameter",
-              "Float": "#/definitions/FloatParameter",
-              "Int": "#/definitions/IntParameter",
-              "List": "#/definitions/ListParameter",
-              "String": "#/definitions/StringParameter"
-            }
-          }
-        },
-        "type": "array",
-        "title": "Value"
-      }
-    },
-    "type": "object",
-    "required": [
-      "value"
-    ],
-    "title": "ListParameter"
-  },
-  "IntParameter": {
-    "properties": {
-      "dtype": {
-        "type": "string",
-        "const": "Int",
-        "title": "Dtype",
-        "default": "Int",
-        "readOnly": true
-      },
-      "value": {
-        "type": "integer",
-        "title": "Value"
-      }
-    },
-    "type": "object",
-    "required": [
-      "value"
-    ],
-    "title": "IntParameter"
-  },
-  "FloatParameter": {
-    "properties": {
-      "dtype": {
-        "type": "string",
-        "const": "Float",
-        "title": "Dtype",
-        "default": "Float",
-        "readOnly": true
-      },
-      "value": {
-        "type": "number",
-        "title": "Value"
-      }
-    },
-    "type": "object",
-    "required": [
-      "value"
-    ],
-    "title": "FloatParameter"
+    "title": "Programmable"
   },
   "DictParameter": {
     "properties": {
@@ -1154,18 +1207,7 @@
             {
               "$ref": "#/definitions/DictParameter"
             }
-          ],
-          "discriminator": {
-            "propertyName": "dtype",
-            "mapping": {
-              "Boolean": "#/definitions/BooleanParameter",
-              "Dict": "#/definitions/DictParameter",
-              "Float": "#/definitions/FloatParameter",
-              "Int": "#/definitions/IntParameter",
-              "List": "#/definitions/ListParameter",
-              "String": "#/definitions/StringParameter"
-            }
-          }
+          ]
         },
         "type": "object",
         "title": "Value"
@@ -1175,102 +1217,19 @@
     "required": [
       "value"
     ],
-    "title": "DictParameter"
+    "title": "Dictionary"
   },
-  "BooleanParameter": {
+  "ListParameter": {
     "properties": {
       "dtype": {
         "type": "string",
-        "const": "Boolean",
+        "const": "List",
         "title": "Dtype",
-        "default": "Boolean",
+        "default": "List",
         "readOnly": true
       },
       "value": {
-        "type": "boolean",
-        "title": "Value"
-      }
-    },
-    "type": "object",
-    "required": [
-      "value"
-    ],
-    "title": "BooleanParameter"
-  },
-  "ProgrammableMultiQuestionRule": {
-    "properties": {
-      "id": {
-        "type": "string",
-        "title": "Id"
-      },
-      "question_types": {
         "items": {
-          "type": "string",
-          "enum": [
-            "TEXT",
-            "CHOICE",
-            "NUMERIC",
-            "MULTI_VALUED"
-          ]
-        },
-        "type": "array",
-        "uniqueItems": true,
-        "title": "Question Types",
-        "default": [
-          "NUMERIC",
-          "CHOICE",
-          "TEXT",
-          "MULTI_VALUED"
-        ],
-        "readOnly": true
-      },
-      "constraints": {
-        "items": {
-          "$ref": "#/definitions/QuestionConstraint"
-        },
-        "type": "array",
-        "title": "Constraints",
-        "default": [],
-        "readOnly": true
-      },
-      "scope": {
-        "type": "string",
-        "const": "global",
-        "title": "Scope",
-        "default": "global",
-        "readOnly": true
-      },
-      "type": {
-        "type": "string",
-        "const": "PROGRAMMABLE_MULTI",
-        "title": "Type",
-        "default": "PROGRAMMABLE_MULTI",
-        "readOnly": true
-      },
-      "display_name": {
-        "type": "string",
-        "const": "Programmable",
-        "title": "Display Name",
-        "default": "Programmable",
-        "readOnly": true
-      },
-      "target_question_ids": {
-        "items": {
-          "type": "string"
-        },
-        "type": "array",
-        "minItems": 1,
-        "title": "Target Question Ids",
-        "description": "List of question IDs this rule targets."
-      },
-      "code": {
-        "type": "string",
-        "title": "Code",
-        "description": "Code to evaluate the answer_map. Required variable: 'results' (dict mapping question_id -> dict with 'output', 'passed', and optionally 'feedback').",
-        "default": "# You have access to the following variables:\n# - 'answer_map' dict mapping question_id -> student's answer for each target question\n# - any additional variables defined in 'parameters' (e.g., 'param1', 'param2', etc.)\n# You must set the following variable:\n# - 'results' (dict): A dict mapping question_id -> dict with keys:\n#     - 'output' (float): A number between 0 and 1 -- max_points multiplier (OUTPUT mode)\n#     - 'passed' (bool): Whether the answer passed (only used in PASS_FAIL mode)\n#     - 'feedback' (str, optional): Feedback to provide to the student\n# Example code:\nresults = {}\nfor qid, answer in answer_map.items():\n    results[qid] = {\n        'output': 0.0,\n        'passed': False,\n        'feedback': str(answer),\n    }\n"
-      },
-      "parameters": {
-        "additionalProperties": {
           "oneOf": [
             {
               "$ref": "#/definitions/IntParameter"
@@ -1290,45 +1249,104 @@
             {
               "$ref": "#/definitions/DictParameter"
             }
-          ],
-          "discriminator": {
-            "propertyName": "dtype",
-            "mapping": {
-              "Boolean": "#/definitions/BooleanParameter",
-              "Dict": "#/definitions/DictParameter",
-              "Float": "#/definitions/FloatParameter",
-              "Int": "#/definitions/IntParameter",
-              "List": "#/definitions/ListParameter",
-              "String": "#/definitions/StringParameter"
-            }
-          }
+          ]
         },
-        "type": "object",
-        "title": "Parameters",
-        "description": "Parameters that can be used in the code."
-      },
-      "mode": {
-        "type": "string",
-        "enum": [
-          "PASS_FAIL",
-          "OUTPUT"
-        ],
-        "title": "Mode",
-        "description": "Mode of evaluation: 'PASS_FAIL' uses 'passed' per question, 'OUTPUT' uses 'output' (0-1) per question for scoring.",
-        "default": "PASS_FAIL"
+        "type": "array",
+        "title": "Value"
       }
     },
     "type": "object",
     "required": [
-      "target_question_ids"
+      "value"
     ],
-    "title": "ProgrammableMultiQuestionRule"
+    "title": "List"
+  },
+  "BooleanParameter": {
+    "properties": {
+      "dtype": {
+        "type": "string",
+        "const": "Boolean",
+        "title": "Dtype",
+        "default": "Boolean",
+        "readOnly": true
+      },
+      "value": {
+        "type": "boolean",
+        "title": "Value"
+      }
+    },
+    "type": "object",
+    "required": [
+      "value"
+    ],
+    "title": "Boolean"
+  },
+  "StringParameter": {
+    "properties": {
+      "dtype": {
+        "type": "string",
+        "const": "String",
+        "title": "Dtype",
+        "default": "String",
+        "readOnly": true
+      },
+      "value": {
+        "type": "string",
+        "title": "Value"
+      }
+    },
+    "type": "object",
+    "required": [
+      "value"
+    ],
+    "title": "String"
+  },
+  "FloatParameter": {
+    "properties": {
+      "dtype": {
+        "type": "string",
+        "const": "Float",
+        "title": "Dtype",
+        "default": "Float",
+        "readOnly": true
+      },
+      "value": {
+        "type": "number",
+        "title": "Value"
+      }
+    },
+    "type": "object",
+    "required": [
+      "value"
+    ],
+    "title": "Float"
+  },
+  "IntParameter": {
+    "properties": {
+      "dtype": {
+        "type": "string",
+        "const": "Int",
+        "title": "Dtype",
+        "default": "Int",
+        "readOnly": true
+      },
+      "value": {
+        "type": "integer",
+        "title": "Value"
+      }
+    },
+    "type": "object",
+    "required": [
+      "value"
+    ],
+    "title": "Integer"
   },
   "NumericRangeQuestionRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -1403,13 +1421,14 @@
     "required": [
       "question_id"
     ],
-    "title": "NumericRangeQuestionRule"
+    "title": "Numeric Range"
   },
   "NumberEqualQuestionRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -1485,7 +1504,7 @@
       "question_id",
       "answers"
     ],
-    "title": "NumberEqualQuestionRule"
+    "title": "Number Equal"
   },
   "NumberEqualConfig": {
     "properties": {
@@ -1503,108 +1522,14 @@
       }
     },
     "type": "object",
-    "title": "NumberEqualConfig"
-  },
-  "MultipleChoiceQuestionRule": {
-    "properties": {
-      "id": {
-        "type": "string",
-        "title": "Id"
-      },
-      "question_types": {
-        "items": {
-          "type": "string",
-          "enum": [
-            "TEXT",
-            "CHOICE",
-            "NUMERIC",
-            "MULTI_VALUED"
-          ]
-        },
-        "type": "array",
-        "uniqueItems": true,
-        "title": "Question Types",
-        "default": [
-          "CHOICE"
-        ],
-        "readOnly": true
-      },
-      "constraints": {
-        "items": {
-          "$ref": "#/definitions/QuestionConstraint"
-        },
-        "type": "array",
-        "title": "Constraints",
-        "default": [
-          {
-            "type": "CHOICE",
-            "source": "options",
-            "target": "answer"
-          }
-        ],
-        "readOnly": true
-      },
-      "scope": {
-        "type": "string",
-        "const": "question",
-        "title": "Scope",
-        "default": "question",
-        "readOnly": true
-      },
-      "question_id": {
-        "type": "string",
-        "title": "Question Id"
-      },
-      "type": {
-        "type": "string",
-        "const": "MULTIPLE_CHOICE",
-        "title": "Type",
-        "default": "MULTIPLE_CHOICE",
-        "readOnly": true
-      },
-      "display_name": {
-        "type": "string",
-        "const": "Multiple Choice",
-        "title": "Display Name",
-        "default": "Multiple Choice",
-        "readOnly": true
-      },
-      "answer": {
-        "items": {
-          "type": "string"
-        },
-        "type": "array",
-        "minItems": 1,
-        "uniqueItems": true,
-        "title": "Answer",
-        "description": "Set of correct choices"
-      },
-      "mode": {
-        "type": "string",
-        "enum": [
-          "ALL",
-          "CONTAIN",
-          "NOT_CONTAIN",
-          "ANY",
-          "PARTIAL"
-        ],
-        "title": "Mode",
-        "description": "Mode of choice matching: 'ALL' requires all specified choices to be selected, 'CONTAIN' requires all specified choices to be selected but allows extra choices, 'NOT_CONTAIN' requires none of the specified choices to be selected, 'ANY' requires at least one of the specified choices to be selected, 'PARTIAL' gives credit for each specified choice selected minus each unspecified choice selected.",
-        "default": "ALL"
-      }
-    },
-    "type": "object",
-    "required": [
-      "question_id",
-      "answer"
-    ],
-    "title": "MultipleChoiceQuestionRule"
+    "title": "Number Equal Configuration"
   },
   "MultiValuedQuestionRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -1689,9 +1614,6 @@
               "$ref": "#/definitions/LengthRule"
             },
             {
-              "$ref": "#/definitions/ManualRule"
-            },
-            {
               "$ref": "#/definitions/MultiValuedRule"
             },
             {
@@ -1711,7 +1633,6 @@
               "COMPOSITE": "#/definitions/CompositeRule",
               "KEYWORDS": "#/definitions/KeywordsRule",
               "LENGTH": "#/definitions/LengthRule",
-              "MANUAL": "#/definitions/ManualRule",
               "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceRule",
               "MULTI_VALUED": "#/definitions/MultiValuedRule",
               "NUMBER_EQUAL": "#/definitions/NumberEqualRule",
@@ -1746,13 +1667,14 @@
       "question_id",
       "rules"
     ],
-    "title": "MultiValuedQuestionRule"
+    "title": "Multi Valued"
   },
   "TextMatchRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -1768,8 +1690,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -1810,13 +1732,14 @@
     "required": [
       "answers"
     ],
-    "title": "TextMatchRule"
+    "title": "Text Match"
   },
   "SimilarityRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -1889,14 +1812,15 @@
     "required": [
       "references"
     ],
-    "title": "SimilarityRule",
+    "title": "Similarity",
     "description": "A rule that checks for similarity between the student's answer and a reference text."
   },
   "RegexRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -1953,13 +1877,14 @@
     "required": [
       "pattern"
     ],
-    "title": "RegexRule"
+    "title": "Regex"
   },
   "ProgrammingRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -2044,13 +1969,14 @@
     "required": [
       "testcases"
     ],
-    "title": "ProgrammingRule"
+    "title": "Programming"
   },
   "ProgrammableRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -2066,9 +1992,9 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "TEXT",
           "NUMERIC",
           "CHOICE",
-          "TEXT",
           "MULTI_VALUED"
         ],
         "readOnly": true
@@ -2100,7 +2026,10 @@
         "type": "string",
         "title": "Code",
         "description": "Code to evaluate the answer. Required variables: 'output', 'passed'. Optional variable: 'feedback'.",
-        "default": "# You have access to the following variables:\n# - 'answer' variable contains the student's answer (can be str, float, list, or set)\n# - any additional variables defined in 'parameters' (e.g., 'param1', 'param2', etc.)\n# You must set the following variables:\n# - 'output' (float): A number between 0 and 1 -- max_points multiplier (only used in OUTPUT mode)\n# - 'passed' (bool): Whether the answer passed (only used in PASS_FAIL mode)\n# - 'feedback' (str, optional): Feedback to provide to the student\n# Example code:\npassed = False\noutput = 0.0\nfeedback = str(answer)\n"
+        "default": "# You have access to the following variables:\n# - 'answer' variable contains the student's answer (can be str, float, list, or set)\n# - any additional variables defined in 'parameters' (e.g., 'param1', 'param2', etc.)\n# You must set the following variables:\n# - 'output' (float): A number between 0 and 1 -- max_points multiplier (only used in OUTPUT mode)\n# - 'passed' (bool): Whether the answer passed (only used in PASS_FAIL mode)\n# - 'feedback' (str, optional): Feedback to provide to the student\n# Example code:\npassed = False\noutput = 0.0\nfeedback = str(answer)\n",
+        "x-gradeflow": {
+          "input": "code"
+        }
       },
       "parameters": {
         "additionalProperties": {
@@ -2123,18 +2052,7 @@
             {
               "$ref": "#/definitions/DictParameter"
             }
-          ],
-          "discriminator": {
-            "propertyName": "dtype",
-            "mapping": {
-              "Boolean": "#/definitions/BooleanParameter",
-              "Dict": "#/definitions/DictParameter",
-              "Float": "#/definitions/FloatParameter",
-              "Int": "#/definitions/IntParameter",
-              "List": "#/definitions/ListParameter",
-              "String": "#/definitions/StringParameter"
-            }
-          }
+          ]
         },
         "type": "object",
         "title": "Parameters",
@@ -2152,13 +2070,14 @@
       }
     },
     "type": "object",
-    "title": "ProgrammableRule"
+    "title": "Programmable"
   },
   "NumericRangeRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -2219,13 +2138,14 @@
       }
     },
     "type": "object",
-    "title": "NumericRangeRule"
+    "title": "Numeric Range"
   },
   "NumberEqualRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -2289,13 +2209,14 @@
     "required": [
       "answers"
     ],
-    "title": "NumberEqualRule"
+    "title": "Number Equal"
   },
   "MultiValuedRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -2369,9 +2290,6 @@
               "$ref": "#/definitions/LengthRule"
             },
             {
-              "$ref": "#/definitions/ManualRule"
-            },
-            {
               "$ref": "#/definitions/MultiValuedRule"
             },
             {
@@ -2391,7 +2309,6 @@
               "COMPOSITE": "#/definitions/CompositeRule",
               "KEYWORDS": "#/definitions/KeywordsRule",
               "LENGTH": "#/definitions/LengthRule",
-              "MANUAL": "#/definitions/ManualRule",
               "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceRule",
               "MULTI_VALUED": "#/definitions/MultiValuedRule",
               "NUMBER_EQUAL": "#/definitions/NumberEqualRule",
@@ -2425,13 +2342,14 @@
     "required": [
       "rules"
     ],
-    "title": "MultiValuedRule"
+    "title": "Multi Valued"
   },
   "MultipleChoiceRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -2508,67 +2426,14 @@
     "required": [
       "answer"
     ],
-    "title": "MultipleChoiceRule"
-  },
-  "ManualRule": {
-    "properties": {
-      "id": {
-        "type": "string",
-        "title": "Id"
-      },
-      "question_types": {
-        "items": {
-          "type": "string",
-          "enum": [
-            "TEXT",
-            "CHOICE",
-            "NUMERIC",
-            "MULTI_VALUED"
-          ]
-        },
-        "type": "array",
-        "uniqueItems": true,
-        "title": "Question Types",
-        "default": [
-          "NUMERIC",
-          "CHOICE",
-          "TEXT",
-          "MULTI_VALUED"
-        ],
-        "readOnly": true
-      },
-      "constraints": {
-        "items": {
-          "$ref": "#/definitions/QuestionConstraint"
-        },
-        "type": "array",
-        "title": "Constraints",
-        "default": [],
-        "readOnly": true
-      },
-      "type": {
-        "type": "string",
-        "const": "MANUAL",
-        "title": "Type",
-        "default": "MANUAL",
-        "readOnly": true
-      },
-      "display_name": {
-        "type": "string",
-        "const": "Manual",
-        "title": "Display Name",
-        "default": "Manual",
-        "readOnly": true
-      }
-    },
-    "type": "object",
-    "title": "ManualRule"
+    "title": "Multiple Choice"
   },
   "LengthRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -2639,13 +2504,14 @@
       }
     },
     "type": "object",
-    "title": "LengthRule"
+    "title": "Length"
   },
   "KeywordsRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -2713,13 +2579,14 @@
     "required": [
       "keywords"
     ],
-    "title": "KeywordsRule"
+    "title": "Keywords"
   },
   "CompositeRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -2735,8 +2602,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -2794,9 +2661,6 @@
               "$ref": "#/definitions/LengthRule"
             },
             {
-              "$ref": "#/definitions/ManualRule"
-            },
-            {
               "$ref": "#/definitions/MultiValuedRule"
             },
             {
@@ -2816,7 +2680,6 @@
               "COMPOSITE": "#/definitions/CompositeRule",
               "KEYWORDS": "#/definitions/KeywordsRule",
               "LENGTH": "#/definitions/LengthRule",
-              "MANUAL": "#/definitions/ManualRule",
               "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceRule",
               "MULTI_VALUED": "#/definitions/MultiValuedRule",
               "NUMBER_EQUAL": "#/definitions/NumberEqualRule",
@@ -2850,13 +2713,14 @@
     "required": [
       "rules"
     ],
-    "title": "CompositeRule"
+    "title": "Composite"
   },
   "BonusRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -2872,9 +2736,9 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "TEXT",
           "NUMERIC",
           "CHOICE",
-          "TEXT",
           "MULTI_VALUED"
         ],
         "readOnly": true
@@ -2904,112 +2768,14 @@
       }
     },
     "type": "object",
-    "title": "BonusRule"
+    "title": "Bonus"
   },
-  "MultiQuestionAssumption": {
-    "properties": {
-      "name": {
-        "title": "Name",
-        "description": "Name of the assumption",
-        "type": [
-          "string",
-          "null"
-        ]
-      },
-      "weight": {
-        "type": "number",
-        "maximum": 1,
-        "minimum": 0,
-        "title": "Weight",
-        "description": "Weight of the assumption",
-        "default": 1
-      },
-      "rules": {
-        "items": {
-          "oneOf": [
-            {
-              "$ref": "#/definitions/AssumptionSetQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/BonusQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/CompositeQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/ProgrammableQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/ProgrammingQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/SimilarityQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/TextMatchQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/KeywordsQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/RegexQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/LengthQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/ManualQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/MultiValuedQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/MultipleChoiceQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/NumberEqualQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/NumericRangeQuestionRule"
-            }
-          ],
-          "discriminator": {
-            "propertyName": "type",
-            "mapping": {
-              "ASSUMPTION_SET": "#/definitions/AssumptionSetQuestionRule",
-              "BONUS": "#/definitions/BonusQuestionRule",
-              "COMPOSITE": "#/definitions/CompositeQuestionRule",
-              "KEYWORDS": "#/definitions/KeywordsQuestionRule",
-              "LENGTH": "#/definitions/LengthQuestionRule",
-              "MANUAL": "#/definitions/ManualQuestionRule",
-              "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceQuestionRule",
-              "MULTI_VALUED": "#/definitions/MultiValuedQuestionRule",
-              "NUMBER_EQUAL": "#/definitions/NumberEqualQuestionRule",
-              "NUMERIC_RANGE": "#/definitions/NumericRangeQuestionRule",
-              "PROGRAMMABLE": "#/definitions/ProgrammableQuestionRule",
-              "PROGRAMMING": "#/definitions/ProgrammingQuestionRule",
-              "REGEX": "#/definitions/RegexQuestionRule",
-              "SIMILARITY": "#/definitions/SimilarityQuestionRule",
-              "TEXT_MATCH": "#/definitions/TextMatchQuestionRule"
-            }
-          }
-        },
-        "type": "array",
-        "title": "Rules",
-        "description": "List of rules that define the assumption"
-      }
-    },
-    "type": "object",
-    "required": [
-      "rules"
-    ],
-    "title": "MultiQuestionAssumption"
-  },
-  "ManualQuestionRule": {
+  "MultipleChoiceQuestionRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -3025,10 +2791,7 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "CHOICE",
-          "TEXT",
-          "MULTI_VALUED"
+          "CHOICE"
         ],
         "readOnly": true
       },
@@ -3038,7 +2801,13 @@
         },
         "type": "array",
         "title": "Constraints",
-        "default": [],
+        "default": [
+          {
+            "type": "CHOICE",
+            "source": "options",
+            "target": "answer"
+          }
+        ],
         "readOnly": true
       },
       "scope": {
@@ -3054,30 +2823,55 @@
       },
       "type": {
         "type": "string",
-        "const": "MANUAL",
+        "const": "MULTIPLE_CHOICE",
         "title": "Type",
-        "default": "MANUAL",
+        "default": "MULTIPLE_CHOICE",
         "readOnly": true
       },
       "display_name": {
         "type": "string",
-        "const": "Manual",
+        "const": "Multiple Choice",
         "title": "Display Name",
-        "default": "Manual",
+        "default": "Multiple Choice",
         "readOnly": true
+      },
+      "answer": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array",
+        "minItems": 1,
+        "uniqueItems": true,
+        "title": "Answer",
+        "description": "Set of correct choices"
+      },
+      "mode": {
+        "type": "string",
+        "enum": [
+          "ALL",
+          "CONTAIN",
+          "NOT_CONTAIN",
+          "ANY",
+          "PARTIAL"
+        ],
+        "title": "Mode",
+        "description": "Mode of choice matching: 'ALL' requires all specified choices to be selected, 'CONTAIN' requires all specified choices to be selected but allows extra choices, 'NOT_CONTAIN' requires none of the specified choices to be selected, 'ANY' requires at least one of the specified choices to be selected, 'PARTIAL' gives credit for each specified choice selected minus each unspecified choice selected.",
+        "default": "ALL"
       }
     },
     "type": "object",
     "required": [
-      "question_id"
+      "question_id",
+      "answer"
     ],
-    "title": "ManualQuestionRule"
+    "title": "Multiple Choice"
   },
   "LengthQuestionRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -3162,13 +2956,14 @@
     "required": [
       "question_id"
     ],
-    "title": "LengthQuestionRule"
+    "title": "Length"
   },
   "KeywordsQuestionRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -3248,13 +3043,14 @@
       "question_id",
       "keywords"
     ],
-    "title": "KeywordsQuestionRule"
+    "title": "Keywords"
   },
   "CompositeQuestionRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -3270,8 +3066,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "NUMERIC",
-          "TEXT"
+          "TEXT",
+          "NUMERIC"
         ],
         "readOnly": true
       },
@@ -3340,9 +3136,6 @@
               "$ref": "#/definitions/LengthRule"
             },
             {
-              "$ref": "#/definitions/ManualRule"
-            },
-            {
               "$ref": "#/definitions/MultiValuedRule"
             },
             {
@@ -3362,7 +3155,6 @@
               "COMPOSITE": "#/definitions/CompositeRule",
               "KEYWORDS": "#/definitions/KeywordsRule",
               "LENGTH": "#/definitions/LengthRule",
-              "MANUAL": "#/definitions/ManualRule",
               "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceRule",
               "MULTI_VALUED": "#/definitions/MultiValuedRule",
               "NUMBER_EQUAL": "#/definitions/NumberEqualRule",
@@ -3397,13 +3189,14 @@
       "question_id",
       "rules"
     ],
-    "title": "CompositeQuestionRule"
+    "title": "Composite"
   },
   "BonusQuestionRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -3419,9 +3212,9 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "TEXT",
           "NUMERIC",
           "CHOICE",
-          "TEXT",
           "MULTI_VALUED"
         ],
         "readOnly": true
@@ -3465,13 +3258,14 @@
     "required": [
       "question_id"
     ],
-    "title": "BonusQuestionRule"
+    "title": "Bonus"
   },
   "AssumptionSetQuestionRule": {
     "properties": {
       "id": {
         "type": "string",
-        "title": "Id"
+        "title": "Id",
+        "readOnly": true
       },
       "question_types": {
         "items": {
@@ -3487,9 +3281,9 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
+          "TEXT",
           "NUMERIC",
           "CHOICE",
-          "TEXT",
           "MULTI_VALUED"
         ],
         "readOnly": true
@@ -3552,7 +3346,7 @@
       "question_id",
       "assumptions"
     ],
-    "title": "AssumptionSetQuestionRule"
+    "title": "Assumption Set"
   },
   "Assumption": {
     "properties": {
@@ -3602,9 +3396,6 @@
             "$ref": "#/definitions/LengthRule"
           },
           {
-            "$ref": "#/definitions/ManualRule"
-          },
-          {
             "$ref": "#/definitions/MultiValuedRule"
           },
           {
@@ -3626,7 +3417,6 @@
             "COMPOSITE": "#/definitions/CompositeRule",
             "KEYWORDS": "#/definitions/KeywordsRule",
             "LENGTH": "#/definitions/LengthRule",
-            "MANUAL": "#/definitions/ManualRule",
             "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceRule",
             "MULTI_VALUED": "#/definitions/MultiValuedRule",
             "NUMBER_EQUAL": "#/definitions/NumberEqualRule",
@@ -3834,388 +3624,6 @@
     ],
     "title": "ExportQuestionSetRequest"
   },
-  "ConditionalMultiQuestionRule": {
-    "properties": {
-      "id": {
-        "type": "string",
-        "title": "Id"
-      },
-      "question_types": {
-        "items": {
-          "type": "string",
-          "enum": [
-            "TEXT",
-            "CHOICE",
-            "NUMERIC",
-            "MULTI_VALUED"
-          ]
-        },
-        "type": "array",
-        "uniqueItems": true,
-        "title": "Question Types",
-        "default": [
-          "NUMERIC",
-          "CHOICE",
-          "TEXT",
-          "MULTI_VALUED"
-        ],
-        "readOnly": true
-      },
-      "constraints": {
-        "items": {
-          "$ref": "#/definitions/QuestionConstraint"
-        },
-        "type": "array",
-        "title": "Constraints",
-        "default": [],
-        "readOnly": true
-      },
-      "scope": {
-        "type": "string",
-        "const": "global",
-        "title": "Scope",
-        "default": "global",
-        "readOnly": true
-      },
-      "type": {
-        "type": "string",
-        "const": "CONDITIONAL",
-        "title": "Type",
-        "default": "CONDITIONAL",
-        "readOnly": true
-      },
-      "display_name": {
-        "type": "string",
-        "const": "Conditional",
-        "title": "Display Name",
-        "default": "Conditional",
-        "readOnly": true
-      },
-      "if_rules": {
-        "items": {
-          "oneOf": [
-            {
-              "$ref": "#/definitions/AssumptionSetQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/BonusQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/CompositeQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/ProgrammableQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/ProgrammingQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/SimilarityQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/TextMatchQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/KeywordsQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/RegexQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/LengthQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/ManualQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/MultiValuedQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/MultipleChoiceQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/NumberEqualQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/NumericRangeQuestionRule"
-            }
-          ],
-          "discriminator": {
-            "propertyName": "type",
-            "mapping": {
-              "ASSUMPTION_SET": "#/definitions/AssumptionSetQuestionRule",
-              "BONUS": "#/definitions/BonusQuestionRule",
-              "COMPOSITE": "#/definitions/CompositeQuestionRule",
-              "KEYWORDS": "#/definitions/KeywordsQuestionRule",
-              "LENGTH": "#/definitions/LengthQuestionRule",
-              "MANUAL": "#/definitions/ManualQuestionRule",
-              "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceQuestionRule",
-              "MULTI_VALUED": "#/definitions/MultiValuedQuestionRule",
-              "NUMBER_EQUAL": "#/definitions/NumberEqualQuestionRule",
-              "NUMERIC_RANGE": "#/definitions/NumericRangeQuestionRule",
-              "PROGRAMMABLE": "#/definitions/ProgrammableQuestionRule",
-              "PROGRAMMING": "#/definitions/ProgrammingQuestionRule",
-              "REGEX": "#/definitions/RegexQuestionRule",
-              "SIMILARITY": "#/definitions/SimilarityQuestionRule",
-              "TEXT_MATCH": "#/definitions/TextMatchQuestionRule"
-            }
-          }
-        },
-        "type": "array",
-        "minItems": 1,
-        "title": "If Rules",
-        "description": "List of rules to evaluate the 'if' condition"
-      },
-      "if_aggregation": {
-        "type": "string",
-        "enum": [
-          "AND",
-          "OR"
-        ],
-        "title": "If Aggregation",
-        "description": "Aggregation mode for 'if' rules: 'AND' requires all to be true, 'OR' requires at least one to be true",
-        "default": "AND"
-      },
-      "then_rules": {
-        "items": {
-          "oneOf": [
-            {
-              "$ref": "#/definitions/AssumptionSetQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/BonusQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/CompositeQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/ProgrammableQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/ProgrammingQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/SimilarityQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/TextMatchQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/KeywordsQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/RegexQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/LengthQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/ManualQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/MultiValuedQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/MultipleChoiceQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/NumberEqualQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/NumericRangeQuestionRule"
-            }
-          ],
-          "discriminator": {
-            "propertyName": "type",
-            "mapping": {
-              "ASSUMPTION_SET": "#/definitions/AssumptionSetQuestionRule",
-              "BONUS": "#/definitions/BonusQuestionRule",
-              "COMPOSITE": "#/definitions/CompositeQuestionRule",
-              "KEYWORDS": "#/definitions/KeywordsQuestionRule",
-              "LENGTH": "#/definitions/LengthQuestionRule",
-              "MANUAL": "#/definitions/ManualQuestionRule",
-              "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceQuestionRule",
-              "MULTI_VALUED": "#/definitions/MultiValuedQuestionRule",
-              "NUMBER_EQUAL": "#/definitions/NumberEqualQuestionRule",
-              "NUMERIC_RANGE": "#/definitions/NumericRangeQuestionRule",
-              "PROGRAMMABLE": "#/definitions/ProgrammableQuestionRule",
-              "PROGRAMMING": "#/definitions/ProgrammingQuestionRule",
-              "REGEX": "#/definitions/RegexQuestionRule",
-              "SIMILARITY": "#/definitions/SimilarityQuestionRule",
-              "TEXT_MATCH": "#/definitions/TextMatchQuestionRule"
-            }
-          }
-        },
-        "type": "array",
-        "minItems": 1,
-        "title": "Then Rules",
-        "description": "List of rules to evaluate if 'if' condition is met"
-      },
-      "else_rules": {
-        "items": {
-          "oneOf": [
-            {
-              "$ref": "#/definitions/AssumptionSetQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/BonusQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/CompositeQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/ProgrammableQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/ProgrammingQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/SimilarityQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/TextMatchQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/KeywordsQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/RegexQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/LengthQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/ManualQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/MultiValuedQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/MultipleChoiceQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/NumberEqualQuestionRule"
-            },
-            {
-              "$ref": "#/definitions/NumericRangeQuestionRule"
-            }
-          ],
-          "discriminator": {
-            "propertyName": "type",
-            "mapping": {
-              "ASSUMPTION_SET": "#/definitions/AssumptionSetQuestionRule",
-              "BONUS": "#/definitions/BonusQuestionRule",
-              "COMPOSITE": "#/definitions/CompositeQuestionRule",
-              "KEYWORDS": "#/definitions/KeywordsQuestionRule",
-              "LENGTH": "#/definitions/LengthQuestionRule",
-              "MANUAL": "#/definitions/ManualQuestionRule",
-              "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceQuestionRule",
-              "MULTI_VALUED": "#/definitions/MultiValuedQuestionRule",
-              "NUMBER_EQUAL": "#/definitions/NumberEqualQuestionRule",
-              "NUMERIC_RANGE": "#/definitions/NumericRangeQuestionRule",
-              "PROGRAMMABLE": "#/definitions/ProgrammableQuestionRule",
-              "PROGRAMMING": "#/definitions/ProgrammingQuestionRule",
-              "REGEX": "#/definitions/RegexQuestionRule",
-              "SIMILARITY": "#/definitions/SimilarityQuestionRule",
-              "TEXT_MATCH": "#/definitions/TextMatchQuestionRule"
-            }
-          }
-        },
-        "type": "array",
-        "title": "Else Rules",
-        "description": "List of rules to evaluate if 'if' condition is not met"
-      }
-    },
-    "type": "object",
-    "required": [
-      "if_rules",
-      "then_rules",
-      "else_rules"
-    ],
-    "title": "ConditionalMultiQuestionRule"
-  },
-  "AssumptionSetMultiQuestionRule": {
-    "properties": {
-      "id": {
-        "type": "string",
-        "title": "Id"
-      },
-      "question_types": {
-        "items": {
-          "type": "string",
-          "enum": [
-            "TEXT",
-            "CHOICE",
-            "NUMERIC",
-            "MULTI_VALUED"
-          ]
-        },
-        "type": "array",
-        "uniqueItems": true,
-        "title": "Question Types",
-        "default": [
-          "NUMERIC",
-          "CHOICE",
-          "TEXT",
-          "MULTI_VALUED"
-        ],
-        "readOnly": true
-      },
-      "constraints": {
-        "items": {
-          "$ref": "#/definitions/QuestionConstraint"
-        },
-        "type": "array",
-        "title": "Constraints",
-        "default": [],
-        "readOnly": true
-      },
-      "scope": {
-        "type": "string",
-        "const": "global",
-        "title": "Scope",
-        "default": "global",
-        "readOnly": true
-      },
-      "mode": {
-        "type": "string",
-        "enum": [
-          "MAX",
-          "MIN"
-        ],
-        "title": "Mode",
-        "description": "Mode to select which assumption to use",
-        "default": "MAX"
-      },
-      "type": {
-        "type": "string",
-        "const": "ASSUMPTION_SET_MULTI",
-        "title": "Type",
-        "default": "ASSUMPTION_SET_MULTI",
-        "readOnly": true
-      },
-      "display_name": {
-        "type": "string",
-        "const": "Assumption Set",
-        "title": "Display Name",
-        "default": "Assumption Set",
-        "readOnly": true
-      },
-      "assumptions": {
-        "items": {
-          "$ref": "#/definitions/MultiQuestionAssumption"
-        },
-        "type": "array",
-        "title": "Assumptions",
-        "description": "List of assumptions in the assumption set"
-      }
-    },
-    "type": "object",
-    "required": [
-      "assumptions"
-    ],
-    "title": "AssumptionSetMultiQuestionRule"
-  },
   "AdjustableQuestionResult": {
     "properties": {
       "output": {
@@ -4240,7 +3648,7 @@
       "rule": {
         "type": "string",
         "title": "Rule",
-        "description": "ID of the rule that was applied"
+        "description": "Display name of the rule that produced the result"
       },
       "graded": {
         "type": "boolean",

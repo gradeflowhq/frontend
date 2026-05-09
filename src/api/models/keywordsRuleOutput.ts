@@ -10,7 +10,7 @@ import type { QuestionConstraint } from './questionConstraint';
 import type { KeywordsRuleOutputMode } from './keywordsRuleOutputMode';
 
 export interface KeywordsRuleOutput {
-  id: string;
+  readonly id: string;
   readonly question_types: readonly KeywordsRuleOutputQuestionTypesItem[];
   readonly constraints: readonly QuestionConstraint[];
   readonly type: 'KEYWORDS';

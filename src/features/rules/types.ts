@@ -1,16 +1,9 @@
-import type {
-  RubricOutputRulesItem,
-  RubricInputRulesItem,
-  QuestionConstraintType,
-} from '@api/models';
-
-// Unified rule value type used by UI — backend rules always carry these fields.
-export type RuleValue = (RubricOutputRulesItem | RubricInputRulesItem) & {
-  id: string;
-  type: RubricOutputRulesItem['type'];
-  scope: RubricOutputRulesItem['scope'];
-  display_name: string;
+// Rule editing is schema-driven. The frontend only needs a typed envelope
+// around backend-provided rule objects and drafts.
+export type RuleValue = {
+  id?: string;
+  type: string;
+  display_name?: string;
+  description?: string;
+  question_id?: string;
 };
-
-// Alias the existing model type for UI code
-export type QuestionType = QuestionConstraintType;

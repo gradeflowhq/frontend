@@ -12,10 +12,10 @@ import {
 import { IconPlus } from '@tabler/icons-react';
 import React, { useCallback, useMemo } from 'react';
 
-import { friendlyRuleLabel } from '@features/rules/schema';
 import { useScrollIntoView } from '@hooks/useScrollIntoView';
 
 import type { RuleValue } from '../types';
+import type { RuleTypeOption } from '@api/models';
 
 // ── types ─────────────────────────────────────────────────────────────────────
 
@@ -114,8 +114,8 @@ interface Props {
   rules: RuleValue[];
   selectedRuleId: string | null;
   onSelect: (ruleId: string) => void;
-  onAdd: (ruleKey: string) => void;
-  addableRuleKeys: string[];
+  onAdd: (ruleType: string) => void;
+  addableRules: RuleTypeOption[];
   coveredQidsByRuleId: Record<string, string[]>;
   searchQuery?: string;
 }
@@ -125,7 +125,7 @@ const GlobalRuleMasterList: React.FC<Props> = ({
   selectedRuleId,
   onSelect,
   onAdd,
-  addableRuleKeys,
+  addableRules,
   coveredQidsByRuleId,
   searchQuery = '',
 }) => {
@@ -134,10 +134,11 @@ const GlobalRuleMasterList: React.FC<Props> = ({
   const rows = useMemo((): GlobalRuleRowData[] => {
     const q = searchQuery.trim().toLowerCase();
     // Build base rows with labels
-    const baseRows = rules.map((rule) => {
+    const baseRows = rules.flatMap((rule) => {
+      if (!rule.id || !rule.display_name) return [];
       const label = rule.display_name;
       const coveredQids = coveredQidsByRuleId[rule.id] ?? [];
-      return { ruleId: rule.id, label, coveredQids };
+      return [{ ruleId: rule.id, label, coveredQids }];
     });
     // Append a sequence number when multiple rules share the same label
     const labelCounts: Record<string, number> = {};
@@ -176,11 +177,11 @@ const GlobalRuleMasterList: React.FC<Props> = ({
     <Box style={{ width: '100%', display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* Add rule button — full width with spacing before the list */}
       <Box pb={4}>
-        {addableRuleKeys.length === 1 ? (
+        {addableRules.length === 1 ? (
           <Button
             size="xs"
             leftSection={<IconPlus size={12} />}
-            onClick={() => onAdd(addableRuleKeys[0]!)}
+            onClick={() => onAdd(addableRules[0]!.type)}
             fullWidth
           >
             Add rule
@@ -197,9 +198,9 @@ const GlobalRuleMasterList: React.FC<Props> = ({
               </Button>
             </Menu.Target>
             <Menu.Dropdown>
-              {addableRuleKeys.map((key) => (
-                <Menu.Item key={key} onClick={() => onAdd(key)}>
-                  {friendlyRuleLabel(key)}
+              {addableRules.map((rule) => (
+                <Menu.Item key={rule.type} onClick={() => onAdd(rule.type)}>
+                  {rule.label}
                 </Menu.Item>
               ))}
             </Menu.Dropdown>

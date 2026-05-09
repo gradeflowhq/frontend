@@ -11,7 +11,7 @@ import type { AssumptionSetMultiQuestionRuleInputMode } from './assumptionSetMul
 import type { MultiQuestionAssumptionInput } from './multiQuestionAssumptionInput';
 
 export interface AssumptionSetMultiQuestionRuleInput {
-  id?: string;
+  readonly id?: string;
   readonly question_types?: readonly AssumptionSetMultiQuestionRuleInputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
   readonly scope?: 'global';

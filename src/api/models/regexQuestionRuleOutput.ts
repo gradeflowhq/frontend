@@ -10,7 +10,7 @@ import type { QuestionConstraint } from './questionConstraint';
 import type { RegexConfig } from './regexConfig';
 
 export interface RegexQuestionRuleOutput {
-  id: string;
+  readonly id: string;
   readonly question_types: readonly RegexQuestionRuleOutputQuestionTypesItem[];
   readonly constraints: readonly QuestionConstraint[];
   readonly scope: 'question';

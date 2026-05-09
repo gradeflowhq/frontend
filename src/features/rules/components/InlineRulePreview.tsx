@@ -4,12 +4,12 @@ import React, { useCallback, useState } from 'react';
 import { usePreviewGrading, useCancelGradingPreview } from '@features/grading/api';
 import { GradingPreviewPanel, GradingPreviewSettings } from '@features/grading/components';
 
+import type { GradingPreviewRequestRule } from '@api/models';
 import type { GradingPreviewParams } from '@features/grading/components';
 import type { RuleValue } from '@features/rules/types';
 
 interface Props {
   rule: RuleValue;
-  getRule?: () => RuleValue | null;
   assessmentId: string;
 }
 
@@ -19,7 +19,7 @@ const DEFAULT_PREVIEW_PARAMS: GradingPreviewParams = {
   seed: null,
 };
 
-const InlineRulePreview: React.FC<Props> = ({ rule, getRule, assessmentId }) => {
+const InlineRulePreview: React.FC<Props> = ({ rule, assessmentId }) => {
   const [previewParams, setPreviewParams] = useState<GradingPreviewParams>(DEFAULT_PREVIEW_PARAMS);
   const previewMutation = usePreviewGrading(assessmentId);
   const cancelPreviewMutation = useCancelGradingPreview(assessmentId);
@@ -29,16 +29,15 @@ const InlineRulePreview: React.FC<Props> = ({ rule, getRule, assessmentId }) => 
 
   const handleRun = useCallback(async (): Promise<void> => {
     setWasCancelled(false);
-    const currentRule = getRule?.() ?? rule;
     await previewMutation.mutateAsync({
-      rule: currentRule ?? null,
+      rule: rule as GradingPreviewRequestRule,
       config: {
         limit: previewParams.limit,
         selection: previewParams.selection,
         seed: previewParams.seed ?? null,
       },
     });
-  }, [getRule, previewMutation, previewParams, rule]);
+  }, [previewMutation, previewParams, rule]);
 
   const handleParamsChange = useCallback((next: GradingPreviewParams): void => {
     setPreviewParams(next);

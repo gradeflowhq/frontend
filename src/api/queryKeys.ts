@@ -22,6 +22,12 @@ export const QK = {
   rubric: {
     overview: (assessmentId: string) => ['rubricOverview', assessmentId] as const,
   },
+  rules: {
+    compatible: (assessmentId: string, params: unknown) =>
+      ['rules', assessmentId, 'compatible', params] as const,
+    schema: (assessmentId: string, params: unknown) =>
+      ['rules', assessmentId, 'schema', params] as const,
+  },
   grading: {
     item: (assessmentId: string) => ['grading', assessmentId] as const,
     export: (assessmentId: string) => ['grading', assessmentId, 'export'] as const,

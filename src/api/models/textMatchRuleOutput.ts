@@ -9,7 +9,7 @@ import type { TextMatchRuleOutputQuestionTypesItem } from './textMatchRuleOutput
 import type { QuestionConstraint } from './questionConstraint';
 
 export interface TextMatchRuleOutput {
-  id: string;
+  readonly id: string;
   readonly question_types: readonly TextMatchRuleOutputQuestionTypesItem[];
   readonly constraints: readonly QuestionConstraint[];
   readonly type: 'TEXT_MATCH';

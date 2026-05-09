@@ -12,7 +12,7 @@ describe('getRuleDescriptionText', () => {
   });
 
   it('returns null when description is missing', () => {
-    expect(getRuleDescriptionText({ type: 'TEXT_MATCH' })).toBeNull();
+    expect(getRuleDescriptionText({ type: 'RULE_A' })).toBeNull();
   });
 
   it('returns null for null input', () => {

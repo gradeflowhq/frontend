@@ -1,167 +1,78 @@
 import React from 'react';
 
-import {
-  useCompatibleRuleKeys,
-  useFindSchemaKeyByType,
-  useRuleDefinitions,
-} from '../api';
-import { HIDE_KEYS_MULTI, HIDE_KEYS_SINGLE } from '../constants';
-import {
-  prepareRuleDefinitionsForRender,
-} from '../schema';
+import { useRuleSchema } from '../api';
+import { buildRuleUiSchema } from '../schemaUi';
 
-import type { RuleDefinitions } from '../api';
-import type { QuestionType, RuleValue } from '../types';
-import type { QuestionSetOutputQuestionMap } from '@api/models';
+import type { UiSchema } from '../schemaUi';
+import type { RuleValue } from '../types';
+import type { RuleSchemaResponse } from '@api/models';
 import type { JSONSchema7 } from 'json-schema';
 
-// ── helpers ───────────────────────────────────────────────────────────────────
-
-const newDraftRuleId = (): string => {
-  const crypto = globalThis.crypto;
-  if (typeof crypto?.randomUUID === 'function') {
-    return crypto.randomUUID().replaceAll('-', '');
-  }
-  return `${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`;
-};
-
-/**
- * Builds an initial draft from a schema definition.
- * Exported so callers that construct bare drafts (e.g. handleAdd) can reuse it.
- */
-export const materializeDraft = (
-  schema: JSONSchema7 | null,
-  questionId?: string | null,
-  initial?: RuleValue | null,
+const ruleFromSchema = (
+  data: RuleSchemaResponse | undefined,
+  initialRule: RuleValue | null | undefined,
 ): RuleValue => {
-  const props =
-    (schema?.properties as Record<string, JSONSchema7> | undefined) ?? {};
-  const draft: Record<string, unknown> = { ...(initial ?? {}) };
-  if (draft.id === undefined) draft.id = newDraftRuleId();
-  const typeConst = props?.type?.const ?? props?.type?.default;
-  if (typeConst !== undefined) draft.type = typeConst;
-  const scopeConst = props?.scope?.const ?? props?.scope?.default;
-  if (scopeConst !== undefined) draft.scope = scopeConst;
-  if (props?.question_id && questionId && draft.question_id === undefined) {
-    draft.question_id = questionId;
-  }
-  return draft as unknown as RuleValue;
+  const initialValue = (data?.initial_value ?? {}) as Record<string, unknown>;
+  return { ...initialValue, ...(initialRule ?? {}) } as RuleValue;
 };
 
-// ── types ─────────────────────────────────────────────────────────────────────
-
-export interface UseRuleEditorStateOptions {
-  /** Pre-selected schema key (e.g. "AllOrNothingMultiQuestionRule"). */
-  selectedRuleKey: string | null;
-  /** Existing rule being edited; null/undefined when adding. */
+interface UseRuleEditorStateOptions {
+  assessmentId: string;
+  selectedRuleType: string | null;
   initialRule?: RuleValue | null;
-  /**
-   * Non-empty string for single-target rules.
-   * Null, undefined, or empty string for multi-target rules.
-   */
   questionId?: string | null;
-  /** Used to filter compatible rule keys. */
-  questionType?: string | null;
-  /** Full question map — used to inject enums into the schema. */
-  questionMap?: QuestionSetOutputQuestionMap;
+  path?: string | null;
 }
 
-export interface UseRuleEditorStateResult {
+interface UseRuleEditorStateResult {
   draft: RuleValue;
-  schemaForRender: JSONSchema7 | null;
-  mergedUiSchema: Record<string, unknown>;
-  concreteKey: string | null;
-  hiddenKeys: readonly string[];
+  setDraft: (next: RuleValue) => void;
+  schema: JSONSchema7 | null;
+  uiSchema: UiSchema;
+  ruleType: string | null;
+  isLoading: boolean;
+  error: unknown;
 }
 
-// ── hook ──────────────────────────────────────────────────────────────────────
-
-/**
- * Encapsulates all schema-augmentation and draft-materialisation logic shared
- * by single-target and multi-target rule editors.
- */
 export const useRuleEditorState = ({
-  selectedRuleKey,
+  assessmentId,
+  selectedRuleType,
   initialRule,
   questionId,
-  questionType,
-  questionMap,
+  path,
 }: UseRuleEditorStateOptions): UseRuleEditorStateResult => {
-  const defs = useRuleDefinitions();
+  const ruleType = selectedRuleType ?? initialRule?.type ?? null;
+  const schemaParams = React.useMemo(() => {
+    if (!ruleType) return null;
+    return {
+      type: ruleType,
+      ...(questionId ? { question_id: questionId } : {}),
+      ...(path ? { path } : {}),
+    };
+  }, [path, questionId, ruleType]);
 
-  // Treat empty string the same as null — never a valid questionId.
-  const isSingleTarget = typeof questionId === 'string' && questionId.length > 0;
-  const editorScope = isSingleTarget ? 'question' : 'global';
-
-  const eligibleKeys = useCompatibleRuleKeys(
-    defs,
-    (questionType as QuestionType | undefined) ?? undefined,
-    editorScope,
+  const schemaQuery = useRuleSchema(assessmentId, schemaParams);
+  const schema = (schemaQuery.data?.schema as JSONSchema7 | undefined) ?? null;
+  const uiSchema = React.useMemo(
+    () => (schema ? buildRuleUiSchema(schema) : {}),
+    [schema],
   );
-  const findKeyByType = useFindSchemaKeyByType(defs);
-
-  const finalDefs = React.useMemo(() => {
-    return prepareRuleDefinitionsForRender(defs as Record<string, unknown>, {
-      questionMap: questionMap as Record<string, Record<string, unknown>> | undefined,
-      questionId,
-      questionType,
-      isSingleTarget,
-    }) as RuleDefinitions;
-  }, [defs, isSingleTarget, questionId, questionMap, questionType]);
-
-  // 4. Resolve the concrete schema key to use
-  const concreteKey = React.useMemo(() => {
-    if (selectedRuleKey && finalDefs[selectedRuleKey]) return selectedRuleKey;
-    if (initialRule) {
-      const k = findKeyByType(initialRule.type, initialRule.scope);
-      if (k) return k;
-    }
-    return eligibleKeys[0] ?? null;
-  }, [finalDefs, selectedRuleKey, initialRule, eligibleKeys, findKeyByType]);
-
-  const baseSchema = React.useMemo(
-    () => (concreteKey ? finalDefs[concreteKey] : null),
-    [finalDefs, concreteKey],
-  );
-
-  // 5. Draft state — re-initialises when the base schema or question changes
   const [draft, setDraft] = React.useState<RuleValue>(() =>
-    materializeDraft(baseSchema, questionId, initialRule ?? undefined),
+    ruleFromSchema(schemaQuery.data, initialRule),
   );
 
   React.useEffect(() => {
-    setDraft(materializeDraft(baseSchema, questionId, initialRule ?? undefined));
-  }, [baseSchema, questionId, initialRule]);
+    if (!schemaQuery.data) return;
+    setDraft(ruleFromSchema(schemaQuery.data, initialRule));
+  }, [initialRule, schemaQuery.data]);
 
-  // 6. Hidden keys depend on whether this is a single- or multi-target editor
-  const hiddenKeys = isSingleTarget
-    ? (HIDE_KEYS_SINGLE as readonly string[])
-    : (HIDE_KEYS_MULTI as readonly string[]);
-
-  // 7. Schema + uiSchema for <SchemaForm>
-  const { schemaForRender, mergedUiSchema } = React.useMemo(() => {
-    const createHiddenFieldUi = () => ({
-      'ui:widget': 'hidden',
-      'ui:title': '',
-      'ui:options': { label: false, hidden: true },
-    });
-
-    const baseUi: Record<string, unknown> = {
-      'ui:title': '',
-      'ui:options': { label: true },
-      'ui:submitButtonOptions': { norender: true },
-    };
-    hiddenKeys.forEach((k) => {
-      baseUi[k] = createHiddenFieldUi();
-    });
-    if (!baseSchema) {
-      return { schemaForRender: null as JSONSchema7 | null, mergedUiSchema: baseUi };
-    }
-    return {
-      schemaForRender: { ...baseSchema, definitions: finalDefs } as JSONSchema7,
-      mergedUiSchema: baseUi,
-    };
-  }, [baseSchema, finalDefs, hiddenKeys]);
-
-  return { draft, schemaForRender, mergedUiSchema, concreteKey, hiddenKeys };
+  return {
+    draft,
+    setDraft,
+    schema,
+    uiSchema,
+    ruleType,
+    isLoading: schemaQuery.isLoading,
+    error: schemaQuery.error,
+  };
 };

@@ -9,13 +9,12 @@
  *    - Maintain nameMap for rewriting refs: original -> normalised
  * 3) Extract into buckets, EACH INCLUDING all transitive $ref dependencies and rewriting refs:
  *    - *Question   -> src/schemas/questions.json
- *    - *Rule       -> src/schemas/rules.json
  *    - *Submission -> src/schemas/submissions.json
  *    - *Request    -> src/schemas/requests.json
  *    - *Response   -> src/schemas/responses.json
  *    - everything else -> src/schemas/others.json (no dependency pull/rewrite required)
  *
- * For the five primary buckets (questions, rules, submissions, requests, responses):
+ * For the four primary buckets (questions, submissions, requests, responses):
  *    - Include all transitive $ref dependencies into the same file (via $ref, discriminator.mapping,
  *      and any string that looks like "#/components/schemas/<Name>")
  *    - Rewrite $refs and discriminator.mapping values to local "#/<Name>" where possible
@@ -34,7 +33,6 @@ const OPENAPI_URL = process.env.OPENAPI_URL || 'http://127.0.0.1:8000/openapi.js
 const OUT_DIR = path.join(process.cwd(), 'src', 'schemas');
 const OUT_FILES = {
   questions: path.join(OUT_DIR, 'questions.json'),
-  rules: path.join(OUT_DIR, 'rules.json'),
   submissions: path.join(OUT_DIR, 'submissions.json'),
   requests: path.join(OUT_DIR, 'requests.json'),
   responses: path.join(OUT_DIR, 'responses.json'),
@@ -57,8 +55,7 @@ function looksLikeComponentsRef(str) {
 
 function getCategories(name) {
   let categories = [];
-  if (name.includes('Rule') || name.includes('QuestionRule')) categories.push('rules');
-  if (name.includes('Question')) categories.push('questions');
+  if (name.includes('Question') && !name.includes('Rule')) categories.push('questions');
   if (name.includes('Submission')) categories.push('submissions');
   if (name.includes('Request')) categories.push('requests');
   if (name.includes('Response')) categories.push('responses');
@@ -230,7 +227,6 @@ async function run() {
   // Partition names into categories by post-normalised name
   const categories = {
     questions: new Set(),
-    rules: new Set(),
     submissions: new Set(),
     requests: new Set(),
     responses: new Set(),
@@ -244,9 +240,8 @@ async function run() {
     });
   }
 
-  // Build self-contained buckets for the five primary categories
+  // Build self-contained buckets for the four primary categories
   const questionsBucket = buildSelfContainedBucket(categories.questions, schemas, nameMap);
-  const rulesBucket = buildSelfContainedBucket(categories.rules, schemas, nameMap);
   const submissionsBucket = buildSelfContainedBucket(categories.submissions, schemas, nameMap);
   const requestsBucket = buildSelfContainedBucket(categories.requests, schemas, nameMap);
   const responsesBucket = buildSelfContainedBucket(categories.responses, schemas, nameMap);
@@ -254,7 +249,6 @@ async function run() {
   // Others: everything not already included in any of the above buckets
   const included = new Set([
     ...Object.keys(questionsBucket),
-    ...Object.keys(rulesBucket),
     ...Object.keys(submissionsBucket),
     ...Object.keys(requestsBucket),
     ...Object.keys(responsesBucket),
@@ -270,7 +264,6 @@ async function run() {
   // Write output files
   const bucketsToWrite = {
     questions: questionsBucket,
-    rules: rulesBucket,
     submissions: submissionsBucket,
     requests: requestsBucket,
     responses: responsesBucket,

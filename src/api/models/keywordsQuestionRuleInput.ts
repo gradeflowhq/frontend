@@ -10,7 +10,7 @@ import type { QuestionConstraint } from './questionConstraint';
 import type { KeywordsQuestionRuleInputMode } from './keywordsQuestionRuleInputMode';
 
 export interface KeywordsQuestionRuleInput {
-  id?: string;
+  readonly id?: string;
   readonly question_types?: readonly KeywordsQuestionRuleInputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
   readonly scope?: 'question';

@@ -11,7 +11,7 @@ import type { ProgrammableQuestionRuleInputParameters } from './programmableQues
 import type { ProgrammableQuestionRuleInputMode } from './programmableQuestionRuleInputMode';
 
 export interface ProgrammableQuestionRuleInput {
-  id?: string;
+  readonly id?: string;
   readonly question_types?: readonly ProgrammableQuestionRuleInputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
   readonly scope?: 'question';

@@ -1,6 +1,7 @@
 import { Button } from '@mantine/core';
 import { withTheme } from '@rjsf/core';
 import { Theme as MantineTheme } from '@rjsf/mantine';
+import { SUBMIT_BTN_OPTIONS_KEY } from '@rjsf/utils';
 import validatorAjv8 from '@rjsf/validator-ajv8';
 import React from 'react';
 
@@ -8,6 +9,7 @@ import type { FormProps } from '@rjsf/core';
 
 
 const MantineForm = withTheme(MantineTheme);
+const DEFAULT_LIVE_VALIDATE = 'onBlur';
 
 export type SchemaFormProps<T = unknown> = {
   schema: FormProps<T>['schema'];
@@ -18,7 +20,7 @@ export type SchemaFormProps<T = unknown> = {
   onError?: FormProps<T>['onError'];
   disabled?: boolean;
   readonly?: boolean;
-  liveValidate?: boolean;
+  liveValidate?: FormProps<T>['liveValidate'];
   formProps?: Partial<FormProps<T>>;
   showSubmit?: boolean;
   isSubmitting?: boolean;
@@ -26,6 +28,7 @@ export type SchemaFormProps<T = unknown> = {
   submitLoadingLabel?: React.ReactNode;
   templates?: FormProps<T>['templates'];
   widgets?: FormProps<T>['widgets'];
+  fields?: FormProps<T>['fields'];
   formContext?: FormProps<T>['formContext'];
 };
 
@@ -38,7 +41,7 @@ export const SchemaForm = <T = unknown>({
   onError,
   disabled,
   readonly,
-  liveValidate,
+  liveValidate = DEFAULT_LIVE_VALIDATE,
   formProps,
   showSubmit = true,
   isSubmitting = false,
@@ -46,16 +49,28 @@ export const SchemaForm = <T = unknown>({
   submitLoadingLabel = undefined,
   templates,
   widgets,
+  fields,
   formContext,
 }: SchemaFormProps<T>) => {
   const mergedWidgets = React.useMemo(
     () => ({ ...MantineTheme.widgets, ...widgets }),
     [widgets],
   );
+  const effectiveUiSchema = React.useMemo(() => {
+    if (showSubmit) return uiSchema;
+    return {
+      ...uiSchema,
+      'ui:options': {
+        ...(uiSchema?.['ui:options'] as Record<string, unknown> | undefined),
+        [SUBMIT_BTN_OPTIONS_KEY]: { norender: true },
+      },
+    };
+  }, [showSubmit, uiSchema]);
+
   return (
     <MantineForm
       schema={schema}
-      uiSchema={uiSchema}
+      uiSchema={effectiveUiSchema}
       formData={formData}
       validator={validatorAjv8}
       onSubmit={onSubmit}
@@ -66,10 +81,11 @@ export const SchemaForm = <T = unknown>({
       liveValidate={liveValidate}
       templates={templates}
       widgets={mergedWidgets}
+      fields={fields}
       formContext={formContext}
       {...formProps}
     >
-      {showSubmit && (
+      {showSubmit ? (
         <Button
           type="submit"
           fullWidth
@@ -78,6 +94,8 @@ export const SchemaForm = <T = unknown>({
         >
           {isSubmitting ? (submitLoadingLabel ?? submitIdleLabel) : submitIdleLabel}
         </Button>
+      ) : (
+        <React.Fragment />
       )}
     </MantineForm>
   );

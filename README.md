@@ -4,8 +4,9 @@ A React + TypeScript frontend for GradeFlow — an automated assessment grading 
 
 ## Key Features
 
-- **Schema-driven forms** — all request/response forms are generated from backend JSON schemas, keeping the frontend in sync with the API automatically.
+- **Schema-driven forms** — common request/response forms use generated backend JSON schemas, while rule editors fetch contextual schemas from the backend at runtime.
 - **Encryption** — student IDs can be encrypted client-side using AES-GCM (PBKDF2-derived key) before being sent to the server. The passphrase never leaves the browser.
+- **Presentation-only rule editing** — rule compatibility, suggestions, initial values, and nested rule schemas come from the backend/engine; the frontend renders the schema.
 - **Live grading preview** — rules can be tested against real submissions before saving.
 - **Answer grouping** — cluster similar answers by exact match, fuzzy similarity, or semantic embedding for bulk review and adjustment. Semantic grouping runs an in-browser embedding model via WebAssembly; see [Semantic Grouping](#semantic-grouping) below.
 - **Canvas LMS grade publishing** — a multi-step workflow for publishing grades directly to Canvas: course and assignment selection (with new group creation), points or percentage mode, configurable rounding, comment inclusion, and async push-progress polling.
@@ -37,7 +38,7 @@ A React + TypeScript frontend for GradeFlow — an automated assessment grading 
 
 ```
 frontend/src/
-├── api/                  # Generated API client, models, and query keys
+├── api/                  # Generated GradeFlow client/models plus hand-written API helpers and query keys
 ├── app/                  # Router configuration and context providers
 ├── components/           # Shared UI components (forms, layout, common)
 ├── features/             # Feature modules (assessments, grading, questions, rules, …)
@@ -50,7 +51,7 @@ frontend/src/
 └── utils/                # Pure utility functions (crypto, datetime, sort, error, …)
 ```
 
-> `src/api/` and `src/schemas/` are **generated** — do not edit them manually. Re-run the codegen commands below after any backend change.
+> `src/api/gradeflowClient.ts`, `src/api/models/`, and `src/schemas/` are **generated** — do not edit them manually. Re-run the codegen commands below after any backend change.
 
 ## Prerequisites
 
@@ -75,7 +76,9 @@ npx orval
 node scripts/extract-schemas.js
 ```
 
-This generates the typed API client (`src/api/`), model types, and the JSON schemas consumed by the form components (`src/schemas/`). Re-run these commands whenever the backend API changes.
+This generates the typed API client (`src/api/gradeflowClient.ts`), model types (`src/api/models/`), and the static non-rule JSON schemas consumed by form components (`src/schemas/`). Re-run these commands whenever the backend API changes.
+
+Rule schemas are fetched from the backend at runtime; they are not generated into `src/schemas/`.
 
 ### Run the development server
 
@@ -88,6 +91,15 @@ Add `-- --host` to expose the server on your local network (useful for testing o
 ```bash
 npm run dev -- --host
 ```
+
+## Rule Editing
+
+The rule editor is intentionally presentation-only:
+
+- `/rules/list` supplies compatible rule labels and types for global, question, and nested path contexts.
+- `/rules/schema` supplies the selected rule's JSON Schema and `initial_value`.
+- The frontend renders standard JSON Schema plus engine-owned `x-gradeflow` metadata such as `input` and `suggestions`.
+- Rule definitions, compatibility, contextual defaults, and nested rule semantics are not duplicated in frontend code.
 
 ## Using the Docker Container
 

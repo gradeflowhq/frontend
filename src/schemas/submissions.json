@@ -92,7 +92,7 @@
       "rule": {
         "type": "string",
         "title": "Rule",
-        "description": "ID of the rule that was applied"
+        "description": "Display name of the rule that produced the result"
       },
       "graded": {
         "type": "boolean",
@@ -677,7 +677,7 @@
       "rule": {
         "type": "string",
         "title": "Rule",
-        "description": "ID of the rule that was applied"
+        "description": "Display name of the rule that produced the result"
       },
       "graded": {
         "type": "boolean",

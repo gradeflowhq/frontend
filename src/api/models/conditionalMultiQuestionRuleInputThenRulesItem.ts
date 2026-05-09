@@ -15,10 +15,9 @@ import type { TextMatchQuestionRuleInput } from './textMatchQuestionRuleInput';
 import type { KeywordsQuestionRuleInput } from './keywordsQuestionRuleInput';
 import type { RegexQuestionRuleInput } from './regexQuestionRuleInput';
 import type { LengthQuestionRuleInput } from './lengthQuestionRuleInput';
-import type { ManualQuestionRuleInput } from './manualQuestionRuleInput';
 import type { MultiValuedQuestionRuleInput } from './multiValuedQuestionRuleInput';
 import type { MultipleChoiceQuestionRuleInput } from './multipleChoiceQuestionRuleInput';
 import type { NumberEqualQuestionRuleInput } from './numberEqualQuestionRuleInput';
 import type { NumericRangeQuestionRuleInput } from './numericRangeQuestionRuleInput';
 
-export type ConditionalMultiQuestionRuleInputThenRulesItem = AssumptionSetQuestionRuleInput | BonusQuestionRuleInput | CompositeQuestionRuleInput | ProgrammableQuestionRuleInput | ProgrammingQuestionRuleInput | SimilarityQuestionRuleInput | TextMatchQuestionRuleInput | KeywordsQuestionRuleInput | RegexQuestionRuleInput | LengthQuestionRuleInput | ManualQuestionRuleInput | MultiValuedQuestionRuleInput | MultipleChoiceQuestionRuleInput | NumberEqualQuestionRuleInput | NumericRangeQuestionRuleInput;
+export type ConditionalMultiQuestionRuleInputThenRulesItem = AssumptionSetQuestionRuleInput | BonusQuestionRuleInput | CompositeQuestionRuleInput | ProgrammableQuestionRuleInput | ProgrammingQuestionRuleInput | SimilarityQuestionRuleInput | TextMatchQuestionRuleInput | KeywordsQuestionRuleInput | RegexQuestionRuleInput | LengthQuestionRuleInput | MultiValuedQuestionRuleInput | MultipleChoiceQuestionRuleInput | NumberEqualQuestionRuleInput | NumericRangeQuestionRuleInput;

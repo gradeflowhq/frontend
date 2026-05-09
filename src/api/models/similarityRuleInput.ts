@@ -13,7 +13,7 @@ import type { SimilarityRuleInputAlgorithm } from './similarityRuleInputAlgorith
  * A rule that checks for similarity between the student's answer and a reference text.
  */
 export interface SimilarityRuleInput {
-  id?: string;
+  readonly id?: string;
   readonly question_types?: readonly SimilarityRuleInputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
   readonly type?: 'SIMILARITY';

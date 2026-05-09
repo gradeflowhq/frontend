@@ -16,41 +16,41 @@ vi.mock('@features/rules/hooks/useRuleEditorState', () => ({
 const mockedUseRuleEditorState = vi.mocked(useRuleEditorState);
 
 describe('RuleEditor', () => {
-  it('keeps field edits out of parent draft state while exposing the latest draft reader', async () => {
+  it('sends field edits to the draft state', async () => {
     const user = userEvent.setup();
     const onDraftChange = vi.fn();
     const onDraftEdit = vi.fn();
-    let readDraft: (() => RuleValue | null) | null = null;
+    const setDraft = vi.fn();
 
     mockedUseRuleEditorState.mockReturnValue({
       draft: { type: 'MOCK', name: 'initial' } as unknown as RuleValue,
-      schemaForRender: {
+      setDraft,
+      schema: {
         type: 'object',
         properties: {
           type: { type: 'string' },
           name: { type: 'string', title: 'Name' },
         },
       },
-      mergedUiSchema: {
+      uiSchema: {
         'ui:title': '',
         'ui:submitButtonOptions': { norender: true },
       },
-      concreteKey: 'MockRule',
-      hiddenKeys: ['type'],
+      ruleType: 'MOCK',
+      isLoading: false,
+      error: null,
     });
 
     render(
       <MantineProvider>
         <RuleEditor
           formKeyBase="mock-rule"
-          selectedRuleKey="MockRule"
+          selectedRuleType="MOCK"
+          assessmentId="assessment-1"
           onSave={vi.fn()}
           onCancel={vi.fn()}
           onDraftChange={onDraftChange}
           onDraftEdit={onDraftEdit}
-          onDraftReaderChange={(reader) => {
-            readDraft = reader;
-          }}
         />
       </MantineProvider>,
     );
@@ -66,7 +66,7 @@ describe('RuleEditor', () => {
 
     await waitFor(() => {
       expect(onDraftEdit).toHaveBeenCalled();
-      expect(readDraft?.()).toMatchObject({ name: 'updated' });
+      expect(setDraft).toHaveBeenLastCalledWith(expect.objectContaining({ name: 'updated' }));
     });
     expect(onDraftChange).toHaveBeenCalledTimes(initialDraftChangeCount);
   });

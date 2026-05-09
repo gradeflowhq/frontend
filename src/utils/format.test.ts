@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatNumericValue, parseNumber, truncateText } from '@utils/format';
+import {
+  formatNumericValue,
+  parseNumber,
+  prettifyKey,
+  truncateText,
+} from '@utils/format';
 
 describe('parseNumber', () => {
   it('returns undefined for undefined input', () => {
@@ -95,5 +100,15 @@ describe('truncateText', () => {
 
   it('returns falsy values unchanged', () => {
     expect(truncateText(null as unknown as string)).toBeFalsy();
+  });
+});
+
+describe('prettifyKey', () => {
+  it('formats snake case labels', () => {
+    expect(prettifyKey('question_id')).toBe('Question Id');
+  });
+
+  it('formats camel case labels', () => {
+    expect(prettifyKey('maxPoints')).toBe('Max Points');
   });
 });

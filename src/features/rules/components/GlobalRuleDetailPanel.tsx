@@ -19,13 +19,11 @@ import RuleConfigAccordion from './RuleConfigAccordion';
 import RuleDescriptionBlock from './RuleDescriptionBlock';
 import RuleEditor from './RuleEditor';
 
-import type { QuestionSetOutputQuestionMap } from '@api/models';
 import type { RuleValue } from '@features/rules/types';
 
 interface Props {
   rule: RuleValue;
   assessmentId: string;
-  questionMap: QuestionSetOutputQuestionMap;
   onEditStateChange?: (isEditing: boolean) => void;
   onDelete: () => void;
   coveredQids: string[];
@@ -42,7 +40,6 @@ interface Props {
 const GlobalRuleDetailPanel: React.FC<Props> = ({
   rule,
   assessmentId,
-  questionMap,
   onEditStateChange,
   onDelete,
   coveredQids,
@@ -55,13 +52,13 @@ const GlobalRuleDetailPanel: React.FC<Props> = ({
 
   // Pending new rules open straight into edit mode
   const [isEditing, setIsEditing] = useState(isPendingNew);
+  const [liveDraft, setLiveDraft] = useState<RuleValue>(rule);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [pendingSave, setPendingSave] = useState(false);
   // Local save error state — needed for isPendingNew where the mutation
   // lives in the parent component (MultiTargetRulesSection) and its error
   // state is not accessible here.
   const [saveError, setSaveError] = useState<unknown>(null);
-  const draftReaderRef = React.useRef<(() => RuleValue | null) | null>(null);
 
   const ruleType = rule.type;
   const ruleLabel = rule.display_name;
@@ -72,6 +69,7 @@ const GlobalRuleDetailPanel: React.FC<Props> = ({
   }, [isEditing, onEditStateChange]);
 
   const handleStartEdit = () => {
+    setLiveDraft(rule);
     setSaveError(null);
     setIsEditing(true);
   };
@@ -80,7 +78,7 @@ const GlobalRuleDetailPanel: React.FC<Props> = ({
     if (isPendingNew) {
       onCancelPending?.();
     } else {
-      draftReaderRef.current = null;
+      setLiveDraft(rule);
       setSaveError(null);
       setIsEditing(false);
     }
@@ -88,10 +86,6 @@ const GlobalRuleDetailPanel: React.FC<Props> = ({
 
   const handleDraftEdit = React.useCallback(() => {
     setSaveError(null);
-  }, []);
-
-  const handleDraftReaderChange = React.useCallback((reader: (() => RuleValue | null) | null) => {
-    draftReaderRef.current = reader;
   }, []);
 
   const handleSave = async (next: RuleValue) => {
@@ -107,6 +101,7 @@ const GlobalRuleDetailPanel: React.FC<Props> = ({
       }
       return;
     }
+    if (!rule.id) return;
     try {
       await updateRule.mutateAsync({ ruleId: rule.id, rule: next });
       setIsEditing(false);
@@ -120,10 +115,7 @@ const GlobalRuleDetailPanel: React.FC<Props> = ({
   const displayError = saveError ?? updateRule.error;
   const editorSaving = isSaving || pendingSave || updateRule.isPending;
 
-  const getPreviewRule = React.useCallback(
-    () => (isEditing ? (draftReaderRef.current?.() ?? rule) : rule),
-    [isEditing, rule],
-  );
+  const previewRule = isEditing ? liveDraft : rule;
 
   return (
     <Box style={{ flex: 1, minWidth: 0 }}>
@@ -166,25 +158,23 @@ const GlobalRuleDetailPanel: React.FC<Props> = ({
         {isEditing ? (
           <RuleEditor
             formKeyBase={`global-rule:${isPendingNew ? 'new' : rule.id}:${ruleType}`}
-            selectedRuleKey={null}
+            selectedRuleType={isPendingNew ? ruleType : null}
+            assessmentId={assessmentId}
             initialRule={rule}
             questionId={null}
-            questionType={null}
-            questionMap={questionMap}
+            onDraftChange={setLiveDraft}
             onDraftEdit={handleDraftEdit}
-            onDraftReaderChange={handleDraftReaderChange}
             onSave={(next) => void handleSave(next)}
             onCancel={handleCancelEdit}
             isSaving={editorSaving}
             error={displayError}
           />
         ) : (
-          <RuleConfigAccordion value={rule} />
+          <RuleConfigAccordion assessmentId={assessmentId} value={rule} />
         )}
 
         <InlineRulePreview
-          rule={rule}
-          getRule={getPreviewRule}
+          rule={previewRule}
           assessmentId={assessmentId}
         />
       </Stack>

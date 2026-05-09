@@ -11,7 +11,7 @@ import type { MultiValuedQuestionRuleOutputRulesItem } from './multiValuedQuesti
 import type { MultiValuedQuestionRuleOutputAggregation } from './multiValuedQuestionRuleOutputAggregation';
 
 export interface MultiValuedQuestionRuleOutput {
-  id: string;
+  readonly id: string;
   readonly question_types: readonly MultiValuedQuestionRuleOutputQuestionTypesItem[];
   readonly constraints: readonly QuestionConstraint[];
   readonly scope: 'question';

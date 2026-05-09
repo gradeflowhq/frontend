@@ -11,7 +11,7 @@ import type { AssumptionSetQuestionRuleOutputMode } from './assumptionSetQuestio
 import type { AssumptionOutput } from './assumptionOutput';
 
 export interface AssumptionSetQuestionRuleOutput {
-  id: string;
+  readonly id: string;
   readonly question_types: readonly AssumptionSetQuestionRuleOutputQuestionTypesItem[];
   readonly constraints: readonly QuestionConstraint[];
   readonly scope: 'question';

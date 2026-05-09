@@ -54,6 +54,17 @@ describe('QK', () => {
     });
   });
 
+  describe('rules', () => {
+    it('groups rule schema keys by assessment', () => {
+      expect(QK.rules.compatible('a1', { question_id: 'q1' })).toEqual([
+        'rules', 'a1', 'compatible', { question_id: 'q1' },
+      ]);
+      expect(QK.rules.schema('a1', { type: 'TEXT_MATCH' })).toEqual([
+        'rules', 'a1', 'schema', { type: 'TEXT_MATCH' },
+      ]);
+    });
+  });
+
   describe('canvas', () => {
     it('courses key includes baseUrl', () => {
       expect(QK.canvas.courses('https://canvas.example.com')).toEqual([

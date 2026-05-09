@@ -11,7 +11,7 @@ import type { NumericRangeQuestionRuleInputMinValue } from './numericRangeQuesti
 import type { NumericRangeQuestionRuleInputMaxValue } from './numericRangeQuestionRuleInputMaxValue';
 
 export interface NumericRangeQuestionRuleInput {
-  id?: string;
+  readonly id?: string;
   readonly question_types?: readonly NumericRangeQuestionRuleInputQuestionTypesItem[];
   readonly constraints?: readonly QuestionConstraint[];
   readonly scope?: 'question';

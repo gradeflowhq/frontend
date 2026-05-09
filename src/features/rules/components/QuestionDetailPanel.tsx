@@ -14,14 +14,12 @@ import { IconCircleCheck, IconPencil, IconPlus, IconTrash } from '@tabler/icons-
 import React, { useState } from 'react';
 
 import {
-  useCompatibleRuleKeys,
+  useCompatibleRules,
   useCreateRule,
   useDeleteRule,
-  useRuleDefinitions,
   useUpdateRule,
 } from '@features/rules/api';
 import { getRuleDescriptionText } from '@features/rules/helpers';
-import { findSchemaKeyByType, friendlyRuleLabel } from '@features/rules/schema';
 import { getErrorMessage } from '@utils/error';
 
 import InlineRulePreview from './InlineRulePreview';
@@ -29,7 +27,7 @@ import RuleConfigAccordion from './RuleConfigAccordion';
 import RuleDescriptionBlock from './RuleDescriptionBlock';
 import RuleEditor from './RuleEditor';
 
-import type { QuestionType, RuleValue } from '../types';
+import type { RuleValue } from '../types';
 import type { QuestionSetOutputQuestionMap } from '@api/models';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -49,7 +47,7 @@ interface Props {
 
 type EditState = {
   mode: 'add' | 'edit';
-  ruleKey: string | null;
+  ruleType: string | null;
 };
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -65,8 +63,7 @@ const QuestionDetailPanel: React.FC<Props> = ({
   onViewGlobalRule,
   onEditStateChange,
 }) => {
-  const defs = useRuleDefinitions();
-  const compatibleKeys = useCompatibleRuleKeys(defs, questionType as QuestionType, 'question');
+  const compatibleRules = useCompatibleRules(assessmentId, { question_id: qid });
   const createRule = useCreateRule(assessmentId);
   const updateRule = useUpdateRule(assessmentId);
   const deleteRule = useDeleteRule(assessmentId);
@@ -80,13 +77,12 @@ const QuestionDetailPanel: React.FC<Props> = ({
 
   // Live draft tracked for preview when a new rule editor first mounts.
   const [liveDraft, setLiveDraft] = useState<RuleValue | null>(null);
-  const draftReaderRef = React.useRef<(() => RuleValue | null) | null>(null);
 
   // The rule to pass to the preview: draft when editing, saved rule when viewing
   const previewRule = editState ? liveDraft : existingRule;
 
   // Label for the covering global rule
-  const coveringRuleLabel = coveringRule?.display_name ?? 'a global rule';
+  const coveringRuleLabel = coveringRule?.display_name;
 
   // Question description from question map
   const questionDef = questionMap[qid] as { description?: string | null } | undefined;
@@ -95,9 +91,9 @@ const QuestionDetailPanel: React.FC<Props> = ({
   const isCovered = rules.length > 0 || coveredByGlobal;
   const isEditing = editState !== null;
 
-  // Rule type badge label — view mode uses existing rule, edit/add mode uses selected key
-  const displayRuleType = editState?.ruleKey
-    ? friendlyRuleLabel(editState.ruleKey)
+  // Rule type badge label — view mode uses existing rule, edit/add mode uses selected type
+  const displayRuleType = editState?.ruleType
+    ? compatibleRules.data?.find((rule) => rule.type === editState.ruleType)?.label
     : existingRule?.display_name ?? null;
   const coveringRuleDescription = getRuleDescriptionText(coveringRule);
   const existingRuleDescription = getRuleDescriptionText(existingRule);
@@ -109,36 +105,28 @@ const QuestionDetailPanel: React.FC<Props> = ({
 
   // ── Handlers ───────────────────────────────────────────────────────────────
 
-  const handleStartAdd = (ruleKey: string) => {
+  const handleStartAdd = (ruleType: string) => {
     setLiveDraft(null);
-    setEditState({ mode: 'add', ruleKey });
+    setEditState({ mode: 'add', ruleType });
   };
 
   const handleStartEdit = () => {
     if (!existingRule) return;
-    const key = findSchemaKeyByType(defs, existingRule.type, existingRule.scope);
     setLiveDraft(existingRule);
-    setEditState({ mode: 'edit', ruleKey: key });
+    setEditState({ mode: 'edit', ruleType: existingRule.type });
   };
 
   const handleCancelEdit = () => {
     setEditState(null);
     setLiveDraft(null);
-    draftReaderRef.current = null;
   };
 
-  const handleDraftReaderChange = React.useCallback((reader: (() => RuleValue | null) | null) => {
-    draftReaderRef.current = reader;
-  }, []);
-
   const handleSave = async (rule: RuleValue) => {
-    const nextRule = { ...rule, question_id: qid } as RuleValue;
-
     try {
       if (existingRule) {
-        await updateRule.mutateAsync({ ruleId: existingRule.id, rule: nextRule });
+        await updateRule.mutateAsync({ ruleId: existingRule.id!, rule });
       } else {
-        await createRule.mutateAsync(nextRule);
+        await createRule.mutateAsync(rule);
       }
       setEditState(null);
       setLiveDraft(null);
@@ -150,7 +138,7 @@ const QuestionDetailPanel: React.FC<Props> = ({
 
   const handleDelete = async () => {
     if (!existingRule) return;
-    await deleteRule.mutateAsync(existingRule.id, {
+    await deleteRule.mutateAsync(existingRule.id!, {
       onSuccess: () => {
         setDeleteConfirm(false);
         notifications.show({ color: 'green', message: 'Rule deleted' });
@@ -166,10 +154,6 @@ const QuestionDetailPanel: React.FC<Props> = ({
   const showPreview = (existingRule !== null || (isEditing && previewRule !== null)) && !!assessmentId;
   const isSaving = createRule.isPending || updateRule.isPending;
   const saveError = createRule.error ?? updateRule.error;
-  const getPreviewRule = React.useCallback(
-    () => (isEditing ? (draftReaderRef.current?.() ?? previewRule) : existingRule),
-    [existingRule, isEditing, previewRule],
-  );
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
@@ -205,12 +189,12 @@ const QuestionDetailPanel: React.FC<Props> = ({
                 </Button>
               </Menu.Target>
               <Menu.Dropdown>
-                {compatibleKeys.map((key) => (
-                  <Menu.Item key={key} onClick={() => handleStartAdd(key)}>
-                    {friendlyRuleLabel(key)}
+                {(compatibleRules.data ?? []).map((rule) => (
+                  <Menu.Item key={rule.type} onClick={() => handleStartAdd(rule.type)}>
+                    {rule.label}
                   </Menu.Item>
                 ))}
-                {compatibleKeys.length === 0 && (
+                {(compatibleRules.data?.length ?? 0) === 0 && (
                   <Menu.Item disabled>No compatible rules</Menu.Item>
                 )}
               </Menu.Dropdown>
@@ -257,15 +241,18 @@ const QuestionDetailPanel: React.FC<Props> = ({
           <Alert
             variant="light"
             color="blue"
-            icon={<IconCircleCheck size={16} />}
           >
             <Group justify="space-between" align="center" wrap="nowrap">
-              <Text size="sm">
-                Covered by{' '}
-                <Text component="span" size="sm" fw={600}>
-                  {coveringRuleLabel}
+              {coveringRuleLabel ? (
+                <Text size="sm">
+                  Global rule:{' '}
+                  <Text component="span" size="sm" fw={600}>
+                    {coveringRuleLabel}
+                  </Text>
                 </Text>
-              </Text>
+              ) : (
+                <Text size="sm">Global rule</Text>
+              )}
               {onViewGlobalRule && (
                 <Button size="xs" variant="subtle" onClick={onViewGlobalRule} px={6}>
                   View →
@@ -276,20 +263,22 @@ const QuestionDetailPanel: React.FC<Props> = ({
         ) : isEditing ? (
           <RuleEditor
             formKeyBase={`rule:${qid}`}
-            selectedRuleKey={editState!.ruleKey}
+            selectedRuleType={editState!.ruleType}
+            assessmentId={assessmentId}
             initialRule={editState!.mode === 'edit' ? existingRule : null}
             questionId={qid}
-            questionType={questionType}
-            questionMap={questionMap}
             onSave={(rule) => void handleSave(rule)}
             onCancel={handleCancelEdit}
             isSaving={isSaving}
             error={saveError}
             onDraftChange={setLiveDraft}
-            onDraftReaderChange={handleDraftReaderChange}
           />
         ) : existingRule ? (
-          <RuleConfigAccordion value={existingRule} contextQuestionId={qid} />
+          <RuleConfigAccordion
+            assessmentId={assessmentId}
+            value={existingRule}
+            contextQuestionId={qid}
+          />
         ) : (
           <Text size="sm" c="dimmed">
             No rule for this question yet.
@@ -300,7 +289,6 @@ const QuestionDetailPanel: React.FC<Props> = ({
         {showPreview && previewRule !== null && (
           <InlineRulePreview
             rule={previewRule}
-            getRule={getPreviewRule}
             assessmentId={assessmentId}
           />
         )}

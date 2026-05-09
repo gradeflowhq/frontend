@@ -14,7 +14,7 @@ export interface QuestionResult {
   passed: boolean;
   /** Feedback or comments */
   feedback: string;
-  /** ID of the rule that was applied */
+  /** Display name of the rule that produced the result */
   rule: string;
   /** Whether the result has been graded */
   graded?: boolean;

@@ -14,7 +14,6 @@ import type { TextMatchRuleInput } from './textMatchRuleInput';
 import type { KeywordsRuleInput } from './keywordsRuleInput';
 import type { RegexRuleInput } from './regexRuleInput';
 import type { LengthRuleInput } from './lengthRuleInput';
-import type { ManualRuleInput } from './manualRuleInput';
 import type { MultiValuedRuleInput } from './multiValuedRuleInput';
 import type { MultipleChoiceRuleInput } from './multipleChoiceRuleInput';
 import type { NumberEqualRuleInput } from './numberEqualRuleInput';
@@ -23,4 +22,4 @@ import type { NumericRangeRuleInput } from './numericRangeRuleInput';
 /**
  * Rule that defines the assumption
  */
-export type AssumptionInputRule = BonusRuleInput | CompositeRuleInput | ProgrammableRuleInput | ProgrammingRuleInput | SimilarityRuleInput | TextMatchRuleInput | KeywordsRuleInput | RegexRuleInput | LengthRuleInput | ManualRuleInput | MultiValuedRuleInput | MultipleChoiceRuleInput | NumberEqualRuleInput | NumericRangeRuleInput;
+export type AssumptionInputRule = BonusRuleInput | CompositeRuleInput | ProgrammableRuleInput | ProgrammingRuleInput | SimilarityRuleInput | TextMatchRuleInput | KeywordsRuleInput | RegexRuleInput | LengthRuleInput | MultiValuedRuleInput | MultipleChoiceRuleInput | NumberEqualRuleInput | NumericRangeRuleInput;

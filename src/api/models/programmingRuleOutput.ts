@@ -12,7 +12,7 @@ import type { ProgrammingConfig } from './programmingConfig';
 import type { ProgrammingRuleOutputMode } from './programmingRuleOutputMode';
 
 export interface ProgrammingRuleOutput {
-  id: string;
+  readonly id: string;
   readonly question_types: readonly ProgrammingRuleOutputQuestionTypesItem[];
   readonly constraints: readonly QuestionConstraint[];
   readonly type: 'PROGRAMMING';
