@@ -211,10 +211,10 @@
               "$ref": "#/definitions/CompositeQuestionRule"
             },
             {
-              "$ref": "#/definitions/ProgrammableQuestionRule"
+              "$ref": "#/definitions/CustomCodeQuestionRule"
             },
             {
-              "$ref": "#/definitions/ProgrammingQuestionRule"
+              "$ref": "#/definitions/CodeTestQuestionRule"
             },
             {
               "$ref": "#/definitions/SimilarityQuestionRule"
@@ -250,7 +250,7 @@
               "$ref": "#/definitions/ConditionalMultiQuestionRule"
             },
             {
-              "$ref": "#/definitions/ProgrammableMultiQuestionRule"
+              "$ref": "#/definitions/CustomCodeMultiQuestionRule"
             }
           ],
           "discriminator": {
@@ -259,17 +259,17 @@
               "ASSUMPTION_SET": "#/definitions/AssumptionSetQuestionRule",
               "ASSUMPTION_SET_MULTI": "#/definitions/AssumptionSetMultiQuestionRule",
               "BONUS": "#/definitions/BonusQuestionRule",
+              "CODE_TESTS": "#/definitions/CodeTestQuestionRule",
               "COMPOSITE": "#/definitions/CompositeQuestionRule",
               "CONDITIONAL": "#/definitions/ConditionalMultiQuestionRule",
+              "CUSTOM_CODE": "#/definitions/CustomCodeQuestionRule",
+              "CUSTOM_CODE_MULTI": "#/definitions/CustomCodeMultiQuestionRule",
               "KEYWORDS": "#/definitions/KeywordsQuestionRule",
               "LENGTH": "#/definitions/LengthQuestionRule",
               "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceQuestionRule",
               "MULTI_VALUED": "#/definitions/MultiValuedQuestionRule",
               "NUMBER_EQUAL": "#/definitions/NumberEqualQuestionRule",
               "NUMERIC_RANGE": "#/definitions/NumericRangeQuestionRule",
-              "PROGRAMMABLE": "#/definitions/ProgrammableQuestionRule",
-              "PROGRAMMABLE_MULTI": "#/definitions/ProgrammableMultiQuestionRule",
-              "PROGRAMMING": "#/definitions/ProgrammingQuestionRule",
               "REGEX": "#/definitions/RegexQuestionRule",
               "SIMILARITY": "#/definitions/SimilarityQuestionRule",
               "TEXT_MATCH": "#/definitions/TextMatchQuestionRule"
@@ -330,8 +330,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "TEXT"
         ],
         "readOnly": true
       },
@@ -607,565 +607,6 @@
     "type": "object",
     "title": "Regex Configuration"
   },
-  "ProgrammingQuestionRule": {
-    "properties": {
-      "id": {
-        "type": "string",
-        "title": "Id",
-        "readOnly": true
-      },
-      "question_types": {
-        "items": {
-          "type": "string",
-          "enum": [
-            "TEXT",
-            "CHOICE",
-            "NUMERIC",
-            "MULTI_VALUED"
-          ]
-        },
-        "type": "array",
-        "uniqueItems": true,
-        "title": "Question Types",
-        "default": [
-          "TEXT"
-        ],
-        "readOnly": true
-      },
-      "constraints": {
-        "items": {
-          "$ref": "#/definitions/QuestionConstraint"
-        },
-        "type": "array",
-        "title": "Constraints",
-        "default": [],
-        "readOnly": true
-      },
-      "scope": {
-        "type": "string",
-        "const": "question",
-        "title": "Scope",
-        "default": "question",
-        "readOnly": true
-      },
-      "question_id": {
-        "type": "string",
-        "title": "Question Id"
-      },
-      "type": {
-        "type": "string",
-        "const": "PROGRAMMING",
-        "title": "Type",
-        "default": "PROGRAMMING",
-        "readOnly": true
-      },
-      "display_name": {
-        "type": "string",
-        "const": "Programming",
-        "title": "Display Name",
-        "default": "Programming",
-        "readOnly": true
-      },
-      "testcases": {
-        "items": {
-          "$ref": "#/definitions/ProgrammingTestCase"
-        },
-        "type": "array",
-        "minItems": 1,
-        "title": "Testcases",
-        "description": "List of test cases to run against the code"
-      },
-      "language": {
-        "type": "string",
-        "const": "python",
-        "title": "Language",
-        "description": "Programming language of the code to be tested",
-        "default": "python"
-      },
-      "config": {
-        "$ref": "#/definitions/ProgrammingConfig",
-        "description": "Configuration for code testing"
-      },
-      "show_evaluated_expected": {
-        "type": "boolean",
-        "title": "Show Evaluated Expected",
-        "description": "Whether to show the evaluated expected output in feedback",
-        "default": true
-      },
-      "mode": {
-        "type": "string",
-        "enum": [
-          "ALL",
-          "ANY",
-          "PARTIAL"
-        ],
-        "title": "Mode",
-        "description": "Mode of test case evaluation: 'ALL' requires all test cases to pass, 'ANY' requires at least one to pass, 'PARTIAL' gives credit for each test case passed.",
-        "default": "ALL"
-      }
-    },
-    "type": "object",
-    "required": [
-      "question_id",
-      "testcases"
-    ],
-    "title": "Programming"
-  },
-  "ProgrammingConfig": {
-    "properties": {
-      "prepend_code": {
-        "type": "string",
-        "title": "Prepend Code",
-        "description": "Code to prepend to the student's answer",
-        "default": "",
-        "x-gradeflow": {
-          "input": "code"
-        }
-      },
-      "append_code": {
-        "type": "string",
-        "title": "Append Code",
-        "description": "Code to append to the student's answer",
-        "default": "",
-        "x-gradeflow": {
-          "input": "code"
-        }
-      },
-      "indent": {
-        "type": "integer",
-        "title": "Indent",
-        "description": "Number of spaces to indent the student's code when embedding it",
-        "default": 0
-      },
-      "time_limit": {
-        "type": "integer",
-        "title": "Time Limit",
-        "description": "Time limit in seconds for code execution",
-        "default": 5
-      }
-    },
-    "type": "object",
-    "title": "Programming Configuration"
-  },
-  "ProgrammingTestCase": {
-    "properties": {
-      "expression": {
-        "type": "string",
-        "title": "Expression",
-        "description": "Input for the test case"
-      },
-      "expected": {
-        "type": "string",
-        "title": "Expected",
-        "description": "Expected output for the test case"
-      }
-    },
-    "type": "object",
-    "required": [
-      "expression",
-      "expected"
-    ],
-    "title": "Test Case"
-  },
-  "ProgrammableMultiQuestionRule": {
-    "properties": {
-      "id": {
-        "type": "string",
-        "title": "Id",
-        "readOnly": true
-      },
-      "question_types": {
-        "items": {
-          "type": "string",
-          "enum": [
-            "TEXT",
-            "CHOICE",
-            "NUMERIC",
-            "MULTI_VALUED"
-          ]
-        },
-        "type": "array",
-        "uniqueItems": true,
-        "title": "Question Types",
-        "default": [
-          "TEXT",
-          "NUMERIC",
-          "CHOICE",
-          "MULTI_VALUED"
-        ],
-        "readOnly": true
-      },
-      "constraints": {
-        "items": {
-          "$ref": "#/definitions/QuestionConstraint"
-        },
-        "type": "array",
-        "title": "Constraints",
-        "default": [],
-        "readOnly": true
-      },
-      "scope": {
-        "type": "string",
-        "const": "global",
-        "title": "Scope",
-        "default": "global",
-        "readOnly": true
-      },
-      "type": {
-        "type": "string",
-        "const": "PROGRAMMABLE_MULTI",
-        "title": "Type",
-        "default": "PROGRAMMABLE_MULTI",
-        "readOnly": true
-      },
-      "display_name": {
-        "type": "string",
-        "const": "Programmable",
-        "title": "Display Name",
-        "default": "Programmable",
-        "readOnly": true
-      },
-      "target_question_ids": {
-        "items": {
-          "type": "string"
-        },
-        "type": "array",
-        "minItems": 1,
-        "title": "Target Question Ids",
-        "description": "List of question IDs this rule targets."
-      },
-      "code": {
-        "type": "string",
-        "title": "Code",
-        "description": "Code to evaluate the answer_map. Required variable: 'results' (dict mapping question_id -> dict with 'output', 'passed', and optionally 'feedback').",
-        "default": "# You have access to the following variables:\n# - 'answer_map' dict mapping question_id -> student's answer for each target question\n# - any additional variables defined in 'parameters' (e.g., 'param1', 'param2', etc.)\n# You must set the following variable:\n# - 'results' (dict): A dict mapping question_id -> dict with keys:\n#     - 'output' (float): A number between 0 and 1 -- max_points multiplier (OUTPUT mode)\n#     - 'passed' (bool): Whether the answer passed (only used in PASS_FAIL mode)\n#     - 'feedback' (str, optional): Feedback to provide to the student\n# Example code:\nresults = {}\nfor qid, answer in answer_map.items():\n    results[qid] = {\n        'output': 0.0,\n        'passed': False,\n        'feedback': str(answer),\n    }\n",
-        "x-gradeflow": {
-          "input": "code"
-        }
-      },
-      "parameters": {
-        "additionalProperties": {
-          "oneOf": [
-            {
-              "$ref": "#/definitions/IntParameter"
-            },
-            {
-              "$ref": "#/definitions/FloatParameter"
-            },
-            {
-              "$ref": "#/definitions/StringParameter"
-            },
-            {
-              "$ref": "#/definitions/BooleanParameter"
-            },
-            {
-              "$ref": "#/definitions/ListParameter"
-            },
-            {
-              "$ref": "#/definitions/DictParameter"
-            }
-          ]
-        },
-        "type": "object",
-        "title": "Parameters",
-        "description": "Parameters that can be used in the code."
-      },
-      "mode": {
-        "type": "string",
-        "enum": [
-          "PASS_FAIL",
-          "OUTPUT"
-        ],
-        "title": "Mode",
-        "description": "Mode of evaluation: 'PASS_FAIL' uses 'passed' per question, 'OUTPUT' uses 'output' (0-1) per question for scoring.",
-        "default": "PASS_FAIL"
-      }
-    },
-    "type": "object",
-    "required": [
-      "target_question_ids"
-    ],
-    "title": "Programmable"
-  },
-  "DictParameter": {
-    "properties": {
-      "dtype": {
-        "type": "string",
-        "const": "Dict",
-        "title": "Dtype",
-        "default": "Dict",
-        "readOnly": true
-      },
-      "value": {
-        "additionalProperties": {
-          "oneOf": [
-            {
-              "$ref": "#/definitions/IntParameter"
-            },
-            {
-              "$ref": "#/definitions/FloatParameter"
-            },
-            {
-              "$ref": "#/definitions/StringParameter"
-            },
-            {
-              "$ref": "#/definitions/BooleanParameter"
-            },
-            {
-              "$ref": "#/definitions/ListParameter"
-            },
-            {
-              "$ref": "#/definitions/DictParameter"
-            }
-          ]
-        },
-        "type": "object",
-        "title": "Value"
-      }
-    },
-    "type": "object",
-    "required": [
-      "value"
-    ],
-    "title": "Dictionary"
-  },
-  "ListParameter": {
-    "properties": {
-      "dtype": {
-        "type": "string",
-        "const": "List",
-        "title": "Dtype",
-        "default": "List",
-        "readOnly": true
-      },
-      "value": {
-        "items": {
-          "oneOf": [
-            {
-              "$ref": "#/definitions/IntParameter"
-            },
-            {
-              "$ref": "#/definitions/FloatParameter"
-            },
-            {
-              "$ref": "#/definitions/StringParameter"
-            },
-            {
-              "$ref": "#/definitions/BooleanParameter"
-            },
-            {
-              "$ref": "#/definitions/ListParameter"
-            },
-            {
-              "$ref": "#/definitions/DictParameter"
-            }
-          ]
-        },
-        "type": "array",
-        "title": "Value"
-      }
-    },
-    "type": "object",
-    "required": [
-      "value"
-    ],
-    "title": "List"
-  },
-  "BooleanParameter": {
-    "properties": {
-      "dtype": {
-        "type": "string",
-        "const": "Boolean",
-        "title": "Dtype",
-        "default": "Boolean",
-        "readOnly": true
-      },
-      "value": {
-        "type": "boolean",
-        "title": "Value"
-      }
-    },
-    "type": "object",
-    "required": [
-      "value"
-    ],
-    "title": "Boolean"
-  },
-  "StringParameter": {
-    "properties": {
-      "dtype": {
-        "type": "string",
-        "const": "String",
-        "title": "Dtype",
-        "default": "String",
-        "readOnly": true
-      },
-      "value": {
-        "type": "string",
-        "title": "Value"
-      }
-    },
-    "type": "object",
-    "required": [
-      "value"
-    ],
-    "title": "String"
-  },
-  "FloatParameter": {
-    "properties": {
-      "dtype": {
-        "type": "string",
-        "const": "Float",
-        "title": "Dtype",
-        "default": "Float",
-        "readOnly": true
-      },
-      "value": {
-        "type": "number",
-        "title": "Value"
-      }
-    },
-    "type": "object",
-    "required": [
-      "value"
-    ],
-    "title": "Float"
-  },
-  "IntParameter": {
-    "properties": {
-      "dtype": {
-        "type": "string",
-        "const": "Int",
-        "title": "Dtype",
-        "default": "Int",
-        "readOnly": true
-      },
-      "value": {
-        "type": "integer",
-        "title": "Value"
-      }
-    },
-    "type": "object",
-    "required": [
-      "value"
-    ],
-    "title": "Integer"
-  },
-  "ProgrammableQuestionRule": {
-    "properties": {
-      "id": {
-        "type": "string",
-        "title": "Id",
-        "readOnly": true
-      },
-      "question_types": {
-        "items": {
-          "type": "string",
-          "enum": [
-            "TEXT",
-            "CHOICE",
-            "NUMERIC",
-            "MULTI_VALUED"
-          ]
-        },
-        "type": "array",
-        "uniqueItems": true,
-        "title": "Question Types",
-        "default": [
-          "TEXT",
-          "NUMERIC",
-          "CHOICE",
-          "MULTI_VALUED"
-        ],
-        "readOnly": true
-      },
-      "constraints": {
-        "items": {
-          "$ref": "#/definitions/QuestionConstraint"
-        },
-        "type": "array",
-        "title": "Constraints",
-        "default": [],
-        "readOnly": true
-      },
-      "scope": {
-        "type": "string",
-        "const": "question",
-        "title": "Scope",
-        "default": "question",
-        "readOnly": true
-      },
-      "question_id": {
-        "type": "string",
-        "title": "Question Id"
-      },
-      "type": {
-        "type": "string",
-        "const": "PROGRAMMABLE",
-        "title": "Type",
-        "default": "PROGRAMMABLE",
-        "readOnly": true
-      },
-      "display_name": {
-        "type": "string",
-        "const": "Programmable",
-        "title": "Display Name",
-        "default": "Programmable",
-        "readOnly": true
-      },
-      "code": {
-        "type": "string",
-        "title": "Code",
-        "description": "Code to evaluate the answer. Required variables: 'output', 'passed'. Optional variable: 'feedback'.",
-        "default": "# You have access to the following variables:\n# - 'answer' variable contains the student's answer (can be str, float, list, or set)\n# - any additional variables defined in 'parameters' (e.g., 'param1', 'param2', etc.)\n# You must set the following variables:\n# - 'output' (float): A number between 0 and 1 -- max_points multiplier (only used in OUTPUT mode)\n# - 'passed' (bool): Whether the answer passed (only used in PASS_FAIL mode)\n# - 'feedback' (str, optional): Feedback to provide to the student\n# Example code:\npassed = False\noutput = 0.0\nfeedback = str(answer)\n",
-        "x-gradeflow": {
-          "input": "code"
-        }
-      },
-      "parameters": {
-        "additionalProperties": {
-          "oneOf": [
-            {
-              "$ref": "#/definitions/IntParameter"
-            },
-            {
-              "$ref": "#/definitions/FloatParameter"
-            },
-            {
-              "$ref": "#/definitions/StringParameter"
-            },
-            {
-              "$ref": "#/definitions/BooleanParameter"
-            },
-            {
-              "$ref": "#/definitions/ListParameter"
-            },
-            {
-              "$ref": "#/definitions/DictParameter"
-            }
-          ]
-        },
-        "type": "object",
-        "title": "Parameters",
-        "description": "Parameters that can be used in the code."
-      },
-      "mode": {
-        "type": "string",
-        "enum": [
-          "PASS_FAIL",
-          "OUTPUT"
-        ],
-        "title": "Mode",
-        "description": "Mode of evaluation: 'PASS_FAIL' uses a boolean 'passed' variable, 'OUTPUT' uses the 'output' variable (0-1) for scoring.",
-        "default": "PASS_FAIL"
-      }
-    },
-    "type": "object",
-    "required": [
-      "question_id"
-    ],
-    "title": "Programmable"
-  },
   "NumericRangeQuestionRule": {
     "properties": {
       "id": {
@@ -1418,10 +859,10 @@
               "$ref": "#/definitions/CompositeRule"
             },
             {
-              "$ref": "#/definitions/ProgrammableRule"
+              "$ref": "#/definitions/CustomCodeRule"
             },
             {
-              "$ref": "#/definitions/ProgrammingRule"
+              "$ref": "#/definitions/CodeTestRule"
             },
             {
               "$ref": "#/definitions/SimilarityRule"
@@ -1455,15 +896,15 @@
             "propertyName": "type",
             "mapping": {
               "BONUS": "#/definitions/BonusRule",
+              "CODE_TESTS": "#/definitions/CodeTestRule",
               "COMPOSITE": "#/definitions/CompositeRule",
+              "CUSTOM_CODE": "#/definitions/CustomCodeRule",
               "KEYWORDS": "#/definitions/KeywordsRule",
               "LENGTH": "#/definitions/LengthRule",
               "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceRule",
               "MULTI_VALUED": "#/definitions/MultiValuedRule",
               "NUMBER_EQUAL": "#/definitions/NumberEqualRule",
               "NUMERIC_RANGE": "#/definitions/NumericRangeRule",
-              "PROGRAMMABLE": "#/definitions/ProgrammableRule",
-              "PROGRAMMING": "#/definitions/ProgrammingRule",
               "REGEX": "#/definitions/RegexRule",
               "SIMILARITY": "#/definitions/SimilarityRule",
               "TEXT_MATCH": "#/definitions/TextMatchRule"
@@ -1515,8 +956,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "TEXT"
         ],
         "readOnly": true
       },
@@ -1703,199 +1144,6 @@
       "pattern"
     ],
     "title": "Regex"
-  },
-  "ProgrammingRule": {
-    "properties": {
-      "id": {
-        "type": "string",
-        "title": "Id",
-        "readOnly": true
-      },
-      "question_types": {
-        "items": {
-          "type": "string",
-          "enum": [
-            "TEXT",
-            "CHOICE",
-            "NUMERIC",
-            "MULTI_VALUED"
-          ]
-        },
-        "type": "array",
-        "uniqueItems": true,
-        "title": "Question Types",
-        "default": [
-          "TEXT"
-        ],
-        "readOnly": true
-      },
-      "constraints": {
-        "items": {
-          "$ref": "#/definitions/QuestionConstraint"
-        },
-        "type": "array",
-        "title": "Constraints",
-        "default": [],
-        "readOnly": true
-      },
-      "type": {
-        "type": "string",
-        "const": "PROGRAMMING",
-        "title": "Type",
-        "default": "PROGRAMMING",
-        "readOnly": true
-      },
-      "display_name": {
-        "type": "string",
-        "const": "Programming",
-        "title": "Display Name",
-        "default": "Programming",
-        "readOnly": true
-      },
-      "testcases": {
-        "items": {
-          "$ref": "#/definitions/ProgrammingTestCase"
-        },
-        "type": "array",
-        "minItems": 1,
-        "title": "Testcases",
-        "description": "List of test cases to run against the code"
-      },
-      "language": {
-        "type": "string",
-        "const": "python",
-        "title": "Language",
-        "description": "Programming language of the code to be tested",
-        "default": "python"
-      },
-      "config": {
-        "$ref": "#/definitions/ProgrammingConfig",
-        "description": "Configuration for code testing"
-      },
-      "show_evaluated_expected": {
-        "type": "boolean",
-        "title": "Show Evaluated Expected",
-        "description": "Whether to show the evaluated expected output in feedback",
-        "default": true
-      },
-      "mode": {
-        "type": "string",
-        "enum": [
-          "ALL",
-          "ANY",
-          "PARTIAL"
-        ],
-        "title": "Mode",
-        "description": "Mode of test case evaluation: 'ALL' requires all test cases to pass, 'ANY' requires at least one to pass, 'PARTIAL' gives credit for each test case passed.",
-        "default": "ALL"
-      }
-    },
-    "type": "object",
-    "required": [
-      "testcases"
-    ],
-    "title": "Programming"
-  },
-  "ProgrammableRule": {
-    "properties": {
-      "id": {
-        "type": "string",
-        "title": "Id",
-        "readOnly": true
-      },
-      "question_types": {
-        "items": {
-          "type": "string",
-          "enum": [
-            "TEXT",
-            "CHOICE",
-            "NUMERIC",
-            "MULTI_VALUED"
-          ]
-        },
-        "type": "array",
-        "uniqueItems": true,
-        "title": "Question Types",
-        "default": [
-          "TEXT",
-          "NUMERIC",
-          "CHOICE",
-          "MULTI_VALUED"
-        ],
-        "readOnly": true
-      },
-      "constraints": {
-        "items": {
-          "$ref": "#/definitions/QuestionConstraint"
-        },
-        "type": "array",
-        "title": "Constraints",
-        "default": [],
-        "readOnly": true
-      },
-      "type": {
-        "type": "string",
-        "const": "PROGRAMMABLE",
-        "title": "Type",
-        "default": "PROGRAMMABLE",
-        "readOnly": true
-      },
-      "display_name": {
-        "type": "string",
-        "const": "Programmable",
-        "title": "Display Name",
-        "default": "Programmable",
-        "readOnly": true
-      },
-      "code": {
-        "type": "string",
-        "title": "Code",
-        "description": "Code to evaluate the answer. Required variables: 'output', 'passed'. Optional variable: 'feedback'.",
-        "default": "# You have access to the following variables:\n# - 'answer' variable contains the student's answer (can be str, float, list, or set)\n# - any additional variables defined in 'parameters' (e.g., 'param1', 'param2', etc.)\n# You must set the following variables:\n# - 'output' (float): A number between 0 and 1 -- max_points multiplier (only used in OUTPUT mode)\n# - 'passed' (bool): Whether the answer passed (only used in PASS_FAIL mode)\n# - 'feedback' (str, optional): Feedback to provide to the student\n# Example code:\npassed = False\noutput = 0.0\nfeedback = str(answer)\n",
-        "x-gradeflow": {
-          "input": "code"
-        }
-      },
-      "parameters": {
-        "additionalProperties": {
-          "oneOf": [
-            {
-              "$ref": "#/definitions/IntParameter"
-            },
-            {
-              "$ref": "#/definitions/FloatParameter"
-            },
-            {
-              "$ref": "#/definitions/StringParameter"
-            },
-            {
-              "$ref": "#/definitions/BooleanParameter"
-            },
-            {
-              "$ref": "#/definitions/ListParameter"
-            },
-            {
-              "$ref": "#/definitions/DictParameter"
-            }
-          ]
-        },
-        "type": "object",
-        "title": "Parameters",
-        "description": "Parameters that can be used in the code."
-      },
-      "mode": {
-        "type": "string",
-        "enum": [
-          "PASS_FAIL",
-          "OUTPUT"
-        ],
-        "title": "Mode",
-        "description": "Mode of evaluation: 'PASS_FAIL' uses a boolean 'passed' variable, 'OUTPUT' uses the 'output' variable (0-1) for scoring.",
-        "default": "PASS_FAIL"
-      }
-    },
-    "type": "object",
-    "title": "Programmable"
   },
   "NumericRangeRule": {
     "properties": {
@@ -2094,10 +1342,10 @@
               "$ref": "#/definitions/CompositeRule"
             },
             {
-              "$ref": "#/definitions/ProgrammableRule"
+              "$ref": "#/definitions/CustomCodeRule"
             },
             {
-              "$ref": "#/definitions/ProgrammingRule"
+              "$ref": "#/definitions/CodeTestRule"
             },
             {
               "$ref": "#/definitions/SimilarityRule"
@@ -2131,15 +1379,15 @@
             "propertyName": "type",
             "mapping": {
               "BONUS": "#/definitions/BonusRule",
+              "CODE_TESTS": "#/definitions/CodeTestRule",
               "COMPOSITE": "#/definitions/CompositeRule",
+              "CUSTOM_CODE": "#/definitions/CustomCodeRule",
               "KEYWORDS": "#/definitions/KeywordsRule",
               "LENGTH": "#/definitions/LengthRule",
               "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceRule",
               "MULTI_VALUED": "#/definitions/MultiValuedRule",
               "NUMBER_EQUAL": "#/definitions/NumberEqualRule",
               "NUMERIC_RANGE": "#/definitions/NumericRangeRule",
-              "PROGRAMMABLE": "#/definitions/ProgrammableRule",
-              "PROGRAMMING": "#/definitions/ProgrammingRule",
               "REGEX": "#/definitions/RegexRule",
               "SIMILARITY": "#/definitions/SimilarityRule",
               "TEXT_MATCH": "#/definitions/TextMatchRule"
@@ -2406,6 +1654,271 @@
     ],
     "title": "Keywords"
   },
+  "CustomCodeRule": {
+    "properties": {
+      "id": {
+        "type": "string",
+        "title": "Id",
+        "readOnly": true
+      },
+      "question_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "CHOICE",
+            "NUMERIC",
+            "MULTI_VALUED"
+          ]
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Question Types",
+        "default": [
+          "NUMERIC",
+          "MULTI_VALUED",
+          "TEXT",
+          "CHOICE"
+        ],
+        "readOnly": true
+      },
+      "constraints": {
+        "items": {
+          "$ref": "#/definitions/QuestionConstraint"
+        },
+        "type": "array",
+        "title": "Constraints",
+        "default": [],
+        "readOnly": true
+      },
+      "type": {
+        "type": "string",
+        "const": "CUSTOM_CODE",
+        "title": "Type",
+        "default": "CUSTOM_CODE",
+        "readOnly": true
+      },
+      "display_name": {
+        "type": "string",
+        "const": "Custom Code",
+        "title": "Display Name",
+        "default": "Custom Code",
+        "readOnly": true
+      },
+      "code": {
+        "type": "string",
+        "title": "Code",
+        "description": "Code to evaluate the answer. Required variables: 'output', 'passed'. Optional variable: 'feedback'.",
+        "default": "# You have access to the following variables:\n# - 'answer' variable contains the student's answer (can be str, float, list, or set)\n# - any additional variables defined in 'parameters' (e.g., 'param1', 'param2', etc.)\n# You must set the following variables:\n# - 'output' (float): A number between 0 and 1 -- max_points multiplier (only used in OUTPUT mode)\n# - 'passed' (bool): Whether the answer passed (only used in PASS_FAIL mode)\n# - 'feedback' (str, optional): Feedback to provide to the student\n# Example code:\npassed = False\noutput = 0.0\nfeedback = str(answer)\n",
+        "x-gradeflow": {
+          "input": "code"
+        }
+      },
+      "parameters": {
+        "additionalProperties": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/IntParameter"
+            },
+            {
+              "$ref": "#/definitions/FloatParameter"
+            },
+            {
+              "$ref": "#/definitions/StringParameter"
+            },
+            {
+              "$ref": "#/definitions/BooleanParameter"
+            },
+            {
+              "$ref": "#/definitions/ListParameter"
+            },
+            {
+              "$ref": "#/definitions/DictParameter"
+            }
+          ]
+        },
+        "type": "object",
+        "title": "Parameters",
+        "description": "Parameters that can be used in the code."
+      },
+      "mode": {
+        "type": "string",
+        "enum": [
+          "PASS_FAIL",
+          "OUTPUT"
+        ],
+        "title": "Mode",
+        "description": "Mode of evaluation: 'PASS_FAIL' uses a boolean 'passed' variable, 'OUTPUT' uses the 'output' variable (0-1) for scoring.",
+        "default": "PASS_FAIL"
+      }
+    },
+    "type": "object",
+    "title": "Custom Code"
+  },
+  "DictParameter": {
+    "properties": {
+      "dtype": {
+        "type": "string",
+        "const": "Dict",
+        "title": "Dtype",
+        "default": "Dict",
+        "readOnly": true
+      },
+      "value": {
+        "additionalProperties": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/IntParameter"
+            },
+            {
+              "$ref": "#/definitions/FloatParameter"
+            },
+            {
+              "$ref": "#/definitions/StringParameter"
+            },
+            {
+              "$ref": "#/definitions/BooleanParameter"
+            },
+            {
+              "$ref": "#/definitions/ListParameter"
+            },
+            {
+              "$ref": "#/definitions/DictParameter"
+            }
+          ]
+        },
+        "type": "object",
+        "title": "Value"
+      }
+    },
+    "type": "object",
+    "required": [
+      "value"
+    ],
+    "title": "Dictionary"
+  },
+  "ListParameter": {
+    "properties": {
+      "dtype": {
+        "type": "string",
+        "const": "List",
+        "title": "Dtype",
+        "default": "List",
+        "readOnly": true
+      },
+      "value": {
+        "items": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/IntParameter"
+            },
+            {
+              "$ref": "#/definitions/FloatParameter"
+            },
+            {
+              "$ref": "#/definitions/StringParameter"
+            },
+            {
+              "$ref": "#/definitions/BooleanParameter"
+            },
+            {
+              "$ref": "#/definitions/ListParameter"
+            },
+            {
+              "$ref": "#/definitions/DictParameter"
+            }
+          ]
+        },
+        "type": "array",
+        "title": "Value"
+      }
+    },
+    "type": "object",
+    "required": [
+      "value"
+    ],
+    "title": "List"
+  },
+  "BooleanParameter": {
+    "properties": {
+      "dtype": {
+        "type": "string",
+        "const": "Boolean",
+        "title": "Dtype",
+        "default": "Boolean",
+        "readOnly": true
+      },
+      "value": {
+        "type": "boolean",
+        "title": "Value"
+      }
+    },
+    "type": "object",
+    "required": [
+      "value"
+    ],
+    "title": "Boolean"
+  },
+  "StringParameter": {
+    "properties": {
+      "dtype": {
+        "type": "string",
+        "const": "String",
+        "title": "Dtype",
+        "default": "String",
+        "readOnly": true
+      },
+      "value": {
+        "type": "string",
+        "title": "Value"
+      }
+    },
+    "type": "object",
+    "required": [
+      "value"
+    ],
+    "title": "String"
+  },
+  "FloatParameter": {
+    "properties": {
+      "dtype": {
+        "type": "string",
+        "const": "Float",
+        "title": "Dtype",
+        "default": "Float",
+        "readOnly": true
+      },
+      "value": {
+        "type": "number",
+        "title": "Value"
+      }
+    },
+    "type": "object",
+    "required": [
+      "value"
+    ],
+    "title": "Float"
+  },
+  "IntParameter": {
+    "properties": {
+      "dtype": {
+        "type": "string",
+        "const": "Int",
+        "title": "Dtype",
+        "default": "Int",
+        "readOnly": true
+      },
+      "value": {
+        "type": "integer",
+        "title": "Value"
+      }
+    },
+    "type": "object",
+    "required": [
+      "value"
+    ],
+    "title": "Integer"
+  },
   "CompositeRule": {
     "properties": {
       "id": {
@@ -2427,8 +1940,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "TEXT"
         ],
         "readOnly": true
       },
@@ -2465,10 +1978,10 @@
               "$ref": "#/definitions/CompositeRule"
             },
             {
-              "$ref": "#/definitions/ProgrammableRule"
+              "$ref": "#/definitions/CustomCodeRule"
             },
             {
-              "$ref": "#/definitions/ProgrammingRule"
+              "$ref": "#/definitions/CodeTestRule"
             },
             {
               "$ref": "#/definitions/SimilarityRule"
@@ -2502,15 +2015,15 @@
             "propertyName": "type",
             "mapping": {
               "BONUS": "#/definitions/BonusRule",
+              "CODE_TESTS": "#/definitions/CodeTestRule",
               "COMPOSITE": "#/definitions/CompositeRule",
+              "CUSTOM_CODE": "#/definitions/CustomCodeRule",
               "KEYWORDS": "#/definitions/KeywordsRule",
               "LENGTH": "#/definitions/LengthRule",
               "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceRule",
               "MULTI_VALUED": "#/definitions/MultiValuedRule",
               "NUMBER_EQUAL": "#/definitions/NumberEqualRule",
               "NUMERIC_RANGE": "#/definitions/NumericRangeRule",
-              "PROGRAMMABLE": "#/definitions/ProgrammableRule",
-              "PROGRAMMING": "#/definitions/ProgrammingRule",
               "REGEX": "#/definitions/RegexRule",
               "SIMILARITY": "#/definitions/SimilarityRule",
               "TEXT_MATCH": "#/definitions/TextMatchRule"
@@ -2540,6 +2053,154 @@
     ],
     "title": "Composite"
   },
+  "CodeTestRule": {
+    "properties": {
+      "id": {
+        "type": "string",
+        "title": "Id",
+        "readOnly": true
+      },
+      "question_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "CHOICE",
+            "NUMERIC",
+            "MULTI_VALUED"
+          ]
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Question Types",
+        "default": [
+          "TEXT"
+        ],
+        "readOnly": true
+      },
+      "constraints": {
+        "items": {
+          "$ref": "#/definitions/QuestionConstraint"
+        },
+        "type": "array",
+        "title": "Constraints",
+        "default": [],
+        "readOnly": true
+      },
+      "type": {
+        "type": "string",
+        "const": "CODE_TESTS",
+        "title": "Type",
+        "default": "CODE_TESTS",
+        "readOnly": true
+      },
+      "display_name": {
+        "type": "string",
+        "const": "Code Tests",
+        "title": "Display Name",
+        "default": "Code Tests",
+        "readOnly": true
+      },
+      "testcases": {
+        "items": {
+          "$ref": "#/definitions/CodeTestCase"
+        },
+        "type": "array",
+        "minItems": 1,
+        "title": "Testcases",
+        "description": "List of test cases to run against the code"
+      },
+      "language": {
+        "type": "string",
+        "const": "python",
+        "title": "Language",
+        "description": "Language of the code to be tested",
+        "default": "python"
+      },
+      "config": {
+        "$ref": "#/definitions/CodeTestConfig",
+        "description": "Configuration for code testing"
+      },
+      "show_evaluated_expected": {
+        "type": "boolean",
+        "title": "Show Evaluated Expected",
+        "description": "Whether to show the evaluated expected output in feedback",
+        "default": true
+      },
+      "mode": {
+        "type": "string",
+        "enum": [
+          "ALL",
+          "ANY",
+          "PARTIAL"
+        ],
+        "title": "Mode",
+        "description": "Mode of test case evaluation: 'ALL' requires all test cases to pass, 'ANY' requires at least one to pass, 'PARTIAL' gives credit for each test case passed.",
+        "default": "ALL"
+      }
+    },
+    "type": "object",
+    "required": [
+      "testcases"
+    ],
+    "title": "Code Tests"
+  },
+  "CodeTestConfig": {
+    "properties": {
+      "prepend_code": {
+        "type": "string",
+        "title": "Prepend Code",
+        "description": "Code to prepend to the student's answer",
+        "default": "",
+        "x-gradeflow": {
+          "input": "code"
+        }
+      },
+      "append_code": {
+        "type": "string",
+        "title": "Append Code",
+        "description": "Code to append to the student's answer",
+        "default": "",
+        "x-gradeflow": {
+          "input": "code"
+        }
+      },
+      "indent": {
+        "type": "integer",
+        "title": "Indent",
+        "description": "Number of spaces to indent the student's code when embedding it",
+        "default": 0
+      },
+      "time_limit": {
+        "type": "integer",
+        "title": "Time Limit",
+        "description": "Time limit in seconds for code execution",
+        "default": 5
+      }
+    },
+    "type": "object",
+    "title": "Code Test Configuration"
+  },
+  "CodeTestCase": {
+    "properties": {
+      "expression": {
+        "type": "string",
+        "title": "Expression",
+        "description": "Input for the test case"
+      },
+      "expected": {
+        "type": "string",
+        "title": "Expected",
+        "description": "Expected output for the test case"
+      }
+    },
+    "type": "object",
+    "required": [
+      "expression",
+      "expected"
+    ],
+    "title": "Test Case"
+  },
   "BonusRule": {
     "properties": {
       "id": {
@@ -2561,10 +2222,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "TEXT",
           "NUMERIC",
-          "CHOICE",
-          "MULTI_VALUED"
+          "MULTI_VALUED",
+          "TEXT",
+          "CHOICE"
         ],
         "readOnly": true
       },
@@ -2870,6 +2531,241 @@
     ],
     "title": "Keywords"
   },
+  "CustomCodeMultiQuestionRule": {
+    "properties": {
+      "id": {
+        "type": "string",
+        "title": "Id",
+        "readOnly": true
+      },
+      "question_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "CHOICE",
+            "NUMERIC",
+            "MULTI_VALUED"
+          ]
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Question Types",
+        "default": [
+          "NUMERIC",
+          "MULTI_VALUED",
+          "TEXT",
+          "CHOICE"
+        ],
+        "readOnly": true
+      },
+      "constraints": {
+        "items": {
+          "$ref": "#/definitions/QuestionConstraint"
+        },
+        "type": "array",
+        "title": "Constraints",
+        "default": [],
+        "readOnly": true
+      },
+      "scope": {
+        "type": "string",
+        "const": "global",
+        "title": "Scope",
+        "default": "global",
+        "readOnly": true
+      },
+      "type": {
+        "type": "string",
+        "const": "CUSTOM_CODE_MULTI",
+        "title": "Type",
+        "default": "CUSTOM_CODE_MULTI",
+        "readOnly": true
+      },
+      "display_name": {
+        "type": "string",
+        "const": "Custom Code",
+        "title": "Display Name",
+        "default": "Custom Code",
+        "readOnly": true
+      },
+      "target_question_ids": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array",
+        "minItems": 1,
+        "title": "Target Question Ids",
+        "description": "List of question IDs this rule targets."
+      },
+      "code": {
+        "type": "string",
+        "title": "Code",
+        "description": "Code to evaluate the answer_map. Required variable: 'results' (dict mapping question_id -> dict with 'output', 'passed', and optionally 'feedback').",
+        "default": "# You have access to the following variables:\n# - 'answer_map' dict mapping question_id -> student's answer for each target question\n# - any additional variables defined in 'parameters' (e.g., 'param1', 'param2', etc.)\n# You must set the following variable:\n# - 'results' (dict): A dict mapping question_id -> dict with keys:\n#     - 'output' (float): A number between 0 and 1 -- max_points multiplier (OUTPUT mode)\n#     - 'passed' (bool): Whether the answer passed (only used in PASS_FAIL mode)\n#     - 'feedback' (str, optional): Feedback to provide to the student\n# Example code:\nresults = {}\nfor qid, answer in answer_map.items():\n    results[qid] = {\n        'output': 0.0,\n        'passed': False,\n        'feedback': str(answer),\n    }\n",
+        "x-gradeflow": {
+          "input": "code"
+        }
+      },
+      "parameters": {
+        "additionalProperties": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/IntParameter"
+            },
+            {
+              "$ref": "#/definitions/FloatParameter"
+            },
+            {
+              "$ref": "#/definitions/StringParameter"
+            },
+            {
+              "$ref": "#/definitions/BooleanParameter"
+            },
+            {
+              "$ref": "#/definitions/ListParameter"
+            },
+            {
+              "$ref": "#/definitions/DictParameter"
+            }
+          ]
+        },
+        "type": "object",
+        "title": "Parameters",
+        "description": "Parameters that can be used in the code."
+      },
+      "mode": {
+        "type": "string",
+        "enum": [
+          "PASS_FAIL",
+          "OUTPUT"
+        ],
+        "title": "Mode",
+        "description": "Mode of evaluation: 'PASS_FAIL' uses 'passed' per question, 'OUTPUT' uses 'output' (0-1) per question for scoring.",
+        "default": "PASS_FAIL"
+      }
+    },
+    "type": "object",
+    "required": [
+      "target_question_ids"
+    ],
+    "title": "Custom Code"
+  },
+  "CustomCodeQuestionRule": {
+    "properties": {
+      "id": {
+        "type": "string",
+        "title": "Id",
+        "readOnly": true
+      },
+      "question_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "CHOICE",
+            "NUMERIC",
+            "MULTI_VALUED"
+          ]
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Question Types",
+        "default": [
+          "NUMERIC",
+          "MULTI_VALUED",
+          "TEXT",
+          "CHOICE"
+        ],
+        "readOnly": true
+      },
+      "constraints": {
+        "items": {
+          "$ref": "#/definitions/QuestionConstraint"
+        },
+        "type": "array",
+        "title": "Constraints",
+        "default": [],
+        "readOnly": true
+      },
+      "scope": {
+        "type": "string",
+        "const": "question",
+        "title": "Scope",
+        "default": "question",
+        "readOnly": true
+      },
+      "question_id": {
+        "type": "string",
+        "title": "Question Id"
+      },
+      "type": {
+        "type": "string",
+        "const": "CUSTOM_CODE",
+        "title": "Type",
+        "default": "CUSTOM_CODE",
+        "readOnly": true
+      },
+      "display_name": {
+        "type": "string",
+        "const": "Custom Code",
+        "title": "Display Name",
+        "default": "Custom Code",
+        "readOnly": true
+      },
+      "code": {
+        "type": "string",
+        "title": "Code",
+        "description": "Code to evaluate the answer. Required variables: 'output', 'passed'. Optional variable: 'feedback'.",
+        "default": "# You have access to the following variables:\n# - 'answer' variable contains the student's answer (can be str, float, list, or set)\n# - any additional variables defined in 'parameters' (e.g., 'param1', 'param2', etc.)\n# You must set the following variables:\n# - 'output' (float): A number between 0 and 1 -- max_points multiplier (only used in OUTPUT mode)\n# - 'passed' (bool): Whether the answer passed (only used in PASS_FAIL mode)\n# - 'feedback' (str, optional): Feedback to provide to the student\n# Example code:\npassed = False\noutput = 0.0\nfeedback = str(answer)\n",
+        "x-gradeflow": {
+          "input": "code"
+        }
+      },
+      "parameters": {
+        "additionalProperties": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/IntParameter"
+            },
+            {
+              "$ref": "#/definitions/FloatParameter"
+            },
+            {
+              "$ref": "#/definitions/StringParameter"
+            },
+            {
+              "$ref": "#/definitions/BooleanParameter"
+            },
+            {
+              "$ref": "#/definitions/ListParameter"
+            },
+            {
+              "$ref": "#/definitions/DictParameter"
+            }
+          ]
+        },
+        "type": "object",
+        "title": "Parameters",
+        "description": "Parameters that can be used in the code."
+      },
+      "mode": {
+        "type": "string",
+        "enum": [
+          "PASS_FAIL",
+          "OUTPUT"
+        ],
+        "title": "Mode",
+        "description": "Mode of evaluation: 'PASS_FAIL' uses a boolean 'passed' variable, 'OUTPUT' uses the 'output' variable (0-1) for scoring.",
+        "default": "PASS_FAIL"
+      }
+    },
+    "type": "object",
+    "required": [
+      "question_id"
+    ],
+    "title": "Custom Code"
+  },
   "ConditionalMultiQuestionRule": {
     "properties": {
       "id": {
@@ -2891,10 +2787,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "TEXT",
           "NUMERIC",
-          "CHOICE",
-          "MULTI_VALUED"
+          "MULTI_VALUED",
+          "TEXT",
+          "CHOICE"
         ],
         "readOnly": true
       },
@@ -2941,10 +2837,10 @@
               "$ref": "#/definitions/CompositeQuestionRule"
             },
             {
-              "$ref": "#/definitions/ProgrammableQuestionRule"
+              "$ref": "#/definitions/CustomCodeQuestionRule"
             },
             {
-              "$ref": "#/definitions/ProgrammingQuestionRule"
+              "$ref": "#/definitions/CodeTestQuestionRule"
             },
             {
               "$ref": "#/definitions/SimilarityQuestionRule"
@@ -2979,15 +2875,15 @@
             "mapping": {
               "ASSUMPTION_SET": "#/definitions/AssumptionSetQuestionRule",
               "BONUS": "#/definitions/BonusQuestionRule",
+              "CODE_TESTS": "#/definitions/CodeTestQuestionRule",
               "COMPOSITE": "#/definitions/CompositeQuestionRule",
+              "CUSTOM_CODE": "#/definitions/CustomCodeQuestionRule",
               "KEYWORDS": "#/definitions/KeywordsQuestionRule",
               "LENGTH": "#/definitions/LengthQuestionRule",
               "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceQuestionRule",
               "MULTI_VALUED": "#/definitions/MultiValuedQuestionRule",
               "NUMBER_EQUAL": "#/definitions/NumberEqualQuestionRule",
               "NUMERIC_RANGE": "#/definitions/NumericRangeQuestionRule",
-              "PROGRAMMABLE": "#/definitions/ProgrammableQuestionRule",
-              "PROGRAMMING": "#/definitions/ProgrammingQuestionRule",
               "REGEX": "#/definitions/RegexQuestionRule",
               "SIMILARITY": "#/definitions/SimilarityQuestionRule",
               "TEXT_MATCH": "#/definitions/TextMatchQuestionRule"
@@ -3022,10 +2918,10 @@
               "$ref": "#/definitions/CompositeQuestionRule"
             },
             {
-              "$ref": "#/definitions/ProgrammableQuestionRule"
+              "$ref": "#/definitions/CustomCodeQuestionRule"
             },
             {
-              "$ref": "#/definitions/ProgrammingQuestionRule"
+              "$ref": "#/definitions/CodeTestQuestionRule"
             },
             {
               "$ref": "#/definitions/SimilarityQuestionRule"
@@ -3060,15 +2956,15 @@
             "mapping": {
               "ASSUMPTION_SET": "#/definitions/AssumptionSetQuestionRule",
               "BONUS": "#/definitions/BonusQuestionRule",
+              "CODE_TESTS": "#/definitions/CodeTestQuestionRule",
               "COMPOSITE": "#/definitions/CompositeQuestionRule",
+              "CUSTOM_CODE": "#/definitions/CustomCodeQuestionRule",
               "KEYWORDS": "#/definitions/KeywordsQuestionRule",
               "LENGTH": "#/definitions/LengthQuestionRule",
               "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceQuestionRule",
               "MULTI_VALUED": "#/definitions/MultiValuedQuestionRule",
               "NUMBER_EQUAL": "#/definitions/NumberEqualQuestionRule",
               "NUMERIC_RANGE": "#/definitions/NumericRangeQuestionRule",
-              "PROGRAMMABLE": "#/definitions/ProgrammableQuestionRule",
-              "PROGRAMMING": "#/definitions/ProgrammingQuestionRule",
               "REGEX": "#/definitions/RegexQuestionRule",
               "SIMILARITY": "#/definitions/SimilarityQuestionRule",
               "TEXT_MATCH": "#/definitions/TextMatchQuestionRule"
@@ -3093,10 +2989,10 @@
               "$ref": "#/definitions/CompositeQuestionRule"
             },
             {
-              "$ref": "#/definitions/ProgrammableQuestionRule"
+              "$ref": "#/definitions/CustomCodeQuestionRule"
             },
             {
-              "$ref": "#/definitions/ProgrammingQuestionRule"
+              "$ref": "#/definitions/CodeTestQuestionRule"
             },
             {
               "$ref": "#/definitions/SimilarityQuestionRule"
@@ -3131,15 +3027,15 @@
             "mapping": {
               "ASSUMPTION_SET": "#/definitions/AssumptionSetQuestionRule",
               "BONUS": "#/definitions/BonusQuestionRule",
+              "CODE_TESTS": "#/definitions/CodeTestQuestionRule",
               "COMPOSITE": "#/definitions/CompositeQuestionRule",
+              "CUSTOM_CODE": "#/definitions/CustomCodeQuestionRule",
               "KEYWORDS": "#/definitions/KeywordsQuestionRule",
               "LENGTH": "#/definitions/LengthQuestionRule",
               "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceQuestionRule",
               "MULTI_VALUED": "#/definitions/MultiValuedQuestionRule",
               "NUMBER_EQUAL": "#/definitions/NumberEqualQuestionRule",
               "NUMERIC_RANGE": "#/definitions/NumericRangeQuestionRule",
-              "PROGRAMMABLE": "#/definitions/ProgrammableQuestionRule",
-              "PROGRAMMING": "#/definitions/ProgrammingQuestionRule",
               "REGEX": "#/definitions/RegexQuestionRule",
               "SIMILARITY": "#/definitions/SimilarityQuestionRule",
               "TEXT_MATCH": "#/definitions/TextMatchQuestionRule"
@@ -3180,8 +3076,8 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "TEXT",
-          "NUMERIC"
+          "NUMERIC",
+          "TEXT"
         ],
         "readOnly": true
       },
@@ -3229,10 +3125,10 @@
               "$ref": "#/definitions/CompositeRule"
             },
             {
-              "$ref": "#/definitions/ProgrammableRule"
+              "$ref": "#/definitions/CustomCodeRule"
             },
             {
-              "$ref": "#/definitions/ProgrammingRule"
+              "$ref": "#/definitions/CodeTestRule"
             },
             {
               "$ref": "#/definitions/SimilarityRule"
@@ -3266,15 +3162,15 @@
             "propertyName": "type",
             "mapping": {
               "BONUS": "#/definitions/BonusRule",
+              "CODE_TESTS": "#/definitions/CodeTestRule",
               "COMPOSITE": "#/definitions/CompositeRule",
+              "CUSTOM_CODE": "#/definitions/CustomCodeRule",
               "KEYWORDS": "#/definitions/KeywordsRule",
               "LENGTH": "#/definitions/LengthRule",
               "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceRule",
               "MULTI_VALUED": "#/definitions/MultiValuedRule",
               "NUMBER_EQUAL": "#/definitions/NumberEqualRule",
               "NUMERIC_RANGE": "#/definitions/NumericRangeRule",
-              "PROGRAMMABLE": "#/definitions/ProgrammableRule",
-              "PROGRAMMING": "#/definitions/ProgrammingRule",
               "REGEX": "#/definitions/RegexRule",
               "SIMILARITY": "#/definitions/SimilarityRule",
               "TEXT_MATCH": "#/definitions/TextMatchRule"
@@ -3305,6 +3201,110 @@
     ],
     "title": "Composite"
   },
+  "CodeTestQuestionRule": {
+    "properties": {
+      "id": {
+        "type": "string",
+        "title": "Id",
+        "readOnly": true
+      },
+      "question_types": {
+        "items": {
+          "type": "string",
+          "enum": [
+            "TEXT",
+            "CHOICE",
+            "NUMERIC",
+            "MULTI_VALUED"
+          ]
+        },
+        "type": "array",
+        "uniqueItems": true,
+        "title": "Question Types",
+        "default": [
+          "TEXT"
+        ],
+        "readOnly": true
+      },
+      "constraints": {
+        "items": {
+          "$ref": "#/definitions/QuestionConstraint"
+        },
+        "type": "array",
+        "title": "Constraints",
+        "default": [],
+        "readOnly": true
+      },
+      "scope": {
+        "type": "string",
+        "const": "question",
+        "title": "Scope",
+        "default": "question",
+        "readOnly": true
+      },
+      "question_id": {
+        "type": "string",
+        "title": "Question Id"
+      },
+      "type": {
+        "type": "string",
+        "const": "CODE_TESTS",
+        "title": "Type",
+        "default": "CODE_TESTS",
+        "readOnly": true
+      },
+      "display_name": {
+        "type": "string",
+        "const": "Code Tests",
+        "title": "Display Name",
+        "default": "Code Tests",
+        "readOnly": true
+      },
+      "testcases": {
+        "items": {
+          "$ref": "#/definitions/CodeTestCase"
+        },
+        "type": "array",
+        "minItems": 1,
+        "title": "Testcases",
+        "description": "List of test cases to run against the code"
+      },
+      "language": {
+        "type": "string",
+        "const": "python",
+        "title": "Language",
+        "description": "Language of the code to be tested",
+        "default": "python"
+      },
+      "config": {
+        "$ref": "#/definitions/CodeTestConfig",
+        "description": "Configuration for code testing"
+      },
+      "show_evaluated_expected": {
+        "type": "boolean",
+        "title": "Show Evaluated Expected",
+        "description": "Whether to show the evaluated expected output in feedback",
+        "default": true
+      },
+      "mode": {
+        "type": "string",
+        "enum": [
+          "ALL",
+          "ANY",
+          "PARTIAL"
+        ],
+        "title": "Mode",
+        "description": "Mode of test case evaluation: 'ALL' requires all test cases to pass, 'ANY' requires at least one to pass, 'PARTIAL' gives credit for each test case passed.",
+        "default": "ALL"
+      }
+    },
+    "type": "object",
+    "required": [
+      "question_id",
+      "testcases"
+    ],
+    "title": "Code Tests"
+  },
   "BonusQuestionRule": {
     "properties": {
       "id": {
@@ -3326,10 +3326,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "TEXT",
           "NUMERIC",
-          "CHOICE",
-          "MULTI_VALUED"
+          "MULTI_VALUED",
+          "TEXT",
+          "CHOICE"
         ],
         "readOnly": true
       },
@@ -3395,10 +3395,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "TEXT",
           "NUMERIC",
-          "CHOICE",
-          "MULTI_VALUED"
+          "MULTI_VALUED",
+          "TEXT",
+          "CHOICE"
         ],
         "readOnly": true
       },
@@ -3489,10 +3489,10 @@
             "$ref": "#/definitions/CompositeRule"
           },
           {
-            "$ref": "#/definitions/ProgrammableRule"
+            "$ref": "#/definitions/CustomCodeRule"
           },
           {
-            "$ref": "#/definitions/ProgrammingRule"
+            "$ref": "#/definitions/CodeTestRule"
           },
           {
             "$ref": "#/definitions/SimilarityRule"
@@ -3528,15 +3528,15 @@
           "propertyName": "type",
           "mapping": {
             "BONUS": "#/definitions/BonusRule",
+            "CODE_TESTS": "#/definitions/CodeTestRule",
             "COMPOSITE": "#/definitions/CompositeRule",
+            "CUSTOM_CODE": "#/definitions/CustomCodeRule",
             "KEYWORDS": "#/definitions/KeywordsRule",
             "LENGTH": "#/definitions/LengthRule",
             "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceRule",
             "MULTI_VALUED": "#/definitions/MultiValuedRule",
             "NUMBER_EQUAL": "#/definitions/NumberEqualRule",
             "NUMERIC_RANGE": "#/definitions/NumericRangeRule",
-            "PROGRAMMABLE": "#/definitions/ProgrammableRule",
-            "PROGRAMMING": "#/definitions/ProgrammingRule",
             "REGEX": "#/definitions/RegexRule",
             "SIMILARITY": "#/definitions/SimilarityRule",
             "TEXT_MATCH": "#/definitions/TextMatchRule"
@@ -3571,10 +3571,10 @@
         "uniqueItems": true,
         "title": "Question Types",
         "default": [
-          "TEXT",
           "NUMERIC",
-          "CHOICE",
-          "MULTI_VALUED"
+          "MULTI_VALUED",
+          "TEXT",
+          "CHOICE"
         ],
         "readOnly": true
       },
@@ -3664,10 +3664,10 @@
               "$ref": "#/definitions/CompositeQuestionRule"
             },
             {
-              "$ref": "#/definitions/ProgrammableQuestionRule"
+              "$ref": "#/definitions/CustomCodeQuestionRule"
             },
             {
-              "$ref": "#/definitions/ProgrammingQuestionRule"
+              "$ref": "#/definitions/CodeTestQuestionRule"
             },
             {
               "$ref": "#/definitions/SimilarityQuestionRule"
@@ -3702,15 +3702,15 @@
             "mapping": {
               "ASSUMPTION_SET": "#/definitions/AssumptionSetQuestionRule",
               "BONUS": "#/definitions/BonusQuestionRule",
+              "CODE_TESTS": "#/definitions/CodeTestQuestionRule",
               "COMPOSITE": "#/definitions/CompositeQuestionRule",
+              "CUSTOM_CODE": "#/definitions/CustomCodeQuestionRule",
               "KEYWORDS": "#/definitions/KeywordsQuestionRule",
               "LENGTH": "#/definitions/LengthQuestionRule",
               "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceQuestionRule",
               "MULTI_VALUED": "#/definitions/MultiValuedQuestionRule",
               "NUMBER_EQUAL": "#/definitions/NumberEqualQuestionRule",
               "NUMERIC_RANGE": "#/definitions/NumericRangeQuestionRule",
-              "PROGRAMMABLE": "#/definitions/ProgrammableQuestionRule",
-              "PROGRAMMING": "#/definitions/ProgrammingQuestionRule",
               "REGEX": "#/definitions/RegexQuestionRule",
               "SIMILARITY": "#/definitions/SimilarityQuestionRule",
               "TEXT_MATCH": "#/definitions/TextMatchQuestionRule"
@@ -3778,10 +3778,10 @@
               "$ref": "#/definitions/CompositeQuestionRule"
             },
             {
-              "$ref": "#/definitions/ProgrammableQuestionRule"
+              "$ref": "#/definitions/CustomCodeQuestionRule"
             },
             {
-              "$ref": "#/definitions/ProgrammingQuestionRule"
+              "$ref": "#/definitions/CodeTestQuestionRule"
             },
             {
               "$ref": "#/definitions/SimilarityQuestionRule"
@@ -3817,7 +3817,7 @@
               "$ref": "#/definitions/ConditionalMultiQuestionRule"
             },
             {
-              "$ref": "#/definitions/ProgrammableMultiQuestionRule"
+              "$ref": "#/definitions/CustomCodeMultiQuestionRule"
             }
           ],
           "discriminator": {
@@ -3826,17 +3826,17 @@
               "ASSUMPTION_SET": "#/definitions/AssumptionSetQuestionRule",
               "ASSUMPTION_SET_MULTI": "#/definitions/AssumptionSetMultiQuestionRule",
               "BONUS": "#/definitions/BonusQuestionRule",
+              "CODE_TESTS": "#/definitions/CodeTestQuestionRule",
               "COMPOSITE": "#/definitions/CompositeQuestionRule",
               "CONDITIONAL": "#/definitions/ConditionalMultiQuestionRule",
+              "CUSTOM_CODE": "#/definitions/CustomCodeQuestionRule",
+              "CUSTOM_CODE_MULTI": "#/definitions/CustomCodeMultiQuestionRule",
               "KEYWORDS": "#/definitions/KeywordsQuestionRule",
               "LENGTH": "#/definitions/LengthQuestionRule",
               "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceQuestionRule",
               "MULTI_VALUED": "#/definitions/MultiValuedQuestionRule",
               "NUMBER_EQUAL": "#/definitions/NumberEqualQuestionRule",
               "NUMERIC_RANGE": "#/definitions/NumericRangeQuestionRule",
-              "PROGRAMMABLE": "#/definitions/ProgrammableQuestionRule",
-              "PROGRAMMABLE_MULTI": "#/definitions/ProgrammableMultiQuestionRule",
-              "PROGRAMMING": "#/definitions/ProgrammingQuestionRule",
               "REGEX": "#/definitions/RegexQuestionRule",
               "SIMILARITY": "#/definitions/SimilarityQuestionRule",
               "TEXT_MATCH": "#/definitions/TextMatchQuestionRule"
@@ -3868,10 +3868,10 @@
               "$ref": "#/definitions/CompositeQuestionRule"
             },
             {
-              "$ref": "#/definitions/ProgrammableQuestionRule"
+              "$ref": "#/definitions/CustomCodeQuestionRule"
             },
             {
-              "$ref": "#/definitions/ProgrammingQuestionRule"
+              "$ref": "#/definitions/CodeTestQuestionRule"
             },
             {
               "$ref": "#/definitions/SimilarityQuestionRule"
@@ -3906,15 +3906,15 @@
             "mapping": {
               "ASSUMPTION_SET": "#/definitions/AssumptionSetQuestionRule",
               "BONUS": "#/definitions/BonusQuestionRule",
+              "CODE_TESTS": "#/definitions/CodeTestQuestionRule",
               "COMPOSITE": "#/definitions/CompositeQuestionRule",
+              "CUSTOM_CODE": "#/definitions/CustomCodeQuestionRule",
               "KEYWORDS": "#/definitions/KeywordsQuestionRule",
               "LENGTH": "#/definitions/LengthQuestionRule",
               "MULTIPLE_CHOICE": "#/definitions/MultipleChoiceQuestionRule",
               "MULTI_VALUED": "#/definitions/MultiValuedQuestionRule",
               "NUMBER_EQUAL": "#/definitions/NumberEqualQuestionRule",
               "NUMERIC_RANGE": "#/definitions/NumericRangeQuestionRule",
-              "PROGRAMMABLE": "#/definitions/ProgrammableQuestionRule",
-              "PROGRAMMING": "#/definitions/ProgrammingQuestionRule",
               "REGEX": "#/definitions/RegexQuestionRule",
               "SIMILARITY": "#/definitions/SimilarityQuestionRule",
               "TEXT_MATCH": "#/definitions/TextMatchQuestionRule"
@@ -3934,7 +3934,7 @@
               "$ref": "#/definitions/ConditionalMultiQuestionRule"
             },
             {
-              "$ref": "#/definitions/ProgrammableMultiQuestionRule"
+              "$ref": "#/definitions/CustomCodeMultiQuestionRule"
             }
           ],
           "discriminator": {
@@ -3942,7 +3942,7 @@
             "mapping": {
               "ASSUMPTION_SET_MULTI": "#/definitions/AssumptionSetMultiQuestionRule",
               "CONDITIONAL": "#/definitions/ConditionalMultiQuestionRule",
-              "PROGRAMMABLE_MULTI": "#/definitions/ProgrammableMultiQuestionRule"
+              "CUSTOM_CODE_MULTI": "#/definitions/CustomCodeMultiQuestionRule"
             }
           }
         },

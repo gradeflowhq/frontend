@@ -8,8 +8,8 @@
 import type { AssumptionSetQuestionRuleOutput } from './assumptionSetQuestionRuleOutput';
 import type { BonusQuestionRuleOutput } from './bonusQuestionRuleOutput';
 import type { CompositeQuestionRuleOutput } from './compositeQuestionRuleOutput';
-import type { ProgrammableQuestionRuleOutput } from './programmableQuestionRuleOutput';
-import type { ProgrammingQuestionRuleOutput } from './programmingQuestionRuleOutput';
+import type { CustomCodeQuestionRuleOutput } from './customCodeQuestionRuleOutput';
+import type { CodeTestQuestionRuleOutput } from './codeTestQuestionRuleOutput';
 import type { SimilarityQuestionRuleOutput } from './similarityQuestionRuleOutput';
 import type { TextMatchQuestionRuleOutput } from './textMatchQuestionRuleOutput';
 import type { KeywordsQuestionRuleOutput } from './keywordsQuestionRuleOutput';
@@ -21,6 +21,6 @@ import type { NumberEqualQuestionRuleOutput } from './numberEqualQuestionRuleOut
 import type { NumericRangeQuestionRuleOutput } from './numericRangeQuestionRuleOutput';
 import type { AssumptionSetMultiQuestionRuleOutput } from './assumptionSetMultiQuestionRuleOutput';
 import type { ConditionalMultiQuestionRuleOutput } from './conditionalMultiQuestionRuleOutput';
-import type { ProgrammableMultiQuestionRuleOutput } from './programmableMultiQuestionRuleOutput';
+import type { CustomCodeMultiQuestionRuleOutput } from './customCodeMultiQuestionRuleOutput';
 
-export type RulesResponseRulesItem = AssumptionSetQuestionRuleOutput | BonusQuestionRuleOutput | CompositeQuestionRuleOutput | ProgrammableQuestionRuleOutput | ProgrammingQuestionRuleOutput | SimilarityQuestionRuleOutput | TextMatchQuestionRuleOutput | KeywordsQuestionRuleOutput | RegexQuestionRuleOutput | LengthQuestionRuleOutput | MultiValuedQuestionRuleOutput | MultipleChoiceQuestionRuleOutput | NumberEqualQuestionRuleOutput | NumericRangeQuestionRuleOutput | AssumptionSetMultiQuestionRuleOutput | ConditionalMultiQuestionRuleOutput | ProgrammableMultiQuestionRuleOutput;
+export type RulesResponseRulesItem = AssumptionSetQuestionRuleOutput | BonusQuestionRuleOutput | CompositeQuestionRuleOutput | CustomCodeQuestionRuleOutput | CodeTestQuestionRuleOutput | SimilarityQuestionRuleOutput | TextMatchQuestionRuleOutput | KeywordsQuestionRuleOutput | RegexQuestionRuleOutput | LengthQuestionRuleOutput | MultiValuedQuestionRuleOutput | MultipleChoiceQuestionRuleOutput | NumberEqualQuestionRuleOutput | NumericRangeQuestionRuleOutput | AssumptionSetMultiQuestionRuleOutput | ConditionalMultiQuestionRuleOutput | CustomCodeMultiQuestionRuleOutput;

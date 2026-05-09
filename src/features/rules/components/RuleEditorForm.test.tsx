@@ -150,7 +150,7 @@ describe('RuleEditorForm', () => {
       schema: parameterSchema,
       uiSchema: buildRuleUiSchema(parameterSchema),
       draft: {
-        type: 'PROGRAMMABLE',
+        type: 'CUSTOM_CODE',
         parameters: { points: { dtype: 'Int', value: 2 } },
       } as RuleValue,
     });

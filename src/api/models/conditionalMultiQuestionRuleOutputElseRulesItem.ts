@@ -8,8 +8,8 @@
 import type { AssumptionSetQuestionRuleOutput } from './assumptionSetQuestionRuleOutput';
 import type { BonusQuestionRuleOutput } from './bonusQuestionRuleOutput';
 import type { CompositeQuestionRuleOutput } from './compositeQuestionRuleOutput';
-import type { ProgrammableQuestionRuleOutput } from './programmableQuestionRuleOutput';
-import type { ProgrammingQuestionRuleOutput } from './programmingQuestionRuleOutput';
+import type { CustomCodeQuestionRuleOutput } from './customCodeQuestionRuleOutput';
+import type { CodeTestQuestionRuleOutput } from './codeTestQuestionRuleOutput';
 import type { SimilarityQuestionRuleOutput } from './similarityQuestionRuleOutput';
 import type { TextMatchQuestionRuleOutput } from './textMatchQuestionRuleOutput';
 import type { KeywordsQuestionRuleOutput } from './keywordsQuestionRuleOutput';
@@ -20,4 +20,4 @@ import type { MultipleChoiceQuestionRuleOutput } from './multipleChoiceQuestionR
 import type { NumberEqualQuestionRuleOutput } from './numberEqualQuestionRuleOutput';
 import type { NumericRangeQuestionRuleOutput } from './numericRangeQuestionRuleOutput';
 
-export type ConditionalMultiQuestionRuleOutputElseRulesItem = AssumptionSetQuestionRuleOutput | BonusQuestionRuleOutput | CompositeQuestionRuleOutput | ProgrammableQuestionRuleOutput | ProgrammingQuestionRuleOutput | SimilarityQuestionRuleOutput | TextMatchQuestionRuleOutput | KeywordsQuestionRuleOutput | RegexQuestionRuleOutput | LengthQuestionRuleOutput | MultiValuedQuestionRuleOutput | MultipleChoiceQuestionRuleOutput | NumberEqualQuestionRuleOutput | NumericRangeQuestionRuleOutput;
+export type ConditionalMultiQuestionRuleOutputElseRulesItem = AssumptionSetQuestionRuleOutput | BonusQuestionRuleOutput | CompositeQuestionRuleOutput | CustomCodeQuestionRuleOutput | CodeTestQuestionRuleOutput | SimilarityQuestionRuleOutput | TextMatchQuestionRuleOutput | KeywordsQuestionRuleOutput | RegexQuestionRuleOutput | LengthQuestionRuleOutput | MultiValuedQuestionRuleOutput | MultipleChoiceQuestionRuleOutput | NumberEqualQuestionRuleOutput | NumericRangeQuestionRuleOutput;

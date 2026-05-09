@@ -23,8 +23,8 @@ const renderSection = () => render(
         globalRules={[
           {
             id: 'rule-1',
-            type: 'PROGRAMMABLE_MULTI',
-            display_name: 'Programmable',
+            type: 'CUSTOM_CODE_MULTI',
+            display_name: 'Custom Code',
           } as RuleValue,
         ]}
         coverage={{

@@ -32,9 +32,9 @@ export const features: FeatureItem[] = [
   },
   {
     icon: React.createElement(IconCode, { size: 28 }),
-    title: 'Programmable rules',
+    title: 'Custom code and code tests',
     description:
-      'Write arbitrary Python grading logic for anything the built-in rules can\'t express. The programming rule runs student code against test cases in an isolated sandbox.',
+      'Use Custom Code for instructor-authored Python grading logic, or Code Tests to run student code answers against test cases in an isolated sandbox.',
   },
   {
     icon: React.createElement(IconStack2, { size: 28 }),

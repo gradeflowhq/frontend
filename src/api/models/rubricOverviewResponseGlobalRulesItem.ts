@@ -7,6 +7,6 @@
  */
 import type { AssumptionSetMultiQuestionRuleOutput } from './assumptionSetMultiQuestionRuleOutput';
 import type { ConditionalMultiQuestionRuleOutput } from './conditionalMultiQuestionRuleOutput';
-import type { ProgrammableMultiQuestionRuleOutput } from './programmableMultiQuestionRuleOutput';
+import type { CustomCodeMultiQuestionRuleOutput } from './customCodeMultiQuestionRuleOutput';
 
-export type RubricOverviewResponseGlobalRulesItem = AssumptionSetMultiQuestionRuleOutput | ConditionalMultiQuestionRuleOutput | ProgrammableMultiQuestionRuleOutput;
+export type RubricOverviewResponseGlobalRulesItem = AssumptionSetMultiQuestionRuleOutput | ConditionalMultiQuestionRuleOutput | CustomCodeMultiQuestionRuleOutput;

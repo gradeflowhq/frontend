@@ -7,8 +7,8 @@
  */
 import type { BonusRuleInput } from './bonusRuleInput';
 import type { CompositeRuleInput } from './compositeRuleInput';
-import type { ProgrammableRuleInput } from './programmableRuleInput';
-import type { ProgrammingRuleInput } from './programmingRuleInput';
+import type { CustomCodeRuleInput } from './customCodeRuleInput';
+import type { CodeTestRuleInput } from './codeTestRuleInput';
 import type { SimilarityRuleInput } from './similarityRuleInput';
 import type { TextMatchRuleInput } from './textMatchRuleInput';
 import type { KeywordsRuleInput } from './keywordsRuleInput';
@@ -22,4 +22,4 @@ import type { NumericRangeRuleInput } from './numericRangeRuleInput';
 /**
  * Rule that defines the assumption
  */
-export type AssumptionInputRule = BonusRuleInput | CompositeRuleInput | ProgrammableRuleInput | ProgrammingRuleInput | SimilarityRuleInput | TextMatchRuleInput | KeywordsRuleInput | RegexRuleInput | LengthRuleInput | MultiValuedRuleInput | MultipleChoiceRuleInput | NumberEqualRuleInput | NumericRangeRuleInput;
+export type AssumptionInputRule = BonusRuleInput | CompositeRuleInput | CustomCodeRuleInput | CodeTestRuleInput | SimilarityRuleInput | TextMatchRuleInput | KeywordsRuleInput | RegexRuleInput | LengthRuleInput | MultiValuedRuleInput | MultipleChoiceRuleInput | NumberEqualRuleInput | NumericRangeRuleInput;

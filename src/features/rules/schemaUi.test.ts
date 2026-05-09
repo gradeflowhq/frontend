@@ -123,10 +123,10 @@ describe('buildRuleUiSchema', () => {
     const schema = {
       type: 'object',
       properties: {
-        config: { $ref: '#/$defs/ProgrammingConfig' },
+        config: { $ref: '#/$defs/CodeTestConfig' },
       },
       $defs: {
-        ProgrammingConfig: {
+        CodeTestConfig: {
           type: 'object',
           properties: {
             prepend_code: { type: 'string', 'x-gradeflow': { input: 'code' } },

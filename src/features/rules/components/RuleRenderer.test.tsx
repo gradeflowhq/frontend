@@ -60,7 +60,7 @@ describe('RuleRenderer', () => {
   it('hides read-only schema fields at every rendered level', () => {
     renderRule(
       {
-        type: 'PROGRAMMABLE',
+        type: 'CUSTOM_CODE',
         question_id: 'q1',
         generated: 'internal',
         parameters: {
@@ -70,7 +70,7 @@ describe('RuleRenderer', () => {
       {
         type: 'object',
         properties: {
-          type: { const: 'PROGRAMMABLE', readOnly: true },
+          type: { const: 'CUSTOM_CODE', readOnly: true },
           question_id: { const: 'q1', readOnly: true, title: 'Question Id' },
           generated: { type: 'string', readOnly: true, title: 'Generated' },
           parameters: {
@@ -187,7 +187,7 @@ describe('RuleRenderer', () => {
   it('renders code fields from schema input hints', async () => {
     renderRule(
       {
-        type: 'PROGRAMMABLE',
+        type: 'CUSTOM_CODE',
         code: 'passed = True',
         config: {
           prepend_code: 'def answer():',
@@ -197,16 +197,16 @@ describe('RuleRenderer', () => {
       {
         type: 'object',
         properties: {
-          type: { const: 'PROGRAMMABLE', readOnly: true },
+          type: { const: 'CUSTOM_CODE', readOnly: true },
           code: {
             type: 'string',
             title: 'Code',
             'x-gradeflow': { input: 'code' },
           },
-          config: { $ref: '#/$defs/ProgrammingConfig' },
+          config: { $ref: '#/$defs/CodeTestConfig' },
         },
         $defs: {
-          ProgrammingConfig: {
+          CodeTestConfig: {
             type: 'object',
             properties: {
               prepend_code: {

@@ -8,8 +8,8 @@
 import type { AssumptionSetQuestionRuleInput } from './assumptionSetQuestionRuleInput';
 import type { BonusQuestionRuleInput } from './bonusQuestionRuleInput';
 import type { CompositeQuestionRuleInput } from './compositeQuestionRuleInput';
-import type { ProgrammableQuestionRuleInput } from './programmableQuestionRuleInput';
-import type { ProgrammingQuestionRuleInput } from './programmingQuestionRuleInput';
+import type { CustomCodeQuestionRuleInput } from './customCodeQuestionRuleInput';
+import type { CodeTestQuestionRuleInput } from './codeTestQuestionRuleInput';
 import type { SimilarityQuestionRuleInput } from './similarityQuestionRuleInput';
 import type { TextMatchQuestionRuleInput } from './textMatchQuestionRuleInput';
 import type { KeywordsQuestionRuleInput } from './keywordsQuestionRuleInput';
@@ -20,4 +20,4 @@ import type { MultipleChoiceQuestionRuleInput } from './multipleChoiceQuestionRu
 import type { NumberEqualQuestionRuleInput } from './numberEqualQuestionRuleInput';
 import type { NumericRangeQuestionRuleInput } from './numericRangeQuestionRuleInput';
 
-export type MultiQuestionAssumptionInputRulesItem = AssumptionSetQuestionRuleInput | BonusQuestionRuleInput | CompositeQuestionRuleInput | ProgrammableQuestionRuleInput | ProgrammingQuestionRuleInput | SimilarityQuestionRuleInput | TextMatchQuestionRuleInput | KeywordsQuestionRuleInput | RegexQuestionRuleInput | LengthQuestionRuleInput | MultiValuedQuestionRuleInput | MultipleChoiceQuestionRuleInput | NumberEqualQuestionRuleInput | NumericRangeQuestionRuleInput;
+export type MultiQuestionAssumptionInputRulesItem = AssumptionSetQuestionRuleInput | BonusQuestionRuleInput | CompositeQuestionRuleInput | CustomCodeQuestionRuleInput | CodeTestQuestionRuleInput | SimilarityQuestionRuleInput | TextMatchQuestionRuleInput | KeywordsQuestionRuleInput | RegexQuestionRuleInput | LengthQuestionRuleInput | MultiValuedQuestionRuleInput | MultipleChoiceQuestionRuleInput | NumberEqualQuestionRuleInput | NumericRangeQuestionRuleInput;

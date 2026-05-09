@@ -8,8 +8,8 @@
 import type { AssumptionSetQuestionRuleInput } from './assumptionSetQuestionRuleInput';
 import type { BonusQuestionRuleInput } from './bonusQuestionRuleInput';
 import type { CompositeQuestionRuleInput } from './compositeQuestionRuleInput';
-import type { ProgrammableQuestionRuleInput } from './programmableQuestionRuleInput';
-import type { ProgrammingQuestionRuleInput } from './programmingQuestionRuleInput';
+import type { CustomCodeQuestionRuleInput } from './customCodeQuestionRuleInput';
+import type { CodeTestQuestionRuleInput } from './codeTestQuestionRuleInput';
 import type { SimilarityQuestionRuleInput } from './similarityQuestionRuleInput';
 import type { TextMatchQuestionRuleInput } from './textMatchQuestionRuleInput';
 import type { KeywordsQuestionRuleInput } from './keywordsQuestionRuleInput';
@@ -21,6 +21,6 @@ import type { NumberEqualQuestionRuleInput } from './numberEqualQuestionRuleInpu
 import type { NumericRangeQuestionRuleInput } from './numericRangeQuestionRuleInput';
 import type { AssumptionSetMultiQuestionRuleInput } from './assumptionSetMultiQuestionRuleInput';
 import type { ConditionalMultiQuestionRuleInput } from './conditionalMultiQuestionRuleInput';
-import type { ProgrammableMultiQuestionRuleInput } from './programmableMultiQuestionRuleInput';
+import type { CustomCodeMultiQuestionRuleInput } from './customCodeMultiQuestionRuleInput';
 
-export type RubricInputRulesItem = AssumptionSetQuestionRuleInput | BonusQuestionRuleInput | CompositeQuestionRuleInput | ProgrammableQuestionRuleInput | ProgrammingQuestionRuleInput | SimilarityQuestionRuleInput | TextMatchQuestionRuleInput | KeywordsQuestionRuleInput | RegexQuestionRuleInput | LengthQuestionRuleInput | MultiValuedQuestionRuleInput | MultipleChoiceQuestionRuleInput | NumberEqualQuestionRuleInput | NumericRangeQuestionRuleInput | AssumptionSetMultiQuestionRuleInput | ConditionalMultiQuestionRuleInput | ProgrammableMultiQuestionRuleInput;
+export type RubricInputRulesItem = AssumptionSetQuestionRuleInput | BonusQuestionRuleInput | CompositeQuestionRuleInput | CustomCodeQuestionRuleInput | CodeTestQuestionRuleInput | SimilarityQuestionRuleInput | TextMatchQuestionRuleInput | KeywordsQuestionRuleInput | RegexQuestionRuleInput | LengthQuestionRuleInput | MultiValuedQuestionRuleInput | MultipleChoiceQuestionRuleInput | NumberEqualQuestionRuleInput | NumericRangeQuestionRuleInput | AssumptionSetMultiQuestionRuleInput | ConditionalMultiQuestionRuleInput | CustomCodeMultiQuestionRuleInput;
