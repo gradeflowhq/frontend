@@ -267,6 +267,14 @@ const OverviewPage: React.FC = () => {
           />
         )}
 
+        {jobStatus === JobStatus.failed && (
+          <ErrorAlert
+            message={jobError ?? 'Grading job failed.'}
+            title="Grading failed"
+            radius="md"
+          />
+        )}
+
         {statusError !== undefined && (
           <ErrorAlert error={statusError} radius="md" />
         )}

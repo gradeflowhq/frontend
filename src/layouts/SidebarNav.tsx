@@ -34,11 +34,10 @@ import React, { useCallback, useState } from 'react';
 import { useAuth } from 'react-oidc-context';
 import { Link, useMatch, useLocation } from 'react-router-dom';
 
-import { JobStatusResponseStatus as JobStatus } from '@api/models/jobStatusResponseStatus';
 import { PATHS } from '@app/routes/paths';
 import { useAssessment } from '@features/assessments/api';
 import { useMe } from '@features/auth/api';
-import { useGradingJob, useJobStatus } from '@features/grading/api';
+import { useLatestGradingJobStatus } from '@features/grading/hooks/useLatestGradingJobStatus';
 import { SIDEBAR_EXPANDED_WIDTH, SIDEBAR_COLLAPSED_WIDTH } from '@lib/constants';
 
 interface SidebarNavProps {
@@ -280,11 +279,7 @@ const AssessmentSidebarItems: React.FC<{ assessmentId: string; expanded: boolean
   const { data: assessment, isLoading: assessmentLoading } = useAssessment(assessmentId, !!assessmentId);
   const ap = PATHS.assessment(assessmentId);
 
-  const { data: gradingJob } = useGradingJob(assessmentId, !!assessmentId);
-  const jobId = gradingJob?.job_id ?? null;
-  const { data: jobStatusRes } = useJobStatus(jobId, !!jobId);
-  const jobStatus = jobStatusRes?.status;
-  const gradingInProgress = jobStatus === JobStatus.queued || jobStatus === JobStatus.running;
+  const { gradingInProgress } = useLatestGradingJobStatus(assessmentId, !!assessmentId);
 
   const gradingBadge = gradingInProgress ? (
     <Loader size={12} />

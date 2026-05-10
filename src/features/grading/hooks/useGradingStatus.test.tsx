@@ -44,9 +44,10 @@ describe('useGradingStatus', () => {
       data: {
         job_id: 'job-1-run',
         url: 'http://test/jobs/job-1-run',
-        is_completed: true,
+        status: JobStatus.completed,
+        error: null,
         created_at: '2026-01-01T00:00:00Z',
-        completed_at: '2026-01-01T00:00:02Z',
+        finished_at: '2026-01-01T00:00:02Z',
         duration_seconds: 2,
       },
       isError: false,
@@ -59,5 +60,32 @@ describe('useGradingStatus', () => {
     expect(mockUseJobStatus).toHaveBeenCalledWith(null, false);
     expect(result.current.jobStatus).toBe(JobStatus.completed);
     expect(result.current.statusError).toBeUndefined();
+  });
+
+  it('uses persisted failed jobs without polling job status', () => {
+    mockUseGrading.mockReturnValue({
+      data: { status: { is_stale: false, updated_at: null } },
+    } as never);
+    mockUseGradingJob.mockReturnValue({
+      data: {
+        job_id: 'job-2-run',
+        url: 'http://test/jobs/job-2-run',
+        status: JobStatus.failed,
+        error: 'Engine failed on q1',
+        created_at: '2026-01-01T00:00:00Z',
+        finished_at: '2026-01-01T00:00:02Z',
+        duration_seconds: null,
+      },
+      isError: false,
+      error: null,
+    } as never);
+    mockUseJobStatus.mockReturnValue({ data: undefined, isError: false, error: null } as never);
+
+    const { result } = renderHook(() => useGradingStatus('assessment-1'), { wrapper });
+
+    expect(mockUseJobStatus).toHaveBeenCalledWith(null, false);
+    expect(result.current.jobStatus).toBe(JobStatus.failed);
+    expect(result.current.jobError).toBe('Engine failed on q1');
+    expect(result.current.gradingInProgress).toBe(false);
   });
 });

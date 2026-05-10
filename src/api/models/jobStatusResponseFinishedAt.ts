@@ -6,4 +6,4 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type JobStatusResponseCompletedAt = string | null;
+export type JobStatusResponseFinishedAt = string | null;

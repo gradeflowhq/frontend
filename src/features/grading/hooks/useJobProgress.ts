@@ -19,7 +19,7 @@ export const useJobProgress = (
   const [visualStartMs, setVisualStartMs] = useState<number | null>(null);
   const [animateAhead, setAnimateAhead] = useState(false);
 
-  const completedAt = timing?.completed_at ?? null;
+  const finishedAt = timing?.finished_at ?? null;
   const createdAt = timing?.created_at ?? null;
   const estimatedCompletionAt = timing?.estimated_completion_at ?? null;
   const estimatedDurationSeconds = timing?.estimated_duration_seconds ?? null;
@@ -28,12 +28,12 @@ export const useJobProgress = (
     if (!createdAt) return null;
 
     return {
-      completed_at: completedAt,
+      finished_at: finishedAt,
       created_at: createdAt,
       estimated_completion_at: estimatedCompletionAt,
       estimated_duration_seconds: estimatedDurationSeconds,
     };
-  }, [completedAt, createdAt, estimatedCompletionAt, estimatedDurationSeconds]);
+  }, [finishedAt, createdAt, estimatedCompletionAt, estimatedDurationSeconds]);
 
   useEffect(() => {
     if (!enabled) return undefined;

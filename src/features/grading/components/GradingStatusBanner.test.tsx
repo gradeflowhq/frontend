@@ -20,7 +20,7 @@ const renderBanner = (overrides: Partial<GradingStatusResult>) => {
   mockUseGradingStatus.mockReturnValue({
     gradingInProgress: false,
     jobStatus: undefined,
-    jobError: undefined,
+    jobError: null,
     isStale: false,
     updatedAt: null,
     jobProgress: EMPTY_JOB_PROGRESS,

@@ -5,7 +5,7 @@
  * Thin FastAPI wrapper over GradeFlow Engine
  * OpenAPI spec version: 0.1.0
  */
-import type { JobStatusResponseCompletedAt } from './jobStatusResponseCompletedAt';
+import type { JobStatusResponseFinishedAt } from './jobStatusResponseFinishedAt';
 import type { JobStatusResponseDurationSeconds } from './jobStatusResponseDurationSeconds';
 import type { JobStatusResponseEstimatedDurationSeconds } from './jobStatusResponseEstimatedDurationSeconds';
 import type { JobStatusResponseEstimatedCompletionAt } from './jobStatusResponseEstimatedCompletionAt';
@@ -13,8 +13,7 @@ import type { JobStatusResponseStatus } from './jobStatusResponseStatus';
 import type { JobStatusResponseError } from './jobStatusResponseError';
 
 export interface JobStatusResponse {
-  is_completed: boolean;
-  completed_at?: JobStatusResponseCompletedAt;
+  finished_at?: JobStatusResponseFinishedAt;
   duration_seconds?: JobStatusResponseDurationSeconds;
   estimated_duration_seconds?: JobStatusResponseEstimatedDurationSeconds;
   estimated_completion_at?: JobStatusResponseEstimatedCompletionAt;

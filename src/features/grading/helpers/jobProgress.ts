@@ -5,7 +5,7 @@ import type { GradingJob, JobStatusResponse } from '@api/models';
 
 export type JobTiming = Pick<
   GradingJob | JobStatusResponse,
-  'completed_at' | 'created_at' | 'estimated_completion_at' | 'estimated_duration_seconds'
+  'finished_at' | 'created_at' | 'estimated_completion_at' | 'estimated_duration_seconds'
 >;
 
 export type JobProgress = {
@@ -55,15 +55,15 @@ export const getJobProgress = (
 
   const pollingDelayMs = options.pollingDelayMs ?? POLLING_INTERVAL_MS;
   const visibleCompletionMs = expectedMs + pollingDelayMs;
-  const completedMs = getTimestampMs(job?.completed_at);
-  const currentMs = completedMs ?? nowMs;
+  const finishedMs = getTimestampMs(job?.finished_at);
+  const currentMs = finishedMs ?? nowMs;
   const progressStartMs = options.progressStartMs ?? createdMs;
   const expectedDurationMs = visibleCompletionMs - progressStartMs;
 
   if (expectedDurationMs <= 0) {
     return {
       percent: 100,
-      overdue: completedMs === null && nowMs >= visibleCompletionMs,
+      overdue: finishedMs === null && nowMs >= visibleCompletionMs,
       remainingMs: 0,
     };
   }
@@ -73,8 +73,8 @@ export const getJobProgress = (
 
   return {
     percent,
-    overdue: completedMs === null && nowMs >= visibleCompletionMs,
-    remainingMs: completedMs === null ? Math.max(0, visibleCompletionMs - nowMs) : 0,
+    overdue: finishedMs === null && nowMs >= visibleCompletionMs,
+    remainingMs: finishedMs === null ? Math.max(0, visibleCompletionMs - nowMs) : 0,
   };
 };
 

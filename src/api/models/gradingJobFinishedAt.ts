@@ -6,4 +6,4 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type GradingJobCompletedAt = string | null;
+export type GradingJobFinishedAt = string | null;

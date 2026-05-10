@@ -5,6 +5,7 @@ import { useCallback, useState } from 'react';
 import { api } from '@api';
 import { JobStatusResponseStatus as JobStatus } from '@api/models/jobStatusResponseStatus';
 import { QK } from '@api/queryKeys';
+import { isActiveJobStatus } from '@features/grading/helpers/jobStatus';
 import { useJobProgress } from '@features/grading/hooks/useJobProgress';
 import {
   POLLING_INTERVAL_MS,
@@ -71,9 +72,7 @@ export const useJobStatus = (jobId: string | null | undefined, enabled = true) =
     // Poll while running/queued; caller can decide when to stop
     refetchInterval: (query) => {
       const status = query.state.data?.status;
-      return status === JobStatus.queued || status === JobStatus.running
-        ? POLLING_INTERVAL_MS
-        : false;
+      return isActiveJobStatus(status) ? POLLING_INTERVAL_MS : false;
     },
   });
 
@@ -158,7 +157,7 @@ export const usePreviewGrading = (assessmentId: string) => {
   const previewStatus = previewJob?.status ?? null;
   const previewProgress = useJobProgress(
     previewJob?.timing,
-    previewStatus === JobStatus.queued || previewStatus === JobStatus.running,
+    isActiveJobStatus(previewStatus),
   );
 
   const mutation = useMutation({

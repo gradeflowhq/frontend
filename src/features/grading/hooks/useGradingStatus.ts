@@ -3,8 +3,9 @@ import { useEffect } from 'react';
 
 import { JobStatusResponseStatus as JobStatus } from '@api/models/jobStatusResponseStatus';
 import { QK } from '@api/queryKeys';
-import { useGrading, useGradingJob, useJobStatus } from '@features/grading/api';
+import { useGrading } from '@features/grading/api';
 import { useJobProgress } from '@features/grading/hooks/useJobProgress';
+import { useLatestGradingJobStatus } from '@features/grading/hooks/useLatestGradingJobStatus';
 
 import type { JobStatusResponseStatus } from '@api/models/jobStatusResponseStatus';
 import type { JobProgress } from '@features/grading/helpers/jobProgress';
@@ -12,7 +13,7 @@ import type { JobProgress } from '@features/grading/helpers/jobProgress';
 export interface GradingStatusResult {
   gradingInProgress: boolean;
   jobStatus: JobStatusResponseStatus | undefined;
-  jobError: string | null | undefined;
+  jobError: string | null;
   statusError?: unknown;
   isStale: boolean;
   updatedAt: string | null | undefined;
@@ -20,43 +21,25 @@ export interface GradingStatusResult {
 }
 
 /**
- * Composes useGradingJob + useJobStatus + useGrading into a single hook that
- * returns grading status fields and auto-invalidates the grading query when
- * a job transitions to "completed".
+ * Composes grading results with the latest job status and auto-invalidates
+ * results when a job transitions to "completed".
  */
 export const useGradingStatus = (assessmentId: string): GradingStatusResult => {
   const qc = useQueryClient();
 
   const { data: gradingData } = useGrading(assessmentId, true);
   const {
-    data: gradingJob,
-    error: gradingJobError,
-    isError: isGradingJobError,
-  } = useGradingJob(assessmentId, true);
-
-  const completedJobStatus = gradingJob?.is_completed ? JobStatus.completed : undefined;
-  const jobId = completedJobStatus ? null : (gradingJob?.job_id ?? null);
-  const {
-    data: jobStatusRes,
-    error: jobStatusError,
-    isError: isJobStatusError,
-  } = useJobStatus(jobId, !!jobId);
-
-  const jobStatus = jobStatusRes?.status ?? completedJobStatus;
-  const jobError = jobStatusRes?.error;
-  const gradingInProgress = jobStatus === JobStatus.queued || jobStatus === JobStatus.running;
-  const jobTiming = jobStatusRes ?? gradingJob;
+    gradingInProgress,
+    jobStatus,
+    jobError,
+    statusError,
+    jobTiming,
+  } = useLatestGradingJobStatus(assessmentId);
   const jobProgress = useJobProgress(jobTiming, gradingInProgress, {
     startFromCurrentTime: true,
   });
   const isStale = gradingData?.status?.is_stale ?? false;
   const updatedAt = gradingData?.status?.updated_at;
-  let statusError: unknown;
-  if (isJobStatusError) {
-    statusError = jobStatusError;
-  } else if (isGradingJobError) {
-    statusError = gradingJobError;  // 404s are already caught — any remaining error is real
-  }
 
   // Auto-invalidate grading results when the job transitions to completed so
   // pages always show fresh data without managing this effect themselves.
