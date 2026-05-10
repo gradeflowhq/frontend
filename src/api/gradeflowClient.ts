@@ -34,6 +34,7 @@ import type {
   GradingJob,
   GradingJobResult,
   GradingPreviewRequest,
+  GradingPreviewResponse,
   GradingResponse,
   GradingRunRequest,
   HealthHealthGet200,
@@ -870,7 +871,7 @@ const runGradingPreviewAssessmentsAssessmentIdGradingPreviewPost = <TData = Axio
 /**
  * @summary Get Grading Preview
  */
-const getGradingPreviewAssessmentsAssessmentIdGradingPreviewGet = <TData = AxiosResponse<GradingResponse>>(
+const getGradingPreviewAssessmentsAssessmentIdGradingPreviewGet = <TData = AxiosResponse<GradingPreviewResponse>>(
     assessmentId: string, options?: AxiosRequestConfig
  ): Promise<TData> => {
     return axios.default.get(
@@ -1052,7 +1053,7 @@ export type AdjustGradingAssessmentsAssessmentIdGradingAdjustPostResult = AxiosR
 export type BulkAdjustGradingAssessmentsAssessmentIdGradingBulkAdjustPostResult = AxiosResponse<BulkGradeAdjustmentResponse>
 export type DownloadGradingAssessmentsAssessmentIdGradingDownloadPostResult = AxiosResponse<GradingDownloadResponse>
 export type RunGradingPreviewAssessmentsAssessmentIdGradingPreviewPostResult = AxiosResponse<GradingJob>
-export type GetGradingPreviewAssessmentsAssessmentIdGradingPreviewGetResult = AxiosResponse<GradingResponse>
+export type GetGradingPreviewAssessmentsAssessmentIdGradingPreviewGetResult = AxiosResponse<GradingPreviewResponse>
 export type GetGradingPreviewJobAssessmentsAssessmentIdGradingPreviewJobGetResult = AxiosResponse<GradingJob>
 export type CancelGradingPreviewJobAssessmentsAssessmentIdGradingPreviewJobDeleteResult = AxiosResponse<void>
 export type ListMembersAssessmentsAssessmentIdMembersGetResult = AxiosResponse<AssessmentUsersResponse>

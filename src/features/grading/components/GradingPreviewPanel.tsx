@@ -24,6 +24,8 @@ type Props = {
   status?: JobStatusResponseStatus | null;
   progress?: JobProgress;
   initialPageSize?: number;
+  answerQuestionIds?: string[];
+  resultQuestionIds?: string[];
 };
 
 const GradingPreviewPanel: React.FC<Props> = ({
@@ -33,6 +35,8 @@ const GradingPreviewPanel: React.FC<Props> = ({
   status,
   progress,
   initialPageSize = 5,
+  answerQuestionIds = [],
+  resultQuestionIds = [],
 }) => {
   const { passphrase } = useAssessmentPassphrase();
 
@@ -41,17 +45,23 @@ const GradingPreviewPanel: React.FC<Props> = ({
     [items]
   );
 
-  const allQids = useMemo(() => {
-    const seen = new Set<string>();
-    for (const gs of sorted) {
-      for (const qid of Object.keys(gs.result_map ?? {})) {
-        seen.add(qid);
-      }
-    }
+  const answerQids = useMemo(
+    () => [...answerQuestionIds].sort((a, b) => natsort(a, b)),
+    [answerQuestionIds]
+  );
+  const resultQids = useMemo(
+    () => [...resultQuestionIds].sort((a, b) => natsort(a, b)),
+    [resultQuestionIds]
+  );
+  const displayQids = useMemo(() => {
+    const seen = new Set([...answerQids, ...resultQids]);
     return [...seen].sort((a, b) => natsort(a, b));
-  }, [sorted]);
+  }, [answerQids, resultQids]);
 
   const columns = useMemo(() => {
+    const answerQidSet = new Set(answerQids);
+    const resultQidSet = new Set(resultQids);
+
     return [
       {
         accessor: 'student_id' as const,
@@ -60,19 +70,18 @@ const GradingPreviewPanel: React.FC<Props> = ({
           <DecryptedText value={row.student_id} passphrase={passphrase} mono size="sm" />
         ),
       },
-      ...allQids.flatMap((qid) => [
-        {
+      ...displayQids.flatMap((qid) => [
+        ...(answerQidSet.has(qid) ? [{
           accessor: `answer_${qid}` as keyof AdjustableSubmission,
-          title: allQids.length > 1 ? `Answer (${qid})` : 'Answer',
+          title: answerQids.length > 1 ? `Answer (${qid})` : 'Answer',
           render: (row: AdjustableSubmission) => {
-            const r: AdjustableQuestionResult | undefined = row.result_map?.[qid];
             const answerRaw = row.answer_map?.[qid] as unknown;
-            return r ? <AnswerText value={answerRaw} /> : <span style={{ color: 'var(--mantine-color-dimmed)' }}>—</span>;
+            return <AnswerText value={answerRaw} />;
           },
-        },
-        {
+        }] : []),
+        ...(resultQidSet.has(qid) ? [{
           accessor: `passed_${qid}` as keyof AdjustableSubmission,
-          title: allQids.length > 1 ? `Passed (${qid})` : 'Passed',
+          title: resultQids.length > 1 ? `Passed (${qid})` : 'Passed',
           render: (row: AdjustableSubmission) => {
             const r: AdjustableQuestionResult | undefined = row.result_map?.[qid];
             if (!r) return <span style={{ color: 'var(--mantine-color-dimmed)' }}>—</span>;
@@ -83,7 +92,7 @@ const GradingPreviewPanel: React.FC<Props> = ({
         },
         {
           accessor: `points_${qid}` as keyof AdjustableSubmission,
-          title: allQids.length > 1 ? `Points (${qid})` : 'Points',
+          title: resultQids.length > 1 ? `Points (${qid})` : 'Points',
           render: (row: AdjustableSubmission) => {
             const r: AdjustableQuestionResult | undefined = row.result_map?.[qid];
             if (!r) return <span style={{ color: 'var(--mantine-color-dimmed)' }}>—</span>;
@@ -98,7 +107,7 @@ const GradingPreviewPanel: React.FC<Props> = ({
         },
         {
           accessor: `feedback_${qid}` as keyof AdjustableSubmission,
-          title: allQids.length > 1 ? `Feedback (${qid})` : 'Feedback',
+          title: resultQids.length > 1 ? `Feedback (${qid})` : 'Feedback',
           render: (row: AdjustableSubmission) => {
             const r: AdjustableQuestionResult | undefined = row.result_map?.[qid];
             if (!r) return <span style={{ color: 'var(--mantine-color-dimmed)' }}>—</span>;
@@ -107,10 +116,10 @@ const GradingPreviewPanel: React.FC<Props> = ({
               ? <span style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: 14 }}>{feedback}</span>
               : <span style={{ color: 'var(--mantine-color-dimmed)' }}>—</span>;
           },
-        },
+        }] : []),
       ]),
     ];
-  }, [allQids, passphrase]);
+  }, [answerQids, displayQids, passphrase, resultQids]);
 
   const { page, setPage, pageSize, setPageSize, paginate } = usePagination([], initialPageSize);
 
@@ -148,6 +157,7 @@ const GradingPreviewPanel: React.FC<Props> = ({
     <DataTable
       columns={columns}
       records={records}
+      idAccessor="student_id"
       totalRecords={sorted.length}
       recordsPerPage={pageSize}
       page={page}

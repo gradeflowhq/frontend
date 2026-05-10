@@ -7,6 +7,7 @@
  */
 import type { GradingJobResultType } from './gradingJobResultType';
 import type { Submission } from './submission';
+import type { GradingJobResultMetadata } from './gradingJobResultMetadata';
 
 export interface GradingJobResult {
   job_id: string;
@@ -15,4 +16,5 @@ export interface GradingJobResult {
   submissions: Submission[];
   /** When True, clear all manual adjustments on re-graded submissions. */
   remove_adjustments?: boolean;
+  metadata?: GradingJobResultMetadata;
 }
