@@ -17,4 +17,5 @@ export interface RubricOverviewResponse {
   coverage: RubricCoverage;
   stale_rules: StaleRuleReference[];
   status: SectionStatus;
+  validation_errors?: string[];
 }

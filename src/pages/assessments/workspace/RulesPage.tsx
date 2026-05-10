@@ -14,9 +14,11 @@ import {
 } from '@mantine/core';
 import {
   IconAdjustments,
+  IconAlertTriangle,
   IconFileImport,
   IconPlus,
   IconQuestionMark,
+  IconTrash,
   IconUpload,
 } from '@tabler/icons-react';
 import React, { lazy, Suspense } from 'react';
@@ -34,6 +36,7 @@ import {
   useAcknowledgeRubricStaleness,
   useCreateEmptyRubric,
   useDeleteRubric,
+  useRepairRubric,
   useRubricOverview,
   useSyncRubric,
 } from '@features/rubric/api';
@@ -143,6 +146,7 @@ const RulesPage: React.FC = () => {
   );
 
   const coverage: RubricCoverage | null = overview?.coverage ?? null;
+  const rubricValidationErrors = overview?.validation_errors ?? [];
 
   const ruleById = React.useMemo(
     () => new Map(rules.flatMap((rule) => (rule.id ? [[rule.id, rule]] : []))),
@@ -154,6 +158,7 @@ const RulesPage: React.FC = () => {
   const [openRubricExport, setOpenRubricExport] = React.useState(false);
   const [confirmDeleteRubric, setConfirmDeleteRubric] = React.useState(false);
   const [confirmSynchronizeRules, setConfirmSynchronizeRules] = React.useState(false);
+  const [confirmRepairRubric, setConfirmRepairRubric] = React.useState(false);
   const [statusAction, setStatusAction] = React.useState<'dismiss' | 'sync' | null>(null);
   const [searchQuery, setSearchQuery] = React.useState('');
 
@@ -227,6 +232,7 @@ const RulesPage: React.FC = () => {
   const acknowledgeRubricStaleness = useAcknowledgeRubricStaleness(assessmentId);
   const createEmptyRubric = useCreateEmptyRubric(assessmentId);
   const syncRubric = useSyncRubric(assessmentId);
+  const repairRubric = useRepairRubric(assessmentId);
 
   const staleRuleSummaries = React.useMemo(
     () =>
@@ -275,6 +281,22 @@ const RulesPage: React.FC = () => {
       onSettled: () => setStatusAction(null),
     });
   }, [staleRuleSummaries, syncRubric]);
+
+  const handleRepairRubric = React.useCallback(() => {
+    repairRubric.mutate(undefined, {
+      onSuccess: () => {
+        setConfirmRepairRubric(false);
+        notifySuccess(
+          rubricValidationErrors.length === 1
+            ? 'Removed invalid rule'
+            : 'Removed invalid rules',
+        );
+      },
+      onError: (err) => {
+        notifyError(err);
+      },
+    });
+  }, [repairRubric, rubricValidationErrors.length]);
 
   // Create an empty rubric explicitly when the user requests it
   const handleCreateEmptyRubric = React.useCallback(() => {
@@ -346,6 +368,39 @@ const RulesPage: React.FC = () => {
         </Button>
         <Button color="orange" loading={syncRubric.isPending} onClick={handleSynchronizeRules}>
           Synchronize
+        </Button>
+      </Group>
+    </Modal>
+  );
+
+  const repairRubricModal = (
+    <Modal
+      opened={confirmRepairRubric}
+      onClose={() => setConfirmRepairRubric(false)}
+      title="Remove Invalid Rules"
+      size="sm"
+    >
+      <Text mb="sm">
+        This will permanently remove the rules that could not be loaded.
+      </Text>
+      <Stack component="ul" gap={4} mb="md" mt={0} pl="md">
+        {rubricValidationErrors.map((message) => (
+          <Text component="li" key={message} size="sm">
+            {message}
+          </Text>
+        ))}
+      </Stack>
+      <Group justify="flex-end" gap="sm">
+        <Button variant="default" onClick={() => setConfirmRepairRubric(false)}>
+          Cancel
+        </Button>
+        <Button
+          color="red"
+          leftSection={<IconTrash size={14} />}
+          loading={repairRubric.isPending}
+          onClick={handleRepairRubric}
+        >
+          Remove
         </Button>
       </Group>
     </Modal>
@@ -543,6 +598,36 @@ const RulesPage: React.FC = () => {
       <Stack gap="md">
         {rulesStatusBanner}
 
+        {rubricValidationErrors.length > 0 && (
+          <Alert color="yellow">
+            <Group align="center" justify="space-between" mb="xs" w="100%">
+              <Group gap="xs">
+                <IconAlertTriangle size={16} />
+                <Text fw={600} size="sm">
+                  Some rules could not be loaded
+                </Text>
+              </Group>
+              <Button
+                color="red"
+                leftSection={<IconTrash size={14} />}
+                loading={repairRubric.isPending}
+                onClick={() => guard(() => setConfirmRepairRubric(true))}
+                size="xs"
+                variant="light"
+              >
+                Remove invalid rules
+              </Button>
+            </Group>
+            <Stack component="ul" gap={4} m={0} pl="md">
+              {rubricValidationErrors.map((message) => (
+                <Text component="li" key={message} size="sm">
+                  {message}
+                </Text>
+              ))}
+            </Stack>
+          </Alert>
+        )}
+
         {(loadingQS || loadingOverview) && renderSkeleton()}
 
         {errorQS && !qsNotFound && <ErrorAlert error={qsError} />}
@@ -656,6 +741,7 @@ const RulesPage: React.FC = () => {
         </Modal>
 
         {synchronizeRulesModal}
+        {repairRubricModal}
 
         <UnsavedChangesModal
           opened={guardModalOpen}

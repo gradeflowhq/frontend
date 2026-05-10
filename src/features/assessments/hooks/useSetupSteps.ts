@@ -21,6 +21,7 @@ export interface SetupStepsResult {
   covTotal: number;
   covCovered: number;
   uncoveredIds: string[];
+  rubricValidationErrors: string[];
 }
 
 export const useSetupSteps = (assessmentId: string): SetupStepsResult => {
@@ -54,6 +55,7 @@ export const useSetupSteps = (assessmentId: string): SetupStepsResult => {
     assessmentId,
     !!assessmentId && questionCount > 0,
   );
+  const rubricValidationErrors = rubricOverview?.validation_errors ?? [];
 
   const coverage = rubricOverview?.coverage;
   const covTotal = coverage?.total ?? 0;
@@ -66,6 +68,8 @@ export const useSetupSteps = (assessmentId: string): SetupStepsResult => {
 
   const hasRules =
     (rubricOverview?.question_rules.length ?? 0) + (rubricOverview?.global_rules.length ?? 0) > 0;
+  const invalidRuleCount = rubricValidationErrors.length;
+  const invalidRuleSummary = `${invalidRuleCount} invalid rule${invalidRuleCount === 1 ? '' : 's'}`;
   const rulesAreStale = Boolean(
     rubricOverview?.status?.is_stale || (rubricOverview?.stale_rules.length ?? 0) > 0,
   );
@@ -83,6 +87,7 @@ export const useSetupSteps = (assessmentId: string): SetupStepsResult => {
 
   const rulesStatus: StepStatus =
     !hasQuestions               ? 'locked'      :
+    invalidRuleCount > 0        ? 'warning'     :
     !hasRules                   ? 'not-started' :
     rulesAreStale               ? 'stale'       :
     covPct >= 1                 ? 'complete'    : 'warning';
@@ -110,8 +115,9 @@ export const useSetupSteps = (assessmentId: string): SetupStepsResult => {
         label: 'Rules',
         status: rulesStatus,
         summary:
-          rulesStatus === 'locked' ? 'Complete questions first'          :
-          hasRules                 ? `${covCovered}/${covTotal} covered` : 'No rules configured',
+          rulesStatus === 'locked'  ? 'Complete questions first'              :
+          invalidRuleCount > 0      ? invalidRuleSummary                      :
+          hasRules                  ? `${covCovered}/${covTotal} covered`     : 'No rules configured',
         updatedAt: rubricOverview?.status?.updated_at ?? null,
         fixLink: ap.rules,
       },
@@ -122,6 +128,8 @@ export const useSetupSteps = (assessmentId: string): SetupStepsResult => {
     covCovered,
     covTotal,
     hasRules,
+    invalidRuleCount,
+    invalidRuleSummary,
     qsRes,
     qsStatus,
     questionCount,
@@ -145,5 +153,6 @@ export const useSetupSteps = (assessmentId: string): SetupStepsResult => {
     covTotal,
     covCovered,
     uncoveredIds,
+    rubricValidationErrors,
   };
 };

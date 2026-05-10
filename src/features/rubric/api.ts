@@ -60,6 +60,19 @@ export const useSyncRubric = (assessmentId: string) => {
   });
 };
 
+export const useRepairRubric = (assessmentId: string) => {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationKey: ['rubric', assessmentId, 'repair'],
+    mutationFn: async () =>
+      (await api.repairRubricAssessmentsAssessmentIdRubricRepairPost(assessmentId)).data,
+    onSuccess: async () => {
+      await invalidateRubricQueries(qc, assessmentId);
+    },
+  });
+};
+
 export const useAcknowledgeRubricStaleness = (assessmentId: string) => {
   const qc = useQueryClient();
 

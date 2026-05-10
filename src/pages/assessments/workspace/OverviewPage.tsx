@@ -60,6 +60,7 @@ const OverviewPage: React.FC = () => {
     covPct,
     covTotal,
     uncoveredIds,
+    rubricValidationErrors,
   } = useSetupSteps(assessmentId);
 
   const { data: gradingData, isLoading: gradingLoading } = useGrading(assessmentId, !!assessmentId);
@@ -103,6 +104,16 @@ const OverviewPage: React.FC = () => {
         uncoveredIds.length > 0
           ? `${uncoveredIds.length} question${uncoveredIds.length !== 1 ? 's' : ''} have no rules: ${uncoveredIds.join(', ')}.`
           : 'Rubric coverage is below 100%.',
+    });
+  }
+
+  if (rubricValidationErrors.length > 0) {
+    warnings.push({
+      key: 'rubric-validation',
+      message:
+        rubricValidationErrors.length === 1
+          ? `1 rule validation issue: ${rubricValidationErrors[0]}`
+          : `${rubricValidationErrors.length} rule validation issues need attention before grading.`,
     });
   }
 
