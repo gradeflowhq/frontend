@@ -17,7 +17,10 @@ export interface SimilarityQuestionRuleInput {
   question_id: string;
   readonly type?: 'SIMILARITY';
   readonly display_name?: 'Similarity';
-  /** Reference answers for similarity comparison */
+  /**
+   * Reference answers for similarity comparison
+   * @minItems 1
+   */
   references: string[];
   /** Similarity threshold for passing the rule (0 to 1) */
   threshold?: number;

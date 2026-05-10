@@ -4,7 +4,7 @@ A React + TypeScript frontend for GradeFlow — an automated assessment grading 
 
 ## Key Features
 
-- **Schema-driven forms** — common request/response forms use generated backend JSON schemas, while rule editors fetch contextual schemas from the backend at runtime.
+- **Schema-driven forms** — selected request and question forms use generated backend JSON schemas, while rule editors fetch contextual schemas from the backend at runtime.
 - **Encryption** — student IDs can be encrypted client-side using AES-GCM (PBKDF2-derived key) before being sent to the server. The passphrase never leaves the browser.
 - **Presentation-only rule editing** — rule compatibility, suggestions, initial values, and nested rule schemas come from the backend/engine; the frontend renders the schema.
 - **Live grading preview** — rules can be tested against real submissions before saving.
@@ -46,7 +46,7 @@ frontend/src/
 ├── layouts/              # App shell, sidebar, and page layout components
 ├── lib/                  # Utility libraries (constants, file helpers, schemas)
 ├── pages/                # Route-level page components
-├── schemas/              # Generated JSON schemas from backend
+├── schemas/              # Generated request/question JSON schemas used by forms
 ├── state/                # Zustand stores
 └── utils/                # Pure utility functions (crypto, datetime, sort, error, …)
 ```
@@ -76,7 +76,7 @@ npx orval
 node scripts/extract-schemas.js
 ```
 
-This generates the typed API client (`src/api/gradeflowClient.ts`), model types (`src/api/models/`), and the static non-rule JSON schemas consumed by form components (`src/schemas/`). Re-run these commands whenever the backend API changes.
+This generates the typed API client (`src/api/gradeflowClient.ts`), model types (`src/api/models/`), and the minimal static schemas consumed by form components (`src/schemas/requests.json` and `src/schemas/questions.json`). Re-run these commands whenever the backend API changes.
 
 Rule schemas are fetched from the backend at runtime; they are not generated into `src/schemas/`.
 

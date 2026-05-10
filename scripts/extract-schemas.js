@@ -1,27 +1,22 @@
 /**
- * GradeFlow OpenAPI schema extractor (all buckets self-contained with local refs)
+ * GradeFlow OpenAPI schema extractor.
+ *
+ * This writes only the static JSON schemas the frontend renders directly.
+ * Rule forms fetch contextual schemas from the backend at runtime, so rule
+ * definitions are intentionally excluded from these snapshots unless one of
+ * the explicit seeds below references them.
  *
  * Implements:
- * 1) Download http://127.0.0.1:8000/openapi.json
- * 2) Normalise component schema names:
+ * 1) Download the configured OpenAPI document.
+ * 2) Normalize component schema names:
  *    - Remove suffix "-Input" (rename to base)
  *    - Remove/exclude all items with suffix "-Output"
  *    - Maintain nameMap for rewriting refs: original -> normalised
- * 3) Extract into buckets, EACH INCLUDING all transitive $ref dependencies and rewriting refs:
- *    - *Question   -> src/schemas/questions.json
- *    - *Submission -> src/schemas/submissions.json
- *    - *Request    -> src/schemas/requests.json
- *    - *Response   -> src/schemas/responses.json
- *    - everything else -> src/schemas/others.json (no dependency pull/rewrite required)
- *
- * For the four primary buckets (questions, submissions, requests, responses):
- *    - Include all transitive $ref dependencies into the same file (via $ref, discriminator.mapping,
- *      and any string that looks like "#/components/schemas/<Name>")
- *    - Rewrite $refs and discriminator.mapping values to local "#/<Name>" where possible
+ * 3) Extract explicit buckets, including transitive $ref dependencies and
+ *    rewriting local refs to "#/definitions/<Name>".
  *
  * Usage:
  *   - Node.js v18+ (global fetch)
- *   - Save as scripts/extract-schemas.js
  *   - Run: node scripts/extract-schemas.js
  */
 
@@ -33,10 +28,27 @@ const OPENAPI_URL = process.env.OPENAPI_URL || 'http://127.0.0.1:8000/openapi.js
 const OUT_DIR = path.join(process.cwd(), 'src', 'schemas');
 const OUT_FILES = {
   questions: path.join(OUT_DIR, 'questions.json'),
-  submissions: path.join(OUT_DIR, 'submissions.json'),
   requests: path.join(OUT_DIR, 'requests.json'),
-  responses: path.join(OUT_DIR, 'responses.json'),
-  others: path.join(OUT_DIR, 'others.json'),
+};
+const OBSOLETE_OUT_FILES = ['submissions.json', 'responses.json', 'others.json'];
+const SCHEMA_BUCKETS = {
+  questions: [
+    'ChoiceQuestion',
+    'MultiValuedQuestion',
+    'NumericQuestion',
+    'TextQuestion',
+  ],
+  requests: [
+    'AssessmentCreateRequest',
+    'AssessmentUpdateRequest',
+    'ExportQuestionSetRequest',
+    'ExportRubricRequest',
+    'GradingDownloadRequest',
+    'ImportQuestionSetRequest',
+    'ImportRubricRequest',
+    'LoadQuestionSetRequest',
+    'LoadRubricRequest',
+  ],
 };
 
 async function ensureDir(dir) {
@@ -51,16 +63,6 @@ function refToSchemaName(ref) {
 
 function looksLikeComponentsRef(str) {
   return typeof str === 'string' && str.startsWith('#/components/schemas/');
-}
-
-function getCategories(name) {
-  let categories = [];
-  if (name.includes('Question') && !name.includes('Rule')) categories.push('questions');
-  if (name.includes('Submission')) categories.push('submissions');
-  if (name.includes('Request')) categories.push('requests');
-  if (name.includes('Response')) categories.push('responses');
-  if (categories.length === 0) categories.push('others');
-  return categories;
 }
 
 function deepClone(obj) {
@@ -195,6 +197,11 @@ function rewriteRefsToLocal(schemaObj, nameMap, localNames) {
 
 // Build a self-contained bucket: include all transitive deps and rewrite refs to local
 function buildSelfContainedBucket(seedNames, schemas, nameMap) {
+  const missingSeeds = seedNames.filter((name) => !schemas[name]);
+  if (missingSeeds.length > 0) {
+    throw new Error(`Missing OpenAPI schema seed(s): ${missingSeeds.join(', ')}`);
+  }
+
   const allNames = gatherTransitiveNames(seedNames, schemas, nameMap);
   const bucket = {};
   const localNames = new Set(allNames);
@@ -224,51 +231,23 @@ async function run() {
 
   await ensureDir(OUT_DIR);
 
-  // Partition names into categories by post-normalised name
-  const categories = {
-    questions: new Set(),
-    submissions: new Set(),
-    requests: new Set(),
-    responses: new Set(),
-    others: new Set(),
-  };
+  const bucketsToWrite = Object.fromEntries(
+    Object.entries(SCHEMA_BUCKETS).map(([key, seedNames]) => [
+      key,
+      buildSelfContainedBucket(seedNames, schemas, nameMap),
+    ]),
+  );
 
-  for (const name of Object.keys(schemas)) {
-    const catList = getCategories(name);
-    catList.forEach((cat) => {
-      categories[cat].add(name);
-    });
-  }
-
-  // Build self-contained buckets for the four primary categories
-  const questionsBucket = buildSelfContainedBucket(categories.questions, schemas, nameMap);
-  const submissionsBucket = buildSelfContainedBucket(categories.submissions, schemas, nameMap);
-  const requestsBucket = buildSelfContainedBucket(categories.requests, schemas, nameMap);
-  const responsesBucket = buildSelfContainedBucket(categories.responses, schemas, nameMap);
-
-  // Others: everything not already included in any of the above buckets
-  const included = new Set([
-    ...Object.keys(questionsBucket),
-    ...Object.keys(submissionsBucket),
-    ...Object.keys(requestsBucket),
-    ...Object.keys(responsesBucket),
-  ]);
-
-  const othersBucket = {};
-  for (const [name, schema] of Object.entries(schemas)) {
-    if (!included.has(name)) {
-      othersBucket[name] = schema; // no rewrite requested for "others"
+  for (const filename of OBSOLETE_OUT_FILES) {
+    try {
+      await fs.unlink(path.join(OUT_DIR, filename));
+      console.log(`Removed obsolete ${path.join(OUT_DIR, filename)}`);
+    } catch (err) {
+      if (err?.code !== 'ENOENT') {
+        throw err;
+      }
     }
   }
-
-  // Write output files
-  const bucketsToWrite = {
-    questions: questionsBucket,
-    submissions: submissionsBucket,
-    requests: requestsBucket,
-    responses: responsesBucket,
-    others: othersBucket,
-  };
 
   for (const [key, filePath] of Object.entries(OUT_FILES)) {
     const content = JSON.stringify(bucketsToWrite[key], null, 2);
