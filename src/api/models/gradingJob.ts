@@ -11,6 +11,7 @@ import type { GradingJobEstimatedDurationSeconds } from './gradingJobEstimatedDu
 import type { GradingJobEstimatedCompletionAt } from './gradingJobEstimatedCompletionAt';
 
 export interface GradingJob {
+  is_completed: boolean;
   completed_at?: GradingJobCompletedAt;
   duration_seconds?: GradingJobDurationSeconds;
   estimated_duration_seconds?: GradingJobEstimatedDurationSeconds;

@@ -34,14 +34,15 @@ export const useGradingStatus = (assessmentId: string): GradingStatusResult => {
     isError: isGradingJobError,
   } = useGradingJob(assessmentId, true);
 
-  const jobId = gradingJob?.job_id ?? null;
+  const completedJobStatus = gradingJob?.is_completed ? JobStatus.completed : undefined;
+  const jobId = completedJobStatus ? null : (gradingJob?.job_id ?? null);
   const {
     data: jobStatusRes,
     error: jobStatusError,
     isError: isJobStatusError,
   } = useJobStatus(jobId, !!jobId);
 
-  const jobStatus = jobStatusRes?.status;
+  const jobStatus = jobStatusRes?.status ?? completedJobStatus;
   const jobError = jobStatusRes?.error;
   const gradingInProgress = jobStatus === JobStatus.queued || jobStatus === JobStatus.running;
   const jobTiming = jobStatusRes ?? gradingJob;

@@ -13,6 +13,7 @@ import type { JobStatusResponseStatus } from './jobStatusResponseStatus';
 import type { JobStatusResponseError } from './jobStatusResponseError';
 
 export interface JobStatusResponse {
+  is_completed: boolean;
   completed_at?: JobStatusResponseCompletedAt;
   duration_seconds?: JobStatusResponseDurationSeconds;
   estimated_duration_seconds?: JobStatusResponseEstimatedDurationSeconds;
