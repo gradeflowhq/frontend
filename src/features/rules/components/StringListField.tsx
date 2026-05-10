@@ -13,7 +13,11 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 
 const stringList = (value: unknown): string[] => {
   if (!Array.isArray(value)) return [];
-  return value.filter((item): item is string => typeof item === 'string');
+  return value.flatMap((item) => {
+    if (typeof item === 'string') return [item];
+    if (typeof item === 'number') return [String(item)];
+    return [];
+  });
 };
 
 const enumValues = (schema: FieldProps['schema']): string[] => {

@@ -281,6 +281,31 @@ describe('RuleEditorForm', () => {
     expect(screen.getByRole('option', { name: 'Alice', hidden: true })).toBeInTheDocument();
   });
 
+  it('renders numeric saved values in string-list fields', () => {
+    renderForm({
+      schema: {
+        type: 'object',
+        properties: {
+          type: { const: 'NUMBER_EQUAL' },
+          answers: {
+            type: 'array',
+            title: 'Answers',
+            items: { type: 'string' },
+            'x-gradeflow': { input: 'string-list', suggestions: ['90', '76.5'] },
+          },
+        },
+      } as JSONSchema7,
+      uiSchema: {
+        type: { 'ui:widget': 'hidden' },
+        answers: { 'ui:field': 'StringListField' },
+      },
+      draft: { type: 'NUMBER_EQUAL', answers: [90, 76.5] } as unknown as RuleValue,
+    });
+
+    expect(screen.getByText('90')).toBeInTheDocument();
+    expect(screen.getByText('76.5')).toBeInTheDocument();
+  });
+
   it('renders string-list enum values as constrained selectable options', async () => {
     const user = userEvent.setup();
     renderForm({
