@@ -15,6 +15,8 @@ import {
 import { MembersTable } from '@features/assessments/components';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 
+import { MembersTableSkeleton } from './WorkspacePageSkeletons';
+
 import type { UserResponse, UserResponseRole } from '@api/models';
 
 const MembersPage: React.FC = () => {
@@ -91,12 +93,15 @@ const MembersPage: React.FC = () => {
       {removeMember.isError && <ErrorAlert error={removeMember.error} mb="md" />}
 
       {!isError && (
-        <MembersTable
-          items={items}
-          isLoading={isLoading}
-          onSetRole={handleSetRole}
-          onRemove={(userId) => setRemoveTarget(userId)}
-        />
+        isLoading ? (
+          <MembersTableSkeleton />
+        ) : (
+          <MembersTable
+            items={items}
+            onSetRole={handleSetRole}
+            onRemove={(userId) => setRemoveTarget(userId)}
+          />
+        )
       )}
 
       <Modal

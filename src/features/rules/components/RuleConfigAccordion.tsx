@@ -1,7 +1,8 @@
-import { Accordion, Skeleton, Stack } from '@mantine/core';
+import { Accordion } from '@mantine/core';
 import React from 'react';
 
 import ErrorAlert from '@components/common/ErrorAlert';
+import { CollapsedAccordionSkeleton } from '@components/common/Skeletons';
 
 import { useRuleSchema } from '../api';
 import RuleRenderer from './RuleRenderer';
@@ -25,17 +26,15 @@ const RuleConfigAccordion: React.FC<Props> = ({ assessmentId, value, contextQues
   );
   const schema = useRuleSchema(assessmentId, schemaParams);
 
+  if (schema.isLoading) {
+    return <CollapsedAccordionSkeleton labelWidth={48} ariaLabel="Loading rule config" />;
+  }
+
   return (
     <Accordion variant="separated" keepMounted={false}>
       <Accordion.Item value="rule-preview">
         <Accordion.Control>Config</Accordion.Control>
         <Accordion.Panel>
-          {schema.isLoading && (
-            <Stack gap="xs">
-              <Skeleton height={28} />
-              <Skeleton height={28} />
-            </Stack>
-          )}
           {schema.isError && <ErrorAlert error={schema.error} />}
           {schema.data?.schema && (
             <RuleRenderer

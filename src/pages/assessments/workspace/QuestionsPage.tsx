@@ -5,7 +5,6 @@ import {
   Center,
   Group,
   Modal,
-  Skeleton,
   Stack,
   Text,
   Title,
@@ -65,6 +64,8 @@ import { useUnsavedChangesGuard } from '@hooks/useUnsavedChangesGuard';
 import { useUrlSelectedId } from '@hooks/useUrlSelectedId';
 import { isNotFoundError } from '@utils/error';
 import { notifyError, notifyErrorMessage, notifySuccess } from '@utils/notifications';
+
+import { QuestionsWorkspaceSkeleton } from './WorkspacePageSkeletons';
 
 import type { ChoiceOptionDrift, QuestionSetInput } from '@api/models';
 import type { QuestionDef } from '@features/questions/components/QuestionEditorPanel';
@@ -486,10 +487,7 @@ const QuestionsPage: React.FC = () => {
   if (loadingSubmissions || loadingQS || loadingQuestionSetStatus) {
     return (
       <PageShell title="Questions" actions={pageActions}>
-        <Stack gap="xs">
-          <Skeleton height={40} />
-          <Skeleton height={200} />
-        </Stack>
+        <QuestionsWorkspaceSkeleton />
       </PageShell>
     );
   }

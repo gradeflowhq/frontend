@@ -14,7 +14,6 @@ import type { DataTableColumn, DataTableSortStatus } from 'mantine-datatable';
 type SubmissionsTableProps = {
   items: RawSubmission[];
   initialPageSize?: number;
-  isLoading?: boolean;
   isDecryptingIds?: boolean;
 };
 
@@ -23,7 +22,6 @@ const PAGE_SIZE_OPTIONS = ['10', '20', '50', '100'];
 const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
   items,
   initialPageSize = 10,
-  isLoading = false,
   isDecryptingIds = false,
 }) => {
   const { passphrase, notifyEncryptedDetected } = useAssessmentPassphrase();
@@ -114,7 +112,6 @@ const SubmissionsTable: React.FC<SubmissionsTableProps> = ({
         onPageChange={setPage}
         sortStatus={sortStatus}
         onSortStatusChange={(s) => setSortStatus(s as DataTableSortStatus<RawSubmission>)}
-        fetching={isLoading}
         highlightOnHover
         pinFirstColumn
       />

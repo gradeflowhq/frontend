@@ -1,4 +1,4 @@
-import { Accordion, Alert, Box, Button, Center, Group, Loader, Stack, Text } from '@mantine/core';
+import { Accordion, Alert, Box, Button, Group, Stack, Text } from '@mantine/core';
 import { IconCheck, IconSettings } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -30,6 +30,8 @@ import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { CACHE_STALE_TIME_CANVAS } from '@lib/constants';
 import { useUserSettingsStore } from '@state/userStore';
 import { notifyErrorMessage, notifySuccess } from '@utils/notifications';
+
+import { CanvasPushPageSkeleton } from './ResultsPageSkeletons';
 
 const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) => {
   const { passphrase, notifyEncryptedDetected } = useAssessmentPassphrase();
@@ -286,13 +288,7 @@ const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId 
   }, [courseId, gradeMode, enableRounding, roundingBase, includeQuestionRemarks]);
 
   if (loadingPublishConfig) {
-    return (
-      <PageShell title="Push to Canvas">
-        <Center py="xl">
-          <Loader size="sm" />
-        </Center>
-      </PageShell>
-    );
+    return <CanvasPushPageSkeleton />;
   }
 
   if (publishConfigError) {

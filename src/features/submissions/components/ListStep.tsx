@@ -9,11 +9,10 @@ import type { RawSubmission } from '@api/models';
 
 export const ListStep: React.FC<{
   items: RawSubmission[];
-  isLoading: boolean;
   isError: boolean;
   error: unknown;
   searchQuery: string;
-}> = ({ items, isLoading, isError, error, searchQuery }) => {
+}> = ({ items, isError, error, searchQuery }) => {
   const { passphrase, notifyEncryptedDetected } = useAssessmentPassphrase();
 
   const studentIds = useMemo(() => items.map((item) => item.student_id ?? ''), [items]);
@@ -34,7 +33,6 @@ export const ListStep: React.FC<{
   return (
     <SubmissionsTable
       items={filteredItems}
-      isLoading={isLoading}
       isDecryptingIds={isDecrypting}
     />
   );

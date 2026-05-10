@@ -1,10 +1,11 @@
-import { Alert, Skeleton, Stack, Text } from '@mantine/core';
+import { Alert, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import React, { useCallback, useMemo, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
 
 import MasterDetailLayout from '@components/common/MasterDetailLayout';
+import { MasterDetailSkeleton } from '@components/common/Skeletons';
 import {
   useCompatibleRules,
   useCreateRule,
@@ -15,6 +16,7 @@ import { natsort } from '@utils/sort';
 
 import GlobalRuleDetailPanel from './GlobalRuleDetailPanel';
 import GlobalRuleMasterList from './GlobalRuleMasterList';
+import RulesDetailPanelSkeleton from './RulesDetailPanelSkeleton';
 
 import type { RubricCoverage } from '@api/models';
 import type { RuleValue } from '@features/rules/types';
@@ -33,27 +35,19 @@ const GLOBAL_RULE_LIST_WIDTH = '210px';
 const GLOBAL_RULE_LAYOUT_HEIGHT = 'calc(100dvh - 100px - 55px)';
 
 const GlobalRulesSkeleton: React.FC = () => (
-  <MasterDetailLayout
+  <MasterDetailSkeleton
     listWidth={GLOBAL_RULE_LIST_WIDTH}
     layoutHeight={GLOBAL_RULE_LAYOUT_HEIGHT}
-    backLabel="Back to rules"
-    listPanel={(
-      <Stack gap="xs" aria-label="Loading global rules">
-        <Skeleton height={30} />
-        <Skeleton height={44} />
-        <Skeleton height={44} />
-      </Stack>
-    )}
-    detailPanel={(
-      <Stack gap="sm">
-        <Stack gap="xs">
-          <Skeleton height={22} width={180} />
-          <Skeleton height={16} width="70%" />
-        </Stack>
-        <Skeleton height={72} />
-        <Skeleton height={180} />
-      </Stack>
-    )}
+    listRows={4}
+    withListAction
+    withListBadges
+    listRowHeight={64}
+    listRowLineWidths={['64%', '78%', '70%', '58%']}
+    listBadgeWidths={[74, 88, 68, 82]}
+    listSecondaryBadgeWidths={[42, 54]}
+    showListSecondaryBadge={(row) => row % 2 === 0}
+    listAriaLabel="Loading global rules"
+    detailPanel={<RulesDetailPanelSkeleton />}
   />
 );
 

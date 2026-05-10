@@ -1,4 +1,4 @@
-import { Alert, Skeleton, Stack, TextInput } from '@mantine/core';
+import { Alert, Stack, TextInput } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconQuestionMark, IconSearch } from '@tabler/icons-react';
 import React, { useCallback, useEffect, useMemo, useState, useTransition } from 'react';
@@ -18,6 +18,7 @@ import {
 import {
   AnswerGroupList,
   GroupModeSelector,
+  GroupViewSkeleton,
   QuestionGroupHeader,
 } from '@features/grading/components/group-view';
 import { buildGroups } from '@features/grading/helpers/grouping';
@@ -331,7 +332,7 @@ const GroupViewPage: React.FC = () => {
   if (isLoading) {
     return (
       <PageShell title="Groups">
-        <Skeleton height={400} />
+        <GroupViewSkeleton />
       </PageShell>
     );
   }

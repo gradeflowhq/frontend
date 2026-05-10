@@ -1,7 +1,6 @@
 import {
   Button,
   Group,
-  Skeleton,
   Stack,
   Text,
   Title,
@@ -35,6 +34,8 @@ import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { CACHE_STALE_TIME_OVERVIEW } from '@lib/constants';
 import { getCurrentTimestampMs } from '@utils/datetime';
 import { getErrorMessage } from '@utils/error';
+
+import OverviewPageSkeleton from './OverviewPageSkeleton';
 
 import type { AdjustableSubmission } from '@api/models';
 import type { GradingWarning } from '@features/grading/components/RunGradingModal';
@@ -218,14 +219,7 @@ const OverviewPage: React.FC = () => {
   // ── Loading ───────────────────────────────────────────────────────────────
 
   if (setupLoading || gradingLoading) {
-    return (
-      <PageShell title={<Skeleton height={24} width={160} />}>
-        <Stack gap="md">
-          <Skeleton height={180} radius="md" />
-          <Skeleton height={120} radius="md" />
-        </Stack>
-      </PageShell>
-    );
+    return <OverviewPageSkeleton />;
   }
 
   // ── Render ────────────────────────────────────────────────────────────────

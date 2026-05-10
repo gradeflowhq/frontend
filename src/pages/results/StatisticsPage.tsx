@@ -1,4 +1,4 @@
-import { Alert, Skeleton, Stack, Tabs } from '@mantine/core';
+import { Alert, Group, Skeleton, Stack, Tabs } from '@mantine/core';
 import { IconActivity, IconChartBar } from '@tabler/icons-react';
 import React, { lazy, Suspense, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
@@ -9,6 +9,8 @@ import PageShell from '@components/common/PageShell';
 import { useGrading } from '@features/grading/api';
 import GradingStatusBanner from '@features/grading/components/GradingStatusBanner';
 import NoGradingResults from '@features/grading/components/NoGradingResults';
+import QuestionAnalysisGridSkeleton from '@features/grading/components/QuestionAnalysisGridSkeleton';
+import ResultsStatsSkeleton from '@features/grading/components/ResultsStatsSkeleton';
 const ResultsStatsPanel = lazy(
   () => import('@features/grading/components/ResultsStatsPanel'),
 );
@@ -21,6 +23,16 @@ import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { natsort } from '@utils/sort';
 
 import type { AdjustableSubmission, QuestionSetOutputQuestionMap } from '@api/models';
+
+const StatisticsTabsSkeleton: React.FC = () => (
+  <Stack gap="md" aria-label="Loading statistics page">
+    <Group gap="xs">
+      <Skeleton height={36} width={112} radius="sm" />
+      <Skeleton height={36} width={112} radius="sm" />
+    </Group>
+    <ResultsStatsSkeleton />
+  </Stack>
+);
 
 const StatisticsPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) => {
   const { assessment } = useAssessmentContext();
@@ -49,10 +61,7 @@ const StatisticsPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId 
       <GradingStatusBanner assessmentId={assessmentId} />
 
       {isLoading ? (
-        <Stack gap="xs">
-          <Skeleton height={40} />
-          <Skeleton height={300} />
-        </Stack>
+        <StatisticsTabsSkeleton />
       ) : !isError && !hasItems && !gradingInProgress ? (
         <NoGradingResults assessmentId={assessmentId} />
       ) : (
@@ -64,7 +73,7 @@ const StatisticsPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId 
 
           <Tabs.Panel value="stats" pt="md">
             {!isError && hasItems && (
-              <Suspense fallback={<Skeleton height={300} />}>
+              <Suspense fallback={<ResultsStatsSkeleton />}>
                 <ResultsStatsPanel items={items} />
               </Suspense>
             )}
@@ -72,7 +81,7 @@ const StatisticsPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId 
 
           <Tabs.Panel value="analysis" pt="md">
             {!isError && hasItems && (
-              <Suspense fallback={<Skeleton height={300} />}>
+              <Suspense fallback={<QuestionAnalysisGridSkeleton />}>
                 <QuestionAnalysisGrid items={items} questionIds={questionIds} />
               </Suspense>
             )}

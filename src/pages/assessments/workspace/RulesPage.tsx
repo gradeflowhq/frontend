@@ -6,7 +6,6 @@ import {
   Center,
   Group,
   Modal,
-  Skeleton,
   Stack,
   Tabs,
   Text,
@@ -48,6 +47,8 @@ import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { useUnsavedChangesGuard } from '@hooks/useUnsavedChangesGuard';
 import { isNotFoundError } from '@utils/error';
 import { notifyError, notifyErrorMessage, notifySuccess } from '@utils/notifications';
+
+import { RulesWorkspaceSkeleton } from './WorkspacePageSkeletons';
 
 import type {
   QuestionSetOutputQuestionMap,
@@ -406,12 +407,7 @@ const RulesPage: React.FC = () => {
     </Modal>
   );
 
-  const renderSkeleton = () => (
-    <Stack gap="md">
-      <Skeleton height={16} mb={4} />
-      <Skeleton height={12} width="60%" />
-    </Stack>
-  );
+  const renderSkeleton = () => <RulesWorkspaceSkeleton />;
 
   if (!enabled) {
     return <Alert color="red">Assessment ID is missing.</Alert>;

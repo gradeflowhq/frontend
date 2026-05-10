@@ -223,6 +223,15 @@ const ArrayView: React.FC<{
   );
 };
 
+const CodeCollapsibleSkeleton: React.FC = () => (
+  <Box style={{ border: '1px solid var(--mantine-color-default-border)', borderRadius: 4 }}>
+    <Group justify="space-between" p="sm">
+      <Skeleton height={12} width={96} />
+      <Skeleton height={14} width={14} />
+    </Group>
+  </Box>
+);
+
 const SchemaObjectView: React.FC<{
   obj: Record<string, unknown>;
   schema: JSONSchema7;
@@ -298,7 +307,7 @@ const renderNode = (
   if (typeof value === 'string') {
     if (inputForSchema(resolvedSchema) === CODE_INPUT) {
       return (
-        <Suspense fallback={<Skeleton height={60} />}>
+        <Suspense fallback={<CodeCollapsibleSkeleton />}>
           <CodeCollapsible title={schemaTitle(resolvedSchema) ?? 'Code'} code={value} />
         </Suspense>
       );

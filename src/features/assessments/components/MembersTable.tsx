@@ -12,7 +12,6 @@ type MembersTableProps = {
   onSetRole: (userId: string, role: UserResponseRole) => Promise<void> | void;
   onRemove: (userId: string) => void;
   initialPageSize?: number;
-  isLoading?: boolean;
 };
 
 const MembersTable: React.FC<MembersTableProps> = ({
@@ -20,7 +19,6 @@ const MembersTable: React.FC<MembersTableProps> = ({
   onSetRole,
   onRemove,
   initialPageSize = 10,
-  isLoading = false,
 }) => {
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [pendingRole, setPendingRole] = useState<UserResponseRole | null>(null);
@@ -51,7 +49,7 @@ const MembersTable: React.FC<MembersTableProps> = ({
     }
   };
 
-  if (!isLoading && (!Array.isArray(items) || items.length === 0)) {
+  if (!Array.isArray(items) || items.length === 0) {
     return (
       <Center py="xl">
         <Stack align="center" gap="xs">
@@ -130,7 +128,6 @@ const MembersTable: React.FC<MembersTableProps> = ({
       recordsPerPage={PAGE_SIZE}
       page={page}
       onPageChange={setPage}
-      fetching={isLoading}
       striped
       highlightOnHover
     />

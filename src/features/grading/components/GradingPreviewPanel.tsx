@@ -1,4 +1,4 @@
-import { Skeleton, Stack } from '@mantine/core';
+import { Stack } from '@mantine/core';
 import { IconCircleCheck, IconAlertCircle } from '@tabler/icons-react';
 import { DataTable } from 'mantine-datatable';
 import React, { useMemo } from 'react';
@@ -6,6 +6,7 @@ import React, { useMemo } from 'react';
 import { JobStatusResponseStatus as JobStatus } from '@api/models/jobStatusResponseStatus';
 import AnswerText from '@components/common/AnswerText';
 import ErrorAlert from '@components/common/ErrorAlert';
+import { TableSkeleton } from '@components/common/Skeletons';
 import DecryptedText from '@features/encryption/components/DecryptedText';
 import { useAssessmentPassphrase } from '@features/encryption/PassphraseContext';
 import JobProgressAlert from '@features/grading/components/JobProgressAlert';
@@ -121,7 +122,16 @@ const GradingPreviewPanel: React.FC<Props> = ({
           statusText={`Preview job ${statusLabel}`}
           progress={progress}
         />
-        <Skeleton height={200} />
+        <TableSkeleton
+          columns={5}
+          rows={5}
+          columnTemplate="1fr 1.5fr 96px 100px 1.8fr"
+          minWidth={760}
+          headerWidths={[72, 52, 44, 52, 64]}
+          cellWidths={['58%', '84%', 44, 54, '88%']}
+          secondaryLine={{ columns: [1, 4], width: '64%' }}
+          ariaLabel="Loading grading preview table"
+        />
       </Stack>
     );
   }

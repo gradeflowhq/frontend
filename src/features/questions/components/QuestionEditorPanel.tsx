@@ -151,7 +151,17 @@ const QuestionEditorPanel: React.FC<Props> = ({
           {loadingExamples ? (
             <Stack gap="xs">
               {[0, 1, 2].map((i) => (
-                <Skeleton key={i} height={28} radius="sm" />
+                <Box
+                  key={i}
+                  px="sm"
+                  py={6}
+                  style={{
+                    borderRadius: 'var(--mantine-radius-sm)',
+                    border: '1px solid var(--mantine-color-default-border)',
+                  }}
+                >
+                  <Skeleton height={12} width={i === 0 ? '78%' : i === 1 ? '52%' : '66%'} />
+                </Box>
               ))}
             </Stack>
           ) : (

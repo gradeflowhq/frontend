@@ -10,7 +10,6 @@ import {
   Modal,
   Progress,
   SimpleGrid,
-  Skeleton,
   Text,
   TextInput,
   Tooltip,
@@ -48,6 +47,8 @@ const AssessmentFormModal = lazy(
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { notifyError, notifySuccess } from '@utils/notifications';
 import { compareDateDesc } from '@utils/sort';
+
+import { AssessmentCardSkeleton } from './AssessmentsPageSkeleton';
 
 import type { AssessmentResponse, AssessmentCreateRequest, AssessmentUpdateRequest } from '@api/models';
 
@@ -217,12 +218,7 @@ const AssessmentsPage: React.FC = () => {
       {isLoading ? (
         <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Card key={i} withBorder padding="md" radius="md">
-              <Skeleton height={16} mb="sm" />
-              <Skeleton height={12} mb="sm" width="60%" />
-              <Skeleton height={8} mb="sm" />
-              <Skeleton height={28} mt="md" />
-            </Card>
+            <AssessmentCardSkeleton key={i} />
           ))}
         </SimpleGrid>
       ) : !isError && filteredItems.length === 0 ? (

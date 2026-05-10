@@ -1,4 +1,4 @@
-import { Button, Menu, Skeleton, TextInput } from '@mantine/core';
+import { Button, Menu, TextInput } from '@mantine/core';
 import { IconChevronDown, IconDownload, IconSearch } from '@tabler/icons-react';
 import React, { lazy, Suspense, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -11,6 +11,7 @@ import { useGrading } from '@features/grading/api';
 import GradingStatusBanner from '@features/grading/components/GradingStatusBanner';
 import NoGradingResults from '@features/grading/components/NoGradingResults';
 import ResultsOverviewTable from '@features/grading/components/ResultsOverviewTable';
+import ResultsOverviewTableSkeleton from '@features/grading/components/ResultsOverviewTableSkeleton';
 const ResultsDownloadModal = lazy(
   () => import('@features/grading/components/ResultsDownloadModal'),
 );
@@ -80,7 +81,7 @@ const StudentsPage: React.FC = () => {
     >
       <GradingStatusBanner assessmentId={assessmentId} />
 
-      {isLoading && <Skeleton height={300} />}
+      {isLoading && <ResultsOverviewTableSkeleton />}
       {isError && <ErrorAlert error={error} />}
 
       {!isLoading && !isError && items.length === 0 && !gradingInProgress && (

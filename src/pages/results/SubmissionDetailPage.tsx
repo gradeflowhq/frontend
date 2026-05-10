@@ -1,6 +1,5 @@
 import {
-  ActionIcon, Alert, Badge, Box, Button, Center, Checkbox, Collapse, Divider, Group,
-  Loader,
+  ActionIcon, Alert, Badge, Box, Button, Checkbox, Collapse, Divider, Group,
   Modal, NumberInput, Paper, Popover, Progress, SegmentedControl, Select,
   SimpleGrid, Stack, Text, Textarea, Title, Tooltip, UnstyledButton,
 } from '@mantine/core';
@@ -28,6 +27,8 @@ import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { isEncrypted } from '@utils/crypto';
 import { notifyError, notifyErrorMessage, notifySuccess } from '@utils/notifications';
 import { natsort } from '@utils/sort';
+
+import SubmissionDetailPageSkeleton from './SubmissionDetailPageSkeleton';
 
 import type {
   AdjustableSubmission,
@@ -498,11 +499,7 @@ const SubmissionDetailInner: React.FC<{ assessmentId: string; encodedStudentId: 
   // ── Loading / error states ──────────────────────────────────────────────────
 
   if (isLoading) {
-    return (
-      <PageShell title="Submission">
-        <Center style={{ minHeight: '60vh' }}><Loader /></Center>
-      </PageShell>
-    );
+    return <SubmissionDetailPageSkeleton />;
   }
   if (isError) {
     return (

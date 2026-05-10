@@ -1,5 +1,5 @@
 import {
-  Alert, Badge, Button, Checkbox, Group, Select, Skeleton, Stack, Text,
+  Alert, Badge, Button, Checkbox, Group, Select, Stack, Text,
 } from '@mantine/core';
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 import { DataTable } from 'mantine-datatable';
@@ -8,6 +8,8 @@ import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import ErrorAlert from '@components/common/ErrorAlert';
 import { useImportConfig, useSaveImportConfig, useSourceData } from '@features/submissions';
 import { inferColumnsFromSource } from '@features/submissions/questionColumnInference';
+
+import { ConfigureStepSkeleton } from './SubmissionsSkeletons';
 
 import type { SubmissionsImportConfig } from '@api/models';
 
@@ -138,12 +140,7 @@ export const ConfigureStep: React.FC<{
   };
 
   if (sourceLoading || sourceFetching) {
-    return (
-      <Stack gap="sm">
-        <Skeleton height={40} />
-        <Skeleton height={200} />
-      </Stack>
-    );
+    return <ConfigureStepSkeleton />;
   }
 
   if (sourceError || !sourceData) {

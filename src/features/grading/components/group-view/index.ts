@@ -1,4 +1,5 @@
 export { default as GroupModeSelector } from './GroupModeSelector';
+export { default as GroupViewSkeleton } from './GroupViewSkeleton';
 export { default as QuestionGroupHeader } from './QuestionGroupHeader';
 export { default as AnswerGroupList } from './AnswerGroupList';
 export { default as BulkAdjustPopover } from './BulkAdjustPopover';

@@ -1,4 +1,4 @@
-import { Button, Group, Menu, Modal, Skeleton, Stack, Text, TextInput } from '@mantine/core';
+import { Button, Group, Menu, Modal, Stack, Text, TextInput } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconAdjustments, IconChevronDown, IconSearch, IconTrash, IconUpload } from '@tabler/icons-react';
 import React, { lazy, Suspense, useMemo, useState, useEffect } from 'react';
@@ -7,7 +7,14 @@ import { useAssessmentContext } from '@app/contexts/AssessmentContext';
 import ErrorAlert from '@components/common/ErrorAlert';
 import PageShell from '@components/common/PageShell';
 import { useDeleteSubmissions, useSubmissions, useSourceData } from '@features/submissions';
-import { ListStep, StepIndicator } from '@features/submissions/components';
+import {
+  ConfigureStepSkeleton,
+  ListStep,
+  StepIndicator,
+  SubmissionsStepSkeleton,
+  SubmissionsTableSkeleton,
+  UploadStepSkeleton,
+} from '@features/submissions/components';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 
 import type { RawSubmission } from '@api/models';
@@ -19,6 +26,38 @@ const UploadStep = lazy(
 const ConfigureStep = lazy(
   () => import('@features/submissions/components/ConfigureStep').then((m) => ({ default: m.ConfigureStep })),
 );
+
+const resolveSubmissionsStep = ({
+  hasSubmissions,
+  hasSource,
+}: {
+  hasSubmissions: boolean;
+  hasSource: boolean;
+}): Step => {
+  if (hasSubmissions) return 'list';
+  if (hasSource) return 'configure';
+  return 'upload';
+};
+
+const resolveLoadingSubmissionsStep = ({
+  hasSubmissions,
+  hasSource,
+  isLoadingSubmissions,
+  isLoadingSource,
+}: {
+  hasSubmissions: boolean;
+  hasSource: boolean;
+  isLoadingSubmissions: boolean;
+  isLoadingSource: boolean;
+}): Step | null => {
+  if (hasSubmissions) return 'list';
+  if (hasSource) return 'configure';
+  if (isLoadingSubmissions || isLoadingSource) return null;
+  return 'upload';
+};
+
+const hasSubmissionSummary = (assessment: ReturnType<typeof useAssessmentContext>['assessment']): boolean =>
+  (assessment?.summary?.submission_count ?? 0) > 0;
 
 const SubmissionsPage: React.FC = () => {
   const { assessmentId, assessment } = useAssessmentContext();
@@ -50,9 +89,7 @@ const SubmissionsPage: React.FC = () => {
     if (isLoading || sourceLoading) return;
     // No submissions on initial load → user needs to configure
     if (!hasSubmissions) setIsConfiguring(true);
-    if (hasSubmissions) { setStep('list'); return; }
-    if (hasSource) { setStep('configure'); return; }
-    setStep('upload');
+    setStep(resolveSubmissionsStep({ hasSubmissions, hasSource }));
   }, [step, isLoading, sourceLoading, hasSubmissions, hasSource]);
 
   // Navigate to a step; always marks the session as "actively configuring"
@@ -77,14 +114,6 @@ const SubmissionsPage: React.FC = () => {
       onError: () => notifications.show({ color: 'red', message: 'Delete failed' }),
     });
   };
-
-  if (step === null) {
-    return (
-      <PageShell title="Submissions">
-        <Skeleton height={40} mb="md" />
-      </PageShell>
-    );
-  }
 
   const pageTitle = 'Submissions';
 
@@ -134,6 +163,24 @@ const SubmissionsPage: React.FC = () => {
     </Group>
   ) : undefined;
 
+  if (step === null) {
+    const hasOptimisticSubmissions = hasSubmissions || (isLoading && hasSubmissionSummary(assessment));
+    const hasOptimisticSource = hasSource || (sourceLoading && Boolean(assessment?.source_updated_at));
+    const skeletonStep = resolveLoadingSubmissionsStep({
+      hasSubmissions: hasOptimisticSubmissions,
+      hasSource: hasOptimisticSource,
+      isLoadingSubmissions: isLoading,
+      isLoadingSource: sourceLoading,
+    });
+    const showSkeletonSteps = skeletonStep !== 'list' || isConfiguring;
+
+    return (
+      <PageShell title={pageTitle} actions={pageActions} updatedAt={assessment?.source_updated_at}>
+        <SubmissionsStepSkeleton step={skeletonStep} showSteps={showSkeletonSteps} />
+      </PageShell>
+    );
+  }
+
   return (
     <PageShell title={pageTitle} actions={pageActions} updatedAt={assessment?.source_updated_at}>
       <Stack gap="md">
@@ -147,7 +194,7 @@ const SubmissionsPage: React.FC = () => {
         )}
 
         {step === 'upload' && (
-          <Suspense fallback={<Skeleton height={200} />}>
+          <Suspense fallback={<UploadStepSkeleton />}>
             <UploadStep
               assessmentId={assessmentId}
               hasExistingSource={hasSource}
@@ -157,7 +204,7 @@ const SubmissionsPage: React.FC = () => {
         )}
 
         {step === 'configure' && (
-          <Suspense fallback={<Skeleton height={200} />}>
+          <Suspense fallback={<ConfigureStepSkeleton />}>
             <ConfigureStep
               assessmentId={assessmentId}
               onSuccess={() => setStep('list')}
@@ -167,13 +214,16 @@ const SubmissionsPage: React.FC = () => {
         )}
 
         {step === 'list' && (
-          <ListStep
-            items={items}
-            isLoading={isLoading}
-            isError={isError}
-            error={error}
-            searchQuery={searchQuery}
-          />
+          isLoading ? (
+            <SubmissionsTableSkeleton />
+          ) : (
+            <ListStep
+              items={items}
+              isError={isError}
+              error={error}
+              searchQuery={searchQuery}
+            />
+          )
         )}
       </Stack>
 

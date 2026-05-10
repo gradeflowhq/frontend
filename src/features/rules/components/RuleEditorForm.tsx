@@ -1,8 +1,9 @@
-import { Alert, Box, Button, Group, Skeleton, Stack } from '@mantine/core';
+import { Alert, Box, Button, Group } from '@mantine/core';
 import { IconDeviceFloppy, IconX } from '@tabler/icons-react';
 import React from 'react';
 
 import ErrorAlert from '@components/common/ErrorAlert';
+import { FormFieldsSkeleton } from '@components/common/Skeletons';
 import HiddenAwareFieldTemplate from '@components/forms/HiddenAwareFieldTemplate';
 import { SchemaForm } from '@components/forms/SchemaForm';
 import CodeEditorWidget from '@components/forms/widgets/CodeEditorWidget';
@@ -66,13 +67,7 @@ const RuleEditorForm: React.FC<RuleEditorFormProps> = ({
 
   if (!schema) {
     if (isLoading) {
-      return (
-        <Stack gap="sm">
-          <Skeleton height={36} />
-          <Skeleton height={88} />
-          <Skeleton height={36} width="40%" ml="auto" />
-        </Stack>
-      );
+      return <FormFieldsSkeleton fields={2} ariaLabel="Loading rule editor" />;
     }
     return <Alert color="yellow">Rule schema not found.</Alert>;
   }

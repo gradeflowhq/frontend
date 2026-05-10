@@ -1,5 +1,5 @@
-import { AppShell, Box, Burger, Center, Loader, Text } from '@mantine/core';
-import React, { Suspense, useCallback, useEffect, useState } from 'react';
+import { AppShell, Box, Burger, Text } from '@mantine/core';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 
 import { prefetchAllOnIdle } from '@app/routes/prefetch';
@@ -67,13 +67,7 @@ const AppLayoutInner: React.FC<{
         />
 
         <ErrorBoundary>
-          <Suspense fallback={
-            <Center style={{ minHeight: '60vh' }}>
-              <Loader color="blue" />
-            </Center>
-          }>
-            <Outlet />
-          </Suspense>
+          <Outlet />
         </ErrorBoundary>
       </AppShell.Main>
     </AppShell>

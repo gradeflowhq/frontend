@@ -1,7 +1,8 @@
-import { Select, Skeleton, Stack } from '@mantine/core';
+import { Select, Stack } from '@mantine/core';
 import React from 'react';
 
 import ErrorAlert from '@components/common/ErrorAlert';
+import { FormFieldsSkeleton } from '@components/common/Skeletons';
 import HiddenAwareFieldTemplate from '@components/forms/HiddenAwareFieldTemplate';
 import { SchemaForm } from '@components/forms/SchemaForm';
 import CodeEditorWidget from '@components/forms/widgets/CodeEditorWidget';
@@ -151,10 +152,7 @@ const RuleSlotField: React.FC<FieldProps<RuleValue>> = (props) => {
       {schema.isError && <ErrorAlert error={schema.error} />}
 
       {selectedType && schema.isLoading && (
-        <Stack gap="xs">
-          <Skeleton height={34} />
-          <Skeleton height={34} />
-        </Stack>
+        <FormFieldsSkeleton fields={2} withActions={false} ariaLabel="Loading nested rule form" />
       )}
 
       {ruleSchema && formData && (
