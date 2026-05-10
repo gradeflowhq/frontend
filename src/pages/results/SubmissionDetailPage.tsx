@@ -15,6 +15,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useAssessmentContext } from '@app/contexts/AssessmentContext';
 import { PATHS } from '@app/routes/paths';
 import AnswerText from '@components/common/AnswerText';
+import ErrorAlert from '@components/common/ErrorAlert';
 import PageShell from '@components/common/PageShell';
 import { useAssessmentPassphrase } from '@features/encryption/PassphraseContext';
 import { useDecryptedIds } from '@features/encryption/useDecryptedIds';
@@ -25,7 +26,6 @@ import { useRubricOverview } from '@features/rubric/api';
 import { getRuleDescriptionText } from '@features/rules/helpers';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { isEncrypted } from '@utils/crypto';
-import { getErrorMessage } from '@utils/error';
 import { notifyError, notifyErrorMessage, notifySuccess } from '@utils/notifications';
 import { natsort } from '@utils/sort';
 
@@ -507,7 +507,7 @@ const SubmissionDetailInner: React.FC<{ assessmentId: string; encodedStudentId: 
   if (isError) {
     return (
       <PageShell title="Submission">
-        <Alert color="red">{getErrorMessage(error)}</Alert>
+        <ErrorAlert error={error} />
       </PageShell>
     );
   }

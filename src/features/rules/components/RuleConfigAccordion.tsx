@@ -1,7 +1,7 @@
-import { Accordion, Alert, Skeleton, Stack } from '@mantine/core';
+import { Accordion, Skeleton, Stack } from '@mantine/core';
 import React from 'react';
 
-import { getErrorMessage } from '@utils/error';
+import ErrorAlert from '@components/common/ErrorAlert';
 
 import { useRuleSchema } from '../api';
 import RuleRenderer from './RuleRenderer';
@@ -36,7 +36,7 @@ const RuleConfigAccordion: React.FC<Props> = ({ assessmentId, value, contextQues
               <Skeleton height={28} />
             </Stack>
           )}
-          {schema.isError && <Alert color="red">{getErrorMessage(schema.error)}</Alert>}
+          {schema.isError && <ErrorAlert error={schema.error} />}
           {schema.data?.schema && (
             <RuleRenderer
               value={value}

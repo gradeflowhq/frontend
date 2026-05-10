@@ -1,8 +1,8 @@
-import { Alert, Button, Combobox, Group, Input, InputBase, Modal, Select, useCombobox } from '@mantine/core';
+import { Button, Combobox, Group, Input, InputBase, Modal, Select, useCombobox } from '@mantine/core';
 import React, { useEffect, useState } from 'react';
 
+import ErrorAlert from '@components/common/ErrorAlert';
 import { QUESTION_TYPES } from '@features/questions/constants';
-import { getErrorMessage } from '@utils/error';
 
 interface Props {
   opened: boolean;
@@ -123,9 +123,7 @@ const AddQuestionModal: React.FC<Props> = ({
       />
 
       {opened && !!error && (
-        <Alert color="red" mb="sm">
-          {getErrorMessage(error)}
-        </Alert>
+        <ErrorAlert error={error} mb="sm" />
       )}
 
       <Group justify="flex-end" gap="sm">

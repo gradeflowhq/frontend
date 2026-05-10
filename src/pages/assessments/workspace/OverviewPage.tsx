@@ -1,5 +1,4 @@
 import {
-  Alert,
   Button,
   Group,
   Skeleton,
@@ -20,6 +19,7 @@ import { JobStatusResponseStatus as JobStatus } from '@api/models/jobStatusRespo
 import { QK } from '@api/queryKeys';
 import { useAssessmentContext } from '@app/contexts/AssessmentContext';
 import { PATHS } from '@app/routes/paths';
+import ErrorAlert from '@components/common/ErrorAlert';
 import PageShell from '@components/common/PageShell';
 import { useAssessment } from '@features/assessments/api';
 import { OverviewSetupTimeline } from '@features/assessments/components';
@@ -263,11 +263,7 @@ const OverviewPage: React.FC = () => {
         )}
 
         {statusError !== undefined && (
-          <Alert color="red" radius="md">
-            <Text size="sm" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-              {getErrorMessage(statusError)}
-            </Text>
-          </Alert>
+          <ErrorAlert error={statusError} radius="md" />
         )}
 
         <OverviewSetupTimeline

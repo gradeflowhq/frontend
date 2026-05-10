@@ -1,9 +1,9 @@
-import { Modal, Alert, Button, Group } from '@mantine/core';
+import { Modal, Button, Group } from '@mantine/core';
 import React from 'react';
 
+import ErrorAlert from '@components/common/ErrorAlert';
 import { SchemaForm } from '@components/forms/SchemaForm';
 import requestsSchema from '@schemas/requests.json';
-import { getErrorMessage } from '@utils/error';
 
 import { assessmentFormUiSchema } from '../constants';
 
@@ -58,7 +58,7 @@ const AssessmentFormModal: React.FC<Props> = ({
       />
 
       {!!error && (
-        <Alert color="red" mt="md">{getErrorMessage(error)}</Alert>
+        <ErrorAlert error={error} mt="md" />
       )}
 
       <Group justify="flex-end" mt="md">

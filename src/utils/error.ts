@@ -1,12 +1,9 @@
 import type { AxiosError } from 'axios';
 
-type ErrorDetail = { type?: string; loc?: unknown; msg?: unknown; ctx?: Record<string, unknown> };
-
 type ErrorPayload = {
   code?: unknown;
   message?: unknown;
   errors?: unknown;
-  detail?: unknown;
 };
 
 type ErrorLike = {
@@ -46,22 +43,6 @@ export const isNotFoundError = (error: unknown): boolean => {
   return status === 404;
 };
 
-/** Map known backend error types to user-friendly messages. */
-const friendlyMessage = (d: ErrorDetail): string | null => {
-  if (d.type === 'union_tag_not_found' && typeof d.msg === 'string') {
-    // Discriminator error — typically means a nested rule was not selected.
-    const path = Array.isArray(d.loc) ? d.loc.slice(1) : [];
-    const ruleIndex = path.findIndex((p) => p === 'rule' || p === 'rules');
-    if (ruleIndex >= 0) {
-      return 'Please select a rule type for all nested rules before saving.';
-    }
-  }
-  return null;
-};
-
-const isErrorDetail = (value: unknown): value is ErrorDetail =>
-  typeof value === 'object' && value !== null;
-
 const compactMessages = (messages: (string | null | undefined)[]): string[] =>
   messages
     .map((message) => message?.trim())
@@ -70,7 +51,7 @@ const compactMessages = (messages: (string | null | undefined)[]): string[] =>
 const getBackendMessages = (data: ErrorPayload | undefined): string[] => {
   if (!data) return [];
 
-  // Case 1: { errors: string[] }
+  // Public backend error contract: { errors: string[] }
   if (Array.isArray(data.errors)) {
     const messages = compactMessages(
       data.errors.map((e: unknown) => (typeof e === 'string' ? e : null)),
@@ -78,34 +59,7 @@ const getBackendMessages = (data: ErrorPayload | undefined): string[] => {
     if (messages.length > 0) return messages;
   }
 
-  // Case 2: FastAPI validation error: { detail: [{ msg: string, ... }] }
-  if (Array.isArray(data.detail)) {
-    const seen = new Set<string>();
-    const messages = compactMessages(
-      data.detail.map((d) => {
-        if (!isErrorDetail(d)) return null;
-
-        // Try user-friendly message first
-        const friendly = friendlyMessage(d);
-        if (friendly) {
-          if (seen.has(friendly)) return null;
-          seen.add(friendly);
-          return friendly;
-        }
-        if (d.msg && typeof d.msg === 'string') {
-          if (Array.isArray(d.loc)) {
-            const locStr = d.loc.slice(1).join(' > '); // skip 'body'
-            return `${locStr}: ${d.msg}`;
-          }
-          return d.msg;
-        }
-        return null;
-      }),
-    );
-    if (messages.length > 0) return messages;
-  }
-
-  // Case 3: structured backend summary: { message: string }
+  // Public backend error summary: { message: string }
   if (typeof data.message === 'string' && data.message.trim()) {
     return [data.message.trim()];
   }

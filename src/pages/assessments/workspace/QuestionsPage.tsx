@@ -23,6 +23,7 @@ import { Link } from 'react-router-dom';
 
 import { useAssessmentContext } from '@app/contexts/AssessmentContext';
 import { ActionOptionCard } from '@components/common/ActionOptionCard';
+import ErrorAlert from '@components/common/ErrorAlert';
 import MasterDetailLayout from '@components/common/MasterDetailLayout';
 import PageShell from '@components/common/PageShell';
 import SectionStatusBadge from '@components/common/SectionStatusBadge';
@@ -62,7 +63,7 @@ import { useSubmissions } from '@features/submissions/api';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { useUnsavedChangesGuard } from '@hooks/useUnsavedChangesGuard';
 import { useUrlSelectedId } from '@hooks/useUrlSelectedId';
-import { getErrorMessage, isNotFoundError } from '@utils/error';
+import { isNotFoundError } from '@utils/error';
 import { notifyError, notifyErrorMessage, notifySuccess } from '@utils/notifications';
 
 import type { ChoiceOptionDrift, QuestionSetInput } from '@api/models';
@@ -530,7 +531,7 @@ const QuestionsPage: React.FC = () => {
     return (
       <PageShell title="Questions" actions={pageActions} updatedAt={qsRes?.status?.updated_at}>
         {errorQS && !qsMissing && (
-          <Alert color="red" mb="md">{getErrorMessage(qsError)}</Alert>
+          <ErrorAlert error={qsError} mb="md" />
         )}
 
         <Center py="xl">
@@ -692,13 +693,13 @@ const QuestionsPage: React.FC = () => {
         />
 
         {errorQS && !qsMissing && (
-          <Alert color="red">{getErrorMessage(qsError)}</Alert>
+          <ErrorAlert error={qsError} />
         )}
         {errorParsed && !missingSubmissions && (
-          <Alert color="red">{getErrorMessage(parsedError)}</Alert>
+          <ErrorAlert error={parsedError} />
         )}
         {errorQuestionSetStatus && (
-          <Alert color="red">{getErrorMessage(questionSetStatusError)}</Alert>
+          <ErrorAlert error={questionSetStatusError} />
         )}
 
         <MasterDetailLayout
@@ -747,9 +748,7 @@ const QuestionsPage: React.FC = () => {
             </Button>
           </Group>
           {deleteMutation.isError && (
-            <Alert color="red" mt="sm">
-              {getErrorMessage(deleteMutation.error)}
-            </Alert>
+            <ErrorAlert error={deleteMutation.error} mt="sm" />
           )}
         </Modal>
 
@@ -910,9 +909,7 @@ const InferModal: React.FC<InferModalProps> = ({ opened, onClose, inferMutation 
       </Button>
     </Group>
     {inferMutation.isError && (
-      <Alert color="red" mt="sm">
-        {getErrorMessage(inferMutation.error)}
-      </Alert>
+      <ErrorAlert error={inferMutation.error} mt="sm" />
     )}
   </Modal>
 );

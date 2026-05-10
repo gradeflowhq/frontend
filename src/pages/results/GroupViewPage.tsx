@@ -5,6 +5,7 @@ import React, { useCallback, useEffect, useMemo, useState, useTransition } from 
 
 import { useAssessmentContext } from '@app/contexts/AssessmentContext';
 import EmptyState from '@components/common/EmptyState';
+import ErrorAlert from '@components/common/ErrorAlert';
 import MasterDetailLayout from '@components/common/MasterDetailLayout';
 import PageShell from '@components/common/PageShell';
 import QuestionMasterList from '@components/common/QuestionMasterList';
@@ -338,7 +339,7 @@ const GroupViewPage: React.FC = () => {
   if (isError) {
     return (
       <PageShell title="Groups">
-        <Alert color="red">{getErrorMessage(error)}</Alert>
+        <ErrorAlert error={error} />
       </PageShell>
     );
   }

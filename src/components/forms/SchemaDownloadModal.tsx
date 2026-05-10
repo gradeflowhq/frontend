@@ -1,10 +1,10 @@
 import { Alert, Modal } from '@mantine/core';
-import { IconAlertCircle } from '@tabler/icons-react';
 import { useMutation } from '@tanstack/react-query';
 import React, { useMemo, useState } from 'react';
 
+import ErrorAlert from '@components/common/ErrorAlert';
 import { saveBlob } from '@lib/files';
-import { getErrorMessage, isNotFoundError } from '@utils/error';
+import { isNotFoundError } from '@utils/error';
 import { notifySuccess } from '@utils/notifications';
 
 import HiddenAwareFieldTemplate from './HiddenAwareFieldTemplate';
@@ -29,7 +29,7 @@ type Props<TForm, TData extends DownloadResponse> = {
   submitIdleLabel?: React.ReactNode;
   submitLoadingLabel?: React.ReactNode;
   successMessage?: string;
-  notFoundMessage?: React.ReactNode;
+  notFoundMessage?: string;
 };
 
 const SchemaDownloadModalInner = <TForm, TData extends DownloadResponse>({
@@ -74,9 +74,9 @@ const SchemaDownloadModalInner = <TForm, TData extends DownloadResponse>({
     },
   });
 
-  const errorMessage = mutation.isError && isNotFoundError(mutation.error) && notFoundMessage
+  const notFoundErrorMessage = mutation.isError && isNotFoundError(mutation.error)
     ? notFoundMessage
-    : getErrorMessage(mutation.error);
+    : undefined;
 
   return (
     <Modal opened={open} onClose={onClose} title={title}>
@@ -100,11 +100,11 @@ const SchemaDownloadModalInner = <TForm, TData extends DownloadResponse>({
         />
       )}
 
-      {mutation.isError && (
-        <Alert color="red" icon={<IconAlertCircle size={16} />} mt="md">
-          {errorMessage}
-        </Alert>
-      )}
+      {notFoundErrorMessage ? (
+        <ErrorAlert message={notFoundErrorMessage} mt="md" />
+      ) : mutation.isError ? (
+        <ErrorAlert error={mutation.error} mt="md" />
+      ) : null}
     </Modal>
   );
 };

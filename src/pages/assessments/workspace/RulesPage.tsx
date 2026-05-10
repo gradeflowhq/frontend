@@ -24,6 +24,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 
 import { useAssessmentContext } from '@app/contexts/AssessmentContext';
 import { ActionOptionCard } from '@components/common/ActionOptionCard';
+import ErrorAlert from '@components/common/ErrorAlert';
 import PageShell from '@components/common/PageShell';
 import SectionStatusBadge from '@components/common/SectionStatusBadge';
 import { UnsavedChangesModal } from '@components/common/UnsavedChangesModal';
@@ -42,7 +43,7 @@ import SingleTargetRulesSection from '@features/rules/components/SingleTargetRul
 import { useAutoResetState } from '@hooks/useAutoResetState';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { useUnsavedChangesGuard } from '@hooks/useUnsavedChangesGuard';
-import { getErrorMessage, isNotFoundError } from '@utils/error';
+import { isNotFoundError } from '@utils/error';
 import { notifyError, notifyErrorMessage, notifySuccess } from '@utils/notifications';
 
 import type {
@@ -475,9 +476,7 @@ const RulesPage: React.FC = () => {
             </Stack>
 
             {createEmptyRubric.isError && (
-              <Alert color="red" w="100%">
-                {getErrorMessage(createEmptyRubric.error)}
-              </Alert>
+              <ErrorAlert error={createEmptyRubric.error} w="100%" />
             )}
           </Stack>
         </Center>
@@ -546,12 +545,8 @@ const RulesPage: React.FC = () => {
 
         {(loadingQS || loadingOverview) && renderSkeleton()}
 
-        {errorQS && !qsNotFound && (
-          <Alert color="red">{getErrorMessage(qsError)}</Alert>
-        )}
-        {errorOverview && (
-          <Alert color="red">{getErrorMessage(overviewError)}</Alert>
-        )}
+        {errorQS && !qsNotFound && <ErrorAlert error={qsError} />}
+        {errorOverview && <ErrorAlert error={overviewError} />}
 
         {!loadingQS && !errorQS && !loadingOverview && !errorOverview && (
           <Tabs
@@ -657,11 +652,7 @@ const RulesPage: React.FC = () => {
               Delete
             </Button>
           </Group>
-          {deleteRubric.isError && (
-            <Alert color="red" mt="sm">
-              {getErrorMessage(deleteRubric.error)}
-            </Alert>
-          )}
+          {deleteRubric.isError && <ErrorAlert error={deleteRubric.error} mt="sm" />}
         </Modal>
 
         {synchronizeRulesModal}

@@ -13,6 +13,7 @@ import { notifications } from '@mantine/notifications';
 import { IconCircleCheck, IconPencil, IconPlus, IconTrash } from '@tabler/icons-react';
 import React, { useState } from 'react';
 
+import ErrorAlert from '@components/common/ErrorAlert';
 import {
   useCompatibleRules,
   useCreateRule,
@@ -20,7 +21,6 @@ import {
   useUpdateRule,
 } from '@features/rules/api';
 import { getRuleDescriptionText } from '@features/rules/helpers';
-import { getErrorMessage } from '@utils/error';
 
 import InlineRulePreview from './InlineRulePreview';
 import RuleConfigAccordion from './RuleConfigAccordion';
@@ -318,11 +318,7 @@ const QuestionDetailPanel: React.FC<Props> = ({
             Delete
           </Button>
         </Group>
-        {deleteRule.isError && (
-          <Alert color="red" mt="sm">
-            {getErrorMessage(deleteRule.error)}
-          </Alert>
-        )}
+        {deleteRule.isError && <ErrorAlert error={deleteRule.error} mt="sm" />}
       </Modal>
     </Box>
   );

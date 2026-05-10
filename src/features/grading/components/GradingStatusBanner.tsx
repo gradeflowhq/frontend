@@ -3,10 +3,10 @@ import { IconAlertCircle } from '@tabler/icons-react';
 import React from 'react';
 
 import { JobStatusResponseStatus as JobStatus } from '@api/models/jobStatusResponseStatus';
+import ErrorAlert from '@components/common/ErrorAlert';
 import SectionStatusBadge from '@components/common/SectionStatusBadge';
 import JobProgressAlert from '@features/grading/components/JobProgressAlert';
 import { useGradingStatus } from '@features/grading/hooks/useGradingStatus';
-import { getErrorMessage } from '@utils/error';
 
 interface GradingStatusBannerProps {
   assessmentId: string;
@@ -18,16 +18,11 @@ const GradingStatusBanner: React.FC<GradingStatusBannerProps> = ({ assessmentId 
 
   if (statusError) {
     return (
-      <Alert
-        icon={<IconAlertCircle size={16} />}
-        color="red"
+      <ErrorAlert
+        error={statusError}
         title="Grading status unavailable"
         mb="md"
-      >
-        <Text size="sm" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-          {getErrorMessage(statusError)}
-        </Text>
-      </Alert>
+      />
     );
   }
 

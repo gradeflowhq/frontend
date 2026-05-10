@@ -5,9 +5,9 @@ import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 import { DataTable } from 'mantine-datatable';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 
+import ErrorAlert from '@components/common/ErrorAlert';
 import { useImportConfig, useSaveImportConfig, useSourceData } from '@features/submissions';
 import { inferColumnsFromSource } from '@features/submissions/questionColumnInference';
-import { getErrorMessage } from '@utils/error';
 
 import type { SubmissionsImportConfig } from '@api/models';
 
@@ -232,7 +232,7 @@ export const ConfigureStep: React.FC<{
       />
 
       {saveConfig.isError && (
-        <Alert color="red">{getErrorMessage(saveConfig.error)}</Alert>
+        <ErrorAlert error={saveConfig.error} />
       )}
 
       <Group justify="space-between" mt="md">

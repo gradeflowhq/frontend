@@ -1,6 +1,5 @@
 import {
   ActionIcon,
-  Alert,
   Badge,
   Box,
   Button,
@@ -34,6 +33,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { PATHS } from '@app/routes/paths';
 import EmptyState from '@components/common/EmptyState';
+import ErrorAlert from '@components/common/ErrorAlert';
 import PageShell from '@components/common/PageShell';
 import UpdatedAtBadge from '@components/common/UpdatedAtBadge';
 import {
@@ -46,7 +46,6 @@ const AssessmentFormModal = lazy(
   () => import('@features/assessments/components/AssessmentFormModal'),
 );
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
-import { getErrorMessage } from '@utils/error';
 import { notifyError, notifySuccess } from '@utils/notifications';
 import { compareDateDesc } from '@utils/sort';
 
@@ -213,7 +212,7 @@ const AssessmentsPage: React.FC = () => {
       }
     >
 
-      {isError && <Alert color="red" mb="md">{getErrorMessage(error)}</Alert>}
+      {isError && <ErrorAlert error={error} mb="md" />}
 
       {isLoading ? (
         <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
@@ -315,7 +314,7 @@ const AssessmentsPage: React.FC = () => {
           </Button>
         </Group>
         {deleteMutation.isError && (
-          <Alert color="red" mt="sm">{getErrorMessage(deleteMutation.error)}</Alert>
+          <ErrorAlert error={deleteMutation.error} mt="sm" />
         )}
       </Modal>
     </PageShell>

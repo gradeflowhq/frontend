@@ -1,15 +1,15 @@
-import { Alert, Skeleton, Stack, Text } from '@mantine/core';
+import { Skeleton, Stack } from '@mantine/core';
 import { IconCircleCheck, IconAlertCircle } from '@tabler/icons-react';
 import { DataTable } from 'mantine-datatable';
 import React, { useMemo } from 'react';
 
 import { JobStatusResponseStatus as JobStatus } from '@api/models/jobStatusResponseStatus';
 import AnswerText from '@components/common/AnswerText';
+import ErrorAlert from '@components/common/ErrorAlert';
 import DecryptedText from '@features/encryption/components/DecryptedText';
 import { useAssessmentPassphrase } from '@features/encryption/PassphraseContext';
 import JobProgressAlert from '@features/grading/components/JobProgressAlert';
 import { usePagination } from '@hooks/usePagination';
-import { getErrorMessage } from '@utils/error';
 import { natsort } from '@utils/sort';
 
 import type { JobStatusResponseStatus } from '@api/models/jobStatusResponseStatus';
@@ -127,15 +127,7 @@ const GradingPreviewPanel: React.FC<Props> = ({
   }
 
   if (error) {
-    return (
-      <div>
-        <Alert color="red" title="Error">
-          <Text size="sm" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-            {getErrorMessage(error)}
-          </Text>
-        </Alert>
-      </div>
-    );
+    return <ErrorAlert error={error} title="Error" />;
   }
 
   if (!sorted.length) return null;

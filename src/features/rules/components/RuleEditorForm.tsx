@@ -2,10 +2,10 @@ import { Alert, Box, Button, Group, Skeleton, Stack } from '@mantine/core';
 import { IconDeviceFloppy, IconX } from '@tabler/icons-react';
 import React from 'react';
 
+import ErrorAlert from '@components/common/ErrorAlert';
 import HiddenAwareFieldTemplate from '@components/forms/HiddenAwareFieldTemplate';
 import { SchemaForm } from '@components/forms/SchemaForm';
 import CodeEditorWidget from '@components/forms/widgets/CodeEditorWidget';
-import { getErrorMessage } from '@utils/error';
 
 import RuleSlotField from './RuleSlotField';
 import StringListField from './StringListField';
@@ -93,11 +93,7 @@ const RuleEditorForm: React.FC<RuleEditorFormProps> = ({
         formContext={formContext}
       />
 
-      {!!error && (
-        <Alert color="red" mt="sm">
-          {getErrorMessage(error)}
-        </Alert>
-      )}
+      {!!error && <ErrorAlert error={error} mt="sm" />}
 
       <Group justify="flex-end" gap="sm" mt="md">
         <Button

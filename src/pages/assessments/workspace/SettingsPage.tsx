@@ -1,6 +1,5 @@
 import {
   ActionIcon,
-  Alert,
   Box,
   Button,
   Divider,
@@ -20,6 +19,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { useAssessmentContext } from '@app/contexts/AssessmentContext';
 import { PATHS } from '@app/routes/paths';
+import ErrorAlert from '@components/common/ErrorAlert';
 import PageShell from '@components/common/PageShell';
 import { useUpdateAssessment, useDeleteAssessment } from '@features/assessments/api';
 import { useAssessmentPassphrase } from '@features/encryption/PassphraseContext';
@@ -108,7 +108,7 @@ const SettingsPage: React.FC = () => {
               minRows={2}
             />
             {updateMutation.isError && (
-              <Alert color="red">{getErrorMessage(updateMutation.error)}</Alert>
+              <ErrorAlert error={updateMutation.error} />
             )}
             <Group justify="flex-end">
               <Button onClick={handleSave} loading={updateMutation.isPending} disabled={!name.trim()}>
@@ -231,7 +231,7 @@ const SettingsPage: React.FC = () => {
             mb="md"
           />
           {deleteMutation.isError && (
-            <Alert color="red" mb="md">{getErrorMessage(deleteMutation.error)}</Alert>
+            <ErrorAlert error={deleteMutation.error} mb="md" />
           )}
           <Group justify="flex-end">
             <Button variant="default" onClick={() => { setShowDeleteModal(false); setDeleteConfirmName(''); }}>

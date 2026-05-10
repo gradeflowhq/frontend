@@ -1,10 +1,9 @@
-import { Alert } from '@mantine/core';
 import React, { useMemo } from 'react';
 
+import ErrorAlert from '@components/common/ErrorAlert';
 import { useAssessmentPassphrase } from '@features/encryption/PassphraseContext';
 import { useDecryptedIds } from '@features/encryption/useDecryptedIds';
 import { SubmissionsTable } from '@features/submissions/components';
-import { getErrorMessage } from '@utils/error';
 
 import type { RawSubmission } from '@api/models';
 
@@ -30,7 +29,7 @@ export const ListStep: React.FC<{
     });
   }, [items, decryptedIds, searchQuery]);
 
-  if (isError) return <Alert color="red">{getErrorMessage(error)}</Alert>;
+  if (isError) return <ErrorAlert error={error} />;
 
   return (
     <SubmissionsTable

@@ -4,6 +4,7 @@ import React, { lazy, Suspense, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { useAssessmentContext } from '@app/contexts/AssessmentContext';
+import ErrorAlert from '@components/common/ErrorAlert';
 import PageShell from '@components/common/PageShell';
 import { useGrading } from '@features/grading/api';
 import GradingStatusBanner from '@features/grading/components/GradingStatusBanner';
@@ -17,7 +18,6 @@ const QuestionAnalysisGrid = lazy(
 import { useGradingStatus } from '@features/grading/hooks/useGradingStatus';
 import { useQuestionSet } from '@features/questions/api';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
-import { getErrorMessage } from '@utils/error';
 import { natsort } from '@utils/sort';
 
 import type { AdjustableSubmission, QuestionSetOutputQuestionMap } from '@api/models';
@@ -44,7 +44,7 @@ const StatisticsPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId 
 
   return (
     <PageShell title="Statistics" updatedAt={updatedAt}>
-      {isError && <Alert color="red" mb="md">{getErrorMessage(error)}</Alert>}
+      {isError && <ErrorAlert error={error} mb="md" />}
 
       <GradingStatusBanner assessmentId={assessmentId} />
 

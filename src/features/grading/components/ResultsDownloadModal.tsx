@@ -1,16 +1,15 @@
 import { Modal, Alert } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { IconAlertCircle } from '@tabler/icons-react';
 import { useMutation } from '@tanstack/react-query';
 import React, { useMemo, useState } from 'react';
 
 import { api } from '@api';
+import ErrorAlert from '@components/common/ErrorAlert';
 import HiddenAwareFieldTemplate from '@components/forms/HiddenAwareFieldTemplate';
 import { SchemaForm } from '@components/forms/SchemaForm';
 import { useAssessmentPassphrase } from '@features/encryption/PassphraseContext';
 import { tryDecodeExportCsv } from '@features/submissions/helpers';
 import { saveBlob } from '@lib/files';
-import { getErrorMessage } from '@utils/error';
 
 import { buildSchemaForRender, gradingDownloadBaseSchema, materialiseDefaults, pickSerializerSchema } from '../helpers/downloadSchemaUtils';
 
@@ -113,9 +112,7 @@ const ResultsDownloadModalInner: React.FC<Props> = ({ opened, assessmentId, onCl
       )}
 
       {downloadMutation.isError && (
-        <Alert color="red" icon={<IconAlertCircle size={16} />} mt="md">
-          {getErrorMessage(downloadMutation.error)}
-        </Alert>
+        <ErrorAlert error={downloadMutation.error} mt="md" />
       )}
     </Modal>
   );

@@ -1,14 +1,14 @@
-import { Alert, Button, Group, Menu, Modal, Skeleton, Stack, Text, TextInput } from '@mantine/core';
+import { Button, Group, Menu, Modal, Skeleton, Stack, Text, TextInput } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconAdjustments, IconChevronDown, IconSearch, IconTrash, IconUpload } from '@tabler/icons-react';
 import React, { lazy, Suspense, useMemo, useState, useEffect } from 'react';
 
 import { useAssessmentContext } from '@app/contexts/AssessmentContext';
+import ErrorAlert from '@components/common/ErrorAlert';
 import PageShell from '@components/common/PageShell';
 import { useDeleteSubmissions, useSubmissions, useSourceData } from '@features/submissions';
 import { ListStep, StepIndicator } from '@features/submissions/components';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
-import { getErrorMessage } from '@utils/error';
 
 import type { RawSubmission } from '@api/models';
 import type { Step } from '@features/submissions/components';
@@ -194,7 +194,7 @@ const SubmissionsPage: React.FC = () => {
           </Button>
         </Group>
         {deleteMutation.isError && (
-          <Alert color="red" mt="sm">{getErrorMessage(deleteMutation.error)}</Alert>
+          <ErrorAlert error={deleteMutation.error} mt="sm" />
         )}
       </Modal>
     </PageShell>

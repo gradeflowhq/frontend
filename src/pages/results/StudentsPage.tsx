@@ -1,10 +1,11 @@
-import { Alert, Button, Menu, Skeleton, TextInput } from '@mantine/core';
+import { Button, Menu, Skeleton, TextInput } from '@mantine/core';
 import { IconChevronDown, IconDownload, IconSearch } from '@tabler/icons-react';
 import React, { lazy, Suspense, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { useAssessmentContext } from '@app/contexts/AssessmentContext';
 import { PATHS } from '@app/routes/paths';
+import ErrorAlert from '@components/common/ErrorAlert';
 import PageShell from '@components/common/PageShell';
 import { useGrading } from '@features/grading/api';
 import GradingStatusBanner from '@features/grading/components/GradingStatusBanner';
@@ -16,7 +17,6 @@ const ResultsDownloadModal = lazy(
 import { useGradingStatus } from '@features/grading/hooks/useGradingStatus';
 import { useQuestionSet } from '@features/questions/api';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
-import { getErrorMessage } from '@utils/error';
 import { natsort } from '@utils/sort';
 
 import type { AdjustableSubmission } from '@api/models';
@@ -81,7 +81,7 @@ const StudentsPage: React.FC = () => {
       <GradingStatusBanner assessmentId={assessmentId} />
 
       {isLoading && <Skeleton height={300} />}
-      {isError && <Alert color="red">{getErrorMessage(error)}</Alert>}
+      {isError && <ErrorAlert error={error} />}
 
       {!isLoading && !isError && items.length === 0 && !gradingInProgress && (
         <NoGradingResults assessmentId={assessmentId} />

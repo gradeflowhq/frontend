@@ -7,6 +7,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { createCanvasClient, parseCanvasBaseUrl } from '@api/canvasClient';
 import { QK } from '@api/queryKeys';
 import { PATHS } from '@app/routes/paths';
+import ErrorAlert from '@components/common/ErrorAlert';
 import PageShell from '@components/common/PageShell';
 import SectionStatusBadge from '@components/common/SectionStatusBadge';
 import { useAssessment } from '@features/assessments/api';
@@ -28,7 +29,6 @@ import { GradingStatusBanner, NoGradingResults } from '@features/grading/compone
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { CACHE_STALE_TIME_CANVAS } from '@lib/constants';
 import { useUserSettingsStore } from '@state/userStore';
-import { getErrorMessage } from '@utils/error';
 import { notifyErrorMessage, notifySuccess } from '@utils/notifications';
 
 const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) => {
@@ -298,7 +298,7 @@ const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId 
   if (publishConfigError) {
     return (
       <PageShell title="Push to Canvas">
-        <Alert color="red">{getErrorMessage(publishConfigLoadError)}</Alert>
+        <ErrorAlert error={publishConfigLoadError} />
       </PageShell>
     );
   }
@@ -467,7 +467,7 @@ const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId 
         </Accordion>
 
         {!isLoadingData && csvGrades.isError && (
-          <Alert color="red">{getErrorMessage(csvGrades.error as Error)}</Alert>
+          <ErrorAlert error={csvGrades.error} />
         )}
 
         {courseId && (

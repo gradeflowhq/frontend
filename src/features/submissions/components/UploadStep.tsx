@@ -10,6 +10,7 @@ import React, { useState, useCallback, useMemo, useRef } from 'react';
 
 import { api } from '@api';
 import { invalidateSubmissionQueries } from '@api/queryInvalidation';
+import ErrorAlert from '@components/common/ErrorAlert';
 import { buildSourceCsv } from '@features/submissions/helpers';
 import { arraysEqual } from '@features/submissions/questionColumnInference';
 import {
@@ -373,7 +374,7 @@ export const UploadStep: React.FC<{
       )}
 
       {uploadMutation.isError && (
-        <Alert color="red" mt="sm">{getErrorMessage(uploadMutation.error)}</Alert>
+        <ErrorAlert error={uploadMutation.error} mt="sm" />
       )}
 
       <Group justify="flex-end" mt="md">

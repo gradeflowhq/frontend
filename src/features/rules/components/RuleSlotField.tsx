@@ -1,6 +1,7 @@
-import { Alert, Select, Skeleton, Stack } from '@mantine/core';
+import { Select, Skeleton, Stack } from '@mantine/core';
 import React from 'react';
 
+import ErrorAlert from '@components/common/ErrorAlert';
 import HiddenAwareFieldTemplate from '@components/forms/HiddenAwareFieldTemplate';
 import { SchemaForm } from '@components/forms/SchemaForm';
 import CodeEditorWidget from '@components/forms/widgets/CodeEditorWidget';
@@ -147,7 +148,7 @@ const RuleSlotField: React.FC<FieldProps<RuleValue>> = (props) => {
         error={compatibleRules.isError ? getErrorMessage(compatibleRules.error) : undefined}
       />
 
-      {schema.isError && <Alert color="red">{getErrorMessage(schema.error)}</Alert>}
+      {schema.isError && <ErrorAlert error={schema.error} />}
 
       {selectedType && schema.isLoading && (
         <Stack gap="xs">

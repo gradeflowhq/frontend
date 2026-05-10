@@ -1,9 +1,8 @@
-import { Modal, Alert } from '@mantine/core';
-import { IconAlertCircle } from '@tabler/icons-react';
+import { Alert, Modal } from '@mantine/core';
 import { useMutation, type UseMutationOptions } from '@tanstack/react-query';
 import React, { useMemo, useState } from 'react';
 
-import { getErrorMessage } from '@utils/error';
+import ErrorAlert from '@components/common/ErrorAlert';
 import { notifyErrorMessage, notifySuccess } from '@utils/notifications';
 
 import HiddenAwareFieldTemplate from './HiddenAwareFieldTemplate';
@@ -115,14 +114,10 @@ const SchemaRequestModalInner = <TForm, TData = unknown>({
       )}
 
       {!!validationError && (
-        <Alert color="red" icon={<IconAlertCircle size={16} />} mt="md">
-          {getErrorMessage(validationError)}
-        </Alert>
+        <ErrorAlert error={validationError} mt="md" />
       )}
       {mutation.isError && (
-        <Alert color="red" icon={<IconAlertCircle size={16} />} mt="md">
-          {getErrorMessage(mutation.error)}
-        </Alert>
+        <ErrorAlert error={mutation.error} mt="md" />
       )}
     </Modal>
   );

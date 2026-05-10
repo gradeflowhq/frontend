@@ -1,9 +1,10 @@
-import { Alert, Badge, Button, Group, Modal, Select, Text, TextInput, Title } from '@mantine/core';
+import { Badge, Button, Group, Modal, Select, Text, TextInput, Title } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconPlus } from '@tabler/icons-react';
 import React, { useCallback, useState } from 'react';
 
 import { useAssessmentContext } from '@app/contexts/AssessmentContext';
+import ErrorAlert from '@components/common/ErrorAlert';
 import PageShell from '@components/common/PageShell';
 import {
   useMembers,
@@ -13,7 +14,6 @@ import {
 } from '@features/assessments/api';
 import { MembersTable } from '@features/assessments/components';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
-import { getErrorMessage } from '@utils/error';
 
 import type { UserResponse, UserResponseRole } from '@api/models';
 
@@ -85,10 +85,10 @@ const MembersPage: React.FC = () => {
         </Button>
       </Group>
 
-      {isError && <Alert color="red" mb="md">{getErrorMessage(error)}</Alert>}
-      {addMember.isError && <Alert color="red" mb="md">{getErrorMessage(addMember.error)}</Alert>}
-      {setMemberRole.isError && <Alert color="red" mb="md">{getErrorMessage(setMemberRole.error)}</Alert>}
-      {removeMember.isError && <Alert color="red" mb="md">{getErrorMessage(removeMember.error)}</Alert>}
+      {isError && <ErrorAlert error={error} mb="md" />}
+      {addMember.isError && <ErrorAlert error={addMember.error} mb="md" />}
+      {setMemberRole.isError && <ErrorAlert error={setMemberRole.error} mb="md" />}
+      {removeMember.isError && <ErrorAlert error={removeMember.error} mb="md" />}
 
       {!isError && (
         <MembersTable

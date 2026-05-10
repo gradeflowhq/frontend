@@ -33,32 +33,31 @@ describe('getErrorMessages', () => {
     expect(getErrorMessages(error)).toEqual(['valid']);
   });
 
-  it('extracts messages from FastAPI validation detail', () => {
+  it('uses backend message when errors are not provided', () => {
     const error = {
       response: {
+        status: 400,
+        data: {
+          message: 'Invalid request',
+        },
+      },
+    };
+    expect(getErrorMessages(error)).toEqual(['Invalid request']);
+  });
+
+  it('does not parse raw validation detail payloads', () => {
+    const error = {
+      response: {
+        status: 422,
         data: {
           detail: [
             { loc: ['body', 'name'], msg: 'field required' },
-            { loc: ['body', 'score'], msg: 'must be positive' },
           ],
         },
       },
     };
-    expect(getErrorMessages(error)).toEqual([
-      'name: field required',
-      'score: must be positive',
-    ]);
-  });
 
-  it('extracts detail msg without loc', () => {
-    const error = {
-      response: {
-        data: {
-          detail: [{ msg: 'something failed' }],
-        },
-      },
-    };
-    expect(getErrorMessages(error)).toEqual(['something failed']);
+    expect(getErrorMessages(error)).toEqual(['Request failed (422).']);
   });
 
   it('classifies network errors as server down', () => {
