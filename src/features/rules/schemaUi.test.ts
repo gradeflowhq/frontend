@@ -25,7 +25,7 @@ describe('buildRuleUiSchema', () => {
         answers: {
           type: 'array',
           items: { type: 'string' },
-          'x-gradeflow': { input: 'string-list', suggestions: ['Alice'] },
+          'x-gradeflow': { input: 'string-list', suggestions: { Alice: 1 } },
         },
         rules: {
           type: 'array',

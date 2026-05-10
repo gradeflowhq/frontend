@@ -371,7 +371,7 @@ describe('RuleEditorForm', () => {
     expect(next).toBeNull();
   });
 
-  it('renders backend suggestions as selectable string-list options', async () => {
+  it('renders string-list suggestions with counts sorted by count', async () => {
     const user = userEvent.setup();
     renderForm({
       schema: {
@@ -382,7 +382,7 @@ describe('RuleEditorForm', () => {
             type: 'array',
             title: 'Answers',
             items: { type: 'string' },
-            'x-gradeflow': { input: 'string-list', suggestions: ['Alice', 'Bob'] },
+            'x-gradeflow': { input: 'string-list', suggestions: { Bob: 1, Carol: 3, Alice: 3 } },
           },
         },
       } as JSONSchema7,
@@ -395,7 +395,9 @@ describe('RuleEditorForm', () => {
 
     await user.click(screen.getByRole('combobox', { name: /answers/i }));
 
-    expect(screen.getByRole('option', { name: 'Alice', hidden: true })).toBeInTheDocument();
+    const options = screen.getAllByRole('option', { hidden: true });
+    expect(options.map((option) => option.textContent)).toEqual(['Alice3', 'Carol3', 'Bob1']);
+    expect(screen.getByRole('option', { name: /Alice\s*3/, hidden: true })).toBeInTheDocument();
   });
 
   it('renders numeric saved values in string-list fields', () => {
@@ -408,7 +410,7 @@ describe('RuleEditorForm', () => {
             type: 'array',
             title: 'Answers',
             items: { type: 'string' },
-            'x-gradeflow': { input: 'string-list', suggestions: ['90', '76.5'] },
+            'x-gradeflow': { input: 'string-list', suggestions: { '90': 1, '76.5': 1 } },
           },
         },
       } as JSONSchema7,

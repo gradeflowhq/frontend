@@ -98,7 +98,7 @@ The rule editor is intentionally presentation-only:
 
 - `/rules/list` supplies compatible rule labels and types for global, question, and nested path contexts.
 - `/rules/schema` supplies the selected rule's JSON Schema and `initial_value`.
-- The frontend renders standard JSON Schema plus engine-owned `x-gradeflow` metadata such as `input` and `suggestions`.
+- The frontend renders standard JSON Schema plus engine-owned `x-gradeflow` metadata such as `input` and counted `suggestions`.
 - Rule definitions, compatibility, contextual defaults, and nested rule semantics are not duplicated in frontend code.
 
 ## Using the Docker Container
