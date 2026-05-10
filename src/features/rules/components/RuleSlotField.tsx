@@ -40,6 +40,12 @@ const ruleSlotBoundaryStyle: React.CSSProperties = {
 
 const fieldPath = (props: FieldProps): string => props.fieldPathId.path.map(String).join('.');
 
+const ruleSlotLabel = (props: FieldProps): string => {
+  const field = props.fieldPathId.path[props.fieldPathId.path.length - 1];
+  if (typeof field === 'number') return `Rule ${field + 1}`;
+  return props.schema.title ?? props.name;
+};
+
 const ruleType = (value: unknown): string | null => {
   const type = isRecord(value) ? value.type : null;
   return typeof type === 'string' ? type : null;
@@ -146,7 +152,7 @@ const RuleSlotField: React.FC<FieldProps<RuleValue>> = (props) => {
     >
       <Stack gap="sm">
         <Select
-          label={props.name}
+          label={ruleSlotLabel(props)}
           placeholder="Select rule"
           data={(compatibleRules.data ?? []).map((rule) => ({
             value: rule.type,

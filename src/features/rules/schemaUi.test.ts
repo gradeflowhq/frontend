@@ -4,6 +4,16 @@ import { buildRuleUiSchema } from './schemaUi';
 
 import type { JSONSchema7 } from 'json-schema';
 
+const arrayItemUi = (
+  uiSchema: Record<string, unknown>,
+  key: string,
+  index: number,
+): Record<string, unknown> => {
+  const items = (uiSchema[key] as Record<string, unknown>).items;
+  expect(items).toEqual(expect.any(Function));
+  return (items as (item: unknown, index: number) => Record<string, unknown>)({}, index);
+};
+
 describe('buildRuleUiSchema', () => {
   it('maps neutral input hints to renderer ui schema', () => {
     const schema = {
@@ -97,6 +107,7 @@ describe('buildRuleUiSchema', () => {
       $defs: {
         Assumption: {
           type: 'object',
+          title: 'Assumption',
           properties: {
             rule: {
               oneOf: [],
@@ -107,16 +118,16 @@ describe('buildRuleUiSchema', () => {
       },
     };
 
-    expect(buildRuleUiSchema(schema as JSONSchema7)).toEqual({
-      assumptions: {
-        items: {
-          rule: {
-            'ui:field': 'RuleSlotField',
-            'ui:fieldReplacesAnyOrOneOf': true,
-          },
-        },
+    const result = buildRuleUiSchema(schema as JSONSchema7);
+
+    expect(arrayItemUi(result, 'assumptions', 0)).toEqual({
+      'ui:title': 'Assumption 1',
+      rule: {
+        'ui:field': 'RuleSlotField',
+        'ui:fieldReplacesAnyOrOneOf': true,
       },
     });
+    expect(arrayItemUi(result, 'assumptions', 1)['ui:title']).toBe('Assumption 2');
   });
 
   it('recurses through nested object refs with input hints', () => {
@@ -148,6 +159,34 @@ describe('buildRuleUiSchema', () => {
         },
       },
     });
+  });
+
+  it('numbers default object array items from their schema title', () => {
+    const schema = {
+      type: 'object',
+      properties: {
+        testcases: {
+          type: 'array',
+          title: 'Testcases',
+          items: { $ref: '#/$defs/CodeTestCase' },
+        },
+      },
+      $defs: {
+        CodeTestCase: {
+          type: 'object',
+          title: 'Test Case',
+          properties: {
+            expression: { type: 'string' },
+            expected: { type: 'string' },
+          },
+        },
+      },
+    };
+
+    const result = buildRuleUiSchema(schema as JSONSchema7);
+
+    expect(arrayItemUi(result, 'testcases', 0)['ui:title']).toBe('Test Case 1');
+    expect(arrayItemUi(result, 'testcases', 1)['ui:title']).toBe('Test Case 2');
   });
 
   it('recurses through additional property union schemas', () => {

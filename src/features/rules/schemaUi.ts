@@ -57,6 +57,20 @@ const unionOptions = (node: Record<string, unknown>): unknown[] => {
   return [];
 };
 
+const arrayItemTitle = (
+  items: Record<string, unknown>,
+  root: Record<string, unknown>,
+): string | null => {
+  const title = resolveRef(items, root).title;
+  return typeof title === 'string' ? title : null;
+};
+
+const withNumberedItemTitle = (uiSchema: UiSchema, title: string): UiSchema['items'] =>
+  (_item: unknown, index: number) => ({
+    ...uiSchema,
+    'ui:title': `${title} ${index + 1}`,
+  });
+
 const mergeMissing = (target: UiSchema, source: UiSchema): void => {
   Object.entries(source).forEach(([key, value]) => {
     const current = target[key];
@@ -134,7 +148,12 @@ const uiSchemaForProperty = (
     }
   } else if (isRecord(resolved.items)) {
     const itemUi = uiSchemaForNode(resolved.items, root, seen);
-    if (Object.keys(itemUi).length > 0) uiSchema.items = itemUi;
+    const itemTitle = arrayItemTitle(resolved.items, root);
+    if (itemTitle) {
+      uiSchema.items = withNumberedItemTitle(itemUi, itemTitle);
+    } else if (Object.keys(itemUi).length > 0) {
+      uiSchema.items = itemUi;
+    }
   }
 
   if (isRecord(resolved.additionalProperties)) {

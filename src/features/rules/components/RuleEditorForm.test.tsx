@@ -234,6 +234,45 @@ describe('RuleEditorForm', () => {
     expect(screen.getByRole('button', { name: /add item/i })).toBeInTheDocument();
   });
 
+  it('renders numbered titles for schema-titled array items', () => {
+    const codeTestSchema: JSONSchema7 = {
+      type: 'object',
+      properties: {
+        type: { const: 'CODE_TESTS' },
+        testcases: {
+          type: 'array',
+          title: 'Testcases',
+          items: { $ref: '#/$defs/CodeTestCase' },
+        },
+      },
+      $defs: {
+        CodeTestCase: {
+          type: 'object',
+          title: 'Test Case',
+          properties: {
+            expression: { type: 'string', title: 'Expression' },
+            expected: { type: 'string', title: 'Expected' },
+          },
+        },
+      },
+    };
+
+    renderForm({
+      schema: codeTestSchema,
+      uiSchema: buildRuleUiSchema(codeTestSchema),
+      draft: {
+        type: 'CODE_TESTS',
+        testcases: [
+          { expression: 'f(1)', expected: '1' },
+          { expression: 'f(2)', expected: '2' },
+        ],
+      } as unknown as RuleValue,
+    });
+
+    expect(screen.getByText('Test Case 1')).toBeInTheDocument();
+    expect(screen.getByText('Test Case 2')).toBeInTheDocument();
+  });
+
   it('wraps nested rule slots in a visual boundary', () => {
     renderForm({
       schema: {
@@ -268,6 +307,48 @@ describe('RuleEditorForm', () => {
     expect(slot).toHaveStyle('border-left-style: solid');
     expect(slot).toHaveStyle('border-left-width: 3px');
     expect(within(slot).getByPlaceholderText('Select rule')).toBeInTheDocument();
+  });
+
+  it('labels rule list items using one-based display numbers', () => {
+    renderForm({
+      schema: {
+        type: 'object',
+        properties: {
+          type: { const: 'PARENT_RULE' },
+          rules: {
+            type: 'array',
+            title: 'Rules',
+            items: {
+              oneOf: [
+                {
+                  type: 'object',
+                  properties: {
+                    type: { const: 'RULE_A' },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      },
+      uiSchema: {
+        type: { 'ui:widget': 'hidden' },
+        rules: {
+          items: {
+            'ui:field': 'RuleSlotField',
+            'ui:fieldReplacesAnyOrOneOf': true,
+          },
+        },
+      },
+      draft: {
+        type: 'PARENT_RULE',
+        rules: [{ type: 'RULE_A' }, { type: 'RULE_B' }],
+      } as unknown as RuleValue,
+    });
+
+    expect(screen.getByRole('combobox', { name: 'Rule 1' })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'Rule 2' })).toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'rules-0' })).not.toBeInTheDocument();
   });
 
   it('refreshes backend initial values when nested rule context changes', () => {
