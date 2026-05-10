@@ -43,6 +43,7 @@ const SCHEMA_BUCKETS = {
     'AssessmentUpdateRequest',
     'ExportQuestionSetRequest',
     'ExportRubricRequest',
+    'GradingLimitConfig',
     'GradingDownloadRequest',
     'ImportQuestionSetRequest',
     'ImportRubricRequest',

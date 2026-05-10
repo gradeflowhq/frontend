@@ -2,9 +2,16 @@ import { SimpleGrid, NumberInput, Select, Box, Button, Group } from '@mantine/co
 import { IconPlayerPlay, IconX } from '@tabler/icons-react';
 import React from 'react';
 
+import {
+  GRADING_PREVIEW_LIMIT_OPTIONS,
+  GRADING_PREVIEW_SELECTION_OPTIONS,
+} from '@features/grading/previewConfig';
+
+import type { GradingLimitConfigSelection } from '@api/models';
+
 export type GradingPreviewParams = {
   limit: number;
-  selection: 'first' | 'random';
+  selection: GradingLimitConfigSelection;
   seed?: number | null;
 };
 
@@ -29,29 +36,31 @@ type Props = {
 
 const GradingPreviewSettings: React.FC<Props> = ({ value, onChange, onRun, runLoading, onCancel, cancelLoading }) => {
   const { limit, selection, seed } = value;
+
   return (
     <SimpleGrid cols={{ base: 1, md: onRun ? 4 : 3 }} spacing="sm">
-      <NumberInput
+      <Select
         label="Limit"
-        min={1}
-        value={limit}
-        onChange={(v) => onChange({ ...value, limit: Number(v) || 1 })}
+        value={String(limit)}
+        onChange={(v) => {
+          if (v) onChange({ ...value, limit: Number(v) });
+        }}
+        data={GRADING_PREVIEW_LIMIT_OPTIONS}
       />
       <Select
         label="Selection"
         value={selection}
-        onChange={(v) => onChange({ ...value, selection: v as 'first' | 'random' })}
-        data={[
-          { value: 'first', label: 'first' },
-          { value: 'random', label: 'random' },
-        ]}
+        onChange={(v) => {
+          if (v) onChange({ ...value, selection: v as GradingLimitConfigSelection });
+        }}
+        data={GRADING_PREVIEW_SELECTION_OPTIONS}
       />
       <NumberInput
         label="Seed (optional)"
         value={seed ?? ''}
         onChange={(v) => onChange({ ...value, seed: v === '' ? null : Number(v) })}
-        disabled={selection !== 'random'}
-        placeholder="Only for random selection"
+        disabled={selection === 'first'}
+        placeholder="Only for random selections"
       />
       {onRun && (
         <Box style={{ display: 'flex', alignItems: 'flex-end' }}>

@@ -306,6 +306,42 @@
     "type": "object",
     "title": "CsvSubmissionsConfig"
   },
+  "GradingLimitConfig": {
+    "properties": {
+      "limit": {
+        "title": "Limit",
+        "description": "If provided, preview only this many submissions.",
+        "default": 5,
+        "type": [
+          "integer",
+          "null"
+        ],
+        "maximum": 20,
+        "minimum": 1
+      },
+      "selection": {
+        "type": "string",
+        "enum": [
+          "first",
+          "random",
+          "random_unique"
+        ],
+        "title": "Selection",
+        "description": "How to select limited submissions: 'first' (deterministic), 'random', or 'random_unique' (random unique answers).",
+        "default": "random_unique"
+      },
+      "seed": {
+        "title": "Seed",
+        "description": "Random seed used when selection='random' or selection='random_unique' for reproducibility.",
+        "type": [
+          "integer",
+          "null"
+        ]
+      }
+    },
+    "type": "object",
+    "title": "GradingLimitConfig"
+  },
   "ExportRubricRequest": {
     "properties": {
       "serializer": {

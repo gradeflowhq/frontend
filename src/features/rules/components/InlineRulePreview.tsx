@@ -3,6 +3,10 @@ import React, { useCallback, useState } from 'react';
 
 import { usePreviewGrading, useCancelGradingPreview } from '@features/grading/api';
 import { GradingPreviewPanel, GradingPreviewSettings } from '@features/grading/components';
+import {
+  DEFAULT_GRADING_PREVIEW_LIMIT,
+  DEFAULT_GRADING_PREVIEW_SELECTION,
+} from '@features/grading/previewConfig';
 
 import type { GradingPreviewRequestRule } from '@api/models';
 import type { GradingPreviewParams } from '@features/grading/components';
@@ -14,8 +18,8 @@ interface Props {
 }
 
 const DEFAULT_PREVIEW_PARAMS: GradingPreviewParams = {
-  limit: 5,
-  selection: 'first',
+  limit: DEFAULT_GRADING_PREVIEW_LIMIT,
+  selection: DEFAULT_GRADING_PREVIEW_SELECTION,
   seed: null,
 };
 
@@ -31,17 +35,9 @@ const InlineRulePreview: React.FC<Props> = ({ rule, assessmentId }) => {
     setWasCancelled(false);
     await previewMutation.mutateAsync({
       rule: rule as GradingPreviewRequestRule,
-      config: {
-        limit: previewParams.limit,
-        selection: previewParams.selection,
-        seed: previewParams.seed ?? null,
-      },
+      config: previewParams,
     });
   }, [previewMutation, previewParams, rule]);
-
-  const handleParamsChange = useCallback((next: GradingPreviewParams): void => {
-    setPreviewParams(next);
-  }, []);
 
   const handleCancel = useCallback((): void => {
     setWasCancelled(true);
@@ -66,7 +62,7 @@ const InlineRulePreview: React.FC<Props> = ({ rule, assessmentId }) => {
           <Stack gap="md">
             <GradingPreviewSettings
               value={previewParams}
-              onChange={handleParamsChange}
+              onChange={setPreviewParams}
               onRun={handleRun}
               runLoading={previewMutation.isPending}
               onCancel={handleCancel}

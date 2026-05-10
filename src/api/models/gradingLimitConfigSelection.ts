@@ -7,7 +7,7 @@
  */
 
 /**
- * How to select limited submissions: 'first' (deterministic) or 'random'.
+ * How to select limited submissions: 'first' (deterministic), 'random', or 'random_unique' (random unique answers).
  */
 export type GradingLimitConfigSelection = typeof GradingLimitConfigSelection[keyof typeof GradingLimitConfigSelection];
 
@@ -16,4 +16,5 @@ export type GradingLimitConfigSelection = typeof GradingLimitConfigSelection[key
 export const GradingLimitConfigSelection = {
   first: 'first',
   random: 'random',
+  random_unique: 'random_unique',
 } as const;

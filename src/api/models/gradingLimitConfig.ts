@@ -16,8 +16,8 @@ export interface GradingLimitConfig {
    * @maximum 20
    */
   limit?: GradingLimitConfigLimit;
-  /** How to select limited submissions: 'first' (deterministic) or 'random'. */
+  /** How to select limited submissions: 'first' (deterministic), 'random', or 'random_unique' (random unique answers). */
   selection?: GradingLimitConfigSelection;
-  /** Random seed used when selection='random' for reproducibility. */
+  /** Random seed used when selection='random' or selection='random_unique' for reproducibility. */
   seed?: GradingLimitConfigSeed;
 }

@@ -7,6 +7,6 @@
  */
 
 /**
- * Random seed used when selection='random' for reproducibility.
+ * Random seed used when selection='random' or selection='random_unique' for reproducibility.
  */
 export type GradingLimitConfigSeed = number | null;
