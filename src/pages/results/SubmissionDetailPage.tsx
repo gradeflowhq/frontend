@@ -15,6 +15,7 @@ import { useAssessmentContext } from '@app/contexts/AssessmentContext';
 import { PATHS } from '@app/routes/paths';
 import AnswerText from '@components/common/AnswerText';
 import ErrorAlert from '@components/common/ErrorAlert';
+import MarkdownText from '@components/common/MarkdownText';
 import PageShell from '@components/common/PageShell';
 import { useAssessmentPassphrase } from '@features/encryption/PassphraseContext';
 import { useDecryptedIds } from '@features/encryption/useDecryptedIds';
@@ -167,7 +168,7 @@ const QuestionCard: React.FC<QuestionCardProps> = ({
           {ruleDescription && (
             <Box>
               <Text size="xs" c="dimmed" fw={500} mb={2}>Rule</Text>
-              <Text size="sm" style={{ whiteSpace: 'pre-wrap' }}>{ruleDescription}</Text>
+              <MarkdownText>{ruleDescription}</MarkdownText>
             </Box>
           )}
 
