@@ -2,9 +2,9 @@ import { useState } from 'react';
 
 import { createCanvasClient, type CanvasAssignmentSummary } from '@api/canvasClient';
 import { NEW_GROUP_VALUE as NEW_GROUP_SENTINEL } from '@features/canvas/constants';
+import { getCanvasErrorMessage } from '@features/canvas/helpers';
 
 import type { PreparedRow } from '@features/canvas/types';
-import type { AxiosError } from 'axios';
 
 type PushState = 
   | { status: 'idle' }
@@ -135,20 +135,10 @@ export const useCanvasPush = () => {
         progressUrl,
       });
     } catch (err) {
-      const axiosErr = err as AxiosError<{ error?: string; errors?: string[]; message?: string }>;
-      const responseData = axiosErr.response?.data;
-      
-      // Extract error message from various possible response formats
-      const detail = 
-        responseData?.error ?? 
-        responseData?.errors?.[0] ?? 
-        responseData?.message;
-      
-      const errorMessage = detail 
-        ? `Canvas API error: ${detail}`
-        : axiosErr.message || 'Failed to push to Canvas.';
-      
-      setPushState({ status: 'error', message: errorMessage });
+      setPushState({
+        status: 'error',
+        message: getCanvasErrorMessage(err, 'Failed to push to Canvas.'),
+      });
     }
   };
 

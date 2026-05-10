@@ -27,13 +27,12 @@ import { useSearchParams } from 'react-router-dom';
 import { createCanvasClient, parseCanvasBaseUrl } from '@api/canvasClient';
 import PageShell from '@components/common/PageShell';
 import { useMe } from '@features/auth/api';
+import { getCanvasErrorMessage } from '@features/canvas/helpers';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { FORM_MAX_WIDTH } from '@lib/constants';
 import { useUserSettingsStore } from '@state/userStore';
 
 import { ENV } from '../../env';
-
-import type { AxiosError } from 'axios';
 
 // ---------------------------------------------------------------------------
 // User Tab
@@ -152,13 +151,13 @@ const IntegrationsTab: React.FC = () => {
         response.data?.name ?? response.data?.short_name ?? response.data?.sortable_name ?? 'your account';
       setTestState({ status: 'success', message: `Authenticated as ${displayName}.` });
     } catch (err) {
-      const axiosErr = err as AxiosError<{ errors?: string[]; message?: string }>;
-      const detail = axiosErr.response?.data?.errors?.[0] ?? axiosErr.response?.data?.message;
-      const message =
-        detail ||
-        axiosErr.message ||
-        'Unable to reach Canvas via the CORS proxy. Confirm the URL and token.';
-      setTestState({ status: 'error', message });
+      setTestState({
+        status: 'error',
+        message: getCanvasErrorMessage(
+          err,
+          'Unable to reach Canvas via the CORS proxy. Confirm the URL and token.'
+        ),
+      });
     } finally {
       setTesting(false);
     }

@@ -1,5 +1,5 @@
-import { Accordion, Alert, Box, Button, Group, Stack, Text } from '@mantine/core';
-import { IconCheck, IconSettings } from '@tabler/icons-react';
+import { Accordion, ActionIcon, Alert, Box, Button, Group, Stack, Text, Tooltip } from '@mantine/core';
+import { IconAlertCircle, IconCheck, IconRefresh, IconSettings } from '@tabler/icons-react';
 import { useQuery } from '@tanstack/react-query';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -33,6 +33,98 @@ import { notifyErrorMessage, notifySuccess } from '@utils/notifications';
 
 import { CanvasPushPageSkeleton } from './ResultsPageSkeletons';
 
+type CanvasConnectionActionProps = {
+  isConnected: boolean;
+  isError: boolean;
+  missingConfig: boolean;
+  userLabel: string | null;
+  onRetry: () => void | Promise<unknown>;
+  onSettingsClick: () => void;
+};
+
+const CanvasConnectionAction: React.FC<CanvasConnectionActionProps> = ({
+  isConnected,
+  isError,
+  missingConfig,
+  userLabel,
+  onRetry,
+  onSettingsClick,
+}) => {
+  const label = missingConfig
+    ? 'Canvas not configured'
+    : isError
+      ? 'Canvas connection error'
+      : `Canvas: ${userLabel ?? 'Connected'}`;
+  const iconColor = missingConfig
+    ? 'var(--mantine-color-yellow-7)'
+    : isError
+      ? 'var(--mantine-color-red-6)'
+      : 'var(--mantine-color-green-6)';
+  const settingsLabel = missingConfig ? 'Configure Canvas integration' : 'Edit Canvas configuration';
+
+  return (
+    <Group gap="xs" justify="flex-end" wrap="nowrap">
+      <Tooltip label={label} withArrow>
+        <Group
+          gap={6}
+          h={36}
+          maw={340}
+          px="sm"
+          title={label}
+          wrap="nowrap"
+          style={{
+            border: '1px solid var(--mantine-color-default-border)',
+            borderRadius: 'var(--mantine-radius-sm)',
+            backgroundColor: 'var(--mantine-color-body)',
+          }}
+        >
+          {isConnected
+            ? <IconCheck size={16} color={iconColor} />
+            : <IconAlertCircle size={16} color={iconColor} />}
+          <Text
+            fw={500}
+            size="sm"
+            style={{
+              flex: 1,
+              minWidth: 0,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {label}
+          </Text>
+        </Group>
+      </Tooltip>
+
+      <Tooltip label={settingsLabel} withArrow>
+        <Button
+          leftSection={<IconSettings size={16} />}
+          onClick={onSettingsClick}
+          size="sm"
+          variant="default"
+        >
+          Configure
+        </Button>
+      </Tooltip>
+
+      {isError && (
+        <Tooltip label="Retry Canvas connection" withArrow>
+          <ActionIcon
+            aria-label="Retry Canvas connection"
+            color="gray"
+            onClick={() => void onRetry()}
+            size={36}
+            variant="default"
+          >
+            <IconRefresh size={16} />
+          </ActionIcon>
+        </Tooltip>
+      )}
+    </Group>
+  );
+};
+
 const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId }) => {
   const { passphrase, notifyEncryptedDetected } = useAssessmentPassphrase();
   const { data: assessmentRes } = useAssessment(assessmentId, true);
@@ -63,7 +155,7 @@ const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId 
     error: publishConfigLoadError,
   } = useCanvasPublishConfig(assessmentId);
   const [previewTab, setPreviewTab] = useState<PreviewTab>('mapped');
-  const [openSteps, setOpenSteps] = useState<string[]>(() => ['connection']);
+  const [openSteps, setOpenSteps] = useState<string[]>(() => ['course']);
 
   const csvGrades = useCsvGrades(assessmentId, roundingBase ?? 0, passphrase ?? '', notifyEncryptedDetected);
   const { data: gradingData } = useGrading(assessmentId, Boolean(assessmentId));
@@ -85,7 +177,7 @@ const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId 
     return parts.join(' · ');
   }, [courseId, courseData.isLoading, courseData.roster.length, courseData.assignmentGroups.length, courseData.assignments.length]);
 
-  // Fetch Canvas current user for display in the connection step
+  // Fetch Canvas current user for display in the header connection badge.
   const parsedCanvasUrl = parseCanvasBaseUrl(canvasBaseUrl);
   const { data: canvasUser } = useQuery({
     queryKey: QK.canvas.me(canvasBaseUrl),
@@ -250,6 +342,16 @@ const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId 
     !!(courseId && courseData.isLoading);
 
   const isConnected = !canvasData.missingConfig && !canvasData.isError;
+  const canvasConnectionAction = (
+    <CanvasConnectionAction
+      isConnected={isConnected}
+      isError={canvasData.isError}
+      missingConfig={canvasData.missingConfig}
+      userLabel={canvasUserLabel}
+      onRetry={canvasData.refetch}
+      onSettingsClick={goToSettings}
+    />
+  );
   const courseLabel = courseId
     ? canvasData.courses.find(c => String(c.id) === courseId)?.name ?? courseId
     : null;
@@ -293,7 +395,7 @@ const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId 
 
   if (publishConfigError) {
     return (
-      <PageShell title="Push to Canvas">
+      <PageShell title="Push to Canvas" actions={canvasConnectionAction}>
         <ErrorAlert error={publishConfigLoadError} />
       </PageShell>
     );
@@ -301,7 +403,7 @@ const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId 
 
   if (gradingData?.submissions.length === 0) {
     return (
-      <PageShell title="Push to Canvas">
+      <PageShell title="Push to Canvas" actions={canvasConnectionAction}>
         <GradingStatusBanner assessmentId={assessmentId} />
         <NoGradingResults assessmentId={assessmentId} />
       </PageShell>
@@ -309,7 +411,7 @@ const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId 
   }
 
   return (
-    <PageShell title="Push to Canvas">
+    <PageShell title="Push to Canvas" actions={canvasConnectionAction}>
       <Stack gap="md" pb={72}>
 
         {(pushState.status === 'pushing' || (progressUrl && progressQuery.data)) && (
@@ -331,51 +433,7 @@ const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId 
           onChange={setOpenSteps}
           variant="separated"
         >
-          {/* Step 1: Canvas Connection */}
-          <Accordion.Item value="connection">
-            <Accordion.Control>
-              <Group gap="xs" align="center">
-                {isConnected && <IconCheck size={14} color="var(--mantine-color-green-6)" />}
-                <Text fw={500}>Canvas Connection</Text>
-                {isConnected && canvasUserLabel && (
-                  <Text size="sm" c="dimmed" ml="xs">Connected as {canvasUserLabel}</Text>
-                )}
-                {isConnected && !canvasUserLabel && (
-                  <Text size="sm" c="dimmed" ml="xs">Connected</Text>
-                )}
-              </Group>
-            </Accordion.Control>
-            <Accordion.Panel>
-              {canvasData.missingConfig ? (
-                <Group align="center" gap="sm">
-                  <Text size="sm">Not configured. Set your Canvas base URL and token.</Text>
-                  <Button
-                    size="xs"
-                    leftSection={<IconSettings size={14} />}
-                    variant="default"
-                    onClick={goToSettings}
-                  >
-                    Open Settings
-                  </Button>
-                </Group>
-              ) : canvasData.isError ? (
-                <Group align="center" gap="sm">
-                  <Text size="sm" c="red">Connection error — check your Canvas URL and token.</Text>
-                  <Button size="xs" variant="default" onClick={goToSettings}>Update Settings</Button>
-                  <Button size="xs" variant="default" onClick={() => void canvasData.refetch()}>Retry</Button>
-                </Group>
-              ) : (
-                <Group align="center" gap="sm">
-                  <Text size="sm" c="dimmed">
-                    Connected{canvasUserLabel ? ` as ${canvasUserLabel}` : ''}.
-                  </Text>
-                  <Button size="xs" variant="subtle" onClick={goToSettings}>Change</Button>
-                </Group>
-              )}
-            </Accordion.Panel>
-          </Accordion.Item>
-
-          {/* Step 2: Course */}
+          {/* Step 1: Course */}
           <Accordion.Item value="course">
             <Accordion.Control>
               <Group gap="xs" align="center">
@@ -402,7 +460,7 @@ const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId 
             </Accordion.Panel>
           </Accordion.Item>
 
-          {/* Step 3: Assignment */}
+          {/* Step 2: Assignment */}
           <Accordion.Item value="assignment">
             <Accordion.Control>
               <Group gap="xs" align="center">
@@ -436,7 +494,7 @@ const CanvasPushPageInner: React.FC<{ assessmentId: string }> = ({ assessmentId 
             </Accordion.Panel>
           </Accordion.Item>
 
-          {/* Step 4: Grade Settings */}
+          {/* Step 3: Grade Settings */}
           <Accordion.Item value="grade-settings">
             <Accordion.Control>
               <Group gap="xs" align="center">

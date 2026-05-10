@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildUserIdMap, mapCanvasId, parseCsvGrades, pickValue } from '@features/canvas/helpers';
+import { buildUserIdMap, getCanvasErrorMessage, mapCanvasId, parseCsvGrades, pickValue } from '@features/canvas/helpers';
 
 describe('pickValue', () => {
   it('returns raw by default', () => {
@@ -142,5 +142,21 @@ describe('mapCanvasId', () => {
 
   it('returns undefined for unknown ID', () => {
     expect(mapCanvasId('unknown', {}, idMap)).toBeUndefined();
+  });
+});
+
+describe('getCanvasErrorMessage', () => {
+  it('extracts the documented Canvas 4xx error message', () => {
+    const error = {
+      response: {
+        data: {
+          errors: [{ message: 'You do not have permission to manage grades in this course.' }],
+        },
+      },
+    };
+
+    expect(getCanvasErrorMessage(error)).toBe(
+      'You do not have permission to manage grades in this course.'
+    );
   });
 });

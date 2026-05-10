@@ -17,6 +17,20 @@ export type CsvGradeRow = {
 
 export type IdMap = Record<string, string>;
 
+export const getCanvasErrorMessage = (
+  error: unknown,
+  fallback = 'Canvas request failed.'
+): string => {
+  const canvasError = error as {
+    message?: string;
+    response?: { data?: { errors?: { message?: string }[] } };
+  };
+
+  return canvasError.response?.data?.errors?.[0]?.message?.trim()
+    || canvasError.message
+    || fallback;
+};
+
 export const pickValue = (rounded?: number, raw?: number, useRounded = false): number | undefined => {
   if (useRounded) return rounded ?? raw;
   return raw ?? rounded;
