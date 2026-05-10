@@ -1,4 +1,4 @@
-import { Select, Stack } from '@mantine/core';
+import { Box, Select, Stack } from '@mantine/core';
 import React from 'react';
 
 import ErrorAlert from '@components/common/ErrorAlert';
@@ -28,6 +28,14 @@ const formProps = {
   tagName: 'div' as const,
   noHtml5Validate: true,
   noValidate: true,
+};
+const ruleSlotBoundaryStyle: React.CSSProperties = {
+  borderColor: 'var(--mantine-color-default-border)',
+  borderStyle: 'solid',
+  borderWidth: 1,
+  borderLeftColor: 'var(--mantine-color-blue-5)',
+  borderLeftWidth: 3,
+  borderRadius: 4,
 };
 
 const fieldPath = (props: FieldProps): string => props.fieldPathId.path.map(String).join('.');
@@ -130,46 +138,53 @@ const RuleSlotField: React.FC<FieldProps<RuleValue>> = (props) => {
   );
 
   return (
-    <Stack gap="xs">
-      <Select
-        label={props.name}
-        placeholder="Select rule"
-        data={(compatibleRules.data ?? []).map((rule) => ({
-          value: rule.type,
-          label: rule.label,
-        }))}
-        value={selectedType}
-        onChange={(nextType) => {
-          setSelectedType(nextType);
-          if (!nextType) notifyChange(undefined);
-        }}
-        searchable
-        clearable
-        disabled={props.disabled || props.readonly}
-        error={compatibleRules.isError ? getErrorMessage(compatibleRules.error) : undefined}
-      />
-
-      {schema.isError && <ErrorAlert error={schema.error} />}
-
-      {selectedType && schema.isLoading && (
-        <FormFieldsSkeleton fields={2} withActions={false} ariaLabel="Loading nested rule form" />
-      )}
-
-      {ruleSchema && formData && (
-        <SchemaForm<RuleValue>
-          schema={ruleSchema}
-          uiSchema={uiSchema}
-          formData={formData}
-          onChange={({ formData: next }) => notifyChange(next)}
-          formProps={formProps}
-          showSubmit={false}
-          templates={templates}
-          widgets={widgets}
-          fields={ruleFields}
-          formContext={nestedContext}
+    <Box
+      aria-label="Rule slot"
+      p="sm"
+      role="group"
+      style={ruleSlotBoundaryStyle}
+    >
+      <Stack gap="sm">
+        <Select
+          label={props.name}
+          placeholder="Select rule"
+          data={(compatibleRules.data ?? []).map((rule) => ({
+            value: rule.type,
+            label: rule.label,
+          }))}
+          value={selectedType}
+          onChange={(nextType) => {
+            setSelectedType(nextType);
+            if (!nextType) notifyChange(undefined);
+          }}
+          searchable
+          clearable
+          disabled={props.disabled || props.readonly}
+          error={compatibleRules.isError ? getErrorMessage(compatibleRules.error) : undefined}
         />
-      )}
-    </Stack>
+
+        {schema.isError && <ErrorAlert error={schema.error} />}
+
+        {selectedType && schema.isLoading && (
+          <FormFieldsSkeleton fields={2} withActions={false} ariaLabel="Loading nested rule form" />
+        )}
+
+        {ruleSchema && formData && (
+          <SchemaForm<RuleValue>
+            schema={ruleSchema}
+            uiSchema={uiSchema}
+            formData={formData}
+            onChange={({ formData: next }) => notifyChange(next)}
+            formProps={formProps}
+            showSubmit={false}
+            templates={templates}
+            widgets={widgets}
+            fields={ruleFields}
+            formContext={nestedContext}
+          />
+        )}
+      </Stack>
+    </Box>
   );
 };
 

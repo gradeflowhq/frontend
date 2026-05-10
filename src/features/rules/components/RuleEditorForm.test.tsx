@@ -1,5 +1,5 @@
 import { MantineProvider } from '@mantine/core';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -232,6 +232,42 @@ describe('RuleEditorForm', () => {
     });
 
     expect(screen.getByRole('button', { name: /add item/i })).toBeInTheDocument();
+  });
+
+  it('wraps nested rule slots in a visual boundary', () => {
+    renderForm({
+      schema: {
+        type: 'object',
+        properties: {
+          type: { const: 'PARENT_RULE' },
+          child: {
+            title: 'Child rule',
+            oneOf: [
+              {
+                type: 'object',
+                properties: {
+                  type: { const: 'RULE_A' },
+                  answer: { type: 'string' },
+                },
+              },
+            ],
+          },
+        },
+      },
+      uiSchema: {
+        type: { 'ui:widget': 'hidden' },
+        child: {
+          'ui:field': 'RuleSlotField',
+          'ui:fieldReplacesAnyOrOneOf': true,
+        },
+      },
+      draft: { type: 'PARENT_RULE', child: { type: 'RULE_A' } } as unknown as RuleValue,
+    });
+
+    const slot = screen.getByLabelText('Rule slot');
+    expect(slot).toHaveStyle('border-left-style: solid');
+    expect(slot).toHaveStyle('border-left-width: 3px');
+    expect(within(slot).getByPlaceholderText('Select rule')).toBeInTheDocument();
   });
 
   it('refreshes backend initial values when nested rule context changes', () => {
