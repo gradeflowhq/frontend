@@ -8,7 +8,8 @@ import { QK } from '@api/queryKeys';
 import { isActiveJobStatus } from '@features/grading/helpers/jobStatus';
 import { useJobProgress } from '@features/grading/hooks/useJobProgress';
 import {
-  POLLING_INTERVAL_MS,
+  GRADING_JOB_POLLING_INTERVAL_MS,
+  GRADING_PREVIEW_POLLING_INTERVAL_MS,
   CACHE_STALE_TIME_GRADING,
   CACHE_STALE_TIME_JOB,
 } from '@lib/constants';
@@ -72,7 +73,7 @@ export const useJobStatus = (jobId: string | null | undefined, enabled = true) =
     // Poll while running/queued; caller can decide when to stop
     refetchInterval: (query) => {
       const status = query.state.data?.status;
-      return isActiveJobStatus(status) ? POLLING_INTERVAL_MS : false;
+      return isActiveJobStatus(status) ? GRADING_JOB_POLLING_INTERVAL_MS : false;
     },
   });
 
@@ -183,7 +184,7 @@ export const usePreviewGrading = (assessmentId: string) => {
           if (status === JobStatus.failed) {
             throw new Error(statusData.error ?? 'Preview job failed');
           }
-          await new Promise((r) => setTimeout(r, POLLING_INTERVAL_MS));
+          await new Promise((r) => setTimeout(r, GRADING_PREVIEW_POLLING_INTERVAL_MS));
         }
 
         const res = await api.getGradingPreviewAssessmentsAssessmentIdGradingPreviewGet(

@@ -1,4 +1,4 @@
-import { POLLING_INTERVAL_MS } from '@lib/constants';
+import { JOB_PROGRESS_OVERDUE_DELAY_MS } from '@lib/constants';
 import { formatDuration, getCurrentTimestampMs, getTimestampMs, secondsToMs } from '@utils/datetime';
 
 import type { GradingJob, JobStatusResponse } from '@api/models';
@@ -16,7 +16,7 @@ export type JobProgress = {
 };
 
 type JobProgressOptions = {
-  pollingDelayMs?: number;
+  overdueDelayMs?: number;
   progressStartMs?: number | null;
 };
 
@@ -53,17 +53,17 @@ export const getJobProgress = (
     return EMPTY_JOB_PROGRESS;
   }
 
-  const pollingDelayMs = options.pollingDelayMs ?? POLLING_INTERVAL_MS;
-  const visibleCompletionMs = expectedMs + pollingDelayMs;
+  const overdueDelayMs = options.overdueDelayMs ?? JOB_PROGRESS_OVERDUE_DELAY_MS;
+  const overdueAtMs = expectedMs + overdueDelayMs;
   const finishedMs = getTimestampMs(job?.finished_at);
   const currentMs = finishedMs ?? nowMs;
   const progressStartMs = options.progressStartMs ?? createdMs;
-  const expectedDurationMs = visibleCompletionMs - progressStartMs;
+  const expectedDurationMs = expectedMs - progressStartMs;
 
   if (expectedDurationMs <= 0) {
     return {
       percent: 100,
-      overdue: finishedMs === null && nowMs >= visibleCompletionMs,
+      overdue: finishedMs === null && nowMs >= overdueAtMs,
       remainingMs: 0,
     };
   }
@@ -73,10 +73,13 @@ export const getJobProgress = (
 
   return {
     percent,
-    overdue: finishedMs === null && nowMs >= visibleCompletionMs,
-    remainingMs: finishedMs === null ? Math.max(0, visibleCompletionMs - nowMs) : 0,
+    overdue: finishedMs === null && nowMs >= overdueAtMs,
+    remainingMs: finishedMs === null ? Math.max(0, expectedMs - nowMs) : 0,
   };
 };
+
+export const isJobProgressIndeterminate = (progress: JobProgress): boolean =>
+  progress.percent !== null && progress.percent >= 100;
 
 export const getJobProgressText = (
   progress: JobProgress,
@@ -86,5 +89,7 @@ export const getJobProgressText = (
 
   return progress.overdue
     ? overdueMessage
-    : `${formatDuration(progress.remainingMs ?? 0)} remaining`;
+    : isJobProgressIndeterminate(progress)
+      ? 'Finishing...'
+      : `${formatDuration(progress.remainingMs ?? 0)} remaining`;
 };

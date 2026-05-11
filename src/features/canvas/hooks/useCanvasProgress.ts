@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { createCanvasClient } from '@api/canvasClient';
 import { QK } from '@api/queryKeys';
-import { POLLING_INTERVAL_MS } from '@lib/constants';
+import { CANVAS_PROGRESS_POLLING_INTERVAL_MS } from '@lib/constants';
 
 import type { CanvasProgress } from '@api/canvasClient';
 
@@ -24,7 +24,9 @@ export const useCanvasProgress = (
     refetchInterval: (query) => {
       const progress = query.state.data as CanvasProgress | undefined;
       const state = progress?.workflow_state;
-      return state && (state === 'queued' || state === 'running') ? POLLING_INTERVAL_MS : false;
+      return state && (state === 'queued' || state === 'running')
+        ? CANVAS_PROGRESS_POLLING_INTERVAL_MS
+        : false;
     },
     retry: false,
   });

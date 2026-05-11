@@ -1,7 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 
 import { EMPTY_JOB_PROGRESS, getJobProgress } from '@features/grading/helpers/jobProgress';
-import { JOB_PROGRESS_UPDATE_INTERVAL_MS } from '@lib/constants';
 import { getCurrentTimestampMs } from '@utils/datetime';
 
 import type { JobProgress, JobTiming } from '@features/grading/helpers/jobProgress';
@@ -17,7 +16,6 @@ export const useJobProgress = (
 ): JobProgress => {
   const [nowMs, setNowMs] = useState(getCurrentTimestampMs);
   const [visualStartMs, setVisualStartMs] = useState<number | null>(null);
-  const [animateAhead, setAnimateAhead] = useState(false);
 
   const finishedAt = timing?.finished_at ?? null;
   const createdAt = timing?.created_at ?? null;
@@ -38,11 +36,15 @@ export const useJobProgress = (
   useEffect(() => {
     if (!enabled) return undefined;
 
-    const intervalId = window.setInterval(() => {
+    let frameId: number;
+    const update = () => {
       setNowMs(getCurrentTimestampMs());
-    }, JOB_PROGRESS_UPDATE_INTERVAL_MS);
+      frameId = window.requestAnimationFrame(update);
+    };
 
-    return () => window.clearInterval(intervalId);
+    frameId = window.requestAnimationFrame(update);
+
+    return () => window.cancelAnimationFrame(frameId);
   }, [enabled]);
 
   useLayoutEffect(() => {
@@ -51,24 +53,10 @@ export const useJobProgress = (
 
     if (!enabled) {
       setVisualStartMs(null);
-      setAnimateAhead(false);
       return;
     }
 
     setVisualStartMs(options.startFromCurrentTime ? null : currentMs);
-
-    setAnimateAhead(false);
-    let secondFrameId: number | null = null;
-    const firstFrameId = window.requestAnimationFrame(() => {
-      secondFrameId = window.requestAnimationFrame(() => {
-        setAnimateAhead(true);
-      });
-    });
-
-    return () => {
-      window.cancelAnimationFrame(firstFrameId);
-      if (secondFrameId !== null) window.cancelAnimationFrame(secondFrameId);
-    };
   }, [enabled, options.startFromCurrentTime, timingSnapshot]);
 
   if (!enabled) return EMPTY_JOB_PROGRESS;
@@ -77,18 +65,9 @@ export const useJobProgress = (
     progressStartMs: options.startFromCurrentTime ? null : visualStartMs,
   };
   const statusProgress = getJobProgress(timingSnapshot, nowMs, progressOptions);
-  const transitionMs =
-    statusProgress.percent === null || statusProgress.remainingMs === null
-      ? 0
-      : Math.min(JOB_PROGRESS_UPDATE_INTERVAL_MS, statusProgress.remainingMs);
-  const displayProgress =
-    animateAhead && transitionMs > 0
-      ? getJobProgress(timingSnapshot, nowMs + transitionMs, progressOptions)
-      : statusProgress;
 
   return {
     ...statusProgress,
-    percent: displayProgress.percent,
-    transitionMs,
+    transitionMs: 0,
   };
 };

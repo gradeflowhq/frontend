@@ -2,11 +2,17 @@
 // Polling & async timing
 // ---------------------------------------------------------------------------
 
-/** Polling interval for job-status queries and async progress hooks (ms). */
-export const POLLING_INTERVAL_MS = 2000;
+/** Polling interval for full grading job status checks (ms). */
+export const GRADING_JOB_POLLING_INTERVAL_MS = 2000;
 
-/** Refresh cadence for time-based job progress displays (ms). */
-export const JOB_PROGRESS_UPDATE_INTERVAL_MS = 1000;
+/** Polling interval for grading preview jobs (ms). */
+export const GRADING_PREVIEW_POLLING_INTERVAL_MS = 1000;
+
+/** Polling interval for Canvas progress checks (ms). */
+export const CANVAS_PROGRESS_POLLING_INTERVAL_MS = 2000;
+
+/** Grace period after the estimated completion time before showing overdue state (ms). */
+export const JOB_PROGRESS_OVERDUE_DELAY_MS = 2000;
 
 // ---------------------------------------------------------------------------
 // React Query cache durations

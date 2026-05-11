@@ -24,7 +24,7 @@ const renderProgressText = (progress: JobProgress): React.ReactNode => {
   return (
     <Text
       size="xs"
-      c={progress.overdue ? 'orange.8' : 'dimmed'}
+      c="dimmed"
       span
       style={{ whiteSpace: 'nowrap' }}
     >

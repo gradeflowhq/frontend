@@ -1,4 +1,7 @@
+import { Progress } from '@mantine/core';
 import React from 'react';
+
+import { isJobProgressIndeterminate } from '@features/grading/helpers/jobProgress';
 
 import type { JobProgress } from '@features/grading/helpers/jobProgress';
 
@@ -10,37 +13,33 @@ const JobProgressIndicator: React.FC<Props> = ({ progress }) => {
   if (progress.percent === null) return null;
 
   const percent = Math.min(100, Math.max(0, progress.percent));
+  const isIndeterminate = isJobProgressIndeterminate(progress);
 
   return (
-    <div
+    <Progress
       aria-label="Estimated job progress"
-      aria-valuemax={100}
-      aria-valuemin={0}
-      aria-valuenow={percent}
-      role="progressbar"
+      animated={isIndeterminate}
+      color="blue.6"
+      radius={0}
+      size={4}
+      striped={isIndeterminate}
       style={{
-        background: 'var(--mantine-color-blue-light-hover)',
         bottom: 0,
-        height: 4,
         left: 0,
-        overflow: 'hidden',
         position: 'absolute',
         right: 0,
       }}
-    >
-      <div
-        style={{
-          background: progress.overdue
-            ? 'var(--mantine-color-orange-6)'
-            : 'var(--mantine-color-blue-6)',
-          height: '100%',
-          transitionDuration: `${progress.transitionMs ?? 0}ms`,
-          transitionProperty: 'width',
+      styles={{
+        root: {
+          backgroundColor: 'var(--mantine-color-blue-light-hover)',
+        },
+        section: {
           transitionTimingFunction: 'linear',
-          width: `${percent}%`,
-        }}
-      />
-    </div>
+        },
+      }}
+      transitionDuration={isIndeterminate ? 0 : progress.transitionMs}
+      value={isIndeterminate ? 100 : percent}
+    />
   );
 };
 

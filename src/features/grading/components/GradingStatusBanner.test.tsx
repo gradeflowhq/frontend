@@ -51,6 +51,17 @@ describe('GradingStatusBanner', () => {
     expect(screen.getByText(/Taking longer than expected/)).toBeInTheDocument();
   });
 
+  it('shows finishing text instead of zero seconds at the estimate', () => {
+    renderBanner({
+      gradingInProgress: true,
+      jobStatus: JobStatus.running,
+      jobProgress: { percent: 100, overdue: false, remainingMs: 0 },
+    });
+
+    expect(screen.getByText('Finishing...')).toBeInTheDocument();
+    expect(screen.queryByText(/0 sec remaining/)).not.toBeInTheDocument();
+  });
+
   it('shows failed grading errors as an alert', () => {
     renderBanner({ jobStatus: JobStatus.failed, jobError: 'Engine failed on q1' });
 
