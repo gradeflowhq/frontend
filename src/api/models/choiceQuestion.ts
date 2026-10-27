@@ -7,6 +7,7 @@
  */
 import type { ChoiceQuestionDescription } from './choiceQuestionDescription';
 import type { MultiValuedParserConfig } from './multiValuedParserConfig';
+import type { ChoiceQuestionOptions } from './choiceQuestionOptions';
 
 export interface ChoiceQuestion {
   /** Maximum points for the question */
@@ -16,8 +17,8 @@ export interface ChoiceQuestion {
   type?: 'CHOICE';
   /** Parser configuration for choice questions. */
   config?: MultiValuedParserConfig;
-  /** Set of valid choices for this question. */
-  options?: string[];
+  /** Mapping of valid choice IDs to optional displayed option text. */
+  options?: ChoiceQuestionOptions;
   /** Whether to allow multiple choices to be selected. */
   allow_multiple?: boolean;
 }

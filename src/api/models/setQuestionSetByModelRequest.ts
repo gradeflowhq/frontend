@@ -5,8 +5,8 @@
  * Thin FastAPI wrapper over GradeFlow Engine
  * OpenAPI spec version: 0.1.0
  */
-import type { QuestionSetInput } from './questionSetInput';
+import type { QuestionSet } from './questionSet';
 
 export interface SetQuestionSetByModelRequest {
-  question_set: QuestionSetInput;
+  question_set: QuestionSet;
 }

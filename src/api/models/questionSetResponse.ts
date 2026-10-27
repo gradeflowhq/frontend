@@ -5,10 +5,10 @@
  * Thin FastAPI wrapper over GradeFlow Engine
  * OpenAPI spec version: 0.1.0
  */
-import type { QuestionSetOutput } from './questionSetOutput';
+import type { QuestionSet } from './questionSet';
 import type { SectionStatus } from './sectionStatus';
 
 export interface QuestionSetResponse {
-  question_set: QuestionSetOutput;
+  question_set: QuestionSet;
   status: SectionStatus;
 }

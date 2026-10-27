@@ -197,13 +197,15 @@
         "description": "Parser configuration for choice questions."
       },
       "options": {
-        "items": {
-          "type": "string"
+        "additionalProperties": {
+          "type": [
+            "string",
+            "null"
+          ]
         },
-        "type": "array",
-        "uniqueItems": true,
+        "type": "object",
         "title": "Options",
-        "description": "Set of valid choices for this question."
+        "description": "Mapping of valid choice IDs to optional displayed option text."
       },
       "allow_multiple": {
         "type": "boolean",

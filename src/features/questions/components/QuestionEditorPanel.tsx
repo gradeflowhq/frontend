@@ -132,6 +132,11 @@ const QuestionEditorPanel: React.FC<Props> = ({
       ...(questionDef as object),
       ...(draft as object),
     } as QuestionDef;
+    if (merged.type === 'CHOICE' && merged.options) {
+      merged.options = Object.fromEntries(
+        Object.entries(merged.options).map(([id, text]) => [id, text?.trim() ? text : null]),
+      );
+    }
     // Only exit edit mode if the save succeeds.
     onSave(merged).then(() => setIsEditing(false)).catch(() => { /* stay in edit mode */ });
   }, [questionDef, draft, onSave]);
